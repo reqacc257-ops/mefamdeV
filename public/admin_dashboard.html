@@ -1398,10 +1398,14 @@ async function loadAllData() {
         localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(intakeList));
         localStorage.setItem('mefamdev_assessments', JSON.stringify(assessmentList));
 
+        const existingAbsences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
         const absencesMap = {};
         (Array.isArray(absences) ? absences : []).forEach(row => {
             absencesMap[row.app_id || row.appId] = { days: Number(row.days || 0), reason: row.reason || '' };
         });
+        if (Object.keys(absencesMap).length === 0 && Object.keys(existingAbsences).length > 0) {
+            Object.assign(absencesMap, existingAbsences);
+        }
         localStorage.setItem('mefamdev_absences', JSON.stringify(absencesMap));
 
         const nextSavedGrades = {};
@@ -1439,7 +1443,7 @@ async function loadAllData() {
         if (formAvgEl) formAvgEl.innerText = avgFormationPct + '%';
 
         const absencesMap2 = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        const absentee = scholars.filter(s => (absencesMap2[s.id]?.days || 0) >= 3).length;
+        const absentee = appList.filter(s => (absencesMap2[s.id]?.days || 0) >= 3).length;
         const absenteeEl = document.getElementById('prog-absentee');
         if (absenteeEl) absenteeEl.innerText = absentee;
 
@@ -1453,7 +1457,7 @@ async function loadAllData() {
         updateCharts(appList);
         loadSavedRecords();
         renderEvents();
-        renderAttendance(scholars);
+        renderAttendance(appList);
         renderFamilies();
         renderFinancials();
         renderAnnouncements();
@@ -2326,6 +2330,8 @@ async function saveEventAttendance() {
    ATTENDANCE ALERTS
 ══════════════════════════════════════ */
 function renderAttendance(scholars) {
+    const apps = Array.isArray(scholars) ? scholars : [];
+
     // Formation summary
     const formSummary = document.getElementById('formationAttSummary');
     if (formSummary) {
@@ -2348,7 +2354,7 @@ function renderAttendance(scholars) {
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        const alerts = scholars.filter(s => (absences[s.id]?.days || 0) >= 3);
+        const alerts = apps.filter(s => (absences[s.id]?.days || 0) >= 3);
         if (alerts.length === 0) {
             alertsList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No absence alerts. All scholars present.</p></div>';
         } else {
@@ -2375,11 +2381,11 @@ function renderAttendance(scholars) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
         const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
         const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
-        if (scholars.length === 0) {
-            logBody.innerHTML = '<tr><td colspan="6" class="empty-state">No accepted scholars.</td></tr>';
+        if (apps.length === 0) {
+            logBody.innerHTML = '<tr><td colspan="6" class="empty-state">No applicants or scholars available.</td></tr>';
             return;
         }
-        logBody.innerHTML = scholars.map(s => {
+        logBody.innerHTML = apps.map(s => {
             const days = absences[s.id]?.days || 0;
             const formCount = events.filter(ev => (attData[ev.id] || []).includes(s.id)).length;
             const cls = days >= 5 ? 'badge-red' : days >= 3 ? 'badge-orange' : 'badge-green';
@@ -2398,9 +2404,9 @@ function renderAttendance(scholars) {
 
 function openAddAbsenceModal() {
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    const scholars = apps.filter(a => a.status === 'Accepted');
+    const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null);
     const sel = document.getElementById('absenceScholar');
-    sel.innerHTML = scholars.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    sel.innerHTML = '<option value="">— Select applicant/scholar —</option>' + scholars.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     document.getElementById('absenceDays').value = 1;
     document.getElementById('absenceReason').value = '';
     document.getElementById('absenceModal').classList.add('open');
@@ -2411,24 +2417,39 @@ function openAddAbsenceModalFor(id) {
     document.getElementById('absenceScholar').value = id;
 }
 
-function saveAbsence() {
+async function saveAbsence() {
     const id = parseInt(document.getElementById('absenceScholar').value);
     const days = parseInt(document.getElementById('absenceDays').value) || 0;
     const reason = document.getElementById('absenceReason').value.trim();
+    if (!id || !Number.isFinite(id) || days <= 0) {
+        alert('Please select a scholar and enter a valid number of days.');
+        return;
+    }
+
+    try {
+        await MefamAPI.logAbsence(id, days, reason);
+    } catch (error) {
+        console.warn('Could not persist absence to the server; using local fallback.', error);
+    }
+
     const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
     absences[id] = { days: (absences[id]?.days || 0) + days, reason: reason || absences[id]?.reason || '' };
     localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
     closeModal('absenceModal');
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    renderAttendance(apps.filter(a => a.status === 'Accepted'));
+    await loadAllData();
 }
 
-function resetAbsence(id) {
+async function resetAbsence(id) {
+    try {
+        await MefamAPI.resetAbsence(id);
+    } catch (error) {
+        console.warn('Could not reset absence on the server; using local fallback.', error);
+    }
+
     const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
     delete absences[id];
     localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    renderAttendance(apps.filter(a => a.status === 'Accepted'));
+    await loadAllData();
 }
 
 function filterAbsenceLog() {
