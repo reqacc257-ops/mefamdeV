@@ -345,6 +345,15 @@
                         onkeydown="if(event.key==='Enter') proceedLogin()">
                 </div>
             </div>
+            <div id="applicantPasswordField" style="display:none;">
+                <div class="form-group">
+                    <label>Application Password (if set)</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="unifiedAppPassword" placeholder="If you set a password when applying" onkeydown="if(event.key==='Enter') proceedLogin()">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <button class="btn-login" id="loginBtn" onclick="proceedLogin()">
@@ -408,6 +417,7 @@ function onUsernameInput(val) {
     // Reset
     document.getElementById('staffPasswordField').style.display  = 'none';
     document.getElementById('applicantNameField').style.display  = 'none';
+    document.getElementById('applicantPasswordField').style.display = 'none';
     document.getElementById('detectedRole').style.display        = 'none';
     document.getElementById('hintStaff').style.display           = 'block';
     document.getElementById('hintApplicant').style.display       = 'none';
@@ -449,6 +459,7 @@ function onUsernameInput(val) {
             document.getElementById('usernameHint').textContent = '';
         }
         document.getElementById('applicantNameField').style.display = 'block';
+        document.getElementById('applicantPasswordField').style.display = 'block';
         document.getElementById('loginBtn').textContent  = 'Track My Application →';
         document.getElementById('loginBtn').style.background = 'var(--teal)';
         document.getElementById('hintStaff').style.display = 'none';
@@ -524,10 +535,11 @@ async function doStaffLogin(username) {
 
 async function doApplicantLogin(ref) {
     const nameInput = document.getElementById('unifiedName').value.trim();
+    const pwInput = (document.getElementById('unifiedAppPassword')?.value || '').trim();
     const cleanId = ref.replace(/^app-/i, '').trim();
 
     try {
-        const res = await MefamAPI.loginApplicant(cleanId, nameInput);
+        const res = await MefamAPI.loginApplicant(cleanId, nameInput, pwInput);
         if (res?.token) {
             showLoading('Welcome!', () => {
                 window.location.assign('/applicant_portal.html');
