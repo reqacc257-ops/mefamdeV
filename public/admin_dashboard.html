@@ -1443,7 +1443,7 @@ async function loadAllData() {
         if (formAvgEl) formAvgEl.innerText = avgFormationPct + '%';
 
         const absencesMap2 = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        const absentee = appList.filter(s => (absencesMap2[s.id]?.days || 0) >= 3).length;
+        const absentee = appList.filter(s => (absencesMap2[s.id]?.days || 0) >= 1).length;
         const absenteeEl = document.getElementById('prog-absentee');
         if (absenteeEl) absenteeEl.innerText = absentee;
 
@@ -2354,7 +2354,7 @@ function renderAttendance(scholars) {
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        const alerts = apps.filter(s => (absences[s.id]?.days || 0) >= 3);
+        const alerts = apps.filter(s => (absences[s.id]?.days || 0) >= 1);
         if (alerts.length === 0) {
             alertsList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No absence alerts. All scholars present.</p></div>';
         } else {

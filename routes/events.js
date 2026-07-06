@@ -18,8 +18,8 @@ function buildMonitoringAlerts(applications = [], grades = [], absences = []) {
       if (grade && grade < 80) {
         alerts.push({ id: `${appId}-academic`, appId, type: 'academic', severity: 'high', message: `${app.name || 'Scholar'} has a low grade of ${grade}.` });
       }
-      if (absence >= 3) {
-        alerts.push({ id: `${appId}-attendance`, appId, type: 'attendance', severity: 'medium', message: `${app.name || 'Scholar'} has ${absence} missed days.` });
+      if (absence >= 1) {
+        alerts.push({ id: `${appId}-attendance`, appId, type: 'attendance', severity: 'medium', message: `${app.name || 'Scholar'} has ${absence} missed day${absence === 1 ? '' : 's'}.` });
       }
     }
   }

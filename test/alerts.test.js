@@ -26,3 +26,15 @@ test('buildMonitoringSummary reports counts and risk levels', () => {
   assert.equal(summary.atRisk, 2);
   assert.equal(summary.alertLevel, 'high');
 });
+
+test('buildMonitoringAlerts flags a single logged absence', () => {
+  const alerts = buildMonitoringAlerts(
+    [{ id: 1, name: 'Ana Santos', status: 'Accepted' }],
+    [],
+    [{ app_id: '1', days: 1, reason: 'Illness' }]
+  );
+
+  assert.equal(alerts.length, 1);
+  assert.equal(alerts[0].type, 'attendance');
+  assert.match(alerts[0].message, /1/i);
+});
