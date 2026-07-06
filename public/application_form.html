@@ -1181,5 +1181,102 @@
         window.location.href = 'applicant_portal.html';
     }
 </script>
+<script src="/mefamdev-api.js"></script>
+<script>
+    document.getElementById('scholarForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const answer = parseInt(document.getElementById('captchaInput').value);
+        const errEl = document.getElementById('captchaError');
+        if (answer !== captchaAnswer) {
+            errEl.style.display = 'block';
+            document.getElementById('captchaInput').value = '';
+            generateCaptcha(); return;
+        }
+        errEl.style.display = 'none';
+        if (checkSpamCooldown()) return;
+
+        // Family members
+        let familyMembers = [];
+        document.querySelectorAll('#familyTableBody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input, select');
+            const name = inputs[0]?.value?.trim();
+            if (name) familyMembers.push({
+                name, age: inputs[1].value, dob: inputs[2]?.value,
+                sex: inputs[3]?.value, relation: inputs[4]?.value,
+                civil: inputs[5]?.value, educ: inputs[6]?.value,
+                occup: inputs[7]?.value, income: inputs[8]?.value
+            });
+        });
+
+        // Properties
+        let properties = [];
+        document.querySelectorAll('#propertiesContainer input[type="checkbox"]:checked').forEach(c => properties.push(c.value));
+        ['propVehicle', 'propLivestock', 'propOther'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el?.value.trim()) properties.push(`${id.replace('prop','')}: ${el.value.trim()}`);
+        });
+
+        // Pledges (what parent can provide)
+        let canProvide = [];
+        document.querySelectorAll('#page-4 .check-grid input[type="checkbox"]:checked').forEach(c => canProvide.push(c.value));
+
+        const submittedData = collectSubmittedFields();
+        const now = new Date();
+        const data = {
+            id: Date.now(),
+            sy: document.getElementById('sySelect').value,
+            name: document.getElementById('fullName').value.trim(),
+            address: document.getElementById('address').value,
+            barangay: document.getElementById('barangay').value,
+            dob: document.getElementById('dob').value,
+            age: document.getElementById('age').value,
+            gender: document.getElementById('gender').value,
+            contact: document.getElementById('contact').value.trim(),
+            religion: document.getElementById('religion').value,
+            birthplace: document.getElementById('birthplace').value,
+            talents: document.getElementById('talents').value,
+            clubs: document.getElementById('clubs').value,
+            ambition: document.getElementById('ambition').value.trim(),
+            livingWith: document.getElementById('livingWith').value,
+            familyMembers,
+            properties,
+            canProvide,
+            eduLevel: document.getElementById('eduLevel').value,
+            prevGrade: document.getElementById('prevGrade').value,
+            prevSchool: document.getElementById('prevSchool').value,
+            school: document.getElementById('nextSchool').value,
+            grade: document.getElementById('nextGrade').value,
+            degree: document.getElementById('degree').value,
+            whyScholar: document.getElementById('whyScholar').value,
+            totalIncome: document.getElementById('totalIncome').innerText,
+            totalExpense: document.getElementById('totalExpense').innerText,
+            submittedData,
+            submittedAt: now.toISOString(),
+            status: 'Pending Review',
+            statusUpdatedAt: now.toISOString(),
+            statusHistory: [{ status: 'Pending Review', changedAt: now.toISOString(), note: 'Application submitted' }],
+            date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        };
+
+        try {
+            const res = await MefamAPI.submitApplication(data);
+            if (res?.ok) {
+                const appId = res.id || data.id;
+                const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+                apps.unshift({ ...data, id: appId });
+                localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+                localStorage.setItem('mefamdev_last_submit', Date.now());
+                document.getElementById('refNumberDisplay').innerText = 'APP-' + appId;
+                document.getElementById('successMessage').style.display = 'flex';
+            } else {
+                alert(res?.error || 'Unable to submit your application right now.');
+            }
+        } catch (error) {
+            console.error('Application submission failed:', error);
+            alert('Unable to submit your application right now.');
+        }
+    });
+</script>
 </body>
 </html>

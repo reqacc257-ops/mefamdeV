@@ -382,6 +382,7 @@
     <p class="footer-note">© 2026 MEFAMDEV-Life · Angat, Bulacan · Data Privacy Act RA 10173</p>
 </div>
 
+<script src="/mefamdev-api.js"></script>
 <script>
 /* ══════════════════════════════════════
    STAFF ACCOUNTS
@@ -495,7 +496,7 @@ function proceedLogin() {
     }
 }
 
-function doStaffLogin(username) {
+async function doStaffLogin(username) {
     const pass = document.getElementById('unifiedPassword').value;
     if (!pass) {
         document.getElementById('staffPasswordField').style.display = 'block';
@@ -503,51 +504,41 @@ function doStaffLogin(username) {
         showError('Please enter your password.');
         return;
     }
-    const account = STAFF_ACCOUNTS.find(a => a.username === username && a.password === pass);
-    if (!account) {
-        showError('Wrong password. Please try again.');
-        document.getElementById('unifiedPassword').value = '';
-        document.getElementById('unifiedPassword').focus();
-        return;
+
+    try {
+        const res = await MefamAPI.loginStaff(username, pass);
+        if (res?.token) {
+            showLoading('Signing in…', () => {
+                window.location.href = 'admin_dashboard.html';
+            });
+        } else {
+            showError(res?.error || 'Wrong password. Please try again.');
+            document.getElementById('unifiedPassword').value = '';
+            document.getElementById('unifiedPassword').focus();
+        }
+    } catch (error) {
+        console.error('Staff login failed:', error);
+        showError('Unable to sign in right now. Please try again.');
     }
-    sessionStorage.setItem('mefamdev_session', JSON.stringify({
-        type: 'staff', role: account.role, name: account.name,
-        title: account.title, initials: account.initials, loginTime: Date.now()
-    }));
-    showLoading('Signing in as ' + account.name + '…', () => {
-        window.location.href = 'admin_dashboard.html';
-    });
 }
 
-function doApplicantLogin(ref) {
-    const nameInput = document.getElementById('unifiedName').value.trim().toLowerCase();
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+async function doApplicantLogin(ref) {
+    const nameInput = document.getElementById('unifiedName').value.trim();
     const cleanId = ref.replace(/^app-/i, '').trim();
-    let found = apps.find(a => String(a.id) === cleanId);
 
-    if (!found && nameInput.length > 2) {
-        found = apps.find(a => a.name && a.name.toLowerCase().includes(nameInput));
-    }
-    if (!found) {
-        showError('No application found with that reference number. Double-check and try again.');
-        return;
-    }
-    // Name verification (lenient)
-    if (nameInput && found.name) {
-        const fn = found.name.toLowerCase();
-        const parts = fn.split(/[\s,]+/);
-        const match = parts.some(p => p && nameInput.includes(p)) || fn.includes(nameInput);
-        if (!match) {
-            showError('Name does not match the application on file. Please check and try again.');
-            return;
+    try {
+        const res = await MefamAPI.loginApplicant(cleanId, nameInput);
+        if (res?.token) {
+            showLoading('Welcome!', () => {
+                window.location.href = 'applicant_portal.html';
+            });
+        } else {
+            showError(res?.error || 'No application found with that reference number. Double-check and try again.');
         }
+    } catch (error) {
+        console.error('Applicant login failed:', error);
+        showError('Unable to look up your application right now.');
     }
-    sessionStorage.setItem('mefamdev_session', JSON.stringify({
-        type: 'applicant', appId: found.id, name: found.name, loginTime: Date.now()
-    }));
-    showLoading('Welcome, ' + found.name.split(',')[0] + '!', () => {
-        window.location.href = 'applicant_portal.html';
-    });
 }
 
 /* ══════════════════════════════════════

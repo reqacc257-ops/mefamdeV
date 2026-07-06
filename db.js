@@ -6,11 +6,20 @@
  * The database file mefamdev.db is created automatically.
  */
 
-const Database = require('better-sqlite3');
 const path = require('path');
 const crypto = require('crypto');
-
 const fs = require('fs');
+
+let DatabaseImpl;
+let isNativeSqlite = false;
+
+try {
+  DatabaseImpl = require('better-sqlite3');
+} catch (error) {
+  const { DatabaseSync } = require('node:sqlite');
+  DatabaseImpl = DatabaseSync;
+  isNativeSqlite = true;
+}
 
 const DB_PATH = process.env.DB_PATH || process.env.DATABASE_URL || path.join(__dirname, 'mefamdev.db');
 const resolvedDbPath = DB_PATH.startsWith('file:') ? DB_PATH.replace('file:', '') : DB_PATH;
@@ -18,7 +27,29 @@ const dbDir = path.dirname(resolvedDbPath);
 if (dbDir && !fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
-const db = new Database(resolvedDbPath);
+const db = new DatabaseImpl(resolvedDbPath);
+
+if (isNativeSqlite) {
+  db.pragma = (statement) => {
+    const normalized = String(statement).trim();
+    const pragmaStatement = normalized.toLowerCase().startsWith('pragma') ? normalized : `PRAGMA ${normalized}`;
+    db.exec(pragmaStatement);
+    return db;
+  };
+  db.transaction = (fn) => {
+    return (...args) => {
+      db.exec('BEGIN');
+      try {
+        const result = fn(...args);
+        db.exec('COMMIT');
+        return result;
+      } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+      }
+    };
+  };
+}
 
 // Enable WAL mode for better concurrent performance
 db.pragma('journal_mode = WAL');
