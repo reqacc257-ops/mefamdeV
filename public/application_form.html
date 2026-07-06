@@ -756,8 +756,6 @@
                 <p style="font-size:.8rem; color:#666; margin-top:6px;">If you set a password, you'll need it (with your reference number and full name) to access your application.</p>
             </div>
 
-            <p id="cooldownWarning"></p>
-
             <button type="submit" class="btn btn-submit" id="submitBtn">
                 <span class="translatable" data-tl="IPASA ANG APLIKASYON ✓" data-en="SUBMIT APPLICATION ✓">IPASA ANG APLIKASYON ✓</span>
             </button>
@@ -799,7 +797,6 @@
 <script>
     /* ── State ── */
     let captchaAnswer = 0, num1 = 0, num2 = 0, currentLang = 'tl';
-    const COOLDOWN_MS = 5 * 60 * 1000;
     let currentPage = 0;
     const totalPages = 6;
 
@@ -809,7 +806,6 @@
         initFamilyRows();
         setLanguage('tl');
         generateCaptcha();
-        checkSpamCooldown();
         const img = document.querySelector('.logo');
         if (img && (!img.complete || img.naturalWidth === 0)) img.style.display = 'none';
     };
@@ -1055,23 +1051,7 @@
         if (lbl) lbl.innerText = currentLang === 'tl' ? `Human Verification: Ano ang ${num1} + ${num2}?` : `Human Verification: What is ${num1} + ${num2}?`;
     }
 
-    /* ── Cooldown ── */
-    function checkSpamCooldown() {
-        const last = localStorage.getItem('mefamdev_last_submit');
-        if (!last) return false;
-        const elapsed = Date.now() - parseInt(last);
-        if (elapsed < COOLDOWN_MS) {
-            const mins = Math.ceil((COOLDOWN_MS - elapsed) / 60000);
-            document.getElementById('cooldownWarning').innerText = currentLang === 'tl'
-                ? `SPAM PROTECTION: Subukan muli pagkatapos ng ${mins} minuto.`
-                : `SPAM PROTECTION: You can resubmit in ${mins} minutes.`;
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = 'Please wait...';
-            return true;
-        }
-        return false;
-    }
+    /* ── Cooldown removed ── */
 
     function collectSubmittedFields() {
         const payload = {};
@@ -1088,6 +1068,8 @@
         });
         return payload;
     }
+
+    // spam bypass removed
 
 
     function goToPortal() {
@@ -1107,7 +1089,6 @@
             generateCaptcha(); return;
         }
         errEl.style.display = 'none';
-        if (checkSpamCooldown()) return;
 
         // Family members
         let familyMembers = [];
@@ -1185,7 +1166,6 @@
                 if (stored.password) delete stored.password;
                 apps.unshift(stored);
                 localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
-                localStorage.setItem('mefamdev_last_submit', Date.now());
                 document.getElementById('refNumberDisplay').innerText = 'APP-' + appId;
                 document.getElementById('successMessage').style.display = 'flex';
             } else {
