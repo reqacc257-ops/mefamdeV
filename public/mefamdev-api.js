@@ -1,3 +1,16 @@
+/**
+ * mefamdev-api.js
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Drop-in API layer for MEFAMDEV-Life.
+ *
+ * Add this to every HTML page:
+ *   <script src="/mefamdev-api.js"></script>
+ *
+ * It replaces direct localStorage usage with real API calls.
+ * The public form and applicant portal also use this.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
 const API_BASE = window.location.origin + '/api';
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
