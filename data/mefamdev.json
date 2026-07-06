@@ -1,40 +1,40 @@
 {
   "staff": [
     {
-      "0": "director",
-      "1": "9e4d7bba246abe731743986c4dc50897b68b1d0249a066abb3530fcbaa33dab3",
-      "2": "director",
-      "3": "Director",
-      "4": "Primary Social Worker",
-      "5": "DR",
-      "id": 1
+      "id": 1,
+      "username": "director",
+      "password": "9e4d7bba246abe731743986c4dc50897b68b1d0249a066abb3530fcbaa33dab3",
+      "role": "director",
+      "name": "Director",
+      "title": "Primary Social Worker",
+      "initials": "DR"
     },
     {
-      "0": "edu",
-      "1": "a16af3b3a278daaae22f0e80ab9d10ac70009e56d0e705ece8b37d068b907676",
-      "2": "edu",
-      "3": "Edu Staff",
-      "4": "Education Social Worker",
-      "5": "ED",
-      "id": 2
+      "id": 2,
+      "username": "edu",
+      "password": "a16af3b3a278daaae22f0e80ab9d10ac70009e56d0e705ece8b37d068b907676",
+      "role": "edu",
+      "name": "Edu Staff",
+      "title": "Education Social Worker",
+      "initials": "ED"
     },
     {
-      "0": "finance",
-      "1": "48f7312924d74358e75294e3b3613f2319d99e944184b69550f528577ca082fb",
-      "2": "finance",
-      "3": "Finance Staff",
-      "4": "Finance Officer",
-      "5": "FN",
-      "id": 3
+      "id": 3,
+      "username": "finance",
+      "password": "48f7312924d74358e75294e3b3613f2319d99e944184b69550f528577ca082fb",
+      "role": "finance",
+      "name": "Finance Staff",
+      "title": "Finance Officer",
+      "initials": "FN"
     },
     {
-      "0": "program",
-      "1": "acbaf5b79ea124aee6272ccbda319f2eb8cccda6899b876eaeaa573e495eb4a2",
-      "2": "program",
-      "3": "Coordinator",
-      "4": "Program Coordinator",
-      "5": "PC",
-      "id": 4
+      "id": 4,
+      "username": "program",
+      "password": "acbaf5b79ea124aee6272ccbda319f2eb8cccda6899b876eaeaa573e495eb4a2",
+      "role": "program",
+      "name": "Coordinator",
+      "title": "Program Coordinator",
+      "initials": "PC"
     }
   ],
   "applications": [

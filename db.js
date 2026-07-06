@@ -23,7 +23,9 @@ const seedStaff = [
 ];
 
 const staffRows = db.prepare('SELECT * FROM staff').all();
-if (staffRows.length === 0) {
+const hasValidStaffSeed = staffRows.some(row => row && row.username && row.password && row.role);
+if (!hasValidStaffSeed) {
+  db.prepare('DELETE FROM staff').run();
   const insertStaff = db.prepare('INSERT INTO staff (username, password, role, name, title, initials) VALUES (?, ?, ?, ?, ?, ?)');
   for (const s of seedStaff) {
     insertStaff.run(s.username, hashPassword(s.password), s.role, s.name, s.title, s.initials);

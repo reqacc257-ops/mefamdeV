@@ -176,6 +176,12 @@ class QueryBuilder {
     return rows.filter(row => this.matchesWhere(row, whereClause, params));
   }
 
+  asValueArray(params) {
+    if (Array.isArray(params)) return params;
+    if (params === undefined || params === null) return [];
+    return [params];
+  }
+
   parseWhereConditions() {
     const clauses = [];
     const whereMatch = this.query.match(/where\s+(.+)/i);
@@ -201,7 +207,7 @@ class QueryBuilder {
 
   matchesWhere(row, whereClause, params) {
     if (!whereClause.length) return true;
-    const values = Array.isArray(params) ? params : [];
+    const values = this.asValueArray(params);
     return whereClause.every(clause => {
       let expected;
       if (clause.kind === 'placeholder') {
