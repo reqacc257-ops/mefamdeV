@@ -112,13 +112,7 @@ function submitPublicApplication(req, res) {
   const b = req.body;
   if (!b.name || !b.sy) return res.status(400).json({ error: 'Name and school year required' });
 
-  // Cooldown: 1 submission per contact number per 5 minutes
-  if (b.contact) {
-    const recent = db.prepare(
-      "SELECT id FROM applications WHERE contact = ? AND submitted_at > datetime('now', '-5 minutes')"
-    ).get(b.contact);
-    if (recent) return res.status(429).json({ error: 'Please wait 5 minutes before resubmitting.' });
-  }
+  // No server-side submission cooldown enforced.
 
   const stmt = db.prepare(`
     INSERT INTO applications
@@ -169,3 +163,21 @@ function submitPublicApplication(req, res) {
 
 module.exports = router;
 module.exports.submitPublicApplication = submitPublicApplication;
+
+// ── Admin: reset / set applicant password ───────────────────────────────────
+router.post('/:id/reset-password', requireRole('director','program','finance'), (req, res) => {
+  const id = req.params.id;
+  const newPass = req.body.password;
+  const app = db.prepare('SELECT id FROM applications WHERE id = ?').get(id);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+
+  if (newPass === null || newPass === undefined || newPass === '') {
+    // Clear password
+    db.prepare('UPDATE applications SET password_hash = NULL WHERE id = ?').run(id);
+    return res.json({ ok: true, message: 'Password cleared' });
+  }
+
+  const hash = crypto.createHash('sha256').update(String(newPass)).digest('hex');
+  db.prepare('UPDATE applications SET password_hash = ? WHERE id = ?').run(hash, id);
+  res.json({ ok: true });
+});
