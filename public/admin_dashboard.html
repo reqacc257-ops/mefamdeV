@@ -1369,20 +1369,28 @@ async function loadAllData() {
             MefamAPI.getMonitoring(),
         ]);
 
-        const appList = Array.isArray(apps) ? apps : [];
-        const familyList = Array.isArray(families) ? families : [];
-        const announcementList = Array.isArray(announcements) ? announcements : [];
-        const eventList = Array.isArray(events) ? events : [];
-        const fundLogList = Array.isArray(fundLog) ? fundLog : [];
-        const disbLogList = Array.isArray(disbLog) ? disbLog : [];
-        const intakeList = Array.isArray(intakeSheets) ? intakeSheets : [];
-        const assessmentList = Array.isArray(assessments) ? assessments : [];
+        const existingApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const existingEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        const existingAttData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+
+        const appList = Array.isArray(apps) ? apps : existingApps;
+        const familyList = Array.isArray(families) ? families : JSON.parse(localStorage.getItem('mefamdev_families') || '[]');
+        const announcementList = Array.isArray(announcements) ? announcements : JSON.parse(localStorage.getItem('mefamdev_announcements') || '[]');
+        const eventList = Array.isArray(events) ? events : existingEvents;
+        const fundLogList = Array.isArray(fundLog) ? fundLog : JSON.parse(localStorage.getItem('mefamdev_fund_log') || '[]');
+        const disbLogList = Array.isArray(disbLog) ? disbLog : JSON.parse(localStorage.getItem('mefamdev_disbursements') || '[]');
+        const intakeList = Array.isArray(intakeSheets) ? intakeSheets : JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
+        const assessmentList = Array.isArray(assessments) ? assessments : JSON.parse(localStorage.getItem('mefamdev_assessments') || '[]');
 
         localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
         localStorage.setItem('mefamdev_families', JSON.stringify(familyList));
         localStorage.setItem('mefamdev_announcements', JSON.stringify(announcementList));
         localStorage.setItem('mefamdev_events', JSON.stringify(eventList.map(ev => ({ id: ev.id, name: ev.name, date: ev.date, venue: ev.venue, max: ev.max_att || ev.max || 75 }))));
-        localStorage.setItem('mefamdev_event_attendance', JSON.stringify(Object.fromEntries(eventList.map(ev => [ev.id, ev.attendees || []]))));
+        const nextAttData = {};
+        eventList.forEach(ev => {
+            nextAttData[ev.id] = Array.isArray(existingAttData[ev.id]) ? existingAttData[ev.id] : (Array.isArray(ev.attendees) ? ev.attendees : []);
+        });
+        localStorage.setItem('mefamdev_event_attendance', JSON.stringify(nextAttData));
         localStorage.setItem('mefamdev_fund_log', JSON.stringify(fundLogList));
         localStorage.setItem('mefamdev_disbursements', JSON.stringify(disbLogList));
         localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(intakeList));
@@ -1394,10 +1402,15 @@ async function loadAllData() {
         });
         localStorage.setItem('mefamdev_absences', JSON.stringify(absencesMap));
 
-        savedGrades = {};
+        const nextSavedGrades = {};
         (Array.isArray(grades) ? grades : []).forEach(row => {
-            savedGrades[row.app_id || row.appId] = Number(row.grade_val || row.grade || 0);
+            nextSavedGrades[row.app_id || row.appId] = Number(row.grade_val || row.grade || 0);
         });
+        if (Object.keys(nextSavedGrades).length === 0 && Object.keys(savedGrades).length > 0) {
+            Object.assign(nextSavedGrades, savedGrades);
+        }
+        savedGrades = nextSavedGrades;
+        localStorage.setItem('mefamdev_grades', JSON.stringify(savedGrades));
 
         const scholars = appList.filter(a => a.status === 'Accepted');
         const pending = appList.filter(a => a.status === 'Pending Review' || a.status === 'Interviewing');
@@ -1797,16 +1810,25 @@ function openGradeModal(id, name) {
     document.getElementById('gradeModal').classList.add('open');
 }
 
-function saveGrade() {
+async function saveGrade() {
     const id = parseInt(document.getElementById('gradeModalId').value);
     const g = parseInt(document.getElementById('gradeInput').value);
+    const semester = document.getElementById('gradeSemSelect')?.value || '';
     if (g >= 60 && g <= 100) {
-        savedGrades[id] = g;
-        const el = document.getElementById(`grade-val-${id}`);
-        if (el) el.innerText = g;
-        closeModal('gradeModal');
-        const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
-        renderGrades(apps.filter(a => a.status === 'Accepted'));
+        try {
+            await MefamAPI.saveGrade(id, g, semester);
+            savedGrades[id] = g;
+            const el = document.getElementById(`grade-val-${id}`);
+            if (el) el.innerText = g;
+            closeModal('gradeModal');
+            const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+            renderGrades(apps.filter(a => a.status === 'Accepted'));
+        } catch (error) {
+            console.error('Failed to save grade:', error);
+            alert('Unable to save the grade right now.');
+        }
+    } else {
+        alert('Please enter a valid grade between 60 and 100.');
     }
 }
 
@@ -2179,6 +2201,21 @@ function exportData() {
 ══════════════════════════════════════ */
 let currentEventId = null;
 
+function syncEventAttendance(evtId, scholarId, isChecked) {
+    const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+    const current = Array.isArray(attData[evtId]) ? attData[evtId] : [];
+    const next = isChecked
+        ? [...new Set([...current, scholarId])]
+        : current.filter(id => id !== scholarId);
+
+    attData[evtId] = next;
+    localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
+
+    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    renderEvents();
+    renderAttendance(apps.filter(a => a.status === 'Accepted'));
+}
+
 function renderEvents() {
     const container = document.getElementById('eventsList');
     if (!container) return;
@@ -2257,7 +2294,7 @@ function openEventAttendance(evtId) {
     } else {
         list.innerHTML = scholars.map(s => `
             <label style="display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #f5f5f5; cursor:pointer; font-size:.88rem;">
-                <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} style="width:16px; height:16px; accent-color:var(--teal);">
+                <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} onchange="syncEventAttendance(${evtId}, ${s.id}, this.checked)" style="width:16px; height:16px; accent-color:var(--teal);">
                 <span><strong>${s.name}</strong> — ${s.grade}, ${s.school}</span>
             </label>`).join('');
     }
@@ -2270,6 +2307,9 @@ async function saveEventAttendance() {
     const checked = [...document.querySelectorAll('#evtAttList input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
     try {
         await MefamAPI.saveEventAttendance(currentEventId, checked);
+        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        attData[currentEventId] = checked;
+        localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
         await loadAllData();
         openEventAttendance(currentEventId);
         renderEvents();

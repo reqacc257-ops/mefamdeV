@@ -274,7 +274,7 @@ class QueryBuilder {
   }
 
   buildInsertItem(table, values) {
-    const columnsMatch = this.query.match(/insert\s+into\s+[a-z_]+\s*\(([^)]+)\)/i);
+    const columnsMatch = this.query.match(/insert(?:\s+or\s+ignore)?\s+into\s+[a-z_]+\s*\(([^)]+)\)/i);
     const columns = columnsMatch ? columnsMatch[1].split(',').map(col => col.trim()) : [];
 
     const item = { id: this.nextId(table) };

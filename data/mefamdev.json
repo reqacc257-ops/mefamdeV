@@ -84,26 +84,20 @@
   ],
   "event_attendance": [
     {
-      "id": 1
-    },
-    {
-      "id": 2
-    },
-    {
-      "id": 3
-    },
-    {
-      "id": 4
-    },
-    {
-      "id": 5
-    },
-    {
-      "id": 6
+      "id": 1,
+      "event_id": 7,
+      "app_id": 21
     }
   ],
   "absences": [],
-  "grades": [],
+  "grades": [
+    {
+      "id": 1,
+      "app_id": 42,
+      "grade_val": 88,
+      "semester": "2025-2026 1st Sem"
+    }
+  ],
   "fund_log": [],
   "disbursements": [],
   "intake_sheets": [],

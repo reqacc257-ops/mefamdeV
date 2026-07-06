@@ -33,7 +33,7 @@ function buildMonitoringSummary(applications = [], grades = [], absences = []) {
   return {
     activeScholars,
     atRisk: alerts.length,
-    alertLevel: alerts.length >= 3 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
+    alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
     alerts,
   };
 }
