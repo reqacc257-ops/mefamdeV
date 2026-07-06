@@ -33,12 +33,12 @@ router.post('/login', (req, res) => {
 
 // ── Applicant portal login ────────────────────────────────────────────────────
 router.post('/applicant', (req, res) => {
-  const { refNo, name } = req.body;
+  const { refNo, name, password } = req.body;
   if (!refNo) return res.status(400).json({ error: 'Reference number required' });
 
   // Accept "APP-1001" or just "1001"
   const cleanId = String(refNo).replace(/^app-/i, '').trim();
-  const app = db.prepare('SELECT id, name, status, school, grade, sy FROM applications WHERE id = ?').get(cleanId);
+  const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(cleanId);
 
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
@@ -49,6 +49,14 @@ router.post('/applicant', (req, res) => {
     const input = name.trim().toLowerCase();
     const match = parts.some(p => p && input.includes(p)) || fn.includes(input);
     if (!match) return res.status(401).json({ error: 'Name does not match application on file' });
+  }
+
+  // If a password is set, require it; if none is set, reject an entered password
+  if (app.password_hash) {
+    const hashed = crypto.createHash('sha256').update(String(password || '')).digest('hex');
+    if (!password || hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid password' });
+  } else if (password) {
+    return res.status(401).json({ error: 'No application password is set. Leave the password blank to continue.' });
   }
 
   const payload = { type: 'applicant', appId: app.id, name: app.name };
