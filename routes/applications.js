@@ -12,6 +12,7 @@
 
 const router = require('express').Router();
 const db = require('../db');
+const crypto = require('crypto');
 const { requireRole } = require('../middleware/auth');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -124,12 +125,12 @@ function submitPublicApplication(req, res) {
       (sy, name, address, barangay, dob, age, gender, contact, religion, birthplace,
        talents, clubs, ambition, living_with, edu_level, prev_grade, prev_school,
        school, grade, degree, why_scholar, total_income, total_expense,
-       family_members, properties, can_provide, status, date_label)
+       family_members, properties, can_provide, status, date_label, password_hash)
     VALUES
       (@sy, @name, @address, @barangay, @dob, @age, @gender, @contact, @religion, @birthplace,
        @talents, @clubs, @ambition, @living_with, @edu_level, @prev_grade, @prev_school,
        @school, @grade, @degree, @why_scholar, @total_income, @total_expense,
-       @family_members, @properties, @can_provide, 'Pending Review', @date_label)
+       @family_members, @properties, @can_provide, 'Pending Review', @date_label, @password_hash)
   `);
 
   const info = stmt.run({
@@ -160,6 +161,7 @@ function submitPublicApplication(req, res) {
     properties:    JSON.stringify(b.properties    || []),
     can_provide:   JSON.stringify(b.canProvide    || []),
     date_label:    b.date || b.dateLabel || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    password_hash: b.password ? crypto.createHash('sha256').update(String(b.password)).digest('hex') : null
   });
 
   res.json({ ok: true, id: info.lastInsertRowid });
