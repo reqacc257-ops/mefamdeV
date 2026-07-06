@@ -52,6 +52,16 @@ class MemoryStore {
     return this;
   }
 
+  transaction(fn) {
+    try {
+      const result = fn();
+      this.save();
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   pragma() {
     return this;
   }

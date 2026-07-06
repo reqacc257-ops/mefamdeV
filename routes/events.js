@@ -73,10 +73,9 @@ router.put('/:id/attendance', (req, res) => {
   // Replace attendance for this event
   const del = db.prepare('DELETE FROM event_attendance WHERE event_id = ?');
   const ins = db.prepare('INSERT OR IGNORE INTO event_attendance (event_id, app_id) VALUES (?, ?)');
-  db.transaction(() => {
-    del.run(eventId);
-    appIds.forEach(id => ins.run(eventId, id));
-  })();
+  del.run(eventId);
+  appIds.forEach(id => ins.run(eventId, id));
+  if (typeof db.save === 'function') db.save();
   res.json({ ok: true });
 });
 

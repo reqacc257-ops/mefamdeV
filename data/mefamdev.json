@@ -45,8 +45,63 @@
     }
   ],
   "families": [],
-  "events": [],
-  "event_attendance": [],
+  "events": [
+    {
+      "id": 1,
+      "name": "Test Event",
+      "date": "2026-07-06",
+      "venue": "Office",
+      "max_att": 30
+    },
+    {
+      "id": 2,
+      "name": "Test Event 2",
+      "date": "2026-07-06",
+      "venue": "Office",
+      "max_att": 30
+    },
+    {
+      "id": 3,
+      "name": "Test Event 3",
+      "date": "2026-07-06",
+      "venue": "Office",
+      "max_att": 30
+    },
+    {
+      "id": 4,
+      "name": "Test Event 4",
+      "date": "2026-07-06",
+      "venue": "Office",
+      "max_att": 30
+    },
+    {
+      "id": 5,
+      "name": "Node Test Event",
+      "date": "2026-07-06",
+      "venue": "Office",
+      "max_att": 30
+    }
+  ],
+  "event_attendance": [
+    {
+      "id": 1
+    },
+    {
+      "id": 2
+    },
+    {
+      "id": 3
+    },
+    {
+      "id": 4
+    },
+    {
+      "id": 5
+    },
+    {
+      "id": 6
+    }
+  ],
   "absences": [],
   "grades": [],
   "fund_log": [],
