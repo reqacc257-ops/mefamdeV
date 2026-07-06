@@ -77,6 +77,7 @@ const MefamAPI = {
   // ── Families ───────────────────────────────────────────────────────────────
   async getFamilies() { return this._get('/families'); },
   async addFamily(data) { return this._post('/families', data); },
+  async updateFamily(id, data) { return this._put(`/families/${id}`, data); },
   async deleteFamily(id) { return this._delete(`/families/${id}`); },
 
   // ── Events & Attendance ────────────────────────────────────────────────────
