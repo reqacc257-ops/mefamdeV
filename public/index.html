@@ -338,9 +338,8 @@
         <!-- Step 2b: Applicant verification (shown for applicant portal access) -->
         <div id="applicantNameField" style="display:none;">
             <div class="form-group">
-                <label>Full Name (optional for verification)</label>
+                <label>Full Name</label>
                 <div class="input-wrap">
-                    <span class="input-icon">📋</span>
                     <input type="text" id="unifiedName"
                         placeholder="As submitted in your application"
                         onkeydown="if(event.key==='Enter') proceedLogin()">
@@ -348,10 +347,10 @@
             </div>
             <div id="applicantPasswordField" style="display:none;">
                 <div class="form-group">
-                    <label>Application Password (if set)</label>
+                    <label>Application Password</label>
                     <div class="input-wrap">
                         <span class="input-icon">🔒</span>
-                            <input type="password" id="unifiedAppPassword" placeholder="If you set a password when applying" onkeydown="if(event.key==='Enter') proceedLogin()">
+                            <input type="password" id="unifiedAppPassword" placeholder="Enter your application password" onkeydown="if(event.key==='Enter') proceedLogin()">
                             <button type="button" onclick="toggleUnifiedAppPassword()" id="toggleUnifiedAppPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
                     </div>
                 </div>
@@ -446,18 +445,18 @@ function onUsernameInput(val) {
         document.getElementById('hintApplicant').style.display = 'none';
         document.getElementById('unifiedPassword').focus();
 
-    } else {
+    } else if (isAppRef) {
         detectedType = 'applicant';
         const cleanId = val.trim().replace(/^app-/i, '');
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-        const found = apps.find(a => String(a.id) === cleanId || (a.username && a.username.toLowerCase() === v));
+        const found = apps.find(a => String(a.id) === cleanId);
 
         if (found) {
             showDetected('📋 Applicant — APP-' + found.id, '#e8f5e9', '#1b5e20', '#81c784');
             document.getElementById('usernameHint').textContent = '✓ Application found: ' + found.name;
             document.getElementById('usernameHint').style.color = '#27ae60';
         } else {
-            showDetected('📋 Applicant Portal', '#fff8e1', '#6d4c00', '#ffd54f');
+            showDetected('📋 Applicant Reference', '#fff8e1', '#6d4c00', '#ffd54f');
             document.getElementById('usernameHint').textContent = '';
         }
         document.getElementById('applicantNameField').style.display = 'block';
@@ -467,6 +466,30 @@ function onUsernameInput(val) {
         document.getElementById('hintStaff').style.display = 'none';
         document.getElementById('hintApplicant').style.display = 'block';
         document.getElementById('unifiedName').focus();
+    } else {
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const found = apps.find(a => (a.username || '').toLowerCase() === v);
+        if (found) {
+            detectedType = 'applicant';
+            showDetected('📋 Applicant — APP-' + found.id, '#e8f5e9', '#1b5e20', '#81c784');
+            document.getElementById('usernameHint').textContent = '✓ Application found: ' + found.name;
+            document.getElementById('usernameHint').style.color = '#27ae60';
+            document.getElementById('applicantNameField').style.display = 'block';
+            document.getElementById('applicantPasswordField').style.display = 'block';
+            document.getElementById('loginBtn').textContent  = 'Track My Application →';
+            document.getElementById('loginBtn').style.background = 'var(--teal)';
+            document.getElementById('hintStaff').style.display = 'none';
+            document.getElementById('hintApplicant').style.display = 'block';
+            document.getElementById('unifiedName').focus();
+        } else {
+            detectedType = null;
+            document.getElementById('applicantNameField').style.display = 'none';
+            document.getElementById('applicantPasswordField').style.display = 'none';
+            document.getElementById('detectedRole').style.display = 'none';
+            document.getElementById('hintStaff').style.display = 'block';
+            document.getElementById('hintApplicant').style.display = 'none';
+            document.getElementById('usernameHint').textContent = '';
+        }
     }
 }
 
