@@ -62,6 +62,10 @@ const MefamAPI = {
   async submitApplication(data) {
     const res = await this._post('/public/apply', data, false);
     if (res.id) {
+      const loginRes = await this.loginApplicant(res.id, data.name);
+      if (loginRes?.token) {
+        sessionStorage.setItem('mefamdev_token', loginRes.token);
+      }
       // Store a temporary session so applicant lands on portal
       sessionStorage.setItem('mefamdev_session', JSON.stringify({
         type: 'applicant', appId: res.id, name: data.name, loginTime: Date.now()
@@ -73,6 +77,7 @@ const MefamAPI = {
   // ── Families ───────────────────────────────────────────────────────────────
   async getFamilies() { return this._get('/families'); },
   async addFamily(data) { return this._post('/families', data); },
+  async updateFamily(id, data) { return this._put(`/families/${id}`, data); },
   async deleteFamily(id) { return this._delete(`/families/${id}`); },
 
   // ── Events & Attendance ────────────────────────────────────────────────────
@@ -83,6 +88,7 @@ const MefamAPI = {
     return this._put(`/events/${eventId}/attendance`, { appIds });
   },
   async getAbsences() { return this._get('/events/absences'); },
+  async getMonitoring() { return this._get('/events/monitoring'); },
   async logAbsence(appId, days, reason) {
     return this._post('/events/absences', { appId, days, reason });
   },
@@ -111,6 +117,12 @@ const MefamAPI = {
   async saveAssessment(data) { return this._post('/records/assessments', data); },
   async deleteAssessment(id) { return this._delete(`/records/assessments/${id}`); },
 
+  // ── Document Checklist ────────────────────────────────────────────────────
+  async getDocuments(appId) { return this._get(`/documents/${appId}`); },
+  async setDocumentStatus(appId, docKey, status, note) {
+    return this._put(`/documents/${appId}/${docKey}`, { status, note });
+  },
+
   // ── Communications ────────────────────────────────────────────────────────
   async getAnnouncements() { return this._get('/comms'); },
   async postAnnouncement(subject, message, target, tag) {
@@ -119,12 +131,35 @@ const MefamAPI = {
   async deleteAnnouncement(id) { return this._delete(`/comms/${id}`); },
 
   // ── Internal fetch helpers ────────────────────────────────────────────────
-  _token() { return sessionStorage.getItem('mefamdev_token') || ''; },
+  _token() {
+    const sessionToken = sessionStorage.getItem('mefamdev_token') || '';
+    if (sessionToken) return sessionToken;
+
+    try {
+      const previewRaw = localStorage.getItem('mefamdev_preview_session');
+      if (previewRaw) {
+        const previewSession = JSON.parse(previewRaw);
+        if (previewSession?.token) return previewSession.token;
+      }
+    } catch (e) {
+      // Ignore malformed preview session data.
+    }
+
+    return '';
+  },
 
   async _get(path) {
-    const r = await fetch(API_BASE + path, {
-      headers: { 'Authorization': 'Bearer ' + this._token() }
-    });
+    let token = this._token();
+    const headers = { 'Authorization': 'Bearer ' + token };
+    if (!token) {
+      const session = this.getSession();
+      if (session?.type === 'applicant' && session?.appId) {
+        const loginRes = await this.loginApplicant(session.appId, session.name || '');
+        token = loginRes?.token || '';
+        if (token) headers.Authorization = 'Bearer ' + token;
+      }
+    }
+    const r = await fetch(API_BASE + path, { headers });
     if (r.status === 401) { this.logout(); return; }
     return r.json();
   },

@@ -1,0 +1,28 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { buildMonitoringAlerts, buildMonitoringSummary } = require('../routes/events');
+
+test('buildMonitoringAlerts flags low grades and attendance issues', () => {
+  const alerts = buildMonitoringAlerts(
+    [{ id: 1, name: 'Ana Santos', status: 'Accepted' }],
+    [{ app_id: '1', grade_val: 72 }],
+    [{ app_id: '1', days: 4, reason: 'Sickness' }]
+  );
+
+  assert.equal(alerts.length, 2);
+  assert.equal(alerts[0].type, 'academic');
+  assert.equal(alerts[1].type, 'attendance');
+  assert.match(alerts[0].message, /grade/i);
+});
+
+test('buildMonitoringSummary reports counts and risk levels', () => {
+  const summary = buildMonitoringSummary(
+    [{ id: 1, name: 'Ana Santos', status: 'Accepted' }],
+    [{ app_id: '1', grade_val: 72 }],
+    [{ app_id: '1', days: 4, reason: 'Sickness' }]
+  );
+
+  assert.equal(summary.activeScholars, 1);
+  assert.equal(summary.atRisk, 2);
+  assert.equal(summary.alertLevel, 'high');
+});

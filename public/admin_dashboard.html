@@ -39,7 +39,26 @@
             display: flex; flex-direction: column;
             overflow-y: auto; flex-shrink: 0;
             transition: transform .3s;
-            z-index: 100;
+            z-index: 120;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 12, 23, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 110;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+        .sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+        .menu-toggle {
+            display: none;
+            width: 42px; height: 42px; border: 0; border-radius: 10px;
+            background: #f4f6f9; color: var(--navy); font-size: 1.15rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            margin-right: 10px;
         }
         .sidebar-brand {
             padding: 22px 18px 16px;
@@ -320,9 +339,36 @@
             border-radius: 4px; transition: .15s;
         }
         .ann-delete-btn:hover { background: #fee2e2; color: var(--red); }
+
+        @media (max-width: 900px) {
+            body { overflow: hidden; }
+            .menu-toggle { display: inline-flex; }
+            .sidebar {
+                position: fixed; left: 0; top: 0; bottom: 0;
+                transform: translateX(-100%);
+                width: min(84vw, 320px);
+                box-shadow: 0 18px 45px rgba(0,0,0,.28);
+            }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-backdrop { display: block; }
+            .main { width: 100%; }
+            .topbar { padding: 0 14px; }
+            .topbar-title { font-size: 1rem; }
+            .user-pill .user-info { display: none; }
+            .topbar-right > button:last-child { display: none; }
+            .content-area { padding: 16px; }
+            .stats-grid, .grid-2, .grid-2eq, .charts-grid, .intake-grid, .intake-grid-3, .intake-grid-4 { grid-template-columns: 1fr; }
+            .kanban { flex-direction: column; }
+            .kanban-col { min-width: 0; }
+            .modal { width: calc(100vw - 24px); max-width: none; }
+            .nav-item { padding: 12px 16px; margin: 2px 8px; }
+            .sidebar-footer { padding: 12px 14px; }
+        }
     </style>
 </head>
 <body>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
 <!-- ── Sidebar ── -->
 <aside class="sidebar" id="sidebar">
@@ -406,7 +452,10 @@
 
     <!-- Topbar -->
     <header class="topbar">
-        <span class="topbar-title" id="page-title">Dashboard</span>
+        <div style="display:flex; align-items:center;">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Open navigation">☰</button>
+            <span class="topbar-title" id="page-title">Dashboard</span>
+        </div>
         <div class="topbar-right">
 
             <!-- Role switcher -->
@@ -503,6 +552,17 @@
                 <div class="card">
                     <div class="card-title">Applicants by Education Level</div>
                     <canvas id="eduChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid-2eq" style="margin-bottom:20px;" data-roles="director,edu,program">
+                <div class="card">
+                    <div class="card-title">Scholar Risk Alerts</div>
+                    <div id="monitoringAlerts" class="empty-state"><div class="empty-icon">⚠️</div><p>Loading alerts…</p></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Monitoring Summary</div>
+                    <div id="monitoringSummary" style="font-size:.95rem; color:var(--text-muted); line-height:1.7;"></div>
                 </div>
             </div>
 
@@ -746,13 +806,7 @@
 
                         <!-- Document Vault -->
                         <h4 style="font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); margin:0 0 8px;">📁 Document Vault</h4>
-                        <table>
-                            <thead><tr><th>Document</th><th>Status</th><th>Action</th></tr></thead>
-                            <tbody>
-                                <tr><td>Application Form</td><td><span class="badge badge-green">Submitted</span></td><td><button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(currentProfileId)">View Portal</button></td></tr>
-                                <tr><td>Report Card (Latest)</td><td><span class="badge badge-orange">Pending</span></td><td><button class="btn btn-ghost btn-sm">Upload</button></td></tr>
-                            </tbody>
-                        </table>
+                        <div id="pd-documents"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>
 
                         <!-- Quick actions -->
                         <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
@@ -930,7 +984,10 @@
                                 <h3 style="font-family:'DM Serif Display',serif; font-size:1.1rem; color:var(--navy);" id="fd-surname"></h3>
                                 <span id="fd-incomeBadge"></span>
                             </div>
-                            <button class="btn btn-red btn-sm" onclick="deleteFamily(currentFamilyId)">🗑 Remove</button>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-ghost btn-sm" onclick="openAddFamilyModal(currentFamilyRecord)">✎ Edit</button>
+                                <button class="btn btn-red btn-sm" onclick="deleteFamily(currentFamilyId)">🗑 Remove</button>
+                            </div>
                         </div>
                         <hr style="border:0; border-top:1px solid var(--border); margin-bottom:14px;">
                         <div class="grid-2eq" style="gap:8px; margin-bottom:12px;">
@@ -955,8 +1012,9 @@
         <!-- Add Family Modal -->
         <div class="modal-overlay" id="familyModal">
             <div class="modal" style="max-width:520px;">
-                <div class="modal-header"><h2>Add Beneficiary Family</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('familyModal')">✕</button></div>
+                <div class="modal-header"><h2 id="familyModalTitle">Add Beneficiary Family</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('familyModal')">✕</button></div>
                 <div class="modal-body">
+                    <input type="hidden" id="fm-id">
                     <div class="grid-2eq" style="gap:12px;">
                         <div><label>Family Surname</label><input type="text" id="fm-surname" placeholder="e.g. Dela Cruz" style="width:100%;"></div>
                         <div><label>Guardian Name</label><input type="text" id="fm-guardian" placeholder="Full name" style="width:100%;"></div>
@@ -1228,11 +1286,27 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('roleMenu').classList.remove('open');
         }
     });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 900) closeSidebar();
+    });
 });
 
 /* ══════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════ */
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const isOpen = sidebar.classList.toggle('open');
+    backdrop.classList.toggle('open', isOpen);
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarBackdrop')?.classList.remove('open');
+}
+
 function nav(pageId, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1242,6 +1316,7 @@ function nav(pageId, el) {
     document.getElementById('page-title').innerText = title;
     loadAllData();
     document.getElementById('roleMenu').classList.remove('open');
+    if (window.innerWidth <= 900) closeSidebar();
 }
 
 /* ══════════════════════════════════════
@@ -1279,7 +1354,7 @@ function applyRBAC() {
 ══════════════════════════════════════ */
 async function loadAllData() {
     try {
-        const [apps, families, announcements, events, fundLog, disbLog, intakeSheets, assessments, absences, grades] = await Promise.all([
+        const [apps, families, announcements, events, fundLog, disbLog, intakeSheets, assessments, absences, grades, monitoring] = await Promise.all([
             MefamAPI.getApplications(),
             MefamAPI.getFamilies(),
             MefamAPI.getAnnouncements(),
@@ -1290,6 +1365,7 @@ async function loadAllData() {
             MefamAPI.getAssessments(),
             MefamAPI.getAbsences(),
             MefamAPI.getGrades(),
+            MefamAPI.getMonitoring(),
         ]);
 
         const appList = Array.isArray(apps) ? apps : [];
@@ -1351,6 +1427,7 @@ async function loadAllData() {
         const absenteeEl = document.getElementById('prog-absentee');
         if (absenteeEl) absenteeEl.innerText = absentee;
 
+        renderMonitoring(monitoring);
         renderRecentApps(appList);
         renderFullAppsTable(appList);
         renderPipeline(appList);
@@ -1433,6 +1510,34 @@ function deleteRecord(key, id) {
     records = records.filter(r => r.id !== id);
     localStorage.setItem(key, JSON.stringify(records));
     loadSavedRecords();
+}
+
+function renderMonitoring(monitoring) {
+    const alertsEl = document.getElementById('monitoringAlerts');
+    const summaryEl = document.getElementById('monitoringSummary');
+    if (!alertsEl || !summaryEl) return;
+
+    const summary = monitoring && typeof monitoring === 'object' ? monitoring : { activeScholars: 0, atRisk: 0, alertLevel: 'low', alerts: [] };
+    const alerts = Array.isArray(summary.alerts) ? summary.alerts : [];
+
+    if (!alerts.length) {
+        alertsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No active risk alerts at the moment.</p></div>`;
+    } else {
+        alertsEl.innerHTML = alerts.map(alert => `
+            <div class="ann-item" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}">
+                <div class="ann-tag">${alert.type === 'academic' ? 'Academic' : 'Attendance'}</div>
+                <div class="ann-title">${alert.message}</div>
+                <div class="ann-meta"><span>${alert.severity === 'high' ? 'High priority' : 'Needs follow-up'}</span></div>
+            </div>`).join('');
+    }
+
+    summaryEl.innerHTML = `
+        <div style="display:grid; gap:8px;">
+            <div><strong>Active scholars:</strong> ${summary.activeScholars || 0}</div>
+            <div><strong>At-risk cases:</strong> ${summary.atRisk || 0}</div>
+            <div><strong>Alert level:</strong> <span class="badge ${summary.alertLevel === 'high' ? 'badge-red' : summary.alertLevel === 'medium' ? 'badge-orange' : 'badge-green'}">${summary.alertLevel || 'low'}</span></div>
+            <div style="margin-top:4px; color:var(--text);">This section highlights academic and attendance problems so staff can act earlier.</div>
+        </div>`;
 }
 
 /* ── Recent apps (dashboard) ── */
@@ -1586,6 +1691,8 @@ function viewProfile(id) {
             </div>`;
         }).join('');
     }
+
+    renderDocChecklist(id, 'pd-documents');
 }
 
 function filterProfiles() {
@@ -1593,6 +1700,71 @@ function filterProfiles() {
     document.querySelectorAll('.profile-item').forEach(el => {
         el.style.display = el.innerText.toLowerCase().includes(q) ? '' : 'none';
     });
+}
+
+/* ── Document Checklist ──
+   Renders into any container (Scholar Profile "Document Vault" and the
+   Applicant Pipeline review modal both use this). Staff can mark a document
+   Received, or Flag it with a note that becomes visible to the applicant. */
+async function renderDocChecklist(appId, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '<p style="color:#aaa;font-size:.85rem;">Loading documents…</p>';
+
+    let items;
+    try {
+        items = await MefamAPI.getDocuments(appId);
+    } catch (e) {
+        items = null;
+    }
+    if (!Array.isArray(items)) {
+        el.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">Could not load the document checklist right now.</p>';
+        return;
+    }
+
+    const badgeFor = s => s === 'Received' ? 'badge-green' : s === 'Missing' ? 'badge-red' : 'badge-orange';
+    const submittedCount = items.filter(d => d.status === 'Received').length;
+
+    el.innerHTML = `
+        <div style="font-size:.78rem; color:var(--text-muted); margin-bottom:8px;">
+            ${submittedCount + 1} of ${items.length + 1} documents received
+        </div>
+        <table>
+            <thead><tr><th>Document</th><th>Status</th><th>Note</th><th>Action</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Application Form (Online)</td>
+                    <td><span class="badge badge-green">Submitted</span></td>
+                    <td>—</td>
+                    <td><button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(${appId})">View Portal</button></td>
+                </tr>
+                ${items.map(d => `
+                <tr>
+                    <td>${d.label}</td>
+                    <td><span class="badge ${badgeFor(d.status)}">${d.status}</span></td>
+                    <td style="font-size:.78rem; color:#c0392b; max-width:200px;">${d.note ? d.note : '—'}</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn btn-green btn-sm" onclick="setDocStatus(${appId},'${d.key}','Received','${containerId}')" ${d.status==='Received'?'disabled':''}>✓ Received</button>
+                        <button class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${d.key}','${containerId}')">⚑ Flag</button>
+                    </td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+}
+
+async function setDocStatus(appId, docKey, status, containerId, note) {
+    try {
+        await MefamAPI.setDocumentStatus(appId, docKey, status, note || '');
+        renderDocChecklist(appId, containerId);
+    } catch (e) {
+        alert('Could not update that document\'s status right now.');
+    }
+}
+
+function flagDocMissing(appId, docKey, containerId) {
+    const note = prompt("What's the issue with this document? This note will be shown to the applicant.");
+    if (note === null) return; // cancelled
+    setDocStatus(appId, docKey, 'Missing', containerId, note);
 }
 
 /* ── Grades ── */
@@ -1724,7 +1896,11 @@ function viewApp(id) {
                 <p style="color:#555; font-style:italic;">"${a.whyScholar||'No statement provided.'}"</p>
             </div>
         </div>
-        ${submittedHTML}`;
+        ${submittedHTML}
+        <div class="modal-section" style="margin-top:16px;">Document Requirements</div>
+        <div id="appModalDocs"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>`;
+
+    renderDocChecklist(a.id, 'appModalDocs');
 
     let footerHTML = `<button class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
     if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
@@ -1770,8 +1946,10 @@ function adminLogout() {
 
 /* ── Open applicant portal as admin preview ── */
 function openApplicantPortal(appId) {
-    // Save a temporary preview session so the portal can render
-    const prevSession = sessionStorage.getItem('mefamdev_session');
+    // Save a temporary applicant preview session so the portal can render.
+    // We include the staff member's own token so authenticated API calls
+    // (application details, document checklist, etc.) work in the preview
+    // tab instead of silently failing with a 401.
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
     const app = apps.find(a => String(a.id) === String(appId));
     if (!app) { alert('Application not found.'); return; }
@@ -1783,7 +1961,8 @@ function openApplicantPortal(appId) {
         appId: app.id,
         name: app.name,
         loginTime: Date.now(),
-        isAdminPreview: true
+        isAdminPreview: true,
+        token: sessionStorage.getItem('mefamdev_token') || ''
     }));
 
     window.open('applicant_portal.html?preview=1', '_blank');
@@ -2205,6 +2384,7 @@ function filterAbsenceLog() {
    BENEFICIARY FAMILIES
 ══════════════════════════════════════ */
 let currentFamilyId = null;
+let currentFamilyRecord = null;
 
 function renderFamilies() {
     const list = document.getElementById('familyList');
@@ -2230,6 +2410,7 @@ function viewFamily(id) {
     const f = families.find(x => x.id === id);
     if (!f) return;
     currentFamilyId = id;
+    currentFamilyRecord = f;
     document.querySelectorAll('.profile-item').forEach(el => el.classList.remove('selected'));
     document.getElementById(`fi-${id}`)?.classList.add('selected');
     document.getElementById('family-empty-state').style.display = 'none';
@@ -2261,25 +2442,50 @@ function filterFamilies() {
     });
 }
 
-function openAddFamilyModal() {
-    ['fm-surname','fm-guardian','fm-barangay','fm-contact','fm-benefits'].forEach(id => { document.getElementById(id).value = ''; });
+function openAddFamilyModal(family = null) {
+    currentFamilyRecord = family || null;
+    const idField = document.getElementById('fm-id');
+    const title = document.getElementById('familyModalTitle');
+    ['fm-id','fm-surname','fm-guardian','fm-barangay','fm-contact','fm-benefits'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('fm-income').value = '';
+    document.getElementById('fm-bracket').value = 'Below Min.';
+
+    if (family) {
+        idField.value = family.id || '';
+        document.getElementById('fm-surname').value = family.surname || '';
+        document.getElementById('fm-guardian').value = family.guardian || '';
+        document.getElementById('fm-barangay').value = family.barangay || '';
+        document.getElementById('fm-contact').value = family.contact || '';
+        document.getElementById('fm-income').value = family.income || '';
+        document.getElementById('fm-bracket').value = family.bracket || 'Below Min.';
+        document.getElementById('fm-benefits').value = family.benefits || '';
+        if (title) title.textContent = 'Edit Beneficiary Family';
+    } else if (title) {
+        title.textContent = 'Add Beneficiary Family';
+    }
+
     document.getElementById('familyModal').classList.add('open');
 }
 
 async function saveFamily() {
     const surname = document.getElementById('fm-surname').value.trim();
     if (!surname) { alert('Please enter a family surname.'); return; }
+    const payload = {
+        surname,
+        guardian: document.getElementById('fm-guardian').value.trim(),
+        barangay: document.getElementById('fm-barangay').value.trim(),
+        contact: document.getElementById('fm-contact').value.trim(),
+        income: document.getElementById('fm-income').value,
+        bracket: document.getElementById('fm-bracket').value,
+        benefits: document.getElementById('fm-benefits').value.trim(),
+    };
     try {
-        await MefamAPI.addFamily({
-            surname,
-            guardian: document.getElementById('fm-guardian').value.trim(),
-            barangay: document.getElementById('fm-barangay').value.trim(),
-            contact: document.getElementById('fm-contact').value.trim(),
-            income: document.getElementById('fm-income').value,
-            bracket: document.getElementById('fm-bracket').value,
-            benefits: document.getElementById('fm-benefits').value.trim(),
-        });
+        const familyId = document.getElementById('fm-id').value;
+        if (familyId) {
+            await MefamAPI.updateFamily(familyId, payload);
+        } else {
+            await MefamAPI.addFamily(payload);
+        }
         closeModal('familyModal');
         await loadAllData();
     } catch (error) {
@@ -2366,7 +2572,7 @@ function renderFinancials() {
     }
 }
 
-function addFunds() {
+async function addFunds() {
     const source = document.getElementById('fundSource').value.trim();
     const amount = parseFloat(document.getElementById('fundAmount').value);
     const date   = document.getElementById('fundDate').value;
@@ -2374,38 +2580,39 @@ function addFunds() {
     if (!source) { alert('Please enter the fund source.'); return; }
     if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
     if (!date) { alert('Please enter the date received.'); return; }
-    const log = JSON.parse(localStorage.getItem('mefamdev_fund_log') || '[]');
-    log.push({ id: Date.now(), source, amount, date, notes });
-    localStorage.setItem('mefamdev_fund_log', JSON.stringify(log));
-    document.getElementById('fundSource').value = '';
-    document.getElementById('fundAmount').value = '';
-    document.getElementById('fundDate').value = '';
-    document.getElementById('fundNotes').value = '';
-    renderFinancials();
-    alert('✅ Funds added successfully!');
+
+    try {
+        await MefamAPI.addFunds(source, amount, date, notes);
+        document.getElementById('fundSource').value = '';
+        document.getElementById('fundAmount').value = '';
+        document.getElementById('fundDate').value = '';
+        document.getElementById('fundNotes').value = '';
+        await loadAllData();
+        alert('✅ Funds added successfully!');
+    } catch (error) {
+        console.error('Failed to add funds:', error);
+        alert('Unable to add the fund entry right now.');
+    }
 }
 
-function disburseStipend() {
+async function disburseStipend() {
     const scholarId = parseInt(document.getElementById('disbScholar').value);
     const amount    = parseFloat(document.getElementById('disbAmount').value);
     const period    = document.getElementById('disbPeriod').value.trim();
     if (!scholarId) { alert('Please select a scholar.'); return; }
     if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
 
-    // Check balance
-    const fundLog  = JSON.parse(localStorage.getItem('mefamdev_fund_log') || '[]');
-    const disbLog  = JSON.parse(localStorage.getItem('mefamdev_disbursements') || '[]');
-    const balance  = fundLog.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0)
-                   - disbLog.reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
-    if (amount > balance) { alert('Insufficient fund balance (₱' + balance.toLocaleString() + '). Please add funds first.'); return; }
-
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    const scholar = apps.find(a => a.id === scholarId);
-    const now = new Date().toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
-    disbLog.push({ id: Date.now(), scholarId, scholarName: scholar?.name || 'Unknown', amount, period, date: now });
-    localStorage.setItem('mefamdev_disbursements', JSON.stringify(disbLog));
-    renderFinancials();
-    alert('💸 Stipend of ₱' + amount.toLocaleString() + ' released to ' + (scholar?.name || 'scholar') + '!');
+    try {
+        await MefamAPI.disburseStipend(scholarId, amount, period);
+        document.getElementById('disbScholar').value = '';
+        document.getElementById('disbAmount').value = '3000';
+        document.getElementById('disbPeriod').value = '';
+        await loadAllData();
+        alert('💸 Stipend released successfully!');
+    } catch (error) {
+        console.error('Failed to disburse stipend:', error);
+        alert('Unable to release the stipend right now.');
+    }
 }
 </script>
 </body>

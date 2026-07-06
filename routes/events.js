@@ -5,6 +5,39 @@ const router = require('express').Router();
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');
 
+function buildMonitoringAlerts(applications = [], grades = [], absences = []) {
+  const alerts = [];
+  const appMap = new Map((applications || []).map(app => [String(app.id), app]));
+  const gradeMap = new Map((grades || []).map(g => [String(g.app_id || g.appId), g]));
+  const absenceMap = new Map((absences || []).map(a => [String(a.app_id || a.appId), a]));
+
+  for (const [appId, app] of appMap.entries()) {
+    const grade = Number(gradeMap.get(appId)?.grade_val || gradeMap.get(appId)?.grade || 0);
+    const absence = Number(absenceMap.get(appId)?.days || 0);
+    if (app?.status === 'Accepted' || app?.status === 'Interviewing' || app?.status === 'Pending Review') {
+      if (grade && grade < 80) {
+        alerts.push({ id: `${appId}-academic`, appId, type: 'academic', severity: 'high', message: `${app.name || 'Scholar'} has a low grade of ${grade}.` });
+      }
+      if (absence >= 3) {
+        alerts.push({ id: `${appId}-attendance`, appId, type: 'attendance', severity: 'medium', message: `${app.name || 'Scholar'} has ${absence} missed days.` });
+      }
+    }
+  }
+
+  return alerts;
+}
+
+function buildMonitoringSummary(applications = [], grades = [], absences = []) {
+  const alerts = buildMonitoringAlerts(applications, grades, absences);
+  const activeScholars = (applications || []).filter(app => app?.status === 'Accepted').length;
+  return {
+    activeScholars,
+    atRisk: alerts.length,
+    alertLevel: alerts.length >= 3 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
+    alerts,
+  };
+}
+
 // List events with attendance counts
 router.get('/', (req, res) => {
   const events = db.prepare('SELECT * FROM events ORDER BY date DESC').all();
@@ -70,6 +103,12 @@ router.delete('/absences/:appId', (req, res) => {
 router.get('/grades', (req, res) => {
   res.json(db.prepare('SELECT * FROM grades').all());
 });
+router.get('/monitoring', (req, res) => {
+  const applications = db.prepare('SELECT id, name, status FROM applications').all();
+  const grades = db.prepare('SELECT * FROM grades').all();
+  const absences = db.prepare('SELECT * FROM absences').all();
+  res.json(buildMonitoringSummary(applications, grades, absences));
+});
 router.put('/grades/:appId', (req, res) => {
   const { grade, semester } = req.body;
   db.prepare(`
@@ -80,3 +119,5 @@ router.put('/grades/:appId', (req, res) => {
 });
 
 module.exports = router;
+module.exports.buildMonitoringAlerts = buildMonitoringAlerts;
+module.exports.buildMonitoringSummary = buildMonitoringSummary;

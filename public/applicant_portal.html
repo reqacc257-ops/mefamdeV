@@ -347,15 +347,7 @@
         <div class="card" id="requirementsCard" style="margin-bottom:24px;">
             <div class="card-header"><span class="ch-icon">📋</span><h3>Document Requirements</h3></div>
             <div class="card-body" id="requirementsBody">
-                <div class="req-item"><span class="req-icon">✅</span> Application Form (Online) <span class="req-status"><span class="sbadge sbadge-accepted">Submitted</span></span></div>
-                <div class="req-item"><span class="req-icon">📋</span> Report Card / Grade Slip <span class="req-status"><span class="sbadge sbadge-pending">Required</span></span></div>
-                <div class="req-item"><span class="req-icon">📋</span> Certificate of Enrollment <span class="req-status"><span class="sbadge sbadge-pending">Required</span></span></div>
-                <div class="req-item"><span class="req-icon">📋</span> 1 pc. 2x2 ID Photo <span class="req-status"><span class="sbadge sbadge-pending">Required</span></span></div>
-                <div class="req-item"><span class="req-icon">📋</span> Barangay Certificate of Indigency <span class="req-status"><span class="sbadge sbadge-pending">Required</span></span></div>
-                <div class="req-item"><span class="req-icon">📋</span> Parent/Guardian Valid ID <span class="req-status"><span class="sbadge sbadge-pending">Required</span></span></div>
-                <p style="font-size:.8rem; color:var(--muted); margin-top:12px; padding:10px; background:#f7f9fb; border-radius:7px;">
-                    📌 <strong>Note:</strong> Please bring all original documents and photocopies during your scheduled interview. Contact MEFAMDEV for scheduling.
-                </p>
+                <p style="color:#aaa;font-size:.85rem;">Loading…</p>
             </div>
         </div>
 
@@ -392,6 +384,12 @@ window.onload = function () {
         if (previewRaw) {
             raw = previewRaw;
             localStorage.removeItem('mefamdev_preview_session');
+            // Carry over the staff member's token so authenticated calls
+            // (application details, document checklist) work in this tab.
+            try {
+                const previewSession = JSON.parse(previewRaw);
+                if (previewSession.token) sessionStorage.setItem('mefamdev_token', previewSession.token);
+            } catch (e) { /* ignore malformed preview session */ }
         }
     }
 
@@ -537,6 +535,54 @@ function renderPortal(app, session) {
 
     // Load live announcements from admin
     renderAnnouncements();
+
+    // Document checklist (live, staff-managed)
+    renderRequirements(appData.id);
+}
+
+async function renderRequirements(appId) {
+    const el = document.getElementById('requirementsBody');
+    if (!el) return;
+    let items;
+    try {
+        items = await MefamAPI.getDocuments(appId);
+        if (!Array.isArray(items) && sessionStorage.getItem('mefamdev_token')) {
+            items = await MefamAPI.getDocuments(appId);
+        }
+    } catch (e) {
+        items = null;
+    }
+    if (!Array.isArray(items)) {
+        el.innerHTML = '<p style="color:#aaa;font-size:.85rem;">Could not load your document checklist right now. Please refresh the page.</p>';
+        return;
+    }
+
+    const cfg = {
+        'Received': { icon: '✅', cls: 'sbadge-accepted', label: 'Received' },
+        'Missing':  { icon: '⚠️', cls: 'sbadge-rejected', label: 'Needs Attention' },
+        'Required': { icon: '📋', cls: 'sbadge-pending',  label: 'Required' },
+    };
+
+    const rows = [
+        `<div class="req-item"><span class="req-icon">✅</span> Application Form (Online) <span class="req-status"><span class="sbadge sbadge-accepted">Submitted</span></span></div>`,
+        ...items.map(d => {
+            const c = cfg[d.status] || cfg['Required'];
+            const noteHTML = d.status === 'Missing' && d.note
+                ? `<div style="font-size:.78rem; color:#c0392b; margin:2px 0 8px 26px;">↳ ${d.note}</div>`
+                : '';
+            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${d.label} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}`;
+        }),
+    ];
+
+    const previewNote = sessionStorage.getItem('mefamdev_session') && JSON.parse(sessionStorage.getItem('mefamdev_session') || '{}').isAdminPreview
+        ? '<p style="font-size:.78rem; color:#7a5a00; margin-top:8px; padding:8px 10px; background:#fff7db; border-radius:7px;">🔎 Previewing the applicant’s submitted requirements and current checklist status.</p>'
+        : '';
+
+    el.innerHTML = rows.join('') + `
+        ${previewNote}
+        <p style="font-size:.8rem; color:var(--muted); margin-top:12px; padding:10px; background:#f7f9fb; border-radius:7px;">
+            📌 <strong>Note:</strong> Please bring all original documents and photocopies during your scheduled interview. Contact MEFAMDEV for scheduling.
+        </p>`;
 }
 
 function buildTimeline(app) {

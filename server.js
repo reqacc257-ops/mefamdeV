@@ -39,6 +39,7 @@ app.use('/api/families', requireAuth, familiesRouter);
 app.use('/api/events', requireAuth, eventsRouter);
 app.use('/api/financials', requireAuth, financialsRouter);
 app.use('/api/records', requireAuth, recordsRouter);
+app.use('/api/documents', requireAuth, require('./routes/documents'));
 app.use('/api/comms', requireAuth, commsRouter);
 
 // Public submit route
