@@ -2179,6 +2179,21 @@ function exportData() {
 ══════════════════════════════════════ */
 let currentEventId = null;
 
+function syncEventAttendance(evtId, scholarId, isChecked) {
+    const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+    const current = Array.isArray(attData[evtId]) ? attData[evtId] : [];
+    const next = isChecked
+        ? [...new Set([...current, scholarId])]
+        : current.filter(id => id !== scholarId);
+
+    attData[evtId] = next;
+    localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
+
+    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    renderEvents();
+    renderAttendance(apps.filter(a => a.status === 'Accepted'));
+}
+
 function renderEvents() {
     const container = document.getElementById('eventsList');
     if (!container) return;
@@ -2257,7 +2272,7 @@ function openEventAttendance(evtId) {
     } else {
         list.innerHTML = scholars.map(s => `
             <label style="display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #f5f5f5; cursor:pointer; font-size:.88rem;">
-                <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} style="width:16px; height:16px; accent-color:var(--teal);">
+                <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} onchange="syncEventAttendance(${evtId}, ${s.id}, this.checked)" style="width:16px; height:16px; accent-color:var(--teal);">
                 <span><strong>${s.name}</strong> — ${s.grade}, ${s.school}</span>
             </label>`).join('');
     }
@@ -2270,6 +2285,9 @@ async function saveEventAttendance() {
     const checked = [...document.querySelectorAll('#evtAttList input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
     try {
         await MefamAPI.saveEventAttendance(currentEventId, checked);
+        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        attData[currentEventId] = checked;
+        localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
         await loadAllData();
         openEventAttendance(currentEventId);
         renderEvents();
