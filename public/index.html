@@ -327,6 +327,7 @@
                         placeholder="Enter your password"
                         autocomplete="current-password"
                         onkeydown="if(event.key==='Enter') proceedLogin()">
+                    <button type="button" onclick="toggleUnifiedPassword()" id="toggleUnifiedPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
                 </div>
                 <p style="font-size:.74rem; color:#bbb; margin-top:5px; text-align:right; cursor:pointer;">
                     Forgot password? Contact director.
@@ -350,7 +351,8 @@
                     <label>Application Password (if set)</label>
                     <div class="input-wrap">
                         <span class="input-icon">🔒</span>
-                        <input type="password" id="unifiedAppPassword" placeholder="If you set a password when applying" onkeydown="if(event.key==='Enter') proceedLogin()">
+                            <input type="password" id="unifiedAppPassword" placeholder="If you set a password when applying" onkeydown="if(event.key==='Enter') proceedLogin()">
+                            <button type="button" onclick="toggleUnifiedAppPassword()" id="toggleUnifiedAppPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
                     </div>
                 </div>
             </div>
@@ -568,6 +570,22 @@ function showLoading(msg, callback) {
     document.getElementById('loadingMsg').innerText = msg;
     document.getElementById('loadingScreen').classList.add('show');
     setTimeout(callback, 1200);
+}
+
+function toggleUnifiedPassword() {
+    const el = document.getElementById('unifiedPassword');
+    const btn = document.getElementById('toggleUnifiedPw');
+    if (!el) return;
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
+    else { el.type = 'password'; btn.textContent = 'Show'; }
+}
+
+function toggleUnifiedAppPassword() {
+    const el = document.getElementById('unifiedAppPassword');
+    const btn = document.getElementById('toggleUnifiedAppPw');
+    if (!el) return;
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
+    else { el.type = 'password'; btn.textContent = 'Show'; }
 }
 
 /* ── Auto-redirect if already logged in ── */
