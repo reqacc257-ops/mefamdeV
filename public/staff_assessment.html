@@ -716,8 +716,12 @@ function saveAssessment() {
     };
 
     let saved = JSON.parse(localStorage.getItem('mefamdev_assessments')) || [];
-    const existing = linkedAppId ? saved.findIndex(s => s.linkedAppId === linkedAppId) : -1;
-    if (existing > -1) saved[existing] = data; else saved.unshift(data);
+    const existing = linkedAppId ? saved.findIndex(s => String(s.linkedAppId) === String(linkedAppId)) : -1;
+    if (existing > -1) {
+        saved[existing] = { ...saved[existing], ...data, id: saved[existing].id || data.id };
+    } else {
+        saved.unshift(data);
+    }
     localStorage.setItem('mefamdev_assessments', JSON.stringify(saved));
 
     // Update the linked app record

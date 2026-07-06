@@ -1372,6 +1372,8 @@ async function loadAllData() {
         const existingApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         const existingEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
         const existingAttData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        const existingIntake = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
+        const existingAssessments = JSON.parse(localStorage.getItem('mefamdev_assessments') || '[]');
 
         const appList = Array.isArray(apps) ? apps : existingApps;
         const familyList = Array.isArray(families) ? families : JSON.parse(localStorage.getItem('mefamdev_families') || '[]');
@@ -1379,8 +1381,8 @@ async function loadAllData() {
         const eventList = Array.isArray(events) ? events : existingEvents;
         const fundLogList = Array.isArray(fundLog) ? fundLog : JSON.parse(localStorage.getItem('mefamdev_fund_log') || '[]');
         const disbLogList = Array.isArray(disbLog) ? disbLog : JSON.parse(localStorage.getItem('mefamdev_disbursements') || '[]');
-        const intakeList = Array.isArray(intakeSheets) ? intakeSheets : JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
-        const assessmentList = Array.isArray(assessments) ? assessments : JSON.parse(localStorage.getItem('mefamdev_assessments') || '[]');
+        const intakeList = Array.isArray(intakeSheets) && intakeSheets.length > 0 ? intakeSheets : existingIntake;
+        const assessmentList = Array.isArray(assessments) && assessments.length > 0 ? assessments : existingAssessments;
 
         localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
         localStorage.setItem('mefamdev_families', JSON.stringify(familyList));

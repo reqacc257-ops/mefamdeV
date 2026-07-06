@@ -564,8 +564,11 @@ function saveIntake() {
     const data = collectData();
     let saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || [];
 
-    // Check if updating existing
-    const existing = saved.findIndex(s => s.caseNo === data.caseNo && data.caseNo !== '');
+    const recordId = data.id || Date.now();
+    data.id = recordId;
+    data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
     if (existing > -1) {
         saved[existing] = data;
     } else {
