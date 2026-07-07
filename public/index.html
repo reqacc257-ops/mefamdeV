@@ -482,13 +482,17 @@ function onUsernameInput(val) {
             document.getElementById('hintApplicant').style.display = 'block';
             document.getElementById('unifiedName').focus();
         } else {
-            detectedType = null;
-            document.getElementById('applicantNameField').style.display = 'none';
-            document.getElementById('applicantPasswordField').style.display = 'none';
-            document.getElementById('detectedRole').style.display = 'none';
-            document.getElementById('hintStaff').style.display = 'block';
-            document.getElementById('hintApplicant').style.display = 'none';
-            document.getElementById('usernameHint').textContent = '';
+            detectedType = 'applicant';
+            showDetected('📋 Applicant Portal', '#fff8e1', '#6d4c00', '#ffd54f');
+            document.getElementById('usernameHint').textContent = 'You can sign in with your portal username or APP reference number.';
+            document.getElementById('usernameHint').style.color = '#6d4c00';
+            document.getElementById('applicantNameField').style.display = 'block';
+            document.getElementById('applicantPasswordField').style.display = 'block';
+            document.getElementById('loginBtn').textContent  = 'Track My Application →';
+            document.getElementById('loginBtn').style.background = 'var(--teal)';
+            document.getElementById('hintStaff').style.display = 'none';
+            document.getElementById('hintApplicant').style.display = 'block';
+            document.getElementById('unifiedName').focus();
         }
     }
 }

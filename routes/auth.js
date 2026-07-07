@@ -31,21 +31,52 @@ router.post('/login', (req, res) => {
   res.json({ token, user: payload });
 });
 
+function findApplicantByIdentifier(identifier) {
+  const rows = db.prepare('SELECT * FROM applications').all();
+  if (!identifier) return null;
+
+  const clean = String(identifier).trim();
+  const normalized = clean.toLowerCase();
+
+  if (!clean) return null;
+
+  const byUsername = rows.find(row => String(row.portal_username || '').toLowerCase() === normalized);
+  if (byUsername) return byUsername;
+
+  const byRef = clean.replace(/^app-/i, '').trim();
+  if (/^\d+$/.test(byRef)) {
+    return db.prepare('SELECT * FROM applications WHERE id = ?').get(byRef);
+  }
+
+  return null;
+}
+
+router.post('/lookup', (req, res) => {
+  const identifier = String(req.body?.identifier || req.body?.username || req.body?.refNo || '').trim();
+  if (!identifier) return res.status(400).json({ error: 'Reference number or portal username required' });
+
+  const app = findApplicantByIdentifier(identifier);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+
+  res.json({
+    ok: true,
+    applicant: {
+      id: app.id,
+      name: app.name,
+      username: app.portal_username || null,
+      status: app.status,
+    }
+  });
+});
+
 // ── Applicant portal login ────────────────────────────────────────────────────
 router.post('/applicant', (req, res) => {
   const { refNo, name, password, username } = req.body;
   const identifier = String(username || refNo || '').trim();
   if (!identifier) return res.status(400).json({ error: 'Reference number or portal username required' });
 
-  let app = null;
-  if (username) {
-    const rows = db.prepare('SELECT * FROM applications').all();
-    app = rows.find(row => String(row.portal_username || '').toLowerCase() === identifier.toLowerCase());
-  } else {
-    // Accept "APP-1001" or just "1001"
-    const cleanId = String(refNo).replace(/^app-/i, '').trim();
-    app = db.prepare('SELECT * FROM applications WHERE id = ?').get(cleanId);
-  }
+  const app = findApplicantByIdentifier(identifier);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
 
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
