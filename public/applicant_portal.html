@@ -566,8 +566,16 @@ async function uploadDocumentFromInput(input) {
     const file = input.files && input.files[0];
     if (!appId || !docKey || !file) return;
 
+    const maxSize = 10 * 1024 * 1024; // 10 MB
     const row = input.closest('.doc-upload-row');
     const statusEl = row?.querySelector('.doc-upload-status');
+
+    if (file.size > maxSize) {
+        if (statusEl) statusEl.textContent = 'File is too large. Please select an image under 10MB.';
+        input.value = '';
+        return;
+    }
+
     if (statusEl) statusEl.textContent = 'Uploading…';
 
     const reader = new FileReader();
@@ -628,8 +636,8 @@ async function renderRequirements(appId) {
                 ? `<div style="font-size:.78rem; color:#c0392b; margin:2px 0 8px 26px;">↳ ${escapeHtml(d.note)}</div>`
                 : '';
             const uploadLabel = d.fileName
-                ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''}</div>`
-                : `<div class="doc-upload-status">Upload a photo or image file</div>`;
+                ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
+                : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
             const previewLink = d.fileData
                 ? `<a class="doc-preview-link" href="${d.fileData}" target="_blank" rel="noopener">View image</a>`
                 : '';

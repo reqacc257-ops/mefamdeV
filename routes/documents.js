@@ -79,12 +79,22 @@ function saveDocumentUpload(appId, docKey, payload) {
     throw new Error('Unknown document type');
   }
 
+  const maxBytes = 10 * 1024 * 1024; // 10 MB
+  const fileData = payload.fileData || '';
+  const base64Part = String(fileData).includes(',') ? String(fileData).split(',')[1] : String(fileData);
+  const decodedSize = Math.floor(base64Part.length * 3 / 4) - (base64Part.endsWith('==') ? 2 : base64Part.endsWith('=') ? 1 : 0);
+  if (base64Part && decodedSize > maxBytes) {
+    throw new Error('File exceeds the 10MB limit');
+  }
+  if (payload.fileType && !String(payload.fileType).startsWith('image/')) {
+    throw new Error('Only image uploads are accepted');
+  }
+
   const existing = db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get([appId, docKey]);
   const status = payload.status || (payload.fileData ? 'Received' : 'Required');
   const note = payload.note || (existing?.note || '');
   const fileName = payload.fileName || existing?.file_name || '';
   const fileType = payload.fileType || existing?.file_type || '';
-  const fileData = payload.fileData || existing?.file_data || '';
   const uploadMethod = payload.uploadMethod || existing?.upload_method || '';
 
   if (existing) {
