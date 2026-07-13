@@ -185,8 +185,34 @@
         .doc-upload-input { display: none; }
         .doc-upload-status { font-size: .75rem; color: var(--muted); }
         .doc-preview-link { font-size: .75rem; color: var(--teal); font-weight: 600; text-decoration: none; }
-        .doc-upload-thumbnail { margin-top: 10px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #dde3ec; }
+        .doc-upload-thumbnail { margin-top: 10px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #dde3ec; cursor: pointer; }
         .doc-upload-thumbnail img { display: block; width: 100%; height: auto; }
+        .doc-preview-link {
+            font-size: .75rem; color: var(--teal); font-weight: 600; text-decoration: none;
+            border: none; background: transparent; padding: 0; cursor: pointer;
+        }
+        .doc-preview-link:hover { text-decoration: underline; }
+        .image-modal {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.65); z-index: 999; padding: 18px;
+        }
+        .image-modal.open { display: flex; }
+        .image-modal .modal-card {
+            width: min(960px, 100%); max-height: 100%; background: rgba(255,255,255,.98);
+            border-radius: 20px; overflow: hidden; box-shadow: 0 28px 60px rgba(0,0,0,.3);
+            display: flex; flex-direction: column;
+        }
+        .image-modal .modal-header {
+            padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #f0f2f6; background: #fff;
+        }
+        .image-modal .modal-title { font-size: .95rem; font-weight: 700; color: var(--navy); }
+        .image-modal .modal-close {
+            border: none; background: transparent; color: var(--text); font-size: 1.6rem; line-height: 1;
+            cursor: pointer; padding: 0; width: 36px; height: 36px;
+        }
+        .image-modal .modal-body { padding: 0; display: flex; justify-content: center; align-items: center; background: #f7f9fb; }
+        .image-modal .modal-body img { width: 100%; max-height: calc(100vh - 94px); object-fit: contain; }
 
         /* ── Announcements ── */
         .ann-item { padding: 14px 0; border-bottom: 1px solid #f0f2f6; }
@@ -639,10 +665,10 @@ async function renderRequirements(appId) {
                 ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
                 : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
             const previewLink = d.fileData
-                ? `<a class="doc-preview-link" href="${d.fileData}" target="_blank" rel="noopener">View image</a>`
+                ? `<button type="button" class="doc-preview-link" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)">View image</button>`
                 : '';
             const previewImage = d.fileData
-                ? `<div class="doc-upload-thumbnail"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
+                ? `<div class="doc-upload-thumbnail" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
                 : '';
             return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)">📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
@@ -716,6 +742,32 @@ async function renderAnnouncements() {
     }
 }
 
+function showImagePreview(element) {
+    const src = element.dataset.imageSrc || element.getAttribute('data-image-src');
+    const label = element.dataset.imageLabel || element.getAttribute('data-image-label') || 'Image preview';
+    if (!src) return;
+    const modal = document.getElementById('imageModal');
+    const title = modal.querySelector('.modal-title');
+    const img = modal.querySelector('.modal-body img');
+    if (title) title.innerText = label;
+    if (img) img.src = src;
+    modal.classList.add('open');
+}
+
+function closeImagePreview() {
+    const modal = document.getElementById('imageModal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    const img = modal.querySelector('.modal-body img');
+    if (img) img.src = '';
+}
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+        closeImagePreview();
+    }
+});
+
 function logout() {
     if (confirm('Sign out of your applicant portal?')) {
         sessionStorage.removeItem('mefamdev_session');
@@ -723,5 +775,16 @@ function logout() {
     }
 }
 </script>
+<div class="image-modal" id="imageModal" onclick="if (event.target === this) closeImagePreview()">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">Image preview</div>
+            <button class="modal-close" type="button" aria-label="Close preview" onclick="closeImagePreview()">×</button>
+        </div>
+        <div class="modal-body">
+            <img src="" alt="Uploaded image preview">
+        </div>
+    </div>
+</div>
 </body>
 </html>
