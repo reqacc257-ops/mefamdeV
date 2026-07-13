@@ -826,13 +826,14 @@
             <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
                     <div class="card-title" style="margin:0;">Grade Monitoring</div>
-                    <div style="display:flex; gap:10px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <label style="font-size:.84rem; color:var(--text-muted); margin:0;">Semester:</label>
                         <select id="gradeSemSelect" style="width:auto;"><option>2025-2026 1st Sem</option><option>2025-2026 2nd Sem</option></select>
                     </div>
                 </div>
                 <div class="table-wrap">
                     <table>
-                        <thead><tr><th>Scholar Name</th><th>School</th><th>Grade/Year</th><th>Ave. Grade</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Scholar Name</th><th>School</th><th>Grade/Year</th><th>Selected Semester</th><th>History</th><th>Action</th></tr></thead>
                         <tbody id="grades-body"></tbody>
                     </table>
                 </div>
@@ -1244,6 +1245,7 @@
 ══════════════════════════════════════ */
 let currentRole = 'director';
 let savedGrades = {};
+let currentGradeSemester = '';
 
 if (!localStorage.getItem('mefamdev_apps')) {
     localStorage.setItem('mefamdev_apps', JSON.stringify([]));
@@ -1278,6 +1280,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     applyRBAC();
     initCharts();
+    currentGradeSemester = document.getElementById('gradeSemSelect')?.value || '';
+    document.getElementById('gradeSemSelect')?.addEventListener('change', () => {
+        currentGradeSemester = document.getElementById('gradeSemSelect')?.value || '';
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        renderGrades(apps.filter(a => a.status === 'Accepted'));
+    });
     loadAllData();
     setInterval(() => { loadAllData(); }, 5000);
 
@@ -1409,11 +1417,35 @@ async function loadAllData() {
         localStorage.setItem('mefamdev_absences', JSON.stringify(absencesMap));
 
         const nextSavedGrades = {};
-        (Array.isArray(grades) ? grades : []).forEach(row => {
-            nextSavedGrades[row.app_id || row.appId] = Number(row.grade_val || row.grade || 0);
+        const rawGrades = Array.isArray(grades) ? grades : [];
+        rawGrades.forEach(row => {
+            const appId = row.app_id || row.appId;
+            if (!appId) return;
+            if (!nextSavedGrades[appId]) {
+                nextSavedGrades[appId] = { history: [] };
+            }
+            nextSavedGrades[appId].history.push({
+                grade_val: Number(row.grade_val || row.grade || 0),
+                semester: row.semester || '',
+                updated_at: row.updated_at || row.updatedAt || new Date().toISOString()
+            });
         });
-        if (Object.keys(nextSavedGrades).length === 0 && Object.keys(savedGrades).length > 0) {
-            Object.assign(nextSavedGrades, savedGrades);
+        Object.keys(nextSavedGrades).forEach(appId => {
+            const entry = nextSavedGrades[appId];
+            entry.history.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+            entry.latest = entry.history[0];
+        });
+        if (Object.keys(nextSavedGrades).length === 0) {
+            const existingGrades = JSON.parse(localStorage.getItem('mefamdev_grades') || '{}');
+            Object.keys(existingGrades).forEach(appId => {
+                const gradeVal = Number(existingGrades[appId]);
+                if (Number.isFinite(gradeVal)) {
+                    nextSavedGrades[appId] = {
+                        history: [{ grade_val: gradeVal, semester: currentGradeSemester || '', updated_at: new Date().toISOString() }],
+                        latest: { grade_val: gradeVal, semester: currentGradeSemester || '', updated_at: new Date().toISOString() }
+                    };
+                }
+            });
         }
         savedGrades = nextSavedGrades;
         localStorage.setItem('mefamdev_grades', JSON.stringify(savedGrades));
@@ -1427,7 +1459,11 @@ async function loadAllData() {
         const badge = document.getElementById('nav-badge');
         if (badge) badge.innerText = pending.length;
 
-        const gradeAlerts = scholars.filter(s => savedGrades[s.id] !== undefined && savedGrades[s.id] < 80).length;
+        const gradeAlerts = scholars.filter(s => {
+            const record = savedGrades[s.id];
+            const latestGrade = record?.latest?.grade_val;
+            return latestGrade !== undefined && latestGrade !== null && latestGrade < 80;
+        }).length;
         const eduAlertsEl = document.getElementById('edu-alerts');
         if (eduAlertsEl) eduAlertsEl.innerText = gradeAlerts;
         const reportCardsEl = document.getElementById('edu-reportcards');
@@ -1793,25 +1829,34 @@ function renderGrades(scholars) {
     if (!tbody) return;
     if (scholars.length === 0) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No accepted scholars to display.</div></td></tr>`; return; }
     tbody.innerHTML = scholars.map(s => {
-        const g = savedGrades[s.id];
-        const hasGrade = g !== undefined;
+        const record = savedGrades[s.id];
+        const selectedEntry = record?.history?.find(r => r.semester === currentGradeSemester);
+        const selectedGrade = Number(selectedEntry?.grade_val || 0);
+        const historyRows = record?.history?.filter(r => r !== selectedEntry) || [];
+        const historyHtml = historyRows.length > 0
+            ? historyRows.slice(0, 3).map(r => `${r.semester || 'Unspecified'}: ${r.grade_val}`).join('<br>')
+            : '—';
+        const hasGrade = !!selectedEntry;
         const badge = !hasGrade
             ? `<span class="badge badge-grey">No Data</span>`
-            : g >= 80 ? `<span class="badge badge-green">Passed</span>` : `<span class="badge badge-red">Needs Intervention</span>`;
+            : selectedGrade >= 80 ? `<span class="badge badge-green">Passed</span>` : `<span class="badge badge-red">Needs Intervention</span>`;
+        const displayGrade = hasGrade ? selectedGrade : '—';
         return `<tr>
             <td><strong>${s.name}</strong></td>
             <td>${s.school}</td>
             <td>${s.grade}</td>
-            <td id="grade-val-${s.id}">${hasGrade ? g : '—'}</td>
-            <td>${badge}</td>
+            <td id="grade-val-${s.id}">${displayGrade}</td>
+            <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
             <td><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},'${s.name}')">Update</button></td>
         </tr>`;
     }).join('');
 }
 
 function openGradeModal(id, name) {
+    const record = savedGrades[id];
+    const selectedEntry = record?.history?.find(r => r.semester === currentGradeSemester) || {};
     document.getElementById('gradeModalName').innerText = name;
-    document.getElementById('gradeInput').value = savedGrades[id] || '';
+    document.getElementById('gradeInput').value = selectedEntry.grade_val || '';
     document.getElementById('gradeModalId').value = id;
     document.getElementById('gradeModal').classList.add('open');
 }
@@ -1823,9 +1868,19 @@ async function saveGrade() {
     if (g >= 60 && g <= 100) {
         try {
             await MefamAPI.saveGrade(id, g, semester);
-            savedGrades[id] = g;
-            const el = document.getElementById(`grade-val-${id}`);
-            if (el) el.innerText = g;
+            if (!savedGrades[id]) {
+                savedGrades[id] = { history: [] };
+            }
+            const existingIndex = savedGrades[id].history.findIndex(r => r.semester === semester);
+            const entry = { grade_val: g, semester, updated_at: new Date().toISOString() };
+            if (existingIndex >= 0) {
+                savedGrades[id].history[existingIndex] = entry;
+            } else {
+                savedGrades[id].history.unshift(entry);
+            }
+            savedGrades[id].history.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+            savedGrades[id].latest = savedGrades[id].history[0];
+            localStorage.setItem('mefamdev_grades', JSON.stringify(savedGrades));
             closeModal('gradeModal');
             const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
             renderGrades(apps.filter(a => a.status === 'Accepted'));

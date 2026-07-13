@@ -38,3 +38,18 @@ test('buildMonitoringAlerts flags a single logged absence', () => {
   assert.equal(alerts[0].type, 'attendance');
   assert.match(alerts[0].message, /1/i);
 });
+
+test('buildMonitoringAlerts uses the most recent grade entry across semesters', () => {
+  const alerts = buildMonitoringAlerts(
+    [{ id: 1, name: 'Ana Santos', status: 'Accepted' }],
+    [
+      { app_id: '1', grade_val: 85, semester: '2024-2025 1st Sem', updated_at: '2025-01-10T10:00:00Z' },
+      { app_id: '1', grade_val: 72, semester: '2025-2026 1st Sem', updated_at: '2025-08-15T10:00:00Z' }
+    ],
+    []
+  );
+
+  assert.equal(alerts.length, 1);
+  assert.equal(alerts[0].type, 'academic');
+  assert.match(alerts[0].message, /72/);
+});

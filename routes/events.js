@@ -5,10 +5,25 @@ const router = require('express').Router();
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');
 
+function getLatestGradesByApp(grades = []) {
+  const gradeMap = new Map();
+  (grades || []).forEach(row => {
+    const appId = String(row.app_id || row.appId);
+    if (!appId) return;
+    const current = gradeMap.get(appId);
+    const currentTs = current ? Number(new Date(current.updated_at || current.updatedAt || 0)) || 0 : 0;
+    const rowTs = Number(new Date(row.updated_at || row.updatedAt || 0)) || 0;
+    if (!current || rowTs >= currentTs) {
+      gradeMap.set(appId, row);
+    }
+  });
+  return gradeMap;
+}
+
 function buildMonitoringAlerts(applications = [], grades = [], absences = []) {
   const alerts = [];
   const appMap = new Map((applications || []).map(app => [String(app.id), app]));
-  const gradeMap = new Map((grades || []).map(g => [String(g.app_id || g.appId), g]));
+  const gradeMap = getLatestGradesByApp(grades);
   const absenceMap = new Map((absences || []).map(a => [String(a.app_id || a.appId), a]));
 
   for (const [appId, app] of appMap.entries()) {
@@ -100,6 +115,10 @@ router.delete('/absences/:appId', (req, res) => {
 
 // Grades
 router.get('/grades', (req, res) => {
+  const semester = req.query.semester;
+  if (semester) {
+    return res.json(db.prepare('SELECT * FROM grades WHERE semester = ?').all(semester));
+  }
   res.json(db.prepare('SELECT * FROM grades').all());
 });
 router.get('/monitoring', (req, res) => {
@@ -110,10 +129,15 @@ router.get('/monitoring', (req, res) => {
 });
 router.put('/grades/:appId', (req, res) => {
   const { grade, semester } = req.body;
-  db.prepare(`
-    INSERT INTO grades (app_id, grade_val, semester, updated_at) VALUES (?, ?, ?, datetime('now'))
-    ON CONFLICT(app_id) DO UPDATE SET grade_val = excluded.grade_val, semester = excluded.semester, updated_at = excluded.updated_at
-  `).run(req.params.appId, grade, semester || '');
+  const sem = semester || '';
+  const timestamp = new Date().toISOString();
+  const existing = db.prepare('SELECT * FROM grades WHERE app_id = ? AND semester = ?').get(req.params.appId, sem);
+  if (existing) {
+    db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
+  } else {
+    db.prepare('INSERT INTO grades (app_id, grade_val, semester, updated_at) VALUES (?, ?, ?, ?)').run(req.params.appId, grade, sem, timestamp);
+  }
+  if (typeof db.save === 'function') db.save();
   res.json({ ok: true });
 });
 

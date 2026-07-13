@@ -186,7 +186,9 @@ const MefamAPI = {
     return this._post('/events/absences', { appId, days, reason });
   },
   async resetAbsence(appId) { return this._delete(`/events/absences/${appId}`); },
-  async getGrades() { return this._get('/events/grades'); },
+  async getGrades(semester) {
+    return semester ? this._get(`/events/grades?semester=${encodeURIComponent(semester)}`) : this._get('/events/grades');
+  },
   async saveGrade(appId, grade, semester) {
     return this._put(`/events/grades/${appId}`, { grade, semester });
   },
