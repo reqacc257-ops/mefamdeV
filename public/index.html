@@ -463,7 +463,7 @@ function onUsernameInput(input) {
 
     } else if (isAppRef) {
         detectedType = 'applicant';
-        const cleanId = val.trim().replace(/^app-/i, '');
+        const cleanId = rawValue.trim().replace(/^app-/i, '');
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         const found = apps.find(a => String(a.id) === cleanId);
 
