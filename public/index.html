@@ -452,8 +452,7 @@ function onUsernameInput(val) {
 
         if (found) {
             showDetected('📋 Applicant — APP-' + found.id, '#e8f5e9', '#1b5e20', '#81c784');
-            document.getElementById('usernameHint').textContent = '✓ Application found: ' + found.name;
-            document.getElementById('usernameHint').style.color = '#27ae60';
+            document.getElementById('usernameHint').textContent = '';
         } else {
             showDetected('📋 Applicant Reference', '#fff8e1', '#6d4c00', '#ffd54f');
             document.getElementById('usernameHint').textContent = '';
@@ -470,8 +469,7 @@ function onUsernameInput(val) {
         if (found) {
             detectedType = 'applicant';
             showDetected('📋 Applicant — APP-' + found.id, '#e8f5e9', '#1b5e20', '#81c784');
-            document.getElementById('usernameHint').textContent = '✓ Application found: ' + found.name;
-            document.getElementById('usernameHint').style.color = '#27ae60';
+            document.getElementById('usernameHint').textContent = '';
             document.getElementById('applicantNameField').style.display = 'block';
             document.getElementById('applicantPasswordField').style.display = 'block';
             document.getElementById('loginBtn').textContent  = 'Track My Application →';
