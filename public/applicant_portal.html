@@ -185,6 +185,8 @@
         .doc-upload-input { display: none; }
         .doc-upload-status { font-size: .75rem; color: var(--muted); }
         .doc-preview-link { font-size: .75rem; color: var(--teal); font-weight: 600; text-decoration: none; }
+        .doc-upload-thumbnail { margin-top: 10px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #dde3ec; }
+        .doc-upload-thumbnail img { display: block; width: 100%; height: auto; }
 
         /* ── Announcements ── */
         .ann-item { padding: 14px 0; border-bottom: 1px solid #f0f2f6; }
@@ -631,7 +633,10 @@ async function renderRequirements(appId) {
             const previewLink = d.fileData
                 ? `<a class="doc-preview-link" href="${d.fileData}" target="_blank" rel="noopener">View image</a>`
                 : '';
-            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)">📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>`;
+            const previewImage = d.fileData
+                ? `<div class="doc-upload-thumbnail"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
+                : '';
+            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)">📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
     ];
 
