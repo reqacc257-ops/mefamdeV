@@ -337,7 +337,7 @@
         </div>
 
         <!-- Step 2b: Applicant verification (shown for applicant portal access) -->
-        <div id="applicantNameField" style="display:none;">
+        <div id="applicantNameField">
             <div class="form-group">
                 <label>User Name</label>
                 <div class="input-wrap">
@@ -346,7 +346,7 @@
                         onkeydown="if(event.key==='Enter') proceedLogin()">
                 </div>
             </div>
-            <div id="applicantPasswordField" style="display:none;">
+            <div id="applicantPasswordField">
                 <div class="form-group">
                     <label>Application Password</label>
                     <div class="input-wrap">
@@ -434,8 +434,6 @@ function onUsernameInput(input) {
 
     // Reset
     document.getElementById('staffPasswordField').style.display  = 'none';
-    document.getElementById('applicantNameField').style.display  = 'none';
-    document.getElementById('applicantPasswordField').style.display = 'none';
     document.getElementById('detectedRole').style.display        = 'none';
     document.getElementById('hintStaff').style.display           = 'block';
     document.getElementById('hintApplicant').style.display       = 'none';
