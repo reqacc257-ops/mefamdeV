@@ -406,15 +406,15 @@
             <div class="grid-3">
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Apelyido" data-en="Last Name">Apelyido</label>
-                    <input type="text" id="lastName" required class="translatable-ph capitalize-name" data-tl-ph="Apelyido" data-en-ph="Last Name" placeholder="Apelyido" oninput="capitalizeNameField(this)" onblur="capitalizeNameField(this)" pattern="^[A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]+$" title="Use letters, spaces, apostrophes, hyphens, or periods.">
+                    <input type="text" id="lastName" required class="translatable-ph capitalize-name" data-tl-ph="Apelyido" data-en-ph="Last Name" placeholder="Apelyido" oninput="capitalizeNameField(this, false)" onblur="capitalizeNameField(this, true)" pattern="^[A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]+$" title="Use letters, spaces, apostrophes, hyphens, or periods.">
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Pangalan" data-en="First Name">Pangalan</label>
-                    <input type="text" id="firstName" required class="translatable-ph capitalize-name" data-tl-ph="Pangalan" data-en-ph="First Name" placeholder="Pangalan" oninput="capitalizeNameField(this)" onblur="capitalizeNameField(this)" pattern="^[A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]+$" title="Use letters, spaces, apostrophes, hyphens, or periods.">
+                    <input type="text" id="firstName" required class="translatable-ph capitalize-name" data-tl-ph="Pangalan" data-en-ph="First Name" placeholder="Pangalan" oninput="capitalizeNameField(this, false)" onblur="capitalizeNameField(this, true)" pattern="^[A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]+$" title="Use letters, spaces, apostrophes, hyphens, or periods.">
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Gitnang Pangalan" data-en="Middle Name">Gitnang Pangalan</label>
-                    <input type="text" id="middleName" class="translatable-ph capitalize-name" data-tl-ph="Gitnang Pangalan" data-en-ph="Middle Name" placeholder="Gitnang Pangalan" oninput="capitalizeNameField(this)" onblur="capitalizeNameField(this)" pattern="^[A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]+$" title="Use letters, spaces, apostrophes, hyphens, or periods.">
+                    <input type="text" id="middleName" class="translatable-ph capitalize-name" data-tl-ph="Gitnang Pangalan" data-en-ph="Middle Name" placeholder="Gitnang Pangalan" oninput="capitalizeNameField(this, false)" onblur="capitalizeNameField(this, true)" pattern="^[A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]+$" title="Use letters, spaces, apostrophes, hyphens, or periods.">
                 </div>
             </div>
 
@@ -978,22 +978,37 @@
         return age >= 0 ? age : 0;
     }
 
-    function normalizeNameValue(value) {
+    /* Normalizes a name value.
+       isFinal=false (live typing): keep whatever the user typed — including a
+       trailing space and internal runs of spaces — so multi-word names like
+       "Dela Cruz" or "De Los Santos" can actually be typed.
+       isFinal=true (onblur): collapse repeated spaces and trim ends. */
+    function normalizeNameValue(value, isFinal) {
         if (value == null) return '';
-        return String(value)
+        let v = String(value)
             .normalize('NFKC')
-            .replace(/[^A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]/g, '')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .replace(/[^A-Za-zÁÉÍÓÚÑÜáéíóúñü .'-]/g, '');
+
+        if (isFinal) {
+            v = v.replace(/\s+/g, ' ').trim();
+        }
+
+        return v
+            .split(' ')
+            .map(word => word.length ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : word)
             .join(' ');
     }
 
-    function capitalizeNameField(el) {
+    function capitalizeNameField(el, isFinal) {
         if (!el) return;
-        el.value = normalizeNameValue(el.value);
+        const cursorPos = el.selectionStart;
+        const oldLength = el.value.length;
+        el.value = normalizeNameValue(el.value, isFinal);
+        if (!isFinal && cursorPos !== null && cursorPos !== undefined) {
+            const diff = el.value.length - oldLength;
+            const pos = Math.max(0, cursorPos + diff);
+            el.setSelectionRange(pos, pos);
+        }
     }
 
     /* ── Family table ── */
