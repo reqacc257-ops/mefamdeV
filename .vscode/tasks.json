@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "auth-tests",
+			"type": "shell",
+			"command": "node --test test/auth.test.js",
+			"problemMatcher": [],
+			"group": "test"
+		},
+		{
+			"label": "cleanup-temp-file",
+			"type": "shell",
+			"command": "node -e \"require('fs').unlinkSync('tmp-verify-forgot.js')\"",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "delete-temp-file",
+			"type": "shell",
+			"command": "powershell -Command \"Remove-Item -Path 'tmp-verify-forgot.js' -Force -ErrorAction SilentlyContinue\"",
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

@@ -40,17 +40,10 @@
   "applications": [
     {
       "id": 1,
-      "name": "Lookup Applicant",
-      "portal_username": "lookupuser",
-      "status": "Pending Review"
-    },
-    {
-      "id": 2,
-      "name": "Test Reset Applicant",
-      "email": "reqacc257@gmail.com",
-      "portal_username": "testresetapp",
+      "name": "Reset Test Applicant",
+      "email": "applicant@example.com",
       "status": "Pending Review",
-      "reset_token": "6b0cfc4330c446cf9d292d95cef5b12d"
+      "reset_token": "acbcdea0041de1e741b5211d819e59a2"
     }
   ],
   "families": [],
