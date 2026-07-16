@@ -18,12 +18,14 @@ function hashPassword(pw) {
   return crypto.createHash('sha256').update(pw).digest('hex');
 }
 
-function buildResetUrl(token) {
-  const baseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+function buildResetUrl(token, baseUrlOverride) {
+  const baseUrl = baseUrlOverride || process.env.APP_BASE_URL || 'http://localhost:3000';
   return `${baseUrl.replace(/\/$/, '')}/reset_password.html?token=${encodeURIComponent(token)}`;
 }
 
-async function sendPasswordResetEmail(app, token) {
+async function sendPasswordResetEmail(app, token, req) {
+  const baseUrl = process.env.APP_BASE_URL || (req && req.protocol && req.get('host') ? `${req.protocol}://${req.get('host')}` : 'http://localhost:3000');
+  const resetUrl = buildResetUrl(token, baseUrl);
   const resendApiKey = process.env.RESEND_API_KEY;
   if (resendApiKey) {
     try {
@@ -35,8 +37,9 @@ async function sendPasswordResetEmail(app, token) {
         html: `
           <p>Hello ${app.name || 'applicant'},</p>
           <p>We received a request to reset your applicant portal password.</p>
-          <p><a href="${buildResetUrl(token)}">Reset your password</a></p>
-          <p>If you did not make this request, you can ignore this email.</p>
+          <p>Use the button below to choose a new password and continue accessing your MEFAMDEV account.</p>
+          <p><a href="${resetUrl}" style="display:inline-block;padding:10px 16px;background:#1a2e44;color:#ffffff;text-decoration:none;border-radius:8px;">Reset my password</a></p>
+          <p>If you did not make this request, you can safely ignore this email.</p>
         `,
       });
       if (result?.error) {
@@ -50,7 +53,7 @@ async function sendPasswordResetEmail(app, token) {
 
   const smtpHost = process.env.SMTP_HOST;
   if (!smtpHost) {
-    console.log(`[password-reset] No mail provider configured. Reset link: ${buildResetUrl(token)}`);
+    console.log(`[password-reset] No mail provider configured. Reset link: ${resetUrl}`);
     return true;
   }
 
@@ -71,8 +74,9 @@ async function sendPasswordResetEmail(app, token) {
     html: `
       <p>Hello ${app.name || 'applicant'},</p>
       <p>We received a request to reset your applicant portal password.</p>
-      <p><a href="${buildResetUrl(token)}">Reset your password</a></p>
-      <p>If you did not make this request, you can ignore this email.</p>
+      <p>Use the button below to choose a new password and continue accessing your MEFAMDEV account.</p>
+      <p><a href="${resetUrl}" style="display:inline-block;padding:10px 16px;background:#1a2e44;color:#ffffff;text-decoration:none;border-radius:8px;">Reset my password</a></p>
+      <p>If you did not make this request, you can safely ignore this email.</p>
     `,
   };
 
@@ -149,7 +153,7 @@ router.post('/applicant/forgot-password', async (req, res) => {
   const resetToken = crypto.randomBytes(16).toString('hex');
   db.prepare('UPDATE applications SET reset_token = ? WHERE id = ?').run(resetToken, app.id);
 
-  const sent = await sendPasswordResetEmail(app, resetToken);
+  const sent = await sendPasswordResetEmail(app, resetToken, req);
   if (!sent) return res.status(502).json({ error: 'Unable to send reset email right now.' });
 
   console.log(`[password-reset] ${email} -> APP-${app.id} token=${resetToken}`);
