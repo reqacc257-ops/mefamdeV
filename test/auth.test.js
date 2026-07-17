@@ -92,3 +92,36 @@ test('forgot-password creates a reset token for any applicant email', async () =
     server.close();
   }
 });
+
+test('forgot-password builds a reset link from the app origin instead of the login page path', async () => {
+  process.env.APP_BASE_URL = 'http://localhost:3000/index.html';
+  db.data.applications = [];
+  db.prepare(
+    'INSERT INTO applications (name, email, status) VALUES (?, ?, ?)' 
+  ).run('Path Bug Applicant', 'pathbug@example.com', 'Pending Review');
+
+  const logs = [];
+  const originalLog = console.log;
+  console.log = (...args) => logs.push(args.join(' '));
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api/auth', authRouter);
+
+  const server = app.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+
+  try {
+    const { port } = server.address();
+    const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant/forgot-password?email=pathbug@example.com`);
+    const body = await res.json();
+
+    assert.equal(res.status, 200);
+    assert.equal(body.ok, true);
+    assert.match(logs.join('\n'), /http:\/\/localhost:3000\/reset_password\.html\?token=/);
+  } finally {
+    console.log = originalLog;
+    delete process.env.APP_BASE_URL;
+    server.close();
+  }
+});

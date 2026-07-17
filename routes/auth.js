@@ -19,8 +19,18 @@ function hashPassword(pw) {
 }
 
 function buildResetUrl(token, baseUrlOverride) {
-  const baseUrl = baseUrlOverride || process.env.APP_BASE_URL || 'http://localhost:3000';
-  return `${baseUrl.replace(/\/$/, '')}/reset_password.html?token=${encodeURIComponent(token)}`;
+  const rawBaseUrl = baseUrlOverride || process.env.APP_BASE_URL || 'http://localhost:3000';
+
+  let baseOrigin = rawBaseUrl;
+  try {
+    const parsed = new URL(rawBaseUrl);
+    baseOrigin = `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    const cleaned = String(rawBaseUrl || '').replace(/\/[^/]*\.html?$/i, '').replace(/\/$/, '');
+    baseOrigin = cleaned || 'http://localhost:3000';
+  }
+
+  return `${baseOrigin.replace(/\/$/, '')}/reset_password.html?token=${encodeURIComponent(token)}`;
 }
 
 function getApplicantGreeting(app) {
