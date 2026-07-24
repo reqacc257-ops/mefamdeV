@@ -705,12 +705,18 @@
              PIPELINE (KANBAN)
         ═══════════════════════════════════════════════ -->
         <div id="pipeline" class="page">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
                 <div>
                     <h2 style="font-family:'DM Serif Display',serif; color:var(--navy);">Applicant Pipeline</h2>
                     <p style="color:var(--text-muted); font-size:.87rem;">Track applications through the selection process.</p>
                 </div>
-                <button class="btn btn-gold" onclick="loadAllData()">🔄 Refresh</button>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <div class="search-wrap" style="min-width:240px; max-width:320px;">
+                        <span class="search-icon"></span>
+                        <input type="text" class="search-input" id="pipelineSearch" placeholder="Search pipeline by name, barangay, school..." oninput="filterPipeline()">
+                    </div>
+                    <button class="btn btn-gold" onclick="loadAllData()">🔄 Refresh</button>
+                </div>
             </div>
             <div class="kanban">
                 <div class="kanban-col">
@@ -1560,6 +1566,7 @@ async function loadAllData() {
         const assessmentList = Array.isArray(assessments) && assessments.length > 0 ? assessments : existingAssessments;
 
         localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
+        window.pipelineApps = appList;
         localStorage.setItem('mefamdev_families', JSON.stringify(familyList));
         localStorage.setItem('mefamdev_announcements', JSON.stringify(announcementList));
         localStorage.setItem('mefamdev_events', JSON.stringify(eventList.map(ev => ({ id: ev.id, name: ev.name, date: ev.date, venue: ev.venue, max: ev.max_att || ev.max || 75, activeAttendanceSession: ev.activeAttendanceSession || null, checkinCount: ev.checkinCount || 0 }))));
@@ -1926,6 +1933,22 @@ function filterProfiles() {
     document.querySelectorAll('.profile-item').forEach(el => {
         el.style.display = el.innerText.toLowerCase().includes(q) ? '' : 'none';
     });
+}
+
+function filterPipeline() {
+    const query = document.getElementById('pipelineSearch')?.value.toLowerCase().trim() || '';
+    const apps = window.pipelineApps || JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    const filtered = query === '' ? apps : apps.filter(app => {
+        const name = (app.name || '').toLowerCase();
+        const school = (app.school || '').toLowerCase();
+        const barangay = (app.barangay || '').toLowerCase();
+        const status = (app.status || '').toLowerCase();
+        const grade = (app.grade || '').toLowerCase();
+        const nameParts = name.split(/\s+/);
+        const starts = nameParts.some(part => part.startsWith(query));
+        return starts || name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
+    });
+    renderPipeline(filtered);
 }
 
 /* ── Document Checklist ──
