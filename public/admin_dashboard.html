@@ -2370,6 +2370,8 @@ async function startEventSession(evtId) {
         if (isNaN(speed) || speed <= 0) speed = 1;
         __attendanceVisualSpeed = speed;
         localStorage.setItem('attendance_speed', String(speed));
+        // remember the last duration used for this event so UI can compute progress
+        try { localStorage.setItem(`attendance_last_duration_${evtId}`, String(minutes)); } catch (e) {}
         const res = await MefamAPI.startEventSession(evtId, minutes);
         if (!res?.ok) throw new Error(res?.error || 'Failed');
         await loadAllData();
@@ -2487,12 +2489,14 @@ async function saveEventAttendance() {
 // Visual attendance timer and QR helpers
 let __attendanceTimerInterval = null;
 let __attendanceVisualSpeed = parseFloat(localStorage.getItem('attendance_speed') || '1') || 1;
+let __attendanceUIInterval = null;
 
 function renderAttendanceSessionControls(ev) {
     const container = document.getElementById('attendanceSessionControls');
     if (!container) return;
     container.innerHTML = '';
     const active = ev.activeAttendanceSession || null;
+    // If no active session, show Start button
     if (!active) {
         const startBtn = document.createElement('button');
         startBtn.className = 'btn btn-green btn-sm';
@@ -2502,55 +2506,158 @@ function renderAttendanceSessionControls(ev) {
         return;
     }
 
-    const codeDiv = document.createElement('div');
-    codeDiv.style.fontSize = '.95rem';
-    codeDiv.innerHTML = `Code: <strong style="letter-spacing:2px; font-size:1.05rem;">${active.code}</strong>`;
-    container.appendChild(codeDiv);
+    // Build Steam-Guard-like device UI
+    const device = document.createElement('div');
+    device.style.width = '380px';
+    device.style.background = 'var(--panel, #1b2838)';
+    device.style.border = '1px solid var(--panel-edge, #2a3f5a)';
+    device.style.borderRadius = '12px';
+    device.style.padding = '18px';
+    device.style.color = 'var(--text-hi, #e6eef5)';
+    device.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
 
-    const timerDiv = document.createElement('div');
-    timerDiv.id = 'attendanceTimer';
-    timerDiv.style.fontSize = '.9rem';
-    timerDiv.style.color = 'var(--text-muted)';
-    container.appendChild(timerDiv);
+    device.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; color:var(--text-lo,#8894a3); font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--good,#6fcf97);box-shadow:0 0 8px var(--good,#6fcf97);"></span> Attendance session active</div>
+        <div style="font-size:15px; font-weight:600; color:var(--text-hi); margin-bottom:2px;">${ev.name || 'Event'}</div>
+        <div style="font-size:12px; color:var(--text-lo); margin-bottom:12px;">${ev.date || ''} · ${ev.venue || ''}</div>
+        <div style="text-align:center; margin-bottom:12px;"><div style="font-size:11px; color:var(--accent,#66c0f4); text-transform:uppercase; letter-spacing:.12em; margin-bottom:6px;">Show this code to students</div><div id="deviceCode" style="font-family:monospace; font-size:48px; font-weight:700; letter-spacing:.12em;">${(active.code||'----').split('').join(' ')}</div></div>
+        <div style="height:6px; width:100%; background:var(--bar-track,#0e131a); border-radius:4px; overflow:hidden; margin-bottom:12px;"><div id="deviceBar" style="height:100%; width:100%; background:var(--accent,#66c0f4); transform-origin:left;"></div></div>
+        <div style="display:flex; justify-content:space-between; padding:10px 12px; background:var(--bg,#0d1620); border-radius:8px; border:1px solid var(--panel-edge,#2a3f5a); margin-bottom:12px;">
+            <div style="text-align:center; flex:1;"><div id="deviceCheckedIn" style="font-size:20px; font-weight:700; color:var(--accent,#66c0f4);">0</div><div style="font-size:11px; color:var(--text-lo); margin-top:4px;">Checked in</div></div>
+            <div style="width:1px; background:var(--panel-edge,#2a3f5a); margin:0 8px;"></div>
+            <div style="text-align:center; flex:1;"><div id="deviceSeconds" style="font-size:20px; font-weight:700; color:var(--accent,#66c0f4);">0s</div><div style="font-size:11px; color:var(--text-lo); margin-top:4px;">Code refresh</div></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button id="deviceEnd" class="btn btn-ghost" style="flex:1; border:1px solid var(--panel-edge,#2a3f5a);">End event</button>
+            <button id="deviceRefresh" class="btn btn-gold" style="flex:1;">New code</button>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; margin-top:12px;">
+            <div style="flex:0 0 120px; text-align:center;">
+                <img id="attendanceQRCode" src="" alt="QR" style="width:100px;height:100px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;background:#fff;cursor:pointer;" />
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:11px; color:var(--text-lo);">Students enter this code in their portal with their name to be marked present.</div>
+                <div id="deviceRecent" style="max-height:140px; overflow:auto; margin-top:8px; background:transparent;"></div>
+            </div>
+        </div>
+    `;
 
-    const speedLabel = document.createElement('label');
-    speedLabel.style.display = 'flex';
-    speedLabel.style.alignItems = 'center';
-    speedLabel.style.gap = '6px';
-    speedLabel.innerHTML = `<span style="font-size:.82rem; color:var(--text-muted);">Speed</span>`;
-    const speedInput = document.createElement('input');
-    speedInput.type = 'number';
-    speedInput.min = '0.25';
-    speedInput.step = '0.25';
-    speedInput.value = __attendanceVisualSpeed;
-    speedInput.style.width = '72px';
-    speedInput.onchange = () => {
-        const v = parseFloat(speedInput.value) || 1;
-        __attendanceVisualSpeed = v;
-        localStorage.setItem('attendance_speed', String(v));
+    container.appendChild(device);
+
+    // Ensure device styles (animations) exist
+    if (!document.getElementById('attendanceDeviceStyles')) {
+        const style = document.createElement('style');
+        style.id = 'attendanceDeviceStyles';
+        style.innerHTML = `
+            @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+            .attendance-recent-item { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.03); animation: slideIn .28s ease both; }
+            .attendance-bar-anim { transition: width .7s cubic-bezier(.22,.9,.32,1); }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Wire controls and live updates
+    const codeEl = document.getElementById('deviceCode');
+    const barEl = document.getElementById('deviceBar');
+    // add animation class
+    barEl.classList.add('attendance-bar-anim');
+    const secondsEl = document.getElementById('deviceSeconds');
+    const checkedEl = document.getElementById('deviceCheckedIn');
+    const refreshBtn = document.getElementById('deviceRefresh');
+    const endBtn = document.getElementById('deviceEnd');
+
+    // Store duration if available
+    const storedDuration = parseInt(localStorage.getItem(`attendance_last_duration_${ev.id}`) || '15', 10) || 15;
+
+    function updateUIFromActive() {
+        const activeNow = ev.activeAttendanceSession || null;
+        if (!activeNow) return;
+        codeEl.textContent = String(activeNow.code || '----').split('').join(' ');
+        // calculate remaining and total
+        const expiresAt = activeNow.expiresAt ? new Date(activeNow.expiresAt).getTime() : null;
+        const totalSec = (storedDuration || 15) * 60;
+        const now = Date.now();
+        const rem = expiresAt ? Math.max(0, Math.round((expiresAt - now)/1000)) : 0;
+        secondsEl.textContent = rem + 's';
+        const pct = totalSec > 0 ? Math.max(0, Math.min(100, Math.round(rem/totalSec*100))) : 0;
+        barEl.style.width = pct + '%';
+    }
+
+    // Initial update and periodic polling for checkins and expiry
+    async function pollAttendanceUI() {
+        try {
+            const ck = await MefamAPI.getEventCheckins(ev.id) || [];
+            checkedEl.textContent = (ck.length || 0);
+            // render recent check-ins (most recent first)
+            const recentContainer = document.getElementById('deviceRecent');
+            if (recentContainer) {
+                const recent = (ck || []).slice(-6).reverse();
+                if (recent.length === 0) {
+                    recentContainer.innerHTML = '<div style="color:var(--text-lo); font-size:.9rem; padding:8px 10px;">No check-ins yet.</div>';
+                } else {
+                    recentContainer.innerHTML = recent.map(c => {
+                        const t = c.checked_in_at ? new Date(c.checked_in_at).toLocaleTimeString() : '';
+                        const idpart = c.student_id ? ` <span style="color:var(--text-lo);">• ${c.student_id}</span>` : '';
+                        return `<div class="attendance-recent-item"><strong style="display:block;">${escapeHtml(c.student_name || c.name || 'Unknown')}</strong><small style="color:var(--text-lo);">${t}${idpart}</small></div>`;
+                    }).join('');
+                }
+            }
+            // also refresh local event data in case active changed
+            await loadAllData();
+            const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+            const refreshed = events.find(e => e.id === ev.id) || ev;
+            ev.activeAttendanceSession = refreshed.activeAttendanceSession || ev.activeAttendanceSession;
+            updateUIFromActive();
+        } catch (err) {
+            console.error('Attendance UI poll failed', err);
+        }
+    }
+
+    // wire buttons
+    refreshBtn.onclick = async () => {
+        // prompt for duration (blank to reuse)
+        const input = prompt(`Enter new duration in minutes (leave blank to reuse ${storedDuration}):`, String(storedDuration));
+        if (input === null) return; // cancelled
+        let mins = parseInt(input || String(storedDuration), 10);
+        if (isNaN(mins) || mins <= 0) mins = storedDuration;
+        try {
+            localStorage.setItem(`attendance_last_duration_${ev.id}`, String(mins));
+            await MefamAPI.startEventSession(ev.id, mins);
+            await loadAllData();
+            const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+            const refreshed = events.find(e => e.id === ev.id) || ev;
+            ev.activeAttendanceSession = refreshed.activeAttendanceSession || ev.activeAttendanceSession;
+            updateUIFromActive();
+            generateAttendanceQRCode(ev.activeAttendanceSession.code, ev.id);
+        } catch (e) { console.error('Failed to refresh code', e); }
     };
-    speedLabel.appendChild(speedInput);
-    container.appendChild(speedLabel);
 
-    const qrImg = document.createElement('img');
-    qrImg.id = 'attendanceQRCode';
-    qrImg.alt = 'QR code';
-    qrImg.style.width = '110px';
-    qrImg.style.height = '110px';
-    qrImg.style.border = '1px solid var(--border)';
-    qrImg.style.padding = '6px';
-    qrImg.style.background = '#fff';
-    container.appendChild(qrImg);
+    endBtn.onclick = async () => {
+        try {
+            await MefamAPI.endEventSession(ev.id);
+            await loadAllData();
+            // update UI
+            codeEl.textContent = '— — — —';
+            secondsEl.textContent = 'Expired';
+            barEl.style.width = '0%';
+            refreshBtn.disabled = true; endBtn.disabled = true;
+        } catch (e) { console.error('Failed to end session', e); }
+    };
 
-    const printBtn = document.createElement('button');
-    printBtn.className = 'btn btn-ghost btn-sm';
-    printBtn.textContent = 'Print QR';
-    printBtn.onclick = () => printAttendanceQRCode(active.code);
-    container.appendChild(printBtn);
+    // generate QR as before and make QR clickable to print
+    try {
+        generateAttendanceQRCode(active.code, ev.id);
+        const qrImg = document.getElementById('attendanceQRCode');
+        if (qrImg) qrImg.onclick = () => printAttendanceQRCode(active.code);
+    } catch(e){}
 
-    // start visual timer and QR generation
+    // start UI poll intervals
+    if (__attendanceUIInterval) clearInterval(__attendanceUIInterval);
+    pollAttendanceUI();
+    __attendanceUIInterval = setInterval(pollAttendanceUI, 4000);
+
+    // start visual timer (reuse existing function for countdown text)
     startAttendanceVisualTimer(active.expiresAt);
-    generateAttendanceQRCode(active.code, ev.id);
 }
 
 function startAttendanceVisualTimer(expiresAt) {
