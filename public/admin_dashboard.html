@@ -2521,36 +2521,29 @@ function renderAttendanceSessionControls(ev) {
 
     // Build Steam-Guard-like device UI
     const device = document.createElement('div');
-    device.style.width = '380px';
-    device.style.background = 'var(--panel, #1b2838)';
-    device.style.border = '1px solid var(--panel-edge, #2a3f5a)';
-    device.style.borderRadius = '12px';
-    device.style.padding = '18px';
-    device.style.color = 'var(--text-hi, #e6eef5)';
-    device.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
+    device.className = 'attendance-device';
+    // base inline styles removed in favor of stylesheet below
 
     device.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px; color:var(--text-lo,#8894a3); font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--good,#6fcf97);box-shadow:0 0 8px var(--good,#6fcf97);"></span> Attendance session active</div>
-        <div style="font-size:15px; font-weight:600; color:var(--text-hi); margin-bottom:2px;">${ev.name || 'Event'}</div>
-        <div style="font-size:12px; color:var(--text-lo); margin-bottom:12px;">${ev.date || ''} · ${ev.venue || ''}</div>
-        <div style="text-align:center; margin-bottom:12px;"><div style="font-size:11px; color:var(--accent,#66c0f4); text-transform:uppercase; letter-spacing:.12em; margin-bottom:6px;">Show this code to students</div><div id="deviceCode" style="font-family:monospace; font-size:48px; font-weight:700; letter-spacing:.12em;">${(active.code||'----').split('').join(' ')}</div></div>
-        <div style="height:6px; width:100%; background:var(--bar-track,#0e131a); border-radius:4px; overflow:hidden; margin-bottom:12px;"><div id="deviceBar" style="height:100%; width:100%; background:var(--accent,#66c0f4); transform-origin:left;"></div></div>
-        <div style="display:flex; justify-content:space-between; padding:10px 12px; background:var(--bg,#0d1620); border-radius:8px; border:1px solid var(--panel-edge,#2a3f5a); margin-bottom:12px;">
-            <div style="text-align:center; flex:1;"><div id="deviceCheckedIn" style="font-size:20px; font-weight:700; color:var(--accent,#66c0f4);">0</div><div style="font-size:11px; color:var(--text-lo); margin-top:4px;">Checked in</div></div>
+        <div class="ad-top"><span style="width:8px;height:8px;border-radius:50%;background:var(--good,#6fcf97);box-shadow:0 0 8px var(--good,#6fcf97);"></span> <div style="flex:1;">Attendance session active</div></div>
+        <div class="ad-title">${escapeHtml(ev.name || 'Event')}</div>
+        <div class="ad-meta">${escapeHtml(ev.date || '')} ${ev.venue ? '· ' + escapeHtml(ev.venue) : ''}</div>
+        <div style="text-align:center; margin-bottom:6px;"><div class="ad-code-label">Show this code to students</div><div id="deviceCode" class="ad-code">${escapeHtml((active.code||'----').split('').join(' '))}</div></div>
+        <div class="ad-bar"><div id="deviceBar"></div></div>
+        <div class="ad-stats">
+            <div class="ad-stat"><div id="deviceCheckedIn" class="num">0</div><div style="font-size:11px; color:var(--text-lo); margin-top:4px;">Checked in</div></div>
             <div style="width:1px; background:var(--panel-edge,#2a3f5a); margin:0 8px;"></div>
-            <div style="text-align:center; flex:1;"><div id="deviceSeconds" style="font-size:20px; font-weight:700; color:var(--accent,#66c0f4);">0s</div><div style="font-size:11px; color:var(--text-lo); margin-top:4px;">Code refresh</div></div>
+            <div class="ad-stat"><div id="deviceSeconds" class="num">0s</div><div style="font-size:11px; color:var(--text-lo); margin-top:4px;">Code refresh</div></div>
         </div>
-        <div style="display:flex; gap:10px;">
+        <div class="ad-actions">
             <button id="deviceEnd" class="btn btn-ghost" style="flex:1; border:1px solid var(--panel-edge,#2a3f5a);">End event</button>
             <button id="deviceRefresh" class="btn btn-gold" style="flex:1;">New code</button>
         </div>
-        <div style="display:flex; gap:10px; align-items:center; margin-top:12px;">
-            <div style="flex:0 0 120px; text-align:center;">
-                <img id="attendanceQRCode" src="" alt="QR" style="width:100px;height:100px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;background:#fff;cursor:pointer;" />
-            </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-top:12px;">
+            <div class="ad-qr"><img id="attendanceQRCode" src="" alt="QR" /></div>
             <div style="flex:1;">
-                <div style="font-size:11px; color:var(--text-lo);">Students enter this code in their portal with their name to be marked present.</div>
-                <div id="deviceRecent" style="max-height:140px; overflow:auto; margin-top:8px; background:transparent;"></div>
+                <div class="hint">Students enter this code in their portal with their name to be marked present.</div>
+                <div id="deviceRecent" class="ad-recent"></div>
             </div>
         </div>
     `;
@@ -2565,6 +2558,28 @@ function renderAttendanceSessionControls(ev) {
             @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
             .attendance-recent-item { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.03); animation: slideIn .28s ease both; }
             .attendance-bar-anim { transition: width .7s cubic-bezier(.22,.9,.32,1); }
+            .attendance-device { max-width:380px; width:100%; background:var(--panel,#0f2433); border:1px solid var(--panel-edge,#244455); border-radius:12px; padding:16px; color:var(--text-hi,#e6eef5); box-shadow:0 12px 36px rgba(2,6,12,0.5); box-sizing:border-box; margin:8px auto; }
+            .attendance-device .ad-top { display:flex; align-items:center; gap:10px; color:var(--text-lo,#9aa9b8); font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+            .attendance-device .ad-title { font-size:15px; font-weight:600; color:var(--text-hi); margin-bottom:2px; }
+            .attendance-device .ad-meta { font-size:12px; color:var(--text-lo); margin-bottom:12px; }
+            .attendance-device .ad-code-label { font-size:11px; color:var(--accent,#66c0f4); text-transform:uppercase; letter-spacing:.12em; margin-bottom:6px; }
+            .attendance-device .ad-code { font-family:monospace; font-size:44px; font-weight:700; letter-spacing:.12em; text-align:center; margin-bottom:8px; color:var(--text-hi); }
+            .attendance-device .ad-bar { height:6px; width:100%; background:var(--bar-track,#071018); border-radius:6px; overflow:hidden; margin-bottom:12px; }
+            .attendance-device .ad-bar > div { height:100%; background:var(--accent,#66c0f4); transform-origin:left; }
+            .attendance-device .ad-stats { display:flex; gap:12px; padding:10px; background:transparent; border-radius:8px; margin-bottom:12px; }
+            .attendance-device .ad-stat { flex:1; text-align:center; }
+            .attendance-device .ad-stat .num { font-size:20px; font-weight:700; color:var(--accent,#66c0f4); }
+            .attendance-device .ad-actions { display:flex; gap:10px; }
+            .attendance-device .ad-qr { flex:0 0 160px; display:flex; align-items:center; justify-content:center; }
+            .attendance-device #attendanceQRCode { width:160px; height:160px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); background:#fff; cursor:pointer; }
+            .attendance-device .ad-recent { flex:1; max-height:160px; overflow:auto; margin-top:6px; }
+            .attendance-device .hint { font-size:11px; color:var(--text-lo); margin-top:8px; }
+            @media (max-width:420px) {
+                .attendance-device { padding:12px; border-radius:10px; }
+                .attendance-device .ad-code { font-size:34px; letter-spacing:.08em; }
+                .attendance-device #attendanceQRCode { width:120px; height:120px; }
+                .attendance-device .ad-qr { flex:0 0 120px; }
+            }
         `;
         document.head.appendChild(style);
     }
