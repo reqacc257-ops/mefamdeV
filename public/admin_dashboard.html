@@ -1445,7 +1445,7 @@ async function loadAllData() {
         localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
         localStorage.setItem('mefamdev_families', JSON.stringify(familyList));
         localStorage.setItem('mefamdev_announcements', JSON.stringify(announcementList));
-        localStorage.setItem('mefamdev_events', JSON.stringify(eventList.map(ev => ({ id: ev.id, name: ev.name, date: ev.date, venue: ev.venue, max: ev.max_att || ev.max || 75 }))));
+        localStorage.setItem('mefamdev_events', JSON.stringify(eventList.map(ev => ({ id: ev.id, name: ev.name, date: ev.date, venue: ev.venue, max: ev.max_att || ev.max || 75, activeAttendanceSession: ev.activeAttendanceSession || null, checkinCount: ev.checkinCount || 0 }))));
         const nextAttData = {};
         eventList.forEach(ev => {
             nextAttData[ev.id] = Array.isArray(existingAttData[ev.id]) ? existingAttData[ev.id] : (Array.isArray(ev.attendees) ? ev.attendees : []);
@@ -2343,17 +2343,44 @@ function renderEvents() {
             const attended = (attData[ev.id] || []).length;
             const pct = ev.max > 0 ? Math.round(attended / ev.max * 100) : 0;
             const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
+            const active = ev.activeAttendanceSession || null;
+            const sessionHtml = active
+                ? `<div style="font-size:.86rem; margin-bottom:6px;">Code: <strong style="letter-spacing:2px;">${active.code}</strong> <span style="color:var(--text-muted); font-size:.78rem;">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div><button class="btn btn-ghost btn-sm" onclick="endEventSession(${ev.id})">⏹ End</button>`
+                : `<button class="btn btn-green btn-sm" onclick="startEventSession(${ev.id})">▶ Start</button>`;
             return `<tr>
                 <td><strong>${ev.name}</strong></td>
                 <td style="color:var(--text-muted); font-size:.82rem;">${ev.date || '—'}</td>
                 <td style="font-size:.82rem;">${ev.venue || '—'}</td>
                 <td><span class="badge ${badgeCls}">${attended}/${ev.max}</span></td>
-                <td>
-                    <button class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button>
-                    <button class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteEvent(${ev.id})">🗑</button>
-                </td>
+                <td style="display:flex; gap:8px; align-items:center;">${sessionHtml}<div style="margin-left:auto;"> <button class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button> <button class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteEvent(${ev.id})">🗑</button></div></td>
             </tr>`;
         }).join('') + `</tbody></table>`;
+}
+
+async function startEventSession(evtId) {
+    try {
+        const res = await MefamAPI.startEventSession(evtId, 15);
+        if (!res?.ok) throw new Error(res?.error || 'Failed');
+        await loadAllData();
+        renderEvents();
+        alert('Attendance session started. Show the code to students.');
+    } catch (e) {
+        console.error('Failed to start session', e);
+        alert('Unable to start attendance session.');
+    }
+}
+
+async function endEventSession(evtId) {
+    try {
+        const res = await MefamAPI.endEventSession(evtId);
+        if (!res?.ok) throw new Error(res?.error || 'Failed');
+        await loadAllData();
+        renderEvents();
+        alert('Attendance session ended.');
+    } catch (e) {
+        console.error('Failed to end session', e);
+        alert('Unable to end attendance session.');
+    }
 }
 
 async function addEvent() {
@@ -2410,6 +2437,17 @@ function openEventAttendance(evtId) {
                 <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} onchange="syncEventAttendance(${evtId}, ${s.id}, this.checked)" style="width:16px; height:16px; accent-color:var(--teal);">
                 <span><strong>${s.name}</strong> — ${s.grade}, ${s.school}</span>
             </label>`).join('');
+    }
+    // Live check-ins list (from code-based submissions)
+    try {
+        const checkins = await MefamAPI.getEventCheckins(evtId) || [];
+        const liveHtml = checkins.length === 0
+            ? '<div style="margin-top:12px;color:var(--text-muted);font-size:.86rem;">No check-ins yet.</div>'
+            : `<div style="margin-top:12px;"><strong>Live Check-ins</strong><div style="margin-top:6px;">` +
+                checkins.map(c => `<div style="padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:.86rem;"><strong>${c.student_name}</strong> <small style="color:var(--text-muted);">${c.student_id ? ' • ' + c.student_id : ''} — ${new Date(c.checked_in_at).toLocaleTimeString()}</small></div>`).join('') + `</div></div>`;
+        list.innerHTML = liveHtml + list.innerHTML;
+    } catch (e) {
+        console.error('Failed to load live checkins', e);
     }
     document.getElementById('eventAttendancePanel').style.display = 'block';
     document.getElementById('eventAttendancePanel').scrollIntoView({ behavior: 'smooth' });

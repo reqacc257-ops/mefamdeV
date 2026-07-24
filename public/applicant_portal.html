@@ -356,6 +356,20 @@
             </div>
         </div>
 
+        <!-- Attendance check-in (student) -->
+        <div class="card" style="margin-top:14px;">
+            <div class="card-header"><span class="ch-icon">📲</span><h3>Attendance Check-in</h3></div>
+            <div class="card-body">
+                <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:8px;">Enter the attendance code shown by staff for the current session.</p>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" id="attCodeInput" placeholder="Enter code" style="flex:1; padding:10px;">
+                    <input type="text" id="attStudentId" placeholder="Student ID (optional)" style="width:160px; padding:10px;">
+                    <button class="btn btn-navy" onclick="submitAttendanceCode()">Check In</button>
+                </div>
+                <div id="attStatus" style="margin-top:8px; color:var(--muted);"></div>
+            </div>
+        </div>
+
         <!-- Details + Timeline row -->
         <div class="cards-grid">
 
@@ -575,6 +589,32 @@ function renderPortal(app, session) {
 
     // Document checklist (live, staff-managed)
     renderRequirements(appData.id);
+}
+
+async function submitAttendanceCode() {
+    const code = (document.getElementById('attCodeInput') || {}).value || '';
+    const studentId = (document.getElementById('attStudentId') || {}).value || '';
+    const statusEl = document.getElementById('attStatus');
+    if (!code || !String(code).trim()) { alert('Please enter the attendance code.'); return; }
+    const sess = JSON.parse(sessionStorage.getItem('mefamdev_session') || '{}');
+    const name = sess?.name || document.getElementById('heroName')?.innerText || 'Student';
+    try {
+        if (statusEl) statusEl.innerText = 'Submitting…';
+        const res = await MefamAPI.checkinByCode(code.trim(), name, studentId.trim());
+        if (!res) { if (statusEl) statusEl.innerText = 'Unable to reach server.'; return; }
+        if (res.ok) {
+            if (res.duplicate) {
+                if (statusEl) statusEl.innerText = 'You have already checked in for this session.';
+            } else {
+                if (statusEl) statusEl.innerText = 'Check-in successful — thank you!';
+            }
+        } else {
+            if (statusEl) statusEl.innerText = res.error || 'Check-in failed.';
+        }
+    } catch (e) {
+        console.error('Checkin failed', e);
+        if (statusEl) statusEl.innerText = 'Unable to check in right now.';
+    }
 }
 
 function escapeHtml(value) {

@@ -185,9 +185,13 @@ const MefamAPI = {
   async getEvents() { return this._get('/events'); },
   async addEvent(data) { return this._post('/events', data); },
   async deleteEvent(id) { return this._delete(`/events/${id}`); },
+  async startEventSession(eventId, expiresInMinutes) { return this._post(`/events/${eventId}/start`, { expiresInMinutes }); },
+  async endEventSession(eventId) { return this._post(`/events/${eventId}/end`); },
   async saveEventAttendance(eventId, appIds) {
     return this._put(`/events/${eventId}/attendance`, { appIds });
   },
+  async getEventCheckins(eventId) { return this._get(`/events/${eventId}/checkins`); },
+  async checkinByCode(code, name, studentId) { return this._post('/events/checkin', { code, name, studentId }, false); },
   async getAbsences() { return this._get('/events/absences'); },
   async getMonitoring() { return this._get('/events/monitoring'); },
   async logAbsence(appId, days, reason) {

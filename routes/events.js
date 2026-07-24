@@ -195,6 +195,43 @@ router.post('/:id/checkin', (req, res) => {
   res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.' });
 });
 
+// Public check-in by code (students may not know the event id)
+router.post('/checkin', (req, res) => {
+  const { code, name, studentId } = req.body || {};
+  if (!code || !name) {
+    return res.status(400).json({ error: 'Attendance code and name are required.' });
+  }
+
+  const normalizedCode = String(code).trim().toUpperCase();
+  const sessions = ensureTable('event_sessions');
+  const session = sessions.find(s => s && (s.active === 1 || s.active === true) && String(s.code || '').trim().toUpperCase() === normalizedCode);
+  if (!session) return res.status(400).json({ error: 'That attendance code is invalid or inactive.' });
+
+  const now = new Date();
+  const expiresAt = session.expires_at ? new Date(session.expires_at) : null;
+  if (expiresAt && now > expiresAt) {
+    session.active = 0;
+    db.save();
+    return res.status(400).json({ error: 'That attendance code has expired.' });
+  }
+
+  const eventId = Number(session.event_id);
+  const existing = getEventCheckins(eventId).find(row => Number(row.session_id) === Number(session.id) && String(row.student_id) === String(studentId || name));
+  if (existing) return res.json({ ok: true, duplicate: true, message: 'You have already checked in for this event.' });
+
+  const checkins = ensureTable('event_checkins');
+  checkins.push({
+    id: (checkins[checkins.length - 1]?.id || 0) + 1,
+    event_id: eventId,
+    session_id: session.id,
+    student_id: studentId || name,
+    student_name: name,
+    checked_in_at: now.toISOString(),
+  });
+  db.save();
+  res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.', eventId });
+});
+
 // List check-in roster for the active session
 router.get('/:id/checkins', requireRole('director','program','edu'), (req, res) => {
   const eventId = parseInt(req.params.id);
