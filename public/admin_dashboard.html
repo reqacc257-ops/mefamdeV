@@ -2571,6 +2571,7 @@ function renderAttendanceSessionControls(ev) {
         <div class="ad-top"><span style="width:8px;height:8px;border-radius:50%;background:var(--good,#6fcf97);box-shadow:0 0 8px var(--good,#6fcf97);"></span> <div style="flex:1;">Attendance session active</div></div>
         <div class="ad-title">${escapeHtml(ev.name || 'Event')}</div>
         <div class="ad-meta">${escapeHtml(ev.date || '')} ${ev.venue ? '· ' + escapeHtml(ev.venue) : ''}</div>
+        <div class="ad-clock"><div class="ad-clock-badge">Live</div><div id="deviceTimer" class="ad-clock-time">00:00:00</div><div class="ad-clock-label">Session timer</div></div>
         <div style="text-align:center; margin-bottom:6px;"><div class="ad-code-label">Show this code to students</div><div id="deviceCode" class="ad-code">${escapeHtml((active.code||'----').split('').join(' '))}</div></div>
         <div class="ad-bar"><div id="deviceBar"></div></div>
         <div class="ad-stats">
@@ -2601,25 +2602,34 @@ function renderAttendanceSessionControls(ev) {
             @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
             .attendance-recent-item { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.03); animation: slideIn .28s ease both; }
             .attendance-bar-anim { transition: width .7s cubic-bezier(.22,.9,.32,1); }
-            .attendance-device { max-width:380px; width:100%; background:var(--panel,#0f2433); border:1px solid var(--panel-edge,#244455); border-radius:12px; padding:16px; color:var(--text-hi,#e6eef5); box-shadow:0 12px 36px rgba(2,6,12,0.5); box-sizing:border-box; margin:8px auto; }
-            .attendance-device .ad-top { display:flex; align-items:center; gap:10px; color:var(--text-lo,#9aa9b8); font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
-            .attendance-device .ad-title { font-size:15px; font-weight:600; color:var(--text-hi); margin-bottom:2px; }
-            .attendance-device .ad-meta { font-size:12px; color:var(--text-lo); margin-bottom:12px; }
-            .attendance-device .ad-code-label { font-size:11px; color:var(--accent,#66c0f4); text-transform:uppercase; letter-spacing:.12em; margin-bottom:6px; }
-            .attendance-device .ad-code { font-family:monospace; font-size:44px; font-weight:700; letter-spacing:.12em; text-align:center; margin-bottom:8px; color:var(--text-hi); }
-            .attendance-device .ad-bar { height:6px; width:100%; background:var(--bar-track,#071018); border-radius:6px; overflow:hidden; margin-bottom:12px; }
-            .attendance-device .ad-bar > div { height:100%; background:var(--accent,#66c0f4); transform-origin:left; }
-            .attendance-device .ad-stats { display:flex; gap:12px; padding:10px; background:transparent; border-radius:8px; margin-bottom:12px; }
+            .attendance-device { max-width:380px; width:100%; background:linear-gradient(180deg, rgba(10,24,43,.95), rgba(5,14,27,.98)); border:1px solid rgba(102,192,244,.15); border-radius:20px; padding:18px; color:var(--text-hi,#e8f5ff); box-shadow:0 24px 50px rgba(0,0,0,.35); box-sizing:border-box; margin:8px auto; backdrop-filter:blur(12px); }
+            .attendance-device::before { content:''; position:absolute; inset:0; border-radius:20px; padding:1px; background:linear-gradient(135deg, rgba(102,192,244,.35), rgba(135,65,255,.22)); -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); pointer-events:none; }
+            .attendance-device .ad-top { display:flex; align-items:center; gap:10px; color:#9cc8ff; font-size:11px; text-transform:uppercase; letter-spacing:.14em; margin-bottom:8px; }
+            .attendance-device .ad-title { font-size:16px; font-weight:700; color:#f8fbff; margin-bottom:2px; }
+            .attendance-device .ad-meta { font-size:12px; color:rgba(248,251,255,.7); margin-bottom:14px; }
+            .attendance-device .ad-code-label { font-size:10px; color:rgba(135,208,255,.8); text-transform:uppercase; letter-spacing:.18em; margin-bottom:6px; }
+            .attendance-device .ad-clock { margin-bottom:12px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:16px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); width:100%; }
+            .attendance-device .ad-clock-badge { text-transform:uppercase; letter-spacing:.12em; color:#7ad9ff; font-size:10px; font-weight:700; background:rgba(42,170,232,.12); padding:4px 10px; border-radius:999px; }
+            .attendance-device .ad-clock-time { font-family:'DM Serif Display',serif; font-size:34px; font-weight:700; color:#fff; letter-spacing:.16em; text-shadow:0 1px 10px rgba(0,0,0,.25); }
+            .attendance-device .ad-clock-label { font-size:11px; color:rgba(255,255,255,.65); }
+            .attendance-device .ad-code { font-family:monospace; font-size:42px; font-weight:700; letter-spacing:.16em; text-align:center; margin-bottom:10px; color:#d7f3ff; }
+            .attendance-device .ad-bar { height:6px; width:100%; background:rgba(255,255,255,.08); border-radius:999px; overflow:hidden; margin-bottom:14px; }
+            .attendance-device .ad-bar > div { height:100%; background:linear-gradient(90deg, #65c1ff, #5b8bff); transform-origin:left; }
+            .attendance-device .ad-stats { display:flex; gap:10px; padding:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; margin-bottom:14px; }
             .attendance-device .ad-stat { flex:1; text-align:center; }
-            .attendance-device .ad-stat .num { font-size:20px; font-weight:700; color:var(--accent,#66c0f4); }
+            .attendance-device .ad-stat .num { font-size:20px; font-weight:800; color:#e8f6ff; }
             .attendance-device .ad-actions { display:flex; gap:10px; }
+            .attendance-device .ad-actions .btn { flex:1; border-radius:12px; font-weight:700; padding:10px 12px; }
+            .attendance-device .ad-actions .btn-ghost { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12); color:#d7e6ff; }
+            .attendance-device .ad-actions .btn-gold { background:linear-gradient(135deg,#69c9ff,#5e7aff); color:#fff; }
             .attendance-device .ad-qr { flex:0 0 160px; display:flex; align-items:center; justify-content:center; }
-            .attendance-device #attendanceQRCode { width:160px; height:160px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); background:#fff; cursor:pointer; }
-            .attendance-device .ad-recent { flex:1; max-height:160px; overflow:auto; margin-top:6px; }
-            .attendance-device .hint { font-size:11px; color:var(--text-lo); margin-top:8px; }
+            .attendance-device #attendanceQRCode { width:160px; height:160px; border-radius:16px; border:1px solid rgba(255,255,255,.08); background:#fff; cursor:pointer; }
+            .attendance-device .ad-recent { flex:1; max-height:180px; overflow:auto; margin-top:6px; }
+            .attendance-device .hint { font-size:11px; color:rgba(255,255,255,.6); margin-top:8px; }
             @media (max-width:420px) {
-                .attendance-device { padding:12px; border-radius:10px; }
-                .attendance-device .ad-code { font-size:34px; letter-spacing:.08em; }
+                .attendance-device { padding:14px; border-radius:16px; }
+                .attendance-device .ad-code { font-size:32px; }
+                .attendance-device .ad-clock-time { font-size:28px; }
                 .attendance-device #attendanceQRCode { width:120px; height:120px; }
                 .attendance-device .ad-qr { flex:0 0 120px; }
             }
@@ -2732,50 +2742,50 @@ function renderAttendanceSessionControls(ev) {
 }
 
 function startAttendanceVisualTimer(expiresAt) {
-    const el = document.getElementById('attendanceTimer');
+    const el = document.getElementById('deviceTimer');
     if (!el) return;
     if (__attendanceTimerInterval) clearInterval(__attendanceTimerInterval);
+
+    function pad(num) {
+        return String(num).padStart(2, '0');
+    }
+
+    function formatTime(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+
     function update() {
         const now = Date.now();
         const expiry = expiresAt ? new Date(expiresAt).getTime() : null;
-        let secs = expiry ? Math.round((expiry - now) / 1000) : null;
-        if (secs === null) {
-            el.textContent = '(no expiry)';
+        if (!expiry) {
+            el.textContent = '00:00:00';
             return;
         }
-        // visual speed multiplier: subtract more seconds per tick if >1
-        secs = Math.max(-1, secs);
-        const displaySecs = Math.max(0, secs);
-        const m = Math.floor(displaySecs / 60);
-        const s = displaySecs % 60;
-        el.textContent = `Expires in ${m}m ${s}s`;
-        // If expired, clear interval
-        if (secs <= 0) {
+        const secondsRemaining = Math.max(0, Math.round((expiry - now) / 1000));
+        el.textContent = formatTime(secondsRemaining);
+        if (secondsRemaining <= 0) {
             clearInterval(__attendanceTimerInterval);
             __attendanceTimerInterval = null;
-            el.textContent = 'Expired';
         }
     }
+
     update();
-    // tick faster/slower by applying visual multiplier on perceived decrement
     __attendanceTimerInterval = setInterval(() => {
-        // We simply re-render based on real time; speed control will accelerate the displayed expiry by shifting the reference point
-        // To visually speed up, we simulate time moving forward by adding extra ms to now
         const now = Date.now();
-        const fakeNow = now + Math.round((__attendanceVisualSpeed - 1) * 1000);
-        // hack: temporarily override Date.now within update via closure
         const expiry = expiresAt ? new Date(expiresAt).getTime() : null;
-        if (!expiry) return update();
-        let secs = Math.round((expiry - fakeNow) / 1000);
-        secs = Math.max(-1, secs);
-        const displaySecs = Math.max(0, secs);
-        const m = Math.floor(displaySecs / 60);
-        const s = displaySecs % 60;
-        el.textContent = `Expires in ${m}m ${s}s`;
-        if (secs <= 0) {
+        if (!expiry) {
+            update();
+            return;
+        }
+        const fakeNow = now + Math.round((__attendanceVisualSpeed - 1) * 1000);
+        const secondsRemaining = Math.max(0, Math.round((expiry - fakeNow) / 1000));
+        el.textContent = formatTime(secondsRemaining);
+        if (secondsRemaining <= 0) {
             clearInterval(__attendanceTimerInterval);
             __attendanceTimerInterval = null;
-            el.textContent = 'Expired';
         }
     }, 1000);
 }
