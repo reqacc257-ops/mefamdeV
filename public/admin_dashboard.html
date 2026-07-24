@@ -655,6 +655,9 @@
             <div style="margin-top:16px; text-align:right;" data-roles="director">
                 <button class="btn btn-red btn-sm" onclick="clearAllData()">delete Reset All Data (Dev)</button>
             </div>
+            <div style="margin-top:10px; text-align:right;" data-roles="director">
+                <button class="btn btn-gold btn-sm" onclick="seedSampleApplications(50)">Generate 50 Sample Applications</button>
+            </div>
         </div>
 
         <!-- ══════════════════════════════════════════════
@@ -1366,6 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         renderGrades(apps.filter(a => a.status === 'Accepted'));
     });
+    ensureSampleApplications();
     loadAllData();
     setInterval(() => { loadAllData(); }, 5000);
 
@@ -2295,6 +2299,79 @@ function clearAllData() {
     if (!confirm('DANGER: Delete ALL applications and scholars?')) return;
     localStorage.removeItem('mefamdev_apps');
     location.reload();
+}
+
+function ensureSampleApplications() {
+    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    if (apps.length === 0) {
+        const sampleApps = generateRandomApplications(50);
+        localStorage.setItem('mefamdev_apps', JSON.stringify(sampleApps));
+    }
+}
+
+function seedSampleApplications(count = 50) {
+    if (!confirm(`Generate ${count} sample applications? This will replace existing application data.`)) return;
+    const sampleApps = generateRandomApplications(count);
+    localStorage.setItem('mefamdev_apps', JSON.stringify(sampleApps));
+    loadAllData();
+    alert(`${sampleApps.length} sample applications created.`);
+}
+
+function generateRandomApplications(count = 50) {
+    const firstNames = ['Mikaela','Juan','Angela','Rafael','Isabella','Miguel','Leah','Noah','Sophia','Diego','Arianna','Theo','Ella','Caleb','Nina','Luca','Zara','Romeo','Luna','Kai'];
+    const lastNames = ['Santos','Reyes','Cruz','Fernandez','Lopez','Garcia','Pacheco','Valdez','Mendoza','Ortega','Bautista','Manalo','Salazar','Villanueva','Dela Cruz','Torres','Nava','Diaz','Ramos'];
+    const barangays = ['Banaban','Binangbag','Poblacion','San Jose','San Roque','Bulihan','Muzon','Sta. Cruz','San Francisco','San Miguel'];
+    const schools = ['Angat Central School','Angat National High School','Bulacan State University','St. Michael\'s College','San Roque Elementary School','Holy Family Academy','Paaralang Sek. ng Angat','Don Bosco Technical Institute','East Bulacan High School','Northview Senior High'];
+    const grades = ['Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'];
+    const statuses = ['Pending Review','Interviewing','Accepted'];
+    const genders = ['Male','Female'];
+    const ambitions = ['Become a teacher','Finish senior high and help family','Study nursing','Become an engineer','Start a small business','Become a community leader','Finish college','Become a doctor','Help siblings finish school','Open a tutorial center'];
+    const reasons = ['Financial need due to parent illness','Family income is below the poverty line','Supports siblings in school','Family lost source of livelihood','Needs school supplies and tuition','Wants to continue studies despite hardship','Parent is a farmer with irregular income','Single parent household needs support','Household income is unstable','Requires help to stay in school'];
+    const schoolYears = ['2025-2026','2026-2027'];
+    const streetNames = ['Narra St.','Mabini St.','Del Pilar St.','Sampaguita St.','Maharlika Ave.'];
+    const baseDate = Date.now();
+
+    return Array.from({ length: count }, (_, index) => {
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const barangay = barangays[Math.floor(Math.random() * barangays.length)];
+        const school = schools[Math.floor(Math.random() * schools.length)];
+        const grade = grades[Math.floor(Math.random() * grades.length)];
+        const status = statuses[Math.floor(Math.random() * statuses.length)];
+        const gender = genders[Math.floor(Math.random() * genders.length)];
+        const ambition = ambitions[Math.floor(Math.random() * ambitions.length)];
+        const whyScholar = reasons[Math.floor(Math.random() * reasons.length)];
+        const street = streetNames[Math.floor(Math.random() * streetNames.length)];
+        const address = `${Math.ceil(Math.random() * 120)} ${street}`;
+        const submittedAt = new Date(baseDate - Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const id = baseDate + index;
+        const phone = `09${Math.floor(100000000 + Math.random() * 900000000)}`;
+        const totalIncome = 3500 + Math.floor(Math.random() * 22000);
+        const eduLevel = grade === 'Grade 11' || grade === 'Grade 12' ? 'SeniorHigh' : (['Grade 7','Grade 8','Grade 9','Grade 10'].includes(grade) ? 'JuniorHigh' : 'Elementary');
+
+        return {
+            id,
+            name: `${firstName} ${lastName}`,
+            barangay,
+            school,
+            grade,
+            status,
+            gender,
+            ambition,
+            whyScholar,
+            address: `${address}, Brgy. ${barangay}`,
+            contact: phone,
+            eduLevel,
+            sy: schoolYears[Math.floor(Math.random() * schoolYears.length)],
+            totalIncome,
+            date: submittedAt,
+            submittedAt,
+            created_at: submittedAt,
+            username: `user${id}`,
+            password: `pass${id}`,
+            portal_username: `user${id}`
+        };
+    });
 }
 
 /* ══════════════════════════════════════
