@@ -935,8 +935,8 @@
                 <!-- School absence alerts -->
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                        <div class="card-title" style="margin:0;">Absence Alerts — School</div>
-                        <button class="btn btn-gold btn-sm" onclick="openAddAbsenceModal()">+ Log Absence</button>
+                        <div class="card-title" style="margin:0;">Formation Alerts</div>
+                        <button class="btn btn-gold btn-sm" onclick="openAddAbsenceModal()">Update Status</button>
                     </div>
                     <div id="absenceAlertsList">
                         <div class="empty-state"><div class="empty-icon">✅</div><p>No absence alerts. All scholars present.</p></div>
@@ -962,7 +962,7 @@
                 </div>
                 <div class="table-wrap">
                     <table>
-                        <thead><tr><th>Scholar</th><th>School</th><th>Days Missed (School)</th><th>Formation Attended</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Scholar</th><th>School</th><th>Formation Attended</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody id="absenceLogBody"></tbody>
                     </table>
                 </div>
@@ -972,19 +972,24 @@
         <!-- Add Absence Modal -->
         <div class="modal-overlay" id="absenceModal">
             <div class="modal" style="max-width:440px;">
-                <div class="modal-header"><h2>Log School Absence</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('absenceModal')">✕</button></div>
+                <div class="modal-header"><h2>Log Formation Attendance</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('absenceModal')">✕</button></div>
                 <div class="modal-body">
                     <div style="margin-bottom:12px;">
                         <label>Scholar</label>
                         <select id="absenceScholar" style="width:100%;"></select>
                     </div>
                     <div style="margin-bottom:12px;">
-                        <label>Days Missed (add to current count)</label>
-                        <input type="number" id="absenceDays" min="1" max="30" value="1" style="width:100%;">
+                        <label>Formation Status</label>
+                        <select id="absenceDays" style="width:100%;">
+                            <option value="0">Select status</option>
+                            <option value="good">Good</option>
+                            <option value="yellow">Yellow</option>
+                            <option value="bad">Bad</option>
+                        </select>
                     </div>
                     <div style="margin-bottom:12px;">
-                        <label>Reason</label>
-                        <input type="text" id="absenceReason" placeholder="e.g. Illness, Family emergency" style="width:100%;">
+                        <label>Notes</label>
+                        <input type="text" id="absenceReason" placeholder="e.g. Late arrival, partial attendance" style="width:100%;">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -3238,22 +3243,27 @@ function renderAttendance(scholars) {
         }
     }
 
-    // Absence alerts panel
+    // Formation alerts panel
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        const alerts = apps.filter(s => (absences[s.id]?.days || 0) >= 1);
+        const alerts = apps.filter(s => {
+            const status = absences[s.id]?.status;
+            return status === 'yellow' || status === 'bad';
+        });
         if (alerts.length === 0) {
-            alertsList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No absence alerts. All scholars present.</p></div>';
+            alertsList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No formation alerts. All scholars are in good standing.</p></div>';
         } else {
-            alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Days Missed</th><th>Reason</th><th>Action</th></tr></thead><tbody>` +
+            alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Status</th><th>Reason</th><th>Action</th></tr></thead><tbody>` +
                 alerts.map(s => {
-                    const d = absences[s.id].days;
-                    const cls = d >= 5 ? 'badge-red' : 'badge-orange';
+                    const record = absences[s.id] || {};
+                    const status = record.status || 'yellow';
+                    const cls = status === 'bad' ? 'badge-red' : 'badge-orange';
+                    const count = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
                     return `<tr>
                         <td><strong>${s.name}</strong></td>
-                        <td><span class="badge ${cls}">${d} Days</span></td>
-                        <td style="font-size:.82rem; color:var(--text-muted);">${absences[s.id].reason || '—'}</td>
+                        <td><span class="badge ${cls}">${status === 'good' ? 'Good' : status === 'yellow' ? 'Yellow' : 'Bad'} (${count}d)</span></td>
+                        <td style="font-size:.82rem; color:var(--text-muted);">${record.reason || '—'}</td>
                         <td>
                             <button class="btn btn-ghost btn-sm" onclick="alert('Contact: ${s.contact || 'N/A'}')">📞 Contact</button>
                             <button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="resetAbsence(${s.id})">✓ Resolved</button>
@@ -3276,15 +3286,14 @@ function renderAttendance(scholars) {
         logBody.innerHTML = apps.map(s => {
             const days = absences[s.id]?.days || 0;
             const formCount = events.filter(ev => (attData[ev.id] || []).includes(s.id)).length;
-            const cls = days >= 5 ? 'badge-red' : days >= 3 ? 'badge-orange' : 'badge-green';
-            const statusLabel = days >= 5 ? 'Critical' : days >= 3 ? 'At Risk' : 'Good';
+            const statusLabel = formCount === events.length && events.length > 0 ? 'Good' : formCount >= Math.ceil(events.length * 0.75) ? 'Yellow' : 'Bad';
+            const cls = statusLabel === 'Good' ? 'badge-green' : statusLabel === 'Yellow' ? 'badge-orange' : 'badge-red';
             return `<tr data-scholar="${s.name.toLowerCase()}">
                 <td><strong>${s.name}</strong></td>
                 <td style="font-size:.82rem;">${s.school}</td>
-                <td><span class="badge ${cls}">${days} day${days !== 1 ? 's' : ''}</span></td>
                 <td>${formCount} / ${events.length} events</td>
                 <td><span class="badge ${cls}">${statusLabel}</span></td>
-                <td><button class="btn btn-ghost btn-sm" onclick="openAddAbsenceModalFor(${s.id})">+ Log</button></td>
+                <td><button class="btn btn-ghost btn-sm" onclick="openAddAbsenceModalFor(${s.id})">Edit</button></td>
             </tr>`;
         }).join('');
     }
@@ -3295,7 +3304,7 @@ function openAddAbsenceModal() {
     const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null);
     const sel = document.getElementById('absenceScholar');
     sel.innerHTML = '<option value="">— Select applicant/scholar —</option>' + scholars.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    document.getElementById('absenceDays').value = 1;
+    document.getElementById('absenceDays').value = '0';
     document.getElementById('absenceReason').value = '';
     document.getElementById('absenceModal').classList.add('open');
 }
@@ -3307,12 +3316,13 @@ function openAddAbsenceModalFor(id) {
 
 async function saveAbsence() {
     const id = parseInt(document.getElementById('absenceScholar').value);
-    const days = parseInt(document.getElementById('absenceDays').value) || 0;
+    const status = document.getElementById('absenceDays').value;
     const reason = document.getElementById('absenceReason').value.trim();
-    if (!id || !Number.isFinite(id) || days <= 0) {
-        alert('Please select a scholar and enter a valid number of days.');
+    if (!id || !Number.isFinite(id) || !['good','yellow','bad'].includes(status)) {
+        alert('Please select a scholar and choose a valid formation status.');
         return;
     }
+    const days = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
 
     try {
         await MefamAPI.logAbsence(id, days, reason);
@@ -3321,7 +3331,11 @@ async function saveAbsence() {
     }
 
     const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-    absences[id] = { days: (absences[id]?.days || 0) + days, reason: reason || absences[id]?.reason || '' };
+    absences[id] = {
+        days,
+        status,
+        reason: reason || absences[id]?.reason || ''
+    };
     localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
     closeModal('absenceModal');
     await loadAllData();
