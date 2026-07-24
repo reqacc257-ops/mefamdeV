@@ -2364,6 +2364,14 @@ function renderEvents() {
 async function startEventSession(evtId) {
     try {
         // Ask staff for desired duration (minutes) and optional visual speed for the timer
+        const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        const ev = events.find(e => e.id === evtId) || null;
+        const active = ev?.activeAttendanceSession || null;
+        if (active) {
+            if (!confirm('There is already an active attendance session for this event. End it and start a new one?')) return;
+            // end existing first
+            await MefamAPI.endEventSession(evtId);
+        }
         let minutes = parseInt(prompt('Attendance duration in minutes (default 15):', '15') || '15', 10);
         if (isNaN(minutes) || minutes <= 0) minutes = 15;
         let speed = parseFloat(prompt('Visual speed multiplier for the timer (1 = real time):', String(__attendanceVisualSpeed || 1)) || String(__attendanceVisualSpeed || 1));
@@ -2376,6 +2384,8 @@ async function startEventSession(evtId) {
         if (!res?.ok) throw new Error(res?.error || 'Failed');
         await loadAllData();
         renderEvents();
+        // If the attendance panel is open for this event, refresh it
+        if (currentEventId === evtId) await openEventAttendance(evtId);
         alert('Attendance session started. Show the code to students.');
     } catch (e) {
         console.error('Failed to start session', e);
@@ -2385,10 +2395,13 @@ async function startEventSession(evtId) {
 
 async function endEventSession(evtId) {
     try {
+        if (!confirm('End the active attendance session for this event?')) return;
         const res = await MefamAPI.endEventSession(evtId);
         if (!res?.ok) throw new Error(res?.error || 'Failed');
         await loadAllData();
         renderEvents();
+        // Refresh panel if open
+        if (currentEventId === evtId) await openEventAttendance(evtId);
         alert('Attendance session ended.');
     } catch (e) {
         console.error('Failed to end session', e);

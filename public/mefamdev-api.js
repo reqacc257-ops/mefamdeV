@@ -269,7 +269,8 @@ const MefamAPI = {
 
   async _get(path) {
     let token = this._token();
-    const headers = { 'Authorization': 'Bearer ' + token };
+    const headers = {};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
     if (!token) {
       const session = this.getSession();
       if (session?.type === 'applicant' && session?.appId) {
@@ -284,15 +285,21 @@ const MefamAPI = {
   },
   async _post(path, body, auth = true) {
     const headers = { 'Content-Type': 'application/json' };
-    if (auth) headers['Authorization'] = 'Bearer ' + this._token();
+    if (auth) {
+      const token = this._token();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+    }
     const r = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });
     if (auth && r.status === 401) { this.logout(); return; }
     return r.json();
   },
   async _patch(path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = this._token();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
     const r = await fetch(`${API_BASE}${path}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this._token() },
+      headers,
       body: JSON.stringify(body),
       credentials: 'same-origin'
     });
@@ -300,9 +307,12 @@ const MefamAPI = {
     return r.json();
   },
   async _put(path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = this._token();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
     const r = await fetch(`${API_BASE}${path}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + this._token() },
+      headers,
       body: JSON.stringify(body),
       credentials: 'same-origin'
     });
@@ -310,9 +320,12 @@ const MefamAPI = {
     return r.json();
   },
   async _delete(path) {
+    const headers = {};
+    const token = this._token();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
     const r = await fetch(`${API_BASE}${path}`, {
       method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + this._token() },
+      headers,
       credentials: 'same-origin'
     });
     if (r.status === 401) { this.logout(); return; }
