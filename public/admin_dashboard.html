@@ -154,7 +154,14 @@
         .role-option.current { background: var(--gold-light); border-left: 3px solid var(--gold); }
 
         /* ── Pages ── */
-        .content-area { flex: 1; overflow-y: auto; padding: 26px 28px; }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 26px 28px;
+            width: 100%;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
         .page { display: none; animation: fadeIn .25s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
