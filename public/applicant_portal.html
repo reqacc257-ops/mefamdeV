@@ -357,7 +357,7 @@
         </div>
 
         <!-- Attendance check-in (student) -->
-        <div class="card" style="margin-top:14px;">
+        <div class="card" id="attendanceCard" style="margin-top:14px;">
             <div class="card-header"><span class="ch-icon">📲</span><h3>Attendance Check-in</h3></div>
             <div class="card-body">
                 <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:8px;">Enter the attendance code shown by staff for the current session.</p>
@@ -553,6 +553,23 @@ function renderPortal(app, session) {
     document.getElementById('heroIcon').innerText = cfg.icon;
     document.getElementById('heroStatus').innerText = cfg.label;
 
+    // Attendance visibility: only accepted applicants can check in
+    try {
+        const attendanceEl = document.getElementById('attendanceCard');
+        const sgEl = document.getElementById('sgCheckin');
+        const defEl = document.getElementById('defaultCheckin');
+        if (sgEl) sgEl.style.display = 'none';
+        if (defEl) defEl.style.display = 'none';
+        if (attendanceEl) {
+            if (normalizedStatus === 'Accepted') {
+                attendanceEl.style.display = '';
+                if (defEl) defEl.style.display = '';
+            } else {
+                attendanceEl.style.display = 'none';
+            }
+        }
+    } catch (e) { /* ignore */ }
+
     // Details
     document.getElementById('dRef').innerText = `${appData.referenceNumber || 'APP-' + appData.id}`;
     document.getElementById('dSY').innerText = appData.sy || '—';
@@ -613,7 +630,7 @@ function renderPortal(app, session) {
     try {
         const params = new URLSearchParams(window.location.search);
         const urlCode = params.get('code');
-        if (urlCode) {
+        if (urlCode && normalizedStatus === 'Accepted') {
             // show SG UI
             document.getElementById('defaultCheckin').style.display = 'none';
             document.getElementById('sgCheckin').style.display = 'block';
@@ -671,6 +688,9 @@ function renderPortal(app, session) {
             sgAuto.onchange = function () {
                 if (sgAuto.checked) setTimeout(() => sgBtn.click(), 400);
             };
+        } else if (urlCode) {
+            const attStatus = document.getElementById('attStatus');
+            if (attStatus) attStatus.innerText = 'Attendance is available only to accepted scholars.';
         }
     } catch (e) { console.error('SG render failed', e); }
 }
@@ -679,6 +699,8 @@ async function submitAttendanceCode() {
     const code = (document.getElementById('attCodeInput') || {}).value || '';
     const studentId = (document.getElementById('attStudentId') || {}).value || '';
     const statusEl = document.getElementById('attStatus');
+    const heroStatusText = (document.getElementById('heroStatus') || {}).innerText || '';
+    if (!heroStatusText.includes('Accepted')) { alert('Attendance is available only to accepted scholars.'); return; }
     if (!code || !String(code).trim()) { alert('Please enter the attendance code.'); return; }
     const sess = JSON.parse(sessionStorage.getItem('mefamdev_session') || '{}');
     const name = sess?.name || document.getElementById('heroName')?.innerText || 'Student';
