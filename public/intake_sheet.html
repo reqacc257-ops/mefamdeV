@@ -504,14 +504,19 @@ window.onload = function () {
     populatePrefill();
     updateTemplatePreview();
 
-    // Check if opened with ?id= param from dashboard
     const params = new URLSearchParams(window.location.search);
     const recordId = params.get('record');
-    const appId = params.get('id');
+    const incomingId = params.get('id');
     if (recordId) {
         loadSavedIntakeRecord(recordId);
-    } else if (appId) {
-        selectPrefillApplicant(appId);
+    } else if (incomingId) {
+        const saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
+        const intake = saved.find(r => String(r.id) === String(incomingId));
+        if (intake) {
+            loadSavedIntakeRecord(incomingId);
+        } else {
+            selectPrefillApplicant(incomingId);
+        }
     }
 };
 

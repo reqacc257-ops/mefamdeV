@@ -1854,7 +1854,7 @@ function filterSavedRecords() {
 
 function openIntakeSheet(recordId) {
     const id = recordId === null || recordId === undefined || recordId === 'null' || recordId === 'undefined' ? null : recordId;
-    const url = id ? `intake_sheet.html?record=${encodeURIComponent(id)}` : 'intake_sheet.html';
+    const url = id ? `intake_sheet.html?id=${encodeURIComponent(id)}` : 'intake_sheet.html';
     window.open(url, '_blank');
 }
 function openAssessment(appId) {
