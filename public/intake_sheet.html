@@ -220,12 +220,58 @@
 
         /* Print styles */
         @media print {
-            body { background: #fff; padding: 0; }
-            .prefill-bar, .toolbar { display: none !important; }
-            .doc-header { background: #fff !important; color: #000 !important; border-bottom: 2px solid #000; }
-            .doc-header h1, .doc-header .org, .doc-header .sub { color: #000 !important; }
-            .doc-body { box-shadow: none; padding: 20px; }
-            .section { page-break-inside: avoid; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            html, body {
+                background: #fff !important;
+                color: #000 !important;
+                margin: 0;
+                padding: 0;
+                font-size: 12pt;
+                line-height: 1.45;
+            }
+            body { padding: 20px !important; }
+            .shell { box-shadow: none !important; border: none !important; background: #fff !important; }
+            .prefill-bar, .toolbar, .search-wrap, .search-results, .btn, input, select, textarea { display: none !important; }
+            .doc-header {
+                background: #fff !important;
+                color: #000 !important;
+                border-bottom: 2px solid #000;
+                padding: 14px 0 8px;
+            }
+            .doc-header .org, .doc-header h1, .doc-header .sub { color: #000 !important; }
+            .doc-body {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+            .doc-body > * { background: transparent !important; color: #000 !important; }
+            .section { page-break-inside: avoid; border-color: #000 !important; }
+            .section-title { border-color: #000 !important; }
+            .fam-table thead th { background: #000 !important; color: #fff !important; }
+            .fam-table tbody tr:nth-child(even) td { background: #f9f9f9 !important; }
+            .fam-table tbody td, .action-table tbody td, .action-table thead th { border-color: #000 !important; }
+            .sig-line { border-color: #000 !important; }
+            .template-type-label { display: block !important; margin-top: 12px; font-size: .88rem; color: #333; }
+        }
+
+        body.template-professional {
+            --bg: #ffffff;
+            --navy: #1a2e44;
+            --gold: #f5a623;
+            --text: #203141;
+            --border: #d8dce4;
+        }
+
+        body.template-cmyk-proof {
+            --bg: #ffffff;
+            --navy: #111111;
+            --gold: #555555;
+            --text: #111111;
+            --border: #999999;
         }
 
         @media (max-width: 640px) {
@@ -269,6 +315,16 @@
         <div class="g2" style="margin-bottom:20px;">
             <div class="field"><label class="fl">Case Category</label><input type="text" id="caseCategory" placeholder="Educational Assistance"></div>
             <div class="field"><label class="fl">Source of Referral</label><input type="text" id="caseReferral" value="Online Application"></div>
+        </div>
+        <div class="g2" style="margin-bottom:20px;">
+            <div class="field"><label class="fl">Template Type</label>
+                <select id="templateType">
+                    <option value="Standard">Standard</option>
+                    <option value="Professional">Professional</option>
+                    <option value="CMYK Proof">CMYK Proof</option>
+                </select>
+            </div>
+            <div class="field"><label class="fl">Print Preview</label><input type="text" id="templateTypeLabel" value="Select a template and click Print" disabled style="background:#f7f7f7; color:#555;"></div>
         </div>
 
         <!-- I. Identifying Information -->
@@ -420,8 +476,8 @@
         <div class="toolbar">
             <a href="admin_dashboard.html" class="btn btn-ghost" style="text-decoration:none;">← Dashboard</a>
             <button class="btn btn-ghost" onclick="clearForm()">delete Clear Form</button>
-            <button class="btn btn-navy" onclick="window.print()">🖨 Print</button>
-            <button class="btn btn-gold" onclick="saveIntake()">💾 Save to Dashboard</button>
+            <button class="btn btn-navy" onclick="printIntakeSheet()">🖨 Print</button>
+            <button class="btn btn-gold" onclick="saveIntake()">💾 Save Intake Sheet</button>
         </div>
 
     </div><!-- /doc-body -->
@@ -446,6 +502,7 @@ window.onload = function () {
     initFamTable();
     initActionTable();
     populatePrefill();
+    updateTemplatePreview();
 
     // Check if opened with ?id= param from dashboard
     const params = new URLSearchParams(window.location.search);
@@ -665,7 +722,7 @@ function saveIntake() {
         }
     }
 
-    alert(`✅ Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}\n\nYou can view all saved intake sheets in the Admin Dashboard.`);
+    alert(`✅ Intake Sheet saved to records! Case No: ${data.caseNo || '(no case no.)'}\n\nYou can view all saved intake sheets in the Admin Dashboard.`);
 }
 
 function loadSavedIntakeRecord(recordId) {
@@ -683,6 +740,9 @@ function loadSavedIntakeRecord(recordId) {
     if (document.getElementById('caseDate')) document.getElementById('caseDate').value = record.caseDate || '';
     if (document.getElementById('caseCategory')) document.getElementById('caseCategory').value = record.caseCategory || '';
     if (document.getElementById('caseReferral')) document.getElementById('caseReferral').value = record.caseReferral || '';
+    if (document.getElementById('templateType')) document.getElementById('templateType').value = record.templateType || 'Standard';
+    if (document.getElementById('templateTypeLabel')) document.getElementById('templateTypeLabel').value = record.templateType ? `${record.templateType} template selected` : 'Select a template and click Print';
+    updateTemplatePreview();
     if (document.getElementById('iName')) document.getElementById('iName').value = record.name || '';
     if (document.getElementById('iNickname')) document.getElementById('iNickname').value = record.nickname || '';
     if (document.getElementById('iNationality')) document.getElementById('iNationality').value = record.nationality || '';
@@ -757,6 +817,7 @@ function collectData() {
         caseDate: document.getElementById('caseDate').value,
         caseCategory: document.getElementById('caseCategory').value,
         caseReferral: document.getElementById('caseReferral').value,
+        templateType: document.getElementById('templateType').value || 'Standard',
         name: document.getElementById('iName').value,
         nickname: document.getElementById('iNickname').value,
         nationality: document.getElementById('iNationality').value,
@@ -788,6 +849,9 @@ function clearForm() {
     document.getElementById('iNationality').value = 'Filipino';
     document.getElementById('iOccup').value = 'Student';
     document.getElementById('caseReferral').value = 'Online Application';
+    document.getElementById('templateType').value = 'Standard';
+    document.getElementById('templateTypeLabel').value = 'Select a template and click Print';
+    updateTemplatePreview();
     // Reset family table
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
@@ -798,6 +862,22 @@ function clearForm() {
     const detail = document.getElementById('prefillDetail');
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
+
+function updateTemplatePreview() {
+    const templateType = document.getElementById('templateType').value || 'Standard';
+    const label = document.getElementById('templateTypeLabel');
+    if (label) label.value = `${templateType} template selected`;
+    const className = templateType.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    document.body.className = `template-${className}`;
+}
+
+function printIntakeSheet() {
+    updateTemplatePreview();
+    setTimeout(() => window.print(), 50);
+}
+
+const templateTypeSelect = document.getElementById('templateType');
+if (templateTypeSelect) templateTypeSelect.addEventListener('change', updateTemplatePreview);
 </script>
 </body>
 </html>

@@ -1782,14 +1782,15 @@ function renderSavedIntakeSheets(sheets) {
         intakeList.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><p>No intake sheets saved yet.</p></div>`;
         return;
     }
-    intakeList.innerHTML = `<table class="saved-records-table"><thead><tr><th>Case No.</th><th>Name</th><th>School</th><th>Date</th><th>Action</th></tr></thead><tbody>` +
+    intakeList.innerHTML = `<table class="saved-records-table"><thead><tr><th>Case No.</th><th>Name</th><th>Template</th><th>School</th><th>Date</th><th>Action</th></tr></thead><tbody>` +
         sheets.map(s => `<tr>
             <td>${s.caseNo || '—'}</td>
             <td><strong>${s.name || '—'}</strong>${s.linkedAppId ? `<div style="font-size:.78rem; color:#64748b;">App #${s.linkedAppId}</div>` : ''}</td>
+            <td style="font-size:.85rem; color:#64748b;">${s.templateType || 'Standard'}</td>
             <td style="font-size:.85rem; color:#64748b;">${s.school || s.schoolName || '—'}</td>
             <td style="color:var(--text-muted); font-size:.8rem;">${s.savedAt || s.caseDate || s.created_at || '—'}</td>
             <td>
-                <button class="btn btn-gold btn-sm" onclick="openIntakeSheet(${s.linkedAppId||'null'})">Open</button>
+                <button class="btn btn-gold btn-sm" onclick="openIntakeSheet(${s.id})">Open</button>
                 <button class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_intake_sheets',${s.id})">✕</button>
             </td>
         </tr>`).join('') + `</tbody></table>`;
