@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEFAMDEV – Spiritual Formation</title>
+  <style>
+    :root {
+      --navy: #1a2e44;
+      --text: #243b53;
+      --text-muted: #64748b;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --border: #e5ebf2;
+      --teal: #16a085;
+      --orange: #f39c12;
+      --red: #c0392b;
+      --gold: #d4a017;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+    }
+    .topbar {
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;
+    }
+    .topbar h1 { margin:0; font-family:'DM Serif Display', serif; color:var(--navy); font-size:1.4rem; }
+    .topbar p { margin:6px 0 0; color:var(--text-muted); }
+    .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; color:var(--navy); }
+    .btn-navy { background: var(--navy); color:#fff; border-color: var(--navy); }
+    .btn-gold { background:var(--gold); color:#fff; border-color:var(--gold); }
+    .btn-green { background:var(--teal); color:#fff; border-color:var(--teal); }
+    .btn-ghost { background:#fff; color:var(--text-muted); }
+    .grid { display:grid; gap:18px; grid-template-columns: 1.3fr .7fr; align-items:start; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:0 10px 24px rgba(15,23,42,.04); }
+    .card-title { font-weight:800; color:var(--navy); margin-bottom:12px; }
+    label { display:block; font-size:.82rem; color:var(--text-muted); margin-bottom:6px; }
+    input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text); }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th, td { padding:10px 8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+    th { color:var(--text-muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; }
+    .badge { display:inline-block; padding:5px 8px; border-radius:999px; font-size:.75rem; font-weight:700; }
+    .badge-green { background: rgba(22,160,133,.12); color:var(--teal); }
+    .badge-orange { background: rgba(243,156,18,.12); color:var(--orange); }
+    .badge-red { background: rgba(192,57,43,.12); color:var(--red); }
+    .empty-state { padding:18px; border:1px dashed var(--border); border-radius:12px; color:var(--text-muted); text-align:center; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); padding:20px; z-index:1000; }
+    .modal-overlay.open { display:flex; align-items:center; justify-content:center; }
+    .modal { background:#fff; width:min(520px, 100%); border-radius:16px; padding:16px; box-shadow:0 20px 50px rgba(0,0,0,.2); }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .modal-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+    .evt-att-list { max-height:420px; overflow:auto; padding-right:4px; }
+    .evt-att-list label { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+    .attendance-panel { display:none; position:fixed; inset:0; background:rgba(15,23,42,.65); padding:20px; z-index:1000; overflow:auto; }
+    .attendance-panel.open { display:flex; justify-content:center; align-items:flex-start; }
+    .attendance-card { width:min(900px, 100%); background:#fff; border-radius:18px; padding:20px; margin-top:20px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .attendance-device { position:relative; max-width:420px; width:100%; background:linear-gradient(180deg, rgba(10,24,43,.95), rgba(5,14,27,.98)); border:1px solid rgba(102,192,244,.15); border-radius:24px; padding:24px; color:#e8f5ff; box-shadow:0 24px 50px rgba(0,0,0,.35); margin:16px auto; }
+    .attendance-device .ad-code { font-size:48px; font-weight:800; letter-spacing:.22em; text-align:center; margin:0 auto 12px; color:#d7f3ff; }
+    .attendance-device .ad-actions { display:flex; gap:10px; margin-top:14px; }
+    .attendance-device .ad-actions .btn { flex:1; }
+    .attendance-device .close-device { position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; cursor:pointer; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1>Spiritual Formation</h1>
+        <p>Manage formation events, attendance, and follow-up alerts.</p>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="window.location.href='admin_dashboard.html'">← Back to Dashboard</button>
+        <button class="btn btn-navy" onclick="refreshFormationData()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Upcoming Events</div>
+        <div id="eventsList">
+          <div class="empty-state">Loading events…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Add New Event</div>
+        <p style="margin:0 0 14px; color:var(--text-muted); font-size:.9rem;">Create an event with a date, venue, and capacity. Once added, mark attendance from the event list.</p>
+        <div style="margin-bottom:12px;"><label>Event Name</label><input type="text" id="evtName" placeholder="e.g. Values Formation Seminar"></div>
+        <div style="margin-bottom:12px;"><label>Date</label><input type="date" id="evtDate"></div>
+        <div style="margin-bottom:12px;"><label>Location / Venue</label><input type="text" id="evtVenue" placeholder="e.g. MEFAMDEV Office, Angat"></div>
+        <div style="margin-bottom:14px;"><label>Capacity</label><input type="number" id="evtMax" value="75" min="1"></div>
+        <button class="btn btn-navy" type="button" style="width:100%;" onclick="addEvent()">➕ Add Event</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="card-title">Formation Summary</div>
+      <div id="formationAttSummary"></div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="card-title">Attendance Alerts</div>
+      <div id="absenceAlertsList"></div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="card-title">Attendance Log</div>
+      <div style="overflow:auto;">
+        <table>
+          <thead><tr><th>Scholar</th><th>School</th><th>Formation</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="absenceLogBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="attendance-panel" id="eventAttendancePanel">
+    <div class="attendance-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="card-title" style="margin:0;" id="evtAttTitle">Attendance — Event</div>
+          <p style="font-size:.84rem; color:var(--text-muted); margin:8px 0 0;">Check off scholars who attended this event.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="closeEventAttendancePanel()">✕ Close</button>
+      </div>
+      <div id="attendanceSessionControls" style="margin-bottom:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;"></div>
+      <div id="evtAttList" class="evt-att-list"></div>
+      <div style="margin-top:18px; text-align:right;">
+        <button class="btn btn-navy" onclick="saveEventAttendance()">💾 Save Attendance</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="absenceModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="margin:0;">Update Formation Status</h3>
+        <button class="btn btn-ghost" onclick="closeModal('absenceModal')">✕</button>
+      </div>
+      <div>
+        <div style="margin-bottom:12px;">
+          <label>Scholar</label>
+          <select id="absenceScholar"></select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label>Status</label>
+          <select id="absenceDays">
+            <option value="good">Good</option>
+            <option value="yellow">Yellow</option>
+            <option value="bad">Bad</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label>Notes</label>
+          <input type="text" id="absenceReason" placeholder="e.g. Late arrival, partial attendance">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('absenceModal')">Cancel</button>
+        <button class="btn btn-navy" onclick="saveAbsence()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/mefamdev-api.js"></script>
+  <script src="/lib/qrcode.min.js"></script>
+  <script>
+    let currentEventId = null;
+    let __attendanceTimerInterval = null;
+    let __attendanceVisualSpeed = parseFloat(localStorage.getItem('attendance_speed') || '1') || 1;
+    let __attendanceUIInterval = null;
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id)?.classList.remove('open');
+    }
+
+    async function refreshFormationData() {
+      try {
+        const [apps, events] = await Promise.all([MefamAPI.getApplications(), MefamAPI.getEvents()]);
+        const appList = Array.isArray(apps) ? apps : [];
+        const eventList = Array.isArray(events) ? events : [];
+        localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
+        localStorage.setItem('mefamdev_events', JSON.stringify(eventList));
+      } catch (e) {
+        console.warn('Could not refresh from server; using local data.', e);
+      }
+      renderEvents();
+      renderAttendance(getAcceptedScholars());
+    }
+
+    function getAcceptedScholars() {
+      const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+      return (Array.isArray(apps) ? apps : []).filter(a => a.status === 'Accepted');
+    }
+
+    function syncEventAttendance(evtId, scholarId, isChecked) {
+      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+      const current = Array.isArray(attData[evtId]) ? attData[evtId] : [];
+      const next = isChecked ? [...new Set([...current, scholarId])] : current.filter(id => id !== scholarId);
+      attData[evtId] = next;
+      localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
+      renderEvents();
+      renderAttendance(getAcceptedScholars());
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('eventsList');
+      if (!container) return;
+      const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+      if (events.length === 0) {
+        container.innerHTML = '<div class="empty-state">No events yet. Add one to get started.</div>';
+        return;
+      }
+      container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Action</th></tr></thead><tbody>` +
+        events.map(ev => {
+          const attended = (attData[ev.id] || []).length;
+          const pct = ev.max > 0 ? Math.round(attended / ev.max * 100) : 0;
+          const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
+          const active = ev.activeAttendanceSession || null;
+          const sessionHtml = active
+            ? `<div style="font-size:.84rem; margin-bottom:6px;">Code: <strong>${active.code}</strong> <span style="color:var(--text-muted);">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div><button class="btn btn-ghost btn-sm" onclick="endEventSession(${ev.id})">⏹ End</button>`
+            : `<button class="btn btn-green btn-sm" onclick="startEventSession(${ev.id})">▶ Start</button>`;
+          return `<tr>
+            <td><strong>${escapeHtml(ev.name)}</strong></td>
+            <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
+            <td style="font-size:.82rem;">${escapeHtml(ev.venue || '—')}</td>
+            <td><span class="badge ${badgeCls}">${attended}/${ev.max}</span></td>
+            <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              ${sessionHtml}
+              <button class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteEvent(${ev.id})">delete</button>
+            </td>
+          </tr>`;
+        }).join('') + `</tbody></table>`;
+    }
+
+    async function startEventSession(evtId) {
+      try {
+        const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        const ev = events.find(e => e.id === evtId) || null;
+        const active = ev?.activeAttendanceSession || null;
+        if (active) {
+          if (!confirm('There is already an active attendance session for this event. End it and start a new one?')) return;
+          await MefamAPI.endEventSession(evtId);
+        }
+        let minutes = parseInt(prompt('Attendance duration in minutes (default 15):', '15') || '15', 10);
+        if (isNaN(minutes) || minutes <= 0) minutes = 15;
+        let speed = parseFloat(prompt('Visual speed multiplier for the timer (1 = real time):', String(__attendanceVisualSpeed || 1)) || String(__attendanceVisualSpeed || 1));
+        if (isNaN(speed) || speed <= 0) speed = 1;
+        __attendanceVisualSpeed = speed;
+        localStorage.setItem('attendance_speed', String(speed));
+        try { localStorage.setItem(`attendance_last_duration_${evtId}`, String(minutes)); } catch (e) {}
+        const res = await MefamAPI.startEventSession(evtId, minutes);
+        if (!res?.ok) throw new Error(res?.error || 'Failed');
+        await refreshFormationData();
+        if (currentEventId === evtId) await openEventAttendance(evtId);
+        alert('Attendance session started. Show the code to students.');
+      } catch (e) {
+        console.error('Failed to start session', e);
+        alert('Unable to start attendance session.');
+      }
+    }
+
+    async function endEventSession(evtId) {
+      try {
+        if (!confirm('End the active attendance session for this event?')) return;
+        const res = await MefamAPI.endEventSession(evtId);
+        if (!res?.ok) throw new Error(res?.error || 'Failed');
+        await refreshFormationData();
+        if (currentEventId === evtId) await openEventAttendance(evtId);
+        alert('Attendance session ended.');
+      } catch (e) {
+        console.error('Failed to end session', e);
+        alert('Unable to end attendance session.');
+      }
+    }
+
+    async function addEvent() {
+      const name = document.getElementById('evtName').value.trim();
+      const date = document.getElementById('evtDate').value;
+      const venue = document.getElementById('evtVenue').value.trim();
+      let max = parseInt(document.getElementById('evtMax').value, 10);
+      if (!name) { alert('Please enter an event name.'); return; }
+      if (!date) { alert('Please choose an event date.'); return; }
+      if (isNaN(max) || max < 1) max = 1;
+      try {
+        await MefamAPI.addEvent({ name, date, venue, max });
+        document.getElementById('evtName').value = '';
+        document.getElementById('evtDate').value = '';
+        document.getElementById('evtVenue').value = '';
+        document.getElementById('evtMax').value = '75';
+        await refreshFormationData();
+      } catch (error) {
+        console.error('Failed to add event:', error);
+        alert('Unable to add the event right now.');
+      }
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm('Delete this event?')) return;
+      try {
+        await MefamAPI.deleteEvent(id);
+        currentEventId = null;
+        document.getElementById('eventAttendancePanel').style.display = 'none';
+        await refreshFormationData();
+      } catch (error) {
+        console.error('Failed to delete event:', error);
+        alert('Unable to delete the event right now.');
+      }
+    }
+
+    async function openEventAttendance(evtId) {
+      currentEventId = evtId;
+      const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+      const ev = events.find(e => e.id === evtId);
+      if (!ev) return;
+      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+      const attended = attData[evtId] || [];
+      const scholars = getAcceptedScholars();
+      document.getElementById('evtAttTitle').textContent = 'Attendance — ' + ev.name + ' (' + (ev.date || '') + ')';
+      const list = document.getElementById('evtAttList');
+      try { renderAttendanceSessionControls(ev); } catch (e) { console.error('session controls render failed', e); }
+      if (scholars.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); font-size:.87rem;">No accepted scholars yet.</p>';
+      } else {
+        list.innerHTML = scholars.map(s => `
+          <label>
+            <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} onchange="syncEventAttendance(${evtId}, ${s.id}, this.checked)">
+            <span><strong>${escapeHtml(s.name)}</strong> — ${escapeHtml(s.grade)}, ${escapeHtml(s.school)}</span>
+          </label>`).join('');
+      }
+      try {
+        const checkins = await MefamAPI.getEventCheckins(evtId) || [];
+        const recentCheckins = (checkins || []).filter(c => c && c.student_name && c.checked_in_at);
+        const liveHtml = recentCheckins.length === 0
+          ? '<div style="margin-top:12px;color:var(--text-muted);font-size:.86rem;">No check-ins yet.</div>'
+          : `<div style="margin-top:12px;"><strong>Live Check-ins</strong><div style="margin-top:6px;">` + recentCheckins.map(c => `<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:.86rem;"><strong>${escapeHtml(c.student_name)}</strong> <small style="color:var(--text-muted);">${c.student_id ? ' • ' + escapeHtml(c.student_id) : ''} — ${new Date(c.checked_in_at).toLocaleTimeString()}</small></div>`).join('') + `</div></div>`;
+        list.innerHTML = liveHtml + list.innerHTML;
+      } catch (e) {
+        console.error('Failed to load live checkins', e);
+      }
+      document.getElementById('eventAttendancePanel').classList.add('open');
+      document.getElementById('eventAttendancePanel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveEventAttendance() {
+      if (!currentEventId) return;
+      const checked = [...document.querySelectorAll('#evtAttList input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
+      try {
+        await MefamAPI.saveEventAttendance(currentEventId, checked);
+        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        attData[currentEventId] = checked;
+        localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
+        await refreshFormationData();
+        openEventAttendance(currentEventId);
+        alert('Attendance saved!');
+      } catch (error) {
+        console.error('Failed to save attendance:', error);
+        alert('Unable to save attendance right now.');
+      }
+    }
+
+    function renderAttendanceSessionControls(ev) {
+      const container = document.getElementById('attendanceSessionControls');
+      if (!container) return;
+      container.innerHTML = '';
+      const active = ev.activeAttendanceSession || null;
+      if (!active) {
+        const shell = document.createElement('div');
+        shell.innerHTML = `<div class="attendance-device"><div style="font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:#7ad9ff; margin-bottom:8px;">Attendance Session Inactive</div><div style="font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:8px;">${escapeHtml(ev.name || 'Event')}</div><div style="font-size:.9rem; color:rgba(248,251,255,.7); margin-bottom:10px;">${escapeHtml(ev.date || '')}${ev.venue ? ' · ' + escapeHtml(ev.venue) : ''}</div><div class="ad-code">— — — — —</div><div class="ad-actions"><button class="btn btn-gold" onclick="startEventSession(${ev.id})">Start session</button></div></div>`;
+        container.appendChild(shell.firstElementChild);
+        return;
+      }
+      const shell = document.createElement('div');
+      shell.innerHTML = `<div class="attendance-device"><div style="font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:#7ad9ff; margin-bottom:8px;">Attendance Session Active</div><div style="font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:8px;">${escapeHtml(ev.name || 'Event')}</div><div style="font-size:.9rem; color:rgba(248,251,255,.7); margin-bottom:12px;">${escapeHtml(ev.date || '')}${ev.venue ? ' · ' + escapeHtml(ev.venue) : ''}</div><div class="ad-code">${escapeHtml((active.code || '----').split('').join(' '))}</div><div class="ad-actions"><button class="btn btn-ghost" onclick="endEventSession(${ev.id})">End session</button><button class="btn btn-gold" onclick="startEventSession(${ev.id})">New code</button></div></div>`;
+      container.appendChild(shell.firstElementChild);
+    }
+
+    function closeEventAttendancePanel() {
+      document.getElementById('eventAttendancePanel').classList.remove('open');
+    }
+
+    function renderAttendance(scholars) {
+      const apps = Array.isArray(scholars) ? scholars : [];
+      const formSummary = document.getElementById('formationAttSummary');
+      if (formSummary) {
+        const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        if (events.length === 0) {
+          formSummary.innerHTML = '<div class="empty-state">No formation events yet.</div>';
+        } else {
+          formSummary.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
+            events.map(ev => {
+              const cnt = (attData[ev.id] || []).length;
+              const pct = ev.max > 0 ? Math.round(cnt / ev.max * 100) : 0;
+              const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
+              return `<tr><td><strong>${escapeHtml(ev.name)}</strong></td><td style="font-size:.82rem;">${escapeHtml(ev.date || '—')}</td><td><span class="badge ${cls}">${cnt}/${ev.max}</span></td></tr>`;
+            }).join('') + `</tbody></table>`;
+        }
+      }
+
+      const alertsList = document.getElementById('absenceAlertsList');
+      if (alertsList) {
+        const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+        const alerts = apps.filter(s => {
+          const status = absences[s.id]?.status;
+          return status === 'yellow' || status === 'bad';
+        });
+        if (alerts.length === 0) {
+          alertsList.innerHTML = '<div class="empty-state">No formation alerts. All scholars are in good standing.</div>';
+        } else {
+          alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Status</th><th>Reason</th><th>Action</th></tr></thead><tbody>` +
+            alerts.map(s => {
+              const record = absences[s.id] || {};
+              const status = record.status || 'yellow';
+              const cls = status === 'bad' ? 'badge-red' : 'badge-orange';
+              return `<tr><td><strong>${escapeHtml(s.name)}</strong></td><td><span class="badge ${cls}">${status === 'yellow' ? 'Yellow' : 'Bad'}</span></td><td style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(record.reason || '—')}</td><td><button class="btn btn-ghost btn-sm" onclick="alert('Contact: ${escapeHtml(s.contact || 'N/A')}')">📞 Contact</button><button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="resetAbsence(${s.id})">✓ Resolved</button></td></tr>`;
+            }).join('') + `</tbody></table>`;
+        }
+      }
+
+      const logBody = document.getElementById('absenceLogBody');
+      if (logBody) {
+        const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        if (apps.length === 0) {
+          logBody.innerHTML = '<tr><td colspan="5" class="empty-state">No accepted scholars available.</td></tr>';
+          return;
+        }
+        logBody.innerHTML = apps.map(s => {
+          const days = absences[s.id]?.days || 0;
+          const formCount = events.filter(ev => (attData[ev.id] || []).includes(s.id)).length;
+          const statusLabel = formCount === events.length && events.length > 0 ? 'Good' : formCount >= Math.ceil(events.length * 0.75) ? 'Yellow' : 'Bad';
+          const cls = statusLabel === 'Good' ? 'badge-green' : statusLabel === 'Yellow' ? 'badge-orange' : 'badge-red';
+          return `<tr>
+            <td><strong>${escapeHtml(s.name)}</strong></td>
+            <td style="font-size:.82rem;">${escapeHtml(s.school || '—')}</td>
+            <td>${formCount} / ${events.length} events</td>
+            <td><span class="badge ${cls}">${statusLabel}</span></td>
+            <td><button class="btn btn-ghost btn-sm" onclick="openAddAbsenceModalFor(${s.id})">Edit</button></td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    function openAddAbsenceModal() {
+      const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+      const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null);
+      const sel = document.getElementById('absenceScholar');
+      if (sel) sel.innerHTML = '<option value="">— Select scholar —</option>' + scholars.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      document.getElementById('absenceDays').value = 'good';
+      document.getElementById('absenceReason').value = '';
+      document.getElementById('absenceModal').classList.add('open');
+    }
+
+    function openAddAbsenceModalFor(id) {
+      openAddAbsenceModal();
+      document.getElementById('absenceScholar').value = id;
+    }
+
+    async function saveAbsence() {
+      const id = parseInt(document.getElementById('absenceScholar').value);
+      const status = document.getElementById('absenceDays').value;
+      const reason = document.getElementById('absenceReason').value.trim();
+      if (!id || !Number.isFinite(id) || !['good','yellow','bad'].includes(status)) {
+        alert('Please select a scholar and choose a valid formation status.');
+        return;
+      }
+      const days = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
+      try { await MefamAPI.logAbsence(id, days, reason); } catch (error) { console.warn('Could not persist absence to the server; using local fallback.', error); }
+      const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+      absences[id] = { days, status, reason: reason || absences[id]?.reason || '' };
+      localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
+      closeModal('absenceModal');
+      renderAttendance(getAcceptedScholars());
+    }
+
+    async function resetAbsence(id) {
+      try { await MefamAPI.resetAbsence(id); } catch (error) { console.warn('Could not reset absence on server; using local fallback.', error); }
+      const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+      delete absences[id];
+      localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
+      renderAttendance(getAcceptedScholars());
+    }
+
+    window.addEventListener('storage', () => {
+      renderEvents();
+      renderAttendance(getAcceptedScholars());
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await refreshFormationData();
+      } catch (e) {
+        console.error('Failed to initialize formation page', e);
+      }
+    });
+  </script>
+</body>
+</html>
