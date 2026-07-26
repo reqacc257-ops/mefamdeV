@@ -450,7 +450,7 @@
                         </div>
                         <div style="flex:1;">
                             <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Name</label><div id="sgName" style="font-size:1.1rem; font-weight:700; margin-top:6px;">—</div></div>
-                            <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Student ID (optional)</label><input type="text" id="sgStudentId" style="width:260px; padding:10px; margin-top:6px;"></div>
+                            <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Student ID (optional)</label><input type="text" id="sgStudentId" autocomplete="off" style="width:260px; padding:10px; margin-top:6px;"></div>
                             <div style="display:flex; gap:8px; align-items:center; margin-top:6px;"><button class="btn btn-navy" id="sgCheckinBtn">Check In</button><label style="font-size:.85rem; color:var(--muted);"><input type="checkbox" id="sgAutoSubmit" style="margin-right:8px;"> Auto submit</label></div>
                             <div id="sgStatus" style="margin-top:8px; color:var(--muted);"></div>
                         </div>
@@ -460,8 +460,8 @@
                 <!-- Default check-in input (fallback) -->
                 <div id="defaultCheckin">
                     <div style="display:flex; gap:8px; align-items:center;">
-                        <input type="text" id="attCodeInput" placeholder="Enter code" style="flex:1; padding:10px;">
-                        <input type="text" id="attStudentId" placeholder="Student ID (optional)" style="width:160px; padding:10px;">
+                        <input type="text" id="attCodeInput" placeholder="Enter code" autocomplete="off" style="flex:1; padding:10px;">
+                        <input type="text" id="attStudentId" placeholder="Student ID (optional)" autocomplete="off" style="width:160px; padding:10px;">
                         <button class="btn btn-navy" onclick="submitAttendanceCode()">Check In</button>
                     </div>
                     <div id="attStatus" style="margin-top:8px; color:var(--muted);"></div>
@@ -729,13 +729,11 @@ function renderPortal(app, session) {
             const name = session.name || appData.name || '';
             document.getElementById('sgName').innerText = name;
             const sgIdInput = document.getElementById('sgStudentId');
-            const origId = document.getElementById('attStudentId')?.value || '';
-            if (sgIdInput && origId) sgIdInput.value = origId;
-            // auto-fill hidden default fields for compatibility
             const attCodeInput = document.getElementById('attCodeInput');
             if (attCodeInput) attCodeInput.value = urlCode;
             const attStudentId = document.getElementById('attStudentId');
-            if (attStudentId && sgIdInput) attStudentId.value = sgIdInput.value;
+            if (attStudentId) attStudentId.value = '';
+            if (sgIdInput) sgIdInput.value = '';
 
             // Countdown: if staff provided expires (via localStorage preview), show a basic countdown
             const expiresAtRaw = localStorage.getItem('preview_attendance_expires');
