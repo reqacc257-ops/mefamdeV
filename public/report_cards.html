@@ -162,25 +162,26 @@
                 const appGrades = grades.filter(g => Number(g.app_id || g.appId) === Number(app.id));
                 const schoolYears = Array.from(new Set(appGrades.map(g => g.school_year || g.schoolYear).filter(Boolean))).sort();
                 const latestSY = schoolYears.length > 0 ? schoolYears[schoolYears.length - 1] : String(app.sy || '2025-2026');
+                const refNo = app.reference || app.referenceNumber || app.reference_number || String(app.id || '—');
                 return `<tr>
                     <td><strong>${escapeHtml(app.name || '—')}</strong></td>
-                    <td><span class="app-id-badge">${escapeHtml(String(app.id || '—'))}</span></td>
+                    <td><span class="app-id-badge">${escapeHtml(refNo)}</span></td>
                     <td>${escapeHtml(latestSY)}</td>
                     <td>${escapeHtml(app.grade || '—')}</td>
                     <td>${escapeHtml(app.school || '—')}</td>
                     <td>
-                        <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)})'>📄 View</button>
+                        <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
                         <button class="btn btn-ghost btn-sm" style="margin-left:6px;" onclick="openSubjectsModal()">✎ Subjects</button>
                     </td>
                 </tr>`;
             }).join('');
         }
 
-        async function viewReportCard(appId, name, gradeLevel, school, schoolYear) {
+        async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
             try {
                 const allGrades = await MefamAPI.getGrades() || [];
                 const scholarGrades = allGrades.filter(g => Number(g.app_id || g.appId) === Number(appId));
-                const scholarData = { name, gradeLevel, school, refNo: appId, schoolYear: schoolYear || 'N/A' };
+                const scholarData = { name, gradeLevel, school, refNo: refNo || appId, schoolYear: schoolYear || 'N/A' };
                 const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades);
                 document.getElementById('reportCardContent').innerHTML = reportCardHTML;
                 if (!document.getElementById('reportCardStyles')) {
