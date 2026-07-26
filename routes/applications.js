@@ -43,8 +43,9 @@ function parseApp(row) {
     totalIncome:   row.total_income,
     totalExpense:  row.total_expense,
     whyScholar:    row.why_scholar,
-    referenceNumber: row.reference_number || row.referenceNumber || '',
-    date:          row.date_label || row.date || '—',
+    reference:      row.reference || row.reference_number || row.referenceNumber || '',
+    referenceNumber: row.reference_number || row.referenceNumber || row.reference || '',
+    date:            row.date_label || row.date || '—',
     submittedData: (() => {
       try { return JSON.parse(row.submitted_data || '{}'); } catch { return row.submitted_data || {}; }
     })(),
@@ -56,10 +57,48 @@ function parseApp(row) {
   };
 }
 
-// ── GET all ───────────────────────────────────────────────────────────────────
+// ── GET all (supports optional paging & filtering) ─────────────────────────────────
 router.get('/', (req, res) => {
-  const rows = db.prepare('SELECT * FROM applications ORDER BY id DESC').all();
-  res.json(rows.map(parseApp));
+  const page = req.query.page ? Math.max(1, parseInt(req.query.page, 10) || 1) : null;
+  const pageSize = req.query.pageSize ? Math.max(1, parseInt(req.query.pageSize, 10) || 20) : null;
+  const status = req.query.status ? String(req.query.status).trim() : null;
+  const q = req.query.q ? String(req.query.q).trim() : null;
+  const includeLatestGrade = req.query.includeLatestGrade === 'true' || req.query.includeLatestGrade === '1';
+
+  // If no paging requested, maintain original behavior
+  if (!page) {
+    const rows = db.prepare('SELECT * FROM applications ORDER BY id DESC').all();
+    return res.json(rows.map(parseApp));
+  }
+
+  // Build WHERE clauses
+  const where = [];
+  const params = [];
+  if (status) { where.push('status = ?'); params.push(status); }
+  if (q) {
+    // search name or reference number
+    where.push('(LOWER(name) LIKE ? OR LOWER(reference_number) LIKE ?)');
+    const like = '%' + q.toLowerCase().replace(/%/g, '\\%') + '%';
+    params.push(like, like);
+  }
+  const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
+  // Count total
+  const countRow = db.prepare(`SELECT COUNT(*) as c FROM applications ${whereSql}`).get(...params);
+  const total = countRow ? Number(countRow.c || 0) : 0;
+
+  const offset = (page - 1) * (pageSize || 20);
+  // Select fields — include latest grade via subquery when requested
+  const latestGradeSql = includeLatestGrade ? `, (SELECT grade_val FROM grades g WHERE g.app_id = applications.id ORDER BY datetime(updated_at) DESC LIMIT 1) as latest_grade` : '';
+  const rows = db.prepare(`SELECT * ${latestGradeSql} FROM applications ${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, pageSize || 20, offset);
+
+  const items = rows.map(r => {
+    const parsed = parseApp(r);
+    if (includeLatestGrade) parsed.latest_grade = r.latest_grade !== undefined ? Number(r.latest_grade || 0) : null;
+    return parsed;
+  });
+
+  return res.json({ items, total, page, pageSize: pageSize || 20 });
 });
 
 // ── GET single ────────────────────────────────────────────────────────────────

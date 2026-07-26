@@ -153,8 +153,17 @@ const MefamAPI = {
   },
 
   // ── Applications ───────────────────────────────────────────────────────────
-  async getApplications() {
-    return this._get('/applications');
+  async getApplications(opts) {
+    // opts: { status, page, pageSize, q, includeLatestGrade }
+    if (!opts || Object.keys(opts).length === 0) return this._get('/applications');
+    const params = [];
+    if (opts.status) params.push(`status=${encodeURIComponent(opts.status)}`);
+    if (opts.page) params.push(`page=${encodeURIComponent(opts.page)}`);
+    if (opts.pageSize) params.push(`pageSize=${encodeURIComponent(opts.pageSize)}`);
+    if (opts.q) params.push(`q=${encodeURIComponent(opts.q)}`);
+    if (opts.includeLatestGrade) params.push(`includeLatestGrade=1`);
+    const qs = params.length ? ('?' + params.join('&')) : '';
+    return this._get(`/applications${qs}`);
   },
   async getApplication(id) {
     return this._get(`/applications/${id}`);
