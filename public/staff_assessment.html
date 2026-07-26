@@ -125,49 +125,54 @@
     .btn:hover{opacity:.85;}
 
     /* ===== PRINT: single page, minimal ink ===== */
-    @page{ size:A4; margin:12mm; }
+    @page{ size:A4; margin:8mm 10mm; }
     @media print{
-        html,body{background:#fff !important;color:#000 !important;font-size:9.5pt;line-height:1.25;padding:0;margin:0;}
+        html,body{background:#fff !important;color:#000 !important;font-size:8pt;line-height:1.1;padding:0;margin:0;}
         .shell{max-width:100%;border:none;}
         .prefill-bar,.toolbar,.legend,.search-wrap{display:none !important;}
         input,select,textarea{border:1px solid #000 !important;background:#fff !important;color:#000 !important;}
 
-        .doc-header{border-bottom:1.5pt solid #000;padding:0 0 6pt;margin-bottom:6pt;}
-        .doc-header h1{color:#000 !important;font-size:14pt;}
-        .doc-header .org,.doc-header .sub{color:#000 !important;}
+        .doc-header{border-bottom:1pt solid #000;padding:0 0 3pt;margin-bottom:4pt;}
+        .doc-header .org{font-size:6.5pt;}
+        .doc-header h1{color:#000 !important;font-size:11pt;margin:1pt 0;}
+        .doc-header .sub{font-size:6.5pt;color:#000 !important;}
 
         .doc-body{padding:0;}
-        .meta-row{gap:6pt;margin-bottom:6pt;}
-        label.fl{color:#000 !important;font-size:6.5pt;}
-        input[type="text"],input[type="date"]{padding:2pt 4pt;font-size:9pt;}
+        .meta-row{gap:4pt;margin-bottom:3pt;}
+        .field{margin-bottom:0;}
+        label.fl{color:#000 !important;font-size:5.6pt;margin-bottom:0;}
+        input[type="text"],input[type="date"]{padding:1pt 3pt;font-size:7.6pt;height:14pt;}
 
-        .instructions{padding:5pt 7pt;margin:0 0 6pt;font-size:7pt;border:1pt solid #000;}
+        .instructions{padding:3pt 6pt;margin:0 0 4pt;font-size:6.2pt;border:1pt solid #000;line-height:1.2;}
 
-        table.ind-table{font-size:7.6pt;margin-bottom:6pt;}
-        table.ind-table th{background:#fff !important;color:#000 !important;border:1pt solid #000;padding:2pt 4pt;}
-        table.ind-table td{border:1pt solid #000;padding:2pt 4pt;color:#000 !important;}
-        tr.cat-row td{background:#eee !important;color:#000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        table.ind-table{font-size:6.8pt;margin-bottom:4pt;border-collapse:collapse;}
+        table.ind-table th{background:#fff !important;color:#000 !important;border:1pt solid #000;padding:1pt 3pt;}
+        table.ind-table td{border:1pt solid #000;padding:1pt 3pt;color:#000 !important;line-height:1.15;}
+        tr.cat-row td{background:#eee !important;color:#000 !important;padding:1pt 3pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
         tr.no-count td{background:#fff !important;color:#333 !important;}
-        .ind-note{font-size:6.6pt;}
-        .ind-subinput{font-size:6.4pt;}
-        .toggle-btn{width:14pt;height:14pt;font-size:7.5pt;color:#000 !important;background:#fff !important;border:1pt solid #000 !important;}
+        .ind-note{font-size:6pt;}
+        .ind-subinput{font-size:5.8pt;margin-top:1pt;}
+        .ind-subinput input{padding:1pt 3pt;height:11pt;}
+        .toggle-btn{width:11pt;height:11pt;font-size:6.4pt;color:#000 !important;background:#fff !important;border:1pt solid #000 !important;}
         .toggle-btn.check-active{background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
         .toggle-btn.x-active{background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
-        .summary-panel{border:1pt solid #000;padding:5pt 8pt;margin-bottom:6pt;}
-        .summary-panel h3{font-size:8pt;color:#000 !important;}
-        .sum-box{border:1pt solid #000;padding:3pt;}
-        .sum-box .sum-val{font-size:10pt;color:#000 !important;}
-        .sum-box .sum-label{font-size:5.5pt;color:#000 !important;}
+        .summary-panel{border:1pt solid #000;padding:3pt 6pt;margin-bottom:4pt;}
+        .summary-panel h3{font-size:7pt;color:#000 !important;margin-bottom:3pt;}
+        .summary-grid{gap:4pt;margin-bottom:3pt;}
+        .sum-box{border:1pt solid #000;padding:2pt;}
+        .sum-box .sum-val{font-size:9pt;color:#000 !important;}
+        .sum-box .sum-label{font-size:5pt;color:#000 !important;}
 
-        .assessment-result{border:1pt solid #000 !important;color:#000 !important;font-size:8pt;padding:5pt 8pt;}
-        .threshold-notes{border:1pt dashed #000;font-size:6.4pt;padding:4pt 6pt;}
+        .assessment-result{border:1pt solid #000 !important;color:#000 !important;font-size:7pt;padding:3pt 6pt;}
+        .threshold-notes{border:1pt dashed #000;font-size:5.6pt;padding:2pt 5pt;margin-top:3pt;}
 
-        .final-row{gap:6pt;margin-bottom:6pt;}
-        .final-opt{border:1pt solid #000;padding:4pt 6pt;font-size:7.6pt;}
+        .final-row{gap:4pt;margin-bottom:4pt;}
+        .final-opt{border:1pt solid #000;padding:2pt 5pt;font-size:6.8pt;}
 
-        .section-label{font-size:6.6pt;color:#000 !important;}
-        textarea{font-size:7.6pt;min-height:36pt;}
+        .section-label{font-size:5.8pt;color:#000 !important;margin-bottom:1pt;}
+        textarea{font-size:6.8pt;min-height:18pt;}
+        div[style*="margin-bottom:12px"]{margin-bottom:3pt !important;}
     }
 
     @media (max-width:600px){
@@ -181,7 +186,7 @@
     <div class="doc-header">
         <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
         <h1>Assessment of Staff</h1>
-        <div class="sub">Staff Poverty Level Indicator Tool · MEFAMDEV Angat, Bulacan Chapter</div>
+        <div class="sub">Family Poverty Level Indicator Tool · MEFAMDEV Angat, Bulacan Chapter</div>
         <div class="legend">✓ = Positive / True &nbsp;·&nbsp; ✕ = Negative / False / Not Present</div>
     </div>
 
