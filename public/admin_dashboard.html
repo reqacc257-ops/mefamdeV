@@ -3609,60 +3609,6 @@ async function resetAbsence(id) {
     await loadAllData();
 }
 
-function renderSubjectsDatalist() {
-    const list = document.getElementById('subjectsList');
-    const view = document.getElementById('subjectsListView');
-    if (!list) return;
-    const raw = localStorage.getItem('mefamdev_subjects');
-    let subjects = [];
-    try { subjects = raw ? JSON.parse(raw) : []; } catch (e) { subjects = []; }
-    // populate datalist
-    list.innerHTML = (subjects.length ? subjects : ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health']).map(s => `<option value="${s}"></option>`).join('');
-    if (view) {
-        view.innerHTML = (subjects.length ? subjects : []).map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${s}</span><button class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
-    }
-}
-
-function openSubjectsModal() {
-    document.getElementById('subjectsModal').classList.add('open');
-    renderSubjectsDatalist();
-}
-
-function closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('open');
-}
-
-function addSubject() {
-    const input = document.getElementById('newSubjectInput');
-    if (!input) return;
-    const val = input.value.trim();
-    if (!val) return alert('Enter a subject name to add.');
-    let subjects = [];
-    try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (e) { subjects = []; }
-    if (subjects.includes(val)) return alert('That subject already exists.');
-    subjects.push(val);
-    localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
-    input.value = '';
-    renderSubjectsDatalist();
-}
-
-function removeSubject(idx) {
-    let subjects = [];
-    try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (e) { subjects = []; }
-    if (idx < 0 || idx >= subjects.length) return;
-    if (!confirm(`Remove subject "${subjects[idx]}"?`)) return;
-    subjects.splice(idx, 1);
-    localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
-    renderSubjectsDatalist();
-}
-
-function saveSubjects() {
-    // already persisted on add/remove; simply close modal
-    closeModal('subjectsModal');
-    renderSubjectsDatalist();
-}
-
 function filterAbsenceLog() {
     const q = document.getElementById('absenceSearch').value.toLowerCase();
     document.querySelectorAll('#absenceLogBody tr').forEach(tr => {
