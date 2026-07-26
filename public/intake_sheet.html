@@ -748,6 +748,18 @@ function collectData() {
         const inputs = tr.querySelectorAll('input');
         if (inputs[0]?.value?.trim()) actionRows.push({ service: inputs[0].value, plan: inputs[1]?.value || '' });
     });
+
+    let linkedApp = null;
+    if (linkedAppId) {
+        try {
+            const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+            linkedApp = apps.find(x => String(x.id) === String(linkedAppId)) || null;
+        } catch (e) {
+            linkedApp = null;
+        }
+    }
+    const schoolName = (linkedApp?.school || linkedApp?.schoolName || linkedApp?.school_name || '').toString().trim();
+
     return {
         id: window.currentIntakeId || Date.now(),
         caseNo: document.getElementById('caseNo').value,
@@ -773,6 +785,8 @@ function collectData() {
         backgroundInfo: document.getElementById('sBackground').value,
         assessment: document.getElementById('sAssessment').value,
         actionPlan: actionRows,
+        school: schoolName,
+        schoolName: schoolName,
         clientSignature: getSigDataUrl('clientSig'),
         staffSignature: getSigDataUrl('staffSig'),
         linkedAppId,
