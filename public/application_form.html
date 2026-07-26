@@ -1251,7 +1251,7 @@
         if (!email) { alert('Please enter your email address.'); return; }
 
         const data = {
-            id: Date.now(),
+            id: Number(referenceNumber),
             referenceNumber,
             sy: document.getElementById('sySelect').value,
             firstName: document.getElementById('firstName').value.trim(),

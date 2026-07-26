@@ -175,22 +175,24 @@ function submitPublicApplication(req, res) {
     if (recent) return res.status(429).json({ error: `Please wait ${submitCooldownMinutes} minutes before resubmitting.` });
   }
 
+  const hasId = b.id !== undefined && b.id !== null && b.id !== '';
+  const insertColumns = [
+    'sy', 'name', 'address', 'barangay', 'dob', 'age', 'gender', 'contact', 'email', 'religion', 'birthplace',
+    'talents', 'clubs', 'ambition', 'living_with', 'edu_level', 'prev_grade', 'prev_school',
+    'school', 'grade', 'degree', 'why_scholar', 'total_income', 'total_expense',
+    'family_members', 'properties', 'can_provide', 'status', 'date_label', 'password_hash', 'portal_username',
+    'reference_number', 'submitted_at', 'submitted_data', 'status_updated_at', 'status_history'
+  ];
+  if (hasId) insertColumns.unshift('id');
+
   const stmt = db.prepare(`
     INSERT INTO applications
-      (sy, name, address, barangay, dob, age, gender, contact, email, religion, birthplace,
-       talents, clubs, ambition, living_with, edu_level, prev_grade, prev_school,
-       school, grade, degree, why_scholar, total_income, total_expense,
-       family_members, properties, can_provide, status, date_label, password_hash, portal_username,
-       reference_number, submitted_at, submitted_data, status_updated_at, status_history)
+      (${insertColumns.join(', ')})
     VALUES
-      (@sy, @name, @address, @barangay, @dob, @age, @gender, @contact, @email, @religion, @birthplace,
-       @talents, @clubs, @ambition, @living_with, @edu_level, @prev_grade, @prev_school,
-       @school, @grade, @degree, @why_scholar, @total_income, @total_expense,
-       @family_members, @properties, @can_provide, 'Pending Review', @date_label, @password_hash, @portal_username,
-       @reference_number, @submitted_at, @submitted_data, @status_updated_at, @status_history)
+      (${insertColumns.map(col => `@${col}`).join(', ')})
   `);
 
-  const info = stmt.run({
+  const params = {
     sy:            b.sy,
     name:          b.name,
     address:       b.address        || '',
@@ -227,7 +229,10 @@ function submitPublicApplication(req, res) {
     submitted_data: JSON.stringify(b.submittedData || {}),
     status_updated_at: b.statusUpdatedAt || b.status_updated_at || new Date().toISOString(),
     status_history: JSON.stringify(b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }])
-  });
+  };
+  if (hasId) params.id = Number(b.id);
+
+  const info = stmt.run(params);
 
   db.prepare(`
     UPDATE applications
