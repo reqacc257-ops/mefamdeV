@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MEFAMDEV – Assessment of Staff (Simple / Print)</title>
+<title>MEFAMDEV – Intake Sheet (Simple / Print)</title>
 <style>
     :root{
         --ink:#111; --line:#333; --muted:#666;
         --accent:#1a2e44;
         --bg:#f4f5f7;
-        --check:#1a6935; --cross:#922b21;
+        --red:#922b21;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{
@@ -20,116 +20,96 @@
         line-height:1.4;
         font-size:14px;
     }
-    .shell{max-width:800px;margin:0 auto;background:#fff;border:1px solid #ccc;}
+    .shell{max-width:900px;margin:0 auto;background:#fff;border:1px solid #ccc;}
 
-    /* Header - screen only decoration, print is plain */
-    .doc-header{
-        padding:16px 20px 12px;
-        border-bottom:2px solid var(--accent);
-        text-align:center;
-    }
+    .doc-header{padding:16px 20px 12px;border-bottom:2px solid var(--accent);text-align:center;}
     .doc-header .org{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
     .doc-header h1{font-size:1.3rem;color:var(--accent);margin:2px 0;}
     .doc-header .sub{font-size:.78rem;color:var(--muted);}
-    .legend{margin-top:6px;font-size:.72rem;color:var(--muted);}
-    .legend b{color:var(--ink);}
 
     .doc-body{padding:16px 20px;}
 
-    /* Prefill (screen only, hidden on print) */
-    .prefill-bar{
-        border:1px solid #ccc;border-radius:6px;padding:10px 12px;margin-bottom:16px;background:#fafafa;
-    }
+    /* Prefill */
+    .prefill-bar{border:1px solid #ccc;border-radius:6px;padding:10px 12px;margin-bottom:16px;background:#fafafa;}
     .prefill-bar p{font-size:.8rem;color:#444;margin-bottom:8px;}
     .search-input{width:100%;max-width:420px;padding:7px 10px;border:1px solid #ccc;border-radius:5px;font-size:.85rem;}
     .search-results{display:grid;gap:6px;max-height:150px;overflow-y:auto;margin-top:8px;}
-    .search-result-item{text-align:left;border:1px solid #ddd;border-radius:5px;background:#fff;padding:8px 10px;cursor:pointer;font-size:.82rem;}
+    .search-result-item{text-align:left;border:1px solid #ddd;border-radius:5px;background:#fff;padding:8px 10px;cursor:pointer;font-size:.82rem;width:100%;}
     .search-result-item:hover{border-color:var(--accent);}
     .search-result-title{font-weight:700;}
     .search-result-meta{color:var(--muted);font-size:.75rem;}
     .prefill-detail-card{border:1px solid #ddd;border-radius:6px;padding:10px 12px;margin-top:10px;font-size:.8rem;}
 
-    /* Meta grid */
-    .meta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+    /* Fields */
     label.fl{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:2px;}
-    .field{margin-bottom:2px;}
-    input[type="text"],input[type="date"],select,textarea{
+    .field{margin-bottom:8px;}
+    input[type="text"],input[type="date"],input[type="number"],select,textarea{
         width:100%;padding:5px 8px;border:1px solid #999;border-radius:4px;font-family:inherit;font-size:.82rem;color:var(--ink);background:#fff;
     }
-    textarea{resize:vertical;}
+    textarea{resize:vertical;min-height:54px;}
 
-    .instructions{
-        border:1px solid #ccc;border-radius:5px;padding:8px 10px;margin:10px 0 14px;
-        font-size:.72rem;color:#444;
-    }
-    .instructions b{color:var(--ink);}
+    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+    .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
 
-    /* Indicator table - compact, print-friendly */
-    table.ind-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.78rem;}
-    table.ind-table th{
-        text-align:left;background:#eee;border:1px solid #999;padding:4px 8px;
-        font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;color:#333;
+    /* Sections */
+    .section{margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #ccc;}
+    .section:last-of-type{border-bottom:none;}
+    .section-title{
+        display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--accent);
+        text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--accent);
     }
-    table.ind-table td{border:1px solid #bbb;padding:4px 8px;vertical-align:top;}
-    tr.cat-row td{
-        background:#e4e7ec;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;
-        border:1px solid #999;padding:4px 8px;color:var(--accent);
-    }
-    .ind-num{width:22px;text-align:center;color:var(--muted);font-weight:700;}
-    .ind-note{font-style:italic;color:var(--muted);font-size:.72rem;}
-    .ind-score{width:64px;text-align:center;white-space:nowrap;}
-    .toggle-btn{
-        width:24px;height:24px;border:1px solid #999;border-radius:4px;background:#fff;cursor:pointer;
-        font-size:.85rem;font-weight:700;color:#aaa;line-height:1;
-    }
-    .toggle-btn.check-active{color:#fff;background:var(--check);border-color:var(--check);}
-    .toggle-btn.x-active{color:#fff;background:var(--cross);border-color:var(--cross);}
-    .ind-subinput{margin-top:3px;font-size:.7rem;display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
-    .ind-subinput input{padding:2px 6px;font-size:.72rem;flex:1;min-width:120px;}
-    tr.no-count td{background:#f7f7f7;color:var(--muted);font-style:italic;}
-    tr.no-count .ind-num{color:#666;}
-
-    /* Summary */
-    .summary-panel{border:1.5px solid var(--accent);border-radius:6px;padding:10px 14px;margin-bottom:14px;}
-    .summary-panel h3{font-size:.85rem;color:var(--accent);margin-bottom:8px;}
-    .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;}
-    .sum-box{border:1px solid #ccc;border-radius:5px;padding:6px 4px;text-align:center;}
-    .sum-box .sum-val{font-size:1.2rem;font-weight:700;color:var(--accent);}
-    .sum-box .sum-label{font-size:.6rem;text-transform:uppercase;color:var(--muted);}
-
-    .assessment-result{
-        padding:8px 12px;border:1.5px solid #999;border-radius:5px;font-weight:700;font-size:.82rem;text-align:center;
-    }
-    .result-above{border-color:var(--check);color:var(--check);}
-    .result-below{border-color:var(--cross);color:var(--cross);}
-    .result-unknown{color:var(--muted);}
-
-    .threshold-notes{
-        border:1px dashed #999;border-radius:5px;padding:6px 10px;margin-top:8px;font-size:.68rem;color:#555;
+    .section-title .num{
+        width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;
+        display:flex;align-items:center;justify-content:center;flex-shrink:0;
     }
 
-    .final-row{display:flex;gap:10px;margin-bottom:10px;}
-    .final-opt{
-        flex:1;display:flex;align-items:center;gap:6px;border:1px solid #999;border-radius:5px;padding:6px 10px;cursor:pointer;font-size:.8rem;
-    }
-    .final-opt input{width:14px;height:14px;}
+    .subsection{border:1px solid #ddd;border-radius:6px;padding:10px 12px;margin-top:8px;background:#fafafa;}
+    .subsection-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;border-left:3px solid var(--accent);padding-left:6px;}
 
-    .section-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px;}
+    /* Family table */
+    .table-wrap{overflow-x:auto;margin-top:4px;}
+    table.fam-table{width:100%;border-collapse:collapse;font-size:.72rem;min-width:680px;}
+    .fam-table thead th{background:#eee;color:#000;border:1px solid #999;padding:4px 6px;font-weight:700;text-align:left;white-space:nowrap;font-size:.66rem;text-transform:uppercase;}
+    .fam-table tbody td{padding:1px 2px;border:1px solid #ccc;}
+    .fam-table td input,.fam-table td select{padding:3px 5px;border:1px solid #ccc;border-radius:3px;font-size:.72rem;width:100%;background:#fff;}
+    .row-num{color:var(--muted);font-size:.68rem;padding:0 4px !important;text-align:center;}
 
-    .toolbar{
-        position:sticky;bottom:0;background:#fff;border-top:1px solid #ccc;padding:10px 20px;
-        display:flex;gap:8px;justify-content:flex-end;
+    /* Action table */
+    table.action-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+    .action-table thead th{background:#eee;color:#000;padding:4px 8px;font-size:.66rem;font-weight:700;text-transform:uppercase;border:1px solid #999;}
+    .action-table tbody td{padding:2px;border:1px solid #ccc;}
+    .action-table td input{width:100%;padding:4px 6px;border:none;font-size:.78rem;background:transparent;}
+
+    /* Signature */
+    .sig-row{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px;}
+    .sig-field{text-align:center;}
+    .sig-pad-wrap{position:relative;height:70px;margin-bottom:4px;}
+    canvas.sig-canvas{
+        position:absolute;top:0;left:0;width:100%;height:100%;
+        border:1px solid #ddd;border-radius:5px;background:#fefefe;
+        cursor:crosshair;touch-action:none;
     }
+    .sig-line{border-bottom:1px solid #000;position:absolute;left:0;right:0;bottom:14px;}
+    .sig-tools{display:flex;justify-content:center;gap:8px;margin-bottom:6px;}
+    .sig-tools .btn-add{font-size:.68rem;padding:3px 9px;}
+    .sig-hint{font-size:.66rem;color:var(--muted);margin-top:2px;}
+    .sig-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#444;margin-top:4px;}
+    .sig-print-img{display:none;max-height:60px;margin:0 auto;}
+
+    .toolbar{position:sticky;bottom:0;background:#fff;border-top:1px solid #ccc;padding:10px 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
     .btn{padding:7px 16px;border:1px solid #999;border-radius:5px;background:#fff;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--ink);}
     .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .btn-add{font-size:.75rem;padding:5px 10px;}
     .btn:hover{opacity:.85;}
 
-    /* ===== PRINT: single page, minimal ink ===== */
+    /* ===== PRINT: minimal ink, compact single-page target ===== */
     @page{ size:A4; margin:8mm 10mm; }
     @media print{
         html,body{background:#fff !important;color:#000 !important;font-size:8pt;line-height:1.1;padding:0;margin:0;}
         .shell{max-width:100%;border:none;}
-        .prefill-bar,.toolbar,.legend,.search-wrap{display:none !important;}
+        .prefill-bar,.toolbar,.search-wrap,.btn-add{display:none !important;}
         input,select,textarea{border:1px solid #000 !important;background:#fff !important;color:#000 !important;}
 
         .doc-header{border-bottom:1pt solid #000;padding:0 0 3pt;margin-bottom:4pt;}
@@ -138,45 +118,49 @@
         .doc-header .sub{font-size:6.5pt;color:#000 !important;}
 
         .doc-body{padding:0;}
-        .meta-row{gap:4pt;margin-bottom:3pt;}
-        .field{margin-bottom:0;}
-        label.fl{color:#000 !important;font-size:5.6pt;margin-bottom:0;}
-        input[type="text"],input[type="date"]{padding:1pt 3pt;font-size:7.6pt;height:14pt;}
+        .meta-grid,.g2,.g3,.g4{gap:4pt;margin-bottom:3pt;}
+        .field{margin-bottom:2pt;}
+        label.fl{color:#000 !important;font-size:5.4pt;margin-bottom:0;}
+        input[type="text"],input[type="date"],input[type="number"],select{padding:1pt 3pt;font-size:7.2pt;height:13pt;}
+        textarea{font-size:7.2pt;min-height:26pt;padding:2pt 4pt;}
 
-        .instructions{padding:3pt 6pt;margin:0 0 4pt;font-size:6.2pt;border:1pt solid #000;line-height:1.2;}
+        .section{margin-bottom:5pt;padding-bottom:4pt;border-bottom:.5pt dashed #999;page-break-inside:avoid;}
+        .section-title{font-size:7.4pt;margin-bottom:4pt;padding-bottom:2pt;border-bottom:1pt solid #000;color:#000 !important;}
+        .section-title .num{width:11pt;height:11pt;font-size:5.8pt;background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
-        table.ind-table{font-size:6.8pt;margin-bottom:4pt;border-collapse:collapse;}
-        table.ind-table th{background:#fff !important;color:#000 !important;border:1pt solid #000;padding:1pt 3pt;}
-        table.ind-table td{border:1pt solid #000;padding:1pt 3pt;color:#000 !important;line-height:1.15;}
-        tr.cat-row td{background:#eee !important;color:#000 !important;padding:1pt 3pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-        tr.no-count td{background:#fff !important;color:#333 !important;}
-        .ind-note{font-size:6pt;}
-        .ind-subinput{font-size:5.8pt;margin-top:1pt;}
-        .ind-subinput input{padding:1pt 3pt;height:11pt;}
-        .toggle-btn{width:11pt;height:11pt;font-size:6.4pt;color:#000 !important;background:#fff !important;border:1pt solid #000 !important;}
-        .toggle-btn.check-active{background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-        .toggle-btn.x-active{background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .subsection{border:1pt solid #000;padding:4pt 6pt;margin-top:4pt;background:#fff !important;}
+        .subsection-title{font-size:6pt;margin-bottom:4pt;border-left:2pt solid #000;padding-left:4pt;color:#000 !important;}
 
-        .summary-panel{border:1pt solid #000;padding:3pt 6pt;margin-bottom:4pt;}
-        .summary-panel h3{font-size:7pt;color:#000 !important;margin-bottom:3pt;}
-        .summary-grid{gap:4pt;margin-bottom:3pt;}
-        .sum-box{border:1pt solid #000;padding:2pt;}
-        .sum-box .sum-val{font-size:9pt;color:#000 !important;}
-        .sum-box .sum-label{font-size:5pt;color:#000 !important;}
+        table.fam-table{font-size:6.2pt;min-width:0;}
+        .fam-table thead th{background:#eee !important;color:#000 !important;border:1pt solid #000;padding:1.5pt 3pt;font-size:5.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .fam-table tbody td{border:1pt solid #999;padding:0 1pt;}
+        .fam-table td input,.fam-table td select{padding:1pt 2pt;font-size:6.2pt;border:none !important;}
+        .row-num{font-size:5.6pt;}
 
-        .assessment-result{border:1pt solid #000 !important;color:#000 !important;font-size:7pt;padding:3pt 6pt;}
-        .threshold-notes{border:1pt dashed #000;font-size:5.6pt;padding:2pt 5pt;margin-top:3pt;}
+        table.action-table{font-size:6.8pt;}
+        .action-table thead th{background:#eee !important;color:#000 !important;padding:2pt 4pt;font-size:5.8pt;border:1pt solid #000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .action-table tbody td{border:1pt solid #999;padding:1pt;}
+        .action-table td input{font-size:6.8pt;padding:1pt 3pt;}
 
-        .final-row{gap:4pt;margin-bottom:4pt;}
-        .final-opt{border:1pt solid #000;padding:2pt 5pt;font-size:6.8pt;}
+        .sig-row{gap:20pt;margin-top:10pt;}
+        .sig-pad-wrap{height:34pt;}
+        .sig-tools{display:none !important;}
+        canvas.sig-canvas{display:none !important;}
+        .sig-print-img{display:block !important;max-height:30pt;margin:0 auto 2pt;}
+        .sig-line{border-color:#000;bottom:6pt;}
+        .sig-hint{display:none !important;}
+        .sig-label{font-size:6pt;margin-top:2pt;}
 
-        .section-label{font-size:5.8pt;color:#000 !important;margin-bottom:1pt;}
-        textarea{font-size:6.8pt;min-height:18pt;}
-        div[style*="margin-bottom:12px"]{margin-bottom:3pt !important;}
+        /* hide empty extra family rows beyond what's filled, kept via JS class */
+        tr.fam-row-empty-print{display:none;}
     }
 
-    @media (max-width:600px){
-        .meta-row,.summary-grid{grid-template-columns:1fr 1fr;}
+    @media (max-width:640px){
+        .doc-body{padding:20px 18px;}
+        .g2,.g3,.g4,.meta-grid{grid-template-columns:1fr;}
+        .sig-row{grid-template-columns:1fr;gap:20px;}
+        .toolbar{padding:12px 16px;}
+        .toolbar .btn{flex:1;justify-content:center;}
     }
 </style>
 </head>
@@ -185,296 +169,340 @@
 
     <div class="doc-header">
         <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
-        <h1>Assessment of Staff</h1>
-        <div class="sub">Family Poverty Level Indicator Tool · MEFAMDEV Angat, Bulacan Chapter</div>
-        <div class="legend">✓ = Positive / True &nbsp;·&nbsp; ✕ = Negative / False / Not Present</div>
+        <h1>Intake Sheet</h1>
+        <div class="sub">Social Case Study Record · MEFAMDEV Angat, Bulacan Chapter</div>
     </div>
 
     <div class="doc-body">
 
         <!-- Prefill (screen only) -->
         <div class="prefill-bar">
-            <p>Link this assessment to a submitted application (optional).</p>
+            <p>Link this intake sheet to a submitted application (optional).</p>
             <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()">
             <div id="prefillResults" class="search-results"></div>
             <div id="prefillDetail" class="prefill-detail-card" style="display:none;"></div>
         </div>
 
-        <!-- Meta -->
-        <div class="meta-row">
-            <div class="field"><label class="fl">Petsa (Date)</label><input type="date" id="metaDate"></div>
-            <div class="field"><label class="fl">Apelyido ng Pamilya</label><input type="text" id="metaFamily" placeholder="Dela Cruz"></div>
-            <div class="field"><label class="fl">Barangay</label><input type="text" id="metaBarangay"></div>
+        <!-- Top meta -->
+        <div class="meta-grid">
+            <div class="field"><label class="fl">Case No.</label><input type="text" id="caseNo" placeholder="e.g. 2026-001"></div>
+            <div class="field"><label class="fl">Date</label><input type="date" id="caseDate"></div>
         </div>
-        <div class="meta-row">
-            <div class="field"><label class="fl">Gabay (Caseworker)</label><input type="text" id="metaGabay"></div>
-            <div class="field"><label class="fl">Mag-aaral</label><input type="text" id="metaStudent"></div>
-            <div class="field"><label class="fl">School Year</label><input type="text" id="metaSY"></div>
+        <div class="g2">
+            <div class="field"><label class="fl">Case Category</label><input type="text" id="caseCategory" placeholder="Educational Assistance"></div>
+            <div class="field"><label class="fl">Source of Referral</label><input type="text" id="caseReferral" value="Online Application"></div>
         </div>
 
-        <div class="instructions">
-            <b>Panuto:</b> Lagyan ng tsek (✓) ang totoo/positibong pahayag. Ekis (✕) kung kabaligtaran. Gumamit ng ball pen sa house visit.
-        </div>
+        <!-- I. Identifying Information -->
+        <div class="section">
+            <div class="section-title"><span class="num">I</span> Identifying Information</div>
 
-        <!-- Indicator table -->
-        <table class="ind-table">
-            <thead>
-                <tr><th style="width:22px;">#</th><th>Indikador</th><th style="width:64px;text-align:center;">Marka</th></tr>
-            </thead>
-            <tbody id="indicatorBody">
-                <tr class="cat-row"><td colspan="3">💵 Kita (Income)</td></tr>
-                <tr class="indicator-row" data-key="ind1" data-starred="true">
-                    <td class="ind-num">1</td>
-                    <td>May regular na trabaho o laging may pumapasok na kita <span class="ind-note">*</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind2" data-starred="false">
-                    <td class="ind-num">2</td>
-                    <td>Sapat ang kita para sa pamilya <span class="ind-note">(kita/family size vs. poverty threshold)</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-
-                <tr class="cat-row"><td colspan="3">📚 Edukasyon</td></tr>
-                <tr class="indicator-row" data-key="ind3" data-starred="false">
-                    <td class="ind-num">3</td>
-                    <td>Nakapagtapos/nakakapag-aral ang lahat ng anak sa elementarya <span class="ind-note">*</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind4" data-starred="false">
-                    <td class="ind-num">4</td>
-                    <td>Nakakapag-aral ang mga anak sa high school</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind5" data-starred="false">
-                    <td class="ind-num">5</td>
-                    <td>May kakayahang makapagpaaral hanggang kolehiyo</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-
-                <tr class="cat-row"><td colspan="3">🏥 Kalusugan</td></tr>
-                <tr class="indicator-row" data-key="ind6" data-starred="true">
-                    <td class="ind-num">6</td>
-                    <td>Araw-araw nakakakain ng 3–5 beses ang pamilya <span class="ind-note">*</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind7" data-starred="false">
-                    <td class="ind-num">7</td>
-                    <td>May kakayahang ipagamot ang malubhang sakit o kapansanan</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-
-                <tr class="cat-row"><td colspan="3">🏡 Tirahan / Pamumuhay</td></tr>
-                <tr class="indicator-row" data-key="ind8" data-starred="false">
-                    <td class="ind-num">8</td>
-                    <td>May sustento/pinansyal na tulong mula sa gobyerno o iba</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind9" data-starred="false">
-                    <td class="ind-num">9</td>
-                    <td>Mayroong social benefits <span class="ind-note">(Philhealth/SSS/ATM)</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind10" data-starred="true">
-                    <td class="ind-num">10</td>
-                    <td>Sarili o pagmamay-ari ang bahay/lupa na tinitirahan <span class="ind-note">*</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind11" data-starred="false">
-                    <td class="ind-num">11</td>
-                    <td>Gawa sa konkreto ang bahay</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind12" data-starred="false">
-                    <td class="ind-num">12</td>
-                    <td>Mayroong kuryente</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind13" data-starred="false">
-                    <td class="ind-num">13</td>
-                    <td>
-                        Bukod sa radyo, TV, plantsa, electric fan, may iba pang appliances
-                        <div class="ind-subinput"><label>Appliances:</label><input type="text" id="appliancesText" placeholder="hal. ref, aircon..."></div>
-                        <div class="ind-subinput"><label>Bilang ng cellphone:</label><input type="text" id="cellphoneCount" placeholder="huwag ibilang ang sira"></div>
-                    </td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind14" data-starred="true">
-                    <td class="ind-num">14</td>
-                    <td>Mayroong sariling palikuran/C.R. <span class="ind-note">*</span></td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind15" data-starred="false">
-                    <td class="ind-num">15</td>
-                    <td>May malapit na pinagkukuhanan ng ligtas na inuming tubig</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="indicator-row" data-key="ind16" data-starred="false">
-                    <td class="ind-num">16</td>
-                    <td>May ipon / impok ang pamilya</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggle(this,'check')">✓</button><button class="toggle-btn" onclick="toggle(this,'x')">✕</button></td>
-                </tr>
-                <tr class="no-count">
-                    <td class="ind-num">—</td>
-                    <td><b>Huwag isama sa pagbibilang:</b> Mayroong may bisyo sa sugal o/at paglalasing</td>
-                    <td class="ind-score"><button class="toggle-btn" onclick="toggleNoCount(this,'check')" id="nocount-check">✓</button><button class="toggle-btn" onclick="toggleNoCount(this,'x')" id="nocount-x">✕</button></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Summary -->
-        <div class="summary-panel">
-            <h3>Assessment Results</h3>
-            <div class="summary-grid">
-                <div class="sum-box"><div class="sum-val" id="totalChecks">0</div><div class="sum-label">Checks (✓)</div></div>
-                <div class="sum-box"><div class="sum-val" id="totalCrosses">0</div><div class="sum-label">Crosses (✕)</div></div>
-                <div class="sum-box"><div class="sum-val" id="totalStarCrosses">0</div><div class="sum-label">Starred ✕</div></div>
-                <div class="sum-box"><div class="sum-val" id="totalPoints">0</div><div class="sum-label">Total Points</div></div>
+            <div class="g2">
+                <div class="field"><label class="fl">Name (Last, First, M.I.)</label><input type="text" id="iName"></div>
+                <div class="field"><label class="fl">Nickname</label><input type="text" id="iNickname"></div>
             </div>
-            <div id="assessmentResult" class="assessment-result result-unknown">— Complete the indicators above to see the result —</div>
-            <div class="threshold-notes">
-                <b>Threshold:</b> 1/6 starred (✕) crossed → Below Poverty Threshold &nbsp;|&nbsp; 4/13 non-starred (✕) crossed → Below Poverty Threshold
+            <div class="g2">
+                <div class="field"><label class="fl">Nationality</label><input type="text" id="iNationality" value="Filipino"></div>
+                <div class="field"><label class="fl">Contact No.</label><input type="text" id="iContact"></div>
+            </div>
+            <div class="field"><label class="fl">Present Address</label><input type="text" id="iPresentAddr"></div>
+            <div class="field"><label class="fl">Permanent Address</label><input type="text" id="iPermAddr"></div>
+
+            <div class="g4">
+                <div class="field"><label class="fl">Civil Status</label>
+                    <select id="iCivilStatus"><option value="Single">Single</option><option value="Married">Married</option><option value="Widowed">Widowed</option><option value="Separated">Separated</option></select>
+                </div>
+                <div class="field"><label class="fl">Sex</label><select id="iSex"><option value="Male">Male</option><option value="Female">Female</option></select></div>
+                <div class="field"><label class="fl">Religion</label><input type="text" id="iReligion"></div>
+                <div class="field"><label class="fl">Age</label><input type="number" id="iAge" min="0"></div>
+            </div>
+            <div class="g3">
+                <div class="field"><label class="fl">Date of Birth</label><input type="date" id="iDob"></div>
+                <div class="field" style="grid-column:span 2"><label class="fl">Place of Birth</label><input type="text" id="iBirthplace"></div>
+            </div>
+            <div class="g2">
+                <div class="field"><label class="fl">Educational Attainment</label><input type="text" id="iEduc"></div>
+                <div class="field"><label class="fl">Occupation</label><input type="text" id="iOccup" value="Student"></div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+                <label style="font-size:.78rem; color:#556; display:flex; align-items:center; gap:6px;"><input id="includeSpouse" type="checkbox" onclick="toggleSpouseSection()"> Include Spouse / Partner information</label>
+            </div>
+            <div id="spouseSection" class="subsection" style="display:none;">
+                <div class="subsection-title">Spouse / Partner Information</div>
+                <div class="g2">
+                    <div class="field"><label class="fl">Name of Spouse</label><input type="text" id="spName"></div>
+                    <div class="field"><label class="fl">Nickname</label><input type="text" id="spNickname"></div>
+                </div>
+                <div class="g2">
+                    <div class="field"><label class="fl">Nationality</label><input type="text" id="spNationality" value="Filipino"></div>
+                    <div class="field"><label class="fl">Contact No.</label><input type="text" id="spContact"></div>
+                </div>
+                <div class="field"><label class="fl">Present Address</label><input type="text" id="spAddress"></div>
+                <div class="g4">
+                    <div class="field"><label class="fl">Civil Status</label><select id="spCivil"><option>Single</option><option selected>Married</option><option>Widowed</option><option>Separated</option></select></div>
+                    <div class="field"><label class="fl">Sex</label><select id="spSex"><option>Male</option><option>Female</option></select></div>
+                    <div class="field"><label class="fl">Religion</label><input type="text" id="spReligion"></div>
+                    <div class="field"><label class="fl">Age</label><input type="number" id="spAge"></div>
+                </div>
+                <div class="g3">
+                    <div class="field"><label class="fl">Date of Birth</label><input type="date" id="spDob"></div>
+                    <div class="field"><label class="fl">Place of Birth</label><input type="text" id="spBirthplace"></div>
+                    <div class="field"><label class="fl">Educational Attainment</label><input type="text" id="spEduc"></div>
+                </div>
+                <div class="field"><label class="fl">Occupation</label><input type="text" id="spOccup"></div>
             </div>
         </div>
 
-        <div style="margin-bottom:12px;">
-            <div class="section-label">Final Assessment (Staff Decision)</div>
-            <div class="final-row">
-                <label class="final-opt" id="lbl-above"><input type="radio" name="finalAssessment" value="above" onchange="updateFinalLabel()"> Above Poverty Threshold</label>
-                <label class="final-opt" id="lbl-below"><input type="radio" name="finalAssessment" value="below" onchange="updateFinalLabel()"> Below Poverty Threshold</label>
+        <!-- II. Family Composition -->
+        <div class="section">
+            <div class="section-title"><span class="num">II</span> Family Composition</div>
+            <div class="table-wrap">
+                <table class="fam-table">
+                    <thead>
+                        <tr>
+                            <th style="width:22px;">#</th>
+                            <th style="min-width:140px;">Name</th>
+                            <th style="min-width:40px;">Age</th>
+                            <th style="min-width:60px;">Sex</th>
+                            <th style="min-width:90px;">Rel. to Client</th>
+                            <th style="min-width:80px;">Civil Status</th>
+                            <th style="min-width:90px;">Educ. Attainment</th>
+                            <th style="min-width:90px;">Occupation</th>
+                            <th style="min-width:70px;">Income</th>
+                        </tr>
+                    </thead>
+                    <tbody id="famTableBody"></tbody>
+                </table>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button type="button" class="btn btn-add" onclick="addFamRow()">+ Add Row</button>
+                <button type="button" class="btn btn-add" onclick="removeFamRow()" style="color:var(--red);">− Remove Last Row</button>
             </div>
         </div>
 
-        <div>
-            <div class="section-label">Narrative Assessment</div>
-            <textarea id="narrativeAssessment" rows="3" placeholder="Ibigay ang buod o paliwanag ng pagtatasa ng pamilya..."></textarea>
+        <!-- III. Problem Presented -->
+        <div class="section">
+            <div class="section-title"><span class="num">III</span> Problem Presented</div>
+            <textarea id="sProblem" rows="3" placeholder="Describe the presenting problem or need of the client..."></textarea>
+        </div>
+
+        <!-- IV. Background Information -->
+        <div class="section">
+            <div class="section-title"><span class="num">IV</span> Background Information on the Stated Problem</div>
+            <textarea id="sBackground" rows="3" placeholder="Provide background details relevant to the stated problem..."></textarea>
+        </div>
+
+        <!-- V. Assessment -->
+        <div class="section">
+            <div class="section-title"><span class="num">V</span> Social Worker's Assessment of the Problem</div>
+            <textarea id="sAssessment" rows="3" placeholder="Social Worker's professional assessment and analysis..."></textarea>
+        </div>
+
+        <!-- VI. Action Plan -->
+        <div class="section">
+            <div class="section-title"><span class="num">VI</span> Social Worker's Intervention Action Plan</div>
+            <table class="action-table" id="actionTable">
+                <thead><tr><th style="width:35%;">Services</th><th>Specific Activities / Plan of Action</th></tr></thead>
+                <tbody id="actionBody"></tbody>
+            </table>
+            <div style="margin-top:8px;">
+                <button type="button" class="btn btn-add" onclick="addActionRow()">+ Add Row</button>
+            </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="sig-row">
+            <div class="sig-field">
+                <div class="sig-tools">
+                    <button type="button" class="btn btn-add" onclick="clearSig('clientSig')">Clear</button>
+                </div>
+                <div class="sig-pad-wrap">
+                    <canvas class="sig-canvas" id="clientSig"></canvas>
+                    <img class="sig-print-img" id="clientSigImg" alt="">
+                    <div class="sig-line"></div>
+                </div>
+                <div class="sig-hint">Sign above with mouse or finger</div>
+                <div class="sig-label">Client's Signature over Printed Name</div>
+            </div>
+            <div class="sig-field">
+                <div class="sig-tools">
+                    <button type="button" class="btn btn-add" onclick="clearSig('staffSig')">Clear</button>
+                </div>
+                <div class="sig-pad-wrap">
+                    <canvas class="sig-canvas" id="staffSig"></canvas>
+                    <img class="sig-print-img" id="staffSigImg" alt="">
+                    <div class="sig-line"></div>
+                </div>
+                <div class="sig-hint">Sign above with mouse or finger</div>
+                <div class="sig-label">Name of Interviewer / Social Worker</div>
+            </div>
         </div>
 
         <div class="toolbar">
-            <button class="btn" onclick="clearAll()">Clear Form</button>
-            <button class="btn" onclick="window.print()">Print</button>
-            <button class="btn btn-primary" onclick="saveAssessment()">Save to Dashboard</button>
+            <button class="btn" onclick="clearForm()">Clear Form</button>
+            <button class="btn" onclick="printIntakeSheet()">Print</button>
+            <button class="btn btn-primary" onclick="saveIntake()">Save Intake Sheet</button>
         </div>
 
     </div>
 </div>
 
 <script>
-const scores = {};
 let linkedAppId = null;
-let noCountValue = null;
+let currentIntakeId = null;
 
-window.onload = function(){
-    document.getElementById('metaDate').value = new Date().toISOString().split('T')[0];
+window.onload = function () {
+    document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
+    initFamTable();
+    initActionTable();
     populatePrefill();
-    const id = new URLSearchParams(window.location.search).get('id');
-    if (id) selectPrefillApplicant(id);
-    document.querySelectorAll('input[name="finalAssessment"]').forEach(r => r.addEventListener('change', updateFinalLabel));
+    initSigPad('clientSig');
+    initSigPad('staffSig');
+
+    const params = new URLSearchParams(window.location.search);
+    const recordId = params.get('record');
+    const incomingId = params.get('id');
+    if (recordId) {
+        loadSavedIntakeRecord(recordId);
+    } else if (incomingId) {
+        const saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
+        const intake = saved.find(r => String(r.id) === String(incomingId));
+        if (intake) { loadSavedIntakeRecord(incomingId); }
+        else { selectPrefillApplicant(incomingId); }
+    }
 };
 
-function toggle(btn, type){
-    const row = btn.closest('tr');
-    const key = row.dataset.key;
-    const buttons = row.querySelectorAll('.toggle-btn');
-    const checkBtn = buttons[0], xBtn = buttons[1];
-    if (scores[key] === type){
-        scores[key] = null;
-        checkBtn.classList.remove('check-active');
-        xBtn.classList.remove('x-active');
-    } else {
-        scores[key] = type;
-        checkBtn.classList.toggle('check-active', type === 'check');
-        xBtn.classList.toggle('x-active', type === 'x');
-    }
-    recalculate();
-}
+/* Signature pads */
+const sigPads = {};
+function initSigPad(id) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#111';
 
-function toggleNoCount(btn, type){
-    const btns = [document.getElementById('nocount-check'), document.getElementById('nocount-x')];
-    if (noCountValue === type){
-        noCountValue = null;
-        btns[0].classList.remove('check-active');
-        btns[1].classList.remove('x-active');
-    } else {
-        noCountValue = type;
-        btns[0].classList.toggle('check-active', type === 'check');
-        btns[1].classList.toggle('x-active', type === 'x');
+    let drawing = false, lastX = 0, lastY = 0;
+    function pos(e) {
+        const r = canvas.getBoundingClientRect();
+        const p = e.touches ? e.touches[0] : e;
+        return { x: p.clientX - r.left, y: p.clientY - r.top };
     }
-}
+    function start(e) { drawing = true; const p = pos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }
+    function move(e) {
+        if (!drawing) return;
+        const p = pos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke();
+        lastX = p.x; lastY = p.y; e.preventDefault();
+    }
+    function end() { drawing = false; }
 
-function recalculate(){
-    let checks = 0, crosses = 0, starCrosses = 0;
-    document.querySelectorAll('.indicator-row[data-key]').forEach(row => {
-        const key = row.dataset.key;
-        const starred = row.dataset.starred === 'true';
-        const val = scores[key];
-        if (val === 'check') checks++;
-        if (val === 'x'){ crosses++; if (starred) starCrosses++; }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+
+    sigPads[id] = { canvas, ctx };
+}
+function clearSig(id) {
+    const pad = sigPads[id];
+    if (!pad) return;
+    pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+    const img = document.getElementById(id + 'Img');
+    if (img) img.src = '';
+}
+function isSigEmpty(id) {
+    const pad = sigPads[id];
+    if (!pad) return true;
+    const data = pad.ctx.getImageData(0, 0, pad.canvas.width, pad.canvas.height).data;
+    for (let i = 3; i < data.length; i += 4) { if (data[i] !== 0) return false; }
+    return true;
+}
+function getSigDataUrl(id) {
+    const pad = sigPads[id];
+    if (!pad || isSigEmpty(id)) return '';
+    return pad.canvas.toDataURL('image/png');
+}
+function setSigFromDataUrl(id, dataUrl) {
+    if (!dataUrl) return;
+    const pad = sigPads[id];
+    if (!pad) return;
+    const img = new Image();
+    img.onload = function () {
+        const rect = pad.canvas.getBoundingClientRect();
+        pad.ctx.drawImage(img, 0, 0, rect.width, rect.height);
+    };
+    img.src = dataUrl;
+}
+function prepareSigImagesForPrint() {
+    ['clientSig', 'staffSig'].forEach(id => {
+        const img = document.getElementById(id + 'Img');
+        if (img) img.src = getSigDataUrl(id);
     });
-    document.getElementById('totalChecks').innerText = checks;
-    document.getElementById('totalCrosses').innerText = crosses;
-    document.getElementById('totalStarCrosses').innerText = starCrosses;
-    document.getElementById('totalPoints').innerText = checks + crosses;
-
-    const result = document.getElementById('assessmentResult');
-    const nonStarCrosses = crosses - starCrosses;
-
-    if (checks + crosses === 0){
-        result.className = 'assessment-result result-unknown';
-        result.innerHTML = '— Complete the indicators above to see the result —';
-        return;
-    }
-    const isBelow = (starCrosses >= 1) || (nonStarCrosses >= 4);
-    if (isBelow){
-        result.className = 'assessment-result result-below';
-        result.innerHTML = `BELOW POVERTY THRESHOLD — Family qualifies for assistance.`;
-        document.querySelector('input[name="finalAssessment"][value="below"]').checked = true;
-    } else {
-        result.className = 'assessment-result result-above';
-        result.innerHTML = `ABOVE POVERTY THRESHOLD — Family does not meet poverty criteria.`;
-        document.querySelector('input[name="finalAssessment"][value="above"]').checked = true;
-    }
-    updateFinalLabel();
 }
 
-function updateFinalLabel(){
-    document.getElementById('lbl-above').style.borderColor = '#999';
-    document.getElementById('lbl-below').style.borderColor = '#999';
-    document.getElementById('lbl-above').style.fontWeight = 'normal';
-    document.getElementById('lbl-below').style.fontWeight = 'normal';
-    const sel = document.querySelector('input[name="finalAssessment"]:checked');
-    if (sel){
-        const lbl = document.getElementById('lbl-' + sel.value);
-        lbl.style.borderColor = '#111';
-        lbl.style.fontWeight = 'bold';
-    }
+/* Family table */
+function initFamTable() { for (let i = 0; i < 5; i++) addFamRow(); }
+function addFamRow() {
+    const tbody = document.getElementById('famTableBody');
+    const n = tbody.rows.length + 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td class="row-num">${n}</td>
+        <td><input type="text" placeholder="Full Name"></td>
+        <td><input type="number" placeholder="—" style="text-align:center;"></td>
+        <td><select><option value="">—</option><option>Male</option><option>Female</option></select></td>
+        <td><input type="text" placeholder="Mother/Father..."></td>
+        <td><select><option value="">—</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></td>
+        <td><input type="text" placeholder="Elem/HS/College"></td>
+        <td><input type="text" placeholder="Occupation"></td>
+        <td><input type="number" placeholder="₱" style="text-align:right;"></td>`;
+    tbody.appendChild(tr);
+}
+function removeFamRow() {
+    const tbody = document.getElementById('famTableBody');
+    if (tbody.rows.length > 1) tbody.removeChild(tbody.lastChild);
 }
 
-function populatePrefill(){
+/* Action table */
+function initActionTable() { for (let i = 0; i < 3; i++) addActionRow(); }
+function addActionRow() {
+    const tbody = document.getElementById('actionBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><input type="text" placeholder="Service rendered..."></td><td><input type="text" placeholder="Specific activity or plan..."></td>`;
+    tbody.appendChild(tr);
+}
+
+/* Prefill */
+function populatePrefill() {
     let apps = [];
     try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
     window.prefillApplicantsCache = apps;
     renderPrefillSearchList(apps);
 }
-
-function renderPrefillSearchList(apps){
+function renderPrefillSearchList(apps) {
     const results = document.getElementById('prefillResults');
     const detail = document.getElementById('prefillDetail');
     if (!results) return;
-    if (apps.length === 0){
-        results.innerHTML = '<div style="padding:10px;color:#666;">No applicants found.</div>';
-        if (detail){ detail.style.display = 'none'; detail.innerHTML = ''; }
-        return;
-    }
-    results.innerHTML = apps.map(a => `
-        <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})">
-            <div class="search-result-title">${a.name || 'Unknown Applicant'}</div>
-            <div class="search-result-meta">${a.grade || 'No grade'} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
-        </button>
-    `).join('');
-    if (detail){ detail.style.display = 'none'; detail.innerHTML = ''; }
+    results.innerHTML = apps.length === 0
+        ? '<div style="padding:10px;color:#666;">No applicants found.</div>'
+        : apps.map(a => `
+            <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})">
+                <div class="search-result-title">${a.name || 'Unknown Applicant'}</div>
+                <div class="search-result-meta">${a.grade || 'No grade'} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
+            </button>
+        `).join('');
+    if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
-
-function filterPrefillApplicants(){
+function filterPrefillApplicants() {
     const query = document.getElementById('prefillSearch')?.value.toLowerCase().trim() || '';
     const apps = window.prefillApplicantsCache || [];
     const filtered = query === '' ? apps : apps.filter(a => {
@@ -487,18 +515,16 @@ function filterPrefillApplicants(){
     });
     renderPrefillSearchList(filtered);
 }
-
-function selectPrefillApplicant(appId){
+function selectPrefillApplicant(appId) {
     const apps = window.prefillApplicantsCache || [];
     const app = apps.find(a => a.id == appId);
     if (!app) return;
     const input = document.getElementById('prefillSearch');
     if (input) input.value = app.name || '';
-    prefillFromApp(appId);
     renderPrefillApplicantDetails(app);
+    prefillFromApp(appId);
 }
-
-function renderPrefillApplicantDetails(app){
+function renderPrefillApplicantDetails(app) {
     const detail = document.getElementById('prefillDetail');
     if (!detail) return;
     detail.style.display = 'block';
@@ -508,98 +534,273 @@ function renderPrefillApplicantDetails(app){
         <div>Barangay: ${app.barangay || 'N/A'} &nbsp;|&nbsp; Contact: ${app.contact || 'N/A'} &nbsp;|&nbsp; Gender: ${app.gender || 'N/A'}</div>
     `;
 }
-
-function prefillFromApp(id){
-    if (!id) return;
+function prefillFromApp(appId) {
+    if (!appId) return;
     let apps = [];
     try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
-    const a = apps.find(x => x.id == id);
+    const a = apps.find(x => x.id == appId);
     if (!a) return;
     linkedAppId = a.id;
-    if (document.getElementById('prefillSearch')) document.getElementById('prefillSearch').value = a.name || '';
+    const input = document.getElementById('prefillSearch');
+    if (input) input.value = a.name || '';
 
-    const surname = a.name ? a.name.split(',')[0].trim() : '';
-    document.getElementById('metaFamily').value = surname;
-    document.getElementById('metaBarangay').value = a.barangay || '';
-    document.getElementById('metaStudent').value = a.name || '';
-    document.getElementById('metaSY').value = a.sy || '';
+    setVal('iName', a.name || '');
+    setVal('iContact', a.contact || '');
+    setVal('iPresentAddr', `${a.address || ''}, Brgy. ${a.barangay || ''}`);
+    setVal('iPermAddr', `${a.address || ''}, Brgy. ${a.barangay || ''}`);
+    setSel('iSex', a.gender === 'Lalaki' ? 'Male' : (a.gender === 'Babae' ? 'Female' : (a.gender || 'Male')));
+    setVal('iReligion', a.religion || '');
+    setVal('iAge', a.age || '');
+    setVal('iDob', a.dob || '');
+    setVal('iBirthplace', a.birthplace || '');
+    setVal('iEduc', `${a.eduLevel || ''} – ${a.grade || ''}`);
 
-    const props = a.properties || [];
-    if (props.includes('4Ps Beneficiary') || props.includes('SSS/GSIS') || props.includes('PHILHEALTH')) setScore('ind9', 'check');
-    if (props.includes('Sariling Bahay') || props.includes('Sariling Lupa')) setScore('ind10', 'check');
+    const income = a.totalIncome || '0';
+    const expense = a.totalExpense || '0';
+    setVal('sProblem', `Applicant requires educational assistance for ${a.grade} at ${a.school} for S.Y. ${a.sy || '—'}. Reason stated: "${a.whyScholar || 'None provided.'}"`);
+    setVal('sBackground', `Family income: ₱${income}/month, Expenses: ₱${expense}/month. Living arrangement: ${a.livingWith || 'Not stated'}. Properties/benefits: ${(a.properties || []).join(', ') || 'None stated'}. Applicant's ambition: ${a.ambition || 'Not stated'}.`);
 
-    const income = parseFloat((a.totalIncome || '0').replace(/,/g, ''));
-    const expense = parseFloat((a.totalExpense || '0').replace(/,/g, ''));
-    if (income > 0) setScore('ind1', 'check');
-    if (income >= expense * 1.1) setScore('ind2', 'check');
+    const tbody = document.getElementById('famTableBody');
+    while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
+    const members = a.familyMembers || [];
+    const total = Math.max(members.length, 5);
+    for (let i = 0; i < total; i++) {
+        const f = members[i] || {};
+        addFamRow();
+        const row = tbody.rows[i];
+        const inputs = row.querySelectorAll('input, select');
+        if (inputs[0]) inputs[0].value = f.name || '';
+        if (inputs[1]) inputs[1].value = f.age || '';
+        if (inputs[2]) inputs[2].value = f.sex === 'Lalaki' ? 'Male' : (f.sex === 'Babae' ? 'Female' : (f.sex || ''));
+        if (inputs[3]) inputs[3].value = f.relation || '';
+        if (inputs[4]) inputs[4].value = f.civil === 'Kasal' ? 'Married' : (f.civil || '');
+        if (inputs[5]) inputs[5].value = f.educ || '';
+        if (inputs[6]) inputs[6].value = f.occup || '';
+        if (inputs[7]) inputs[7].value = f.income || '';
+    }
 
-    recalculate();
+    const parent = members.find(m => ['Father','Ama','Mother','Ina'].includes(m.relation));
+    if (parent) {
+        const spouseCandidate = members.find(m => m !== parent && ['Father','Ama','Mother','Ina'].includes(m.relation));
+        if (spouseCandidate) {
+            setVal('spName', spouseCandidate.name || '');
+            setVal('spAge', spouseCandidate.age || '');
+            setSel('spSex', spouseCandidate.sex === 'Lalaki' ? 'Male' : (spouseCandidate.sex === 'Babae' ? 'Female' : (spouseCandidate.sex || '')));
+            setVal('spOccup', spouseCandidate.occup || '');
+            setVal('spEduc', spouseCandidate.educ || '');
+            const cb = document.getElementById('includeSpouse');
+            if (cb) { cb.checked = true; }
+            toggleSpouseSection();
+        }
+    }
+}
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
+function setSel(id, val) {
+    const el = document.getElementById(id);
+    if (el) { for (let opt of el.options) { if (opt.value === val || opt.text === val) { el.value = opt.value; break; } } }
+}
+function toggleSpouseSection() {
+    const wrapper = document.getElementById('spouseSection');
+    const cb = document.getElementById('includeSpouse');
+    if (!wrapper || !cb) return;
+    wrapper.style.display = cb.checked ? 'block' : 'none';
 }
 
-function setScore(key, type){
-    scores[key] = type;
-    const row = document.querySelector(`.indicator-row[data-key="${key}"]`);
-    if (!row) return;
-    const btns = row.querySelectorAll('.toggle-btn');
-    btns[0].classList.toggle('check-active', type === 'check');
-    btns[1].classList.toggle('x-active', type === 'x');
-}
-
-function saveAssessment(){
-    const finalResult = document.querySelector('input[name="finalAssessment"]:checked')?.value || 'unknown';
-    const data = {
-        id: Date.now(),
-        date: document.getElementById('metaDate').value,
-        familySurname: document.getElementById('metaFamily').value,
-        barangay: document.getElementById('metaBarangay').value,
-        gabay: document.getElementById('metaGabay').value,
-        student: document.getElementById('metaStudent').value,
-        sy: document.getElementById('metaSY').value,
-        scores: { ...scores },
-        noCount: noCountValue,
-        checks: parseInt(document.getElementById('totalChecks').innerText),
-        crosses: parseInt(document.getElementById('totalCrosses').innerText),
-        starCrosses: parseInt(document.getElementById('totalStarCrosses').innerText),
-        finalResult,
-        narrative: document.getElementById('narrativeAssessment').value,
-        appliances: document.getElementById('appliancesText').value,
-        cellphones: document.getElementById('cellphoneCount').value,
-        linkedAppId,
-        savedAt: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' })
-    };
+/* Save */
+function saveIntake() {
+    const data = collectData();
     let saved = [];
-    try { saved = JSON.parse(localStorage.getItem('mefamdev_assessments')) || []; } catch(e){ saved = []; }
-    const existing = linkedAppId ? saved.findIndex(s => String(s.linkedAppId) === String(linkedAppId)) : -1;
-    if (existing > -1){ saved[existing] = { ...saved[existing], ...data, id: saved[existing].id || data.id }; }
-    else { saved.unshift(data); }
-    localStorage.setItem('mefamdev_assessments', JSON.stringify(saved));
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
 
-    if (linkedAppId){
+    const recordId = data.id || window.currentIntakeId || Date.now();
+    data.id = recordId;
+    window.currentIntakeId = recordId;
+    data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
+    if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
+    localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
+    localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
+
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'intake-saved', record: data }, '*');
+    }
+
+    if (linkedAppId) {
         let apps = [];
         try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
         const i = apps.findIndex(a => a.id == linkedAppId);
-        if (i > -1){ apps[i].assessmentResult = finalResult; localStorage.setItem('mefamdev_apps', JSON.stringify(apps)); }
+        if (i > -1 && apps[i].status === 'Pending Review') {
+            apps[i].status = 'Interviewing';
+            apps[i].intakeSheetId = data.caseNo;
+            localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        }
     }
-    alert(`Assessment saved!\nFamily: ${data.familySurname || '(unnamed)'}\nResult: ${finalResult === 'above' ? 'Above Poverty Threshold' : finalResult === 'below' ? 'Below Poverty Threshold' : 'Unset'}`);
+    alert(`Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`);
 }
 
-function clearAll(){
-    if (!confirm('Clear all data? Unsaved changes will be lost.')) return;
-    document.querySelectorAll('input[type="text"], input[type="date"]').forEach(el => { el.value = ''; });
-    document.getElementById('metaDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('narrativeAssessment').value = '';
-    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('check-active','x-active'));
-    document.querySelectorAll('input[name="finalAssessment"]').forEach(r => r.checked = false);
-    for (let k in scores) delete scores[k];
-    noCountValue = null;
+function loadSavedIntakeRecord(recordId) {
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
+    const record = saved.find(r => String(r.id) === String(recordId));
+    if (!record) { alert('Saved intake sheet not found.'); return; }
+
+    currentIntakeId = record.id;
+    linkedAppId = record.linkedAppId || null;
+
+    setVal('caseNo', record.caseNo || '');
+    setVal('caseDate', record.caseDate || '');
+    setVal('caseCategory', record.caseCategory || '');
+    setVal('caseReferral', record.caseReferral || '');
+    setVal('iName', record.name || '');
+    setVal('iNickname', record.nickname || '');
+    setVal('iNationality', record.nationality || '');
+    setVal('iContact', record.contact || '');
+    setVal('iPresentAddr', record.presentAddr || '');
+    setVal('iPermAddr', record.permAddr || '');
+    setVal('iCivilStatus', record.civilStatus || '');
+    setVal('iSex', record.sex || '');
+    setVal('iReligion', record.religion || '');
+    setVal('iAge', record.age || '');
+    setVal('iDob', record.dob || '');
+    setVal('iBirthplace', record.birthplace || '');
+    setVal('iEduc', record.educ || '');
+    setVal('iOccup', record.occup || '');
+    setVal('spName', record.spName || record.spouseName || '');
+    setVal('spNickname', record.spNickname || '');
+    setVal('spNationality', record.spNationality || '');
+    setVal('spContact', record.spContact || '');
+    setVal('spAddress', record.spAddress || '');
+    setVal('spCivil', record.spCivil || '');
+    setVal('spSex', record.spSex || '');
+    setVal('spReligion', record.spReligion || '');
+    setVal('spAge', record.spAge || '');
+    setVal('spDob', record.spDob || '');
+    setVal('spBirthplace', record.spBirthplace || '');
+    setVal('spEduc', record.spEduc || '');
+    setVal('spOccup', record.spOccup || '');
+    const hasSpouse = (record.spName || record.spNick || record.spOccup || record.spEduc || '').toString().trim() !== '';
+    if (hasSpouse) {
+        const cb = document.getElementById('includeSpouse'); if (cb) cb.checked = true;
+        const ss = document.getElementById('spouseSection'); if (ss) ss.style.display = 'block';
+    }
+    setVal('sProblem', record.problemPresented || '');
+    setVal('sBackground', record.backgroundInfo || '');
+    setVal('sAssessment', record.assessment || '');
+
+    const famRows = record.familyComposition || [];
+    const tbody = document.getElementById('famTableBody');
+    while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
+    for (let i = 0; i < Math.max(famRows.length, 5); i++) {
+        addFamRow();
+        const row = tbody.rows[i];
+        const f = famRows[i] || {};
+        const inputs = row.querySelectorAll('input, select');
+        if (inputs[0]) inputs[0].value = f.name || '';
+        if (inputs[1]) inputs[1].value = f.age || '';
+        if (inputs[2]) inputs[2].value = f.sex || '';
+        if (inputs[3]) inputs[3].value = f.relation || '';
+        if (inputs[4]) inputs[4].value = f.civil || '';
+        if (inputs[5]) inputs[5].value = f.educ || '';
+        if (inputs[6]) inputs[6].value = f.occup || '';
+        if (inputs[7]) inputs[7].value = f.income || '';
+    }
+
+    const actionRows = record.actionPlan || [];
+    const actionBody = document.getElementById('actionBody');
+    while (actionBody.rows.length > 0) actionBody.removeChild(actionBody.lastChild);
+    for (let i = 0; i < Math.max(actionRows.length, 3); i++) {
+        addActionRow();
+        const row = actionBody.rows[i];
+        const inputs = row.querySelectorAll('input');
+        if (inputs[0]) inputs[0].value = actionRows[i]?.service || '';
+        if (inputs[1]) inputs[1].value = actionRows[i]?.plan || '';
+    }
+
+    if (record.clientSignature) setSigFromDataUrl('clientSig', record.clientSignature);
+    if (record.staffSignature) setSigFromDataUrl('staffSig', record.staffSignature);
+
+    if (linkedAppId) selectPrefillApplicant(linkedAppId);
+}
+
+function collectData() {
+    const famRows = [];
+    document.querySelectorAll('#famTableBody tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input, select');
+        if (inputs[0]?.value?.trim()) {
+            famRows.push({
+                name: inputs[0].value, age: inputs[1].value,
+                sex: inputs[2].value, relation: inputs[3].value,
+                civil: inputs[4].value, educ: inputs[5].value,
+                occup: inputs[6].value, income: inputs[7].value
+            });
+        }
+    });
+    const actionRows = [];
+    document.querySelectorAll('#actionBody tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input');
+        if (inputs[0]?.value?.trim()) actionRows.push({ service: inputs[0].value, plan: inputs[1]?.value || '' });
+    });
+    return {
+        id: window.currentIntakeId || Date.now(),
+        caseNo: document.getElementById('caseNo').value,
+        caseDate: document.getElementById('caseDate').value,
+        caseCategory: document.getElementById('caseCategory').value,
+        caseReferral: document.getElementById('caseReferral').value,
+        name: document.getElementById('iName').value,
+        nickname: document.getElementById('iNickname').value,
+        nationality: document.getElementById('iNationality').value,
+        contact: document.getElementById('iContact').value,
+        presentAddr: document.getElementById('iPresentAddr').value,
+        permAddr: document.getElementById('iPermAddr').value,
+        civilStatus: document.getElementById('iCivilStatus').value,
+        sex: document.getElementById('iSex').value,
+        religion: document.getElementById('iReligion').value,
+        age: document.getElementById('iAge').value,
+        dob: document.getElementById('iDob').value,
+        birthplace: document.getElementById('iBirthplace').value,
+        educ: document.getElementById('iEduc').value,
+        occup: document.getElementById('iOccup').value,
+        familyComposition: famRows,
+        problemPresented: document.getElementById('sProblem').value,
+        backgroundInfo: document.getElementById('sBackground').value,
+        assessment: document.getElementById('sAssessment').value,
+        actionPlan: actionRows,
+        clientSignature: getSigDataUrl('clientSig'),
+        staffSignature: getSigDataUrl('staffSig'),
+        linkedAppId,
+        savedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    };
+}
+
+function clearForm() {
+    if (!confirm('Clear all fields? Unsaved data will be lost.')) return;
+    document.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea').forEach(el => el.value = '');
+    document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('iNationality').value = 'Filipino';
+    document.getElementById('iOccup').value = 'Student';
+    document.getElementById('caseReferral').value = 'Online Application';
+    const tbody = document.getElementById('famTableBody');
+    while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
+    for (let i = 0; i < 5; i++) addFamRow();
     linkedAppId = null;
+    const cb = document.getElementById('includeSpouse'); if (cb) { cb.checked = false; }
+    const spouseSection = document.getElementById('spouseSection'); if (spouseSection) spouseSection.style.display = 'none';
     const searchInput = document.getElementById('prefillSearch');
     if (searchInput) searchInput.value = '';
     const detail = document.getElementById('prefillDetail');
-    if (detail){ detail.style.display = 'none'; detail.innerHTML = ''; }
-    renderPrefillSearchList(window.prefillApplicantsCache || []);
-    ['lbl-above','lbl-below'].forEach(id => { const el = document.getElementById(id); if (el){ el.style.borderColor = '#999'; el.style.fontWeight = 'normal'; } });
-    recalculate();
+    if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
+}
+
+function printIntakeSheet() {
+    // hide fully empty family rows in print to save space
+    document.querySelectorAll('#famTableBody tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input, select');
+        const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
+        tr.classList.toggle('fam-row-empty-print', !hasData);
+    });
+    prepareSigImagesForPrint();
+    setTimeout(() => window.print(), 30);
 }
 </script>
 </body>
