@@ -235,7 +235,8 @@
             }
             body { padding: 20px !important; }
             .shell { box-shadow: none !important; border: none !important; background: #fff !important; }
-            .prefill-bar, .toolbar, .search-wrap, .search-results, .btn, input, select, textarea { display: none !important; }
+            .prefill-bar, .toolbar, .search-wrap, .search-results, .btn { display: none !important; }
+            input, select, textarea { border: none !important; background: transparent !important; color: #000 !important; }
             .doc-header {
                 background: #fff !important;
                 color: #000 !important;
@@ -364,8 +365,11 @@
                 <div class="field"><label class="fl">Occupation</label><input type="text" id="iOccup" value="Student"></div>
             </div>
 
-            <!-- Spouse -->
-            <div class="subsection">
+            <!-- Spouse (optional) -->
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+                <label style="font-size:.82rem; color:#556; display:flex; align-items:center; gap:8px;"><input id="includeSpouse" type="checkbox" onclick="toggleSpouseSection()"> Include Spouse / Partner information</label>
+            </div>
+            <div id="spouseSection" class="subsection" style="display:none;">
                 <div class="subsection-title">Spouse / Partner Information</div>
                 <div class="g2">
                     <div class="field"><label class="fl">Name of Spouse</label><input type="text" id="spName"></div>
@@ -522,7 +526,7 @@ window.onload = function () {
 
 /* ── Family table ── */
 function initFamTable() {
-    for (let i = 0; i < 15; i++) addFamRow();
+    for (let i = 0; i < 5; i++) addFamRow();
 }
 function addFamRow() {
     const tbody = document.getElementById('famTableBody');
@@ -547,7 +551,7 @@ function removeFamRow() {
 
 /* ── Action plan table ── */
 function initActionTable() {
-    for (let i = 0; i < 6; i++) addActionRow();
+    for (let i = 0; i < 3; i++) addActionRow();
 }
 function addActionRow() {
     const tbody = document.getElementById('actionBody');
@@ -656,7 +660,7 @@ function prefillFromApp(appId) {
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
     const members = a.familyMembers || [];
-    const total = Math.max(members.length, 15);
+    const total = Math.max(members.length, 5);
     for (let i = 0; i < total; i++) {
         const f = members[i] || {};
         addFamRow();
@@ -681,6 +685,10 @@ function prefillFromApp(appId) {
             setSel('spSex', spouseCandidate.sex === 'Lalaki' ? 'Male' : (spouseCandidate.sex === 'Babae' ? 'Female' : (spouseCandidate.sex || '')));
             setVal('spOccup', spouseCandidate.occup || '');
             setVal('spEduc', spouseCandidate.educ || '');
+            // show spouse section when prefilled
+            const cb = document.getElementById('includeSpouse');
+            if (cb) { cb.checked = true; }
+            toggleSpouseSection();
         }
     }
 
@@ -696,6 +704,13 @@ function setSel(id, val) {
     if (el) {
         for (let opt of el.options) { if (opt.value === val || opt.text === val) { el.value = opt.value; break; } }
     }
+}
+
+function toggleSpouseSection() {
+    const wrapper = document.getElementById('spouseSection');
+    const cb = document.getElementById('includeSpouse');
+    if (!wrapper || !cb) return;
+    wrapper.style.display = cb.checked ? 'block' : 'none';
 }
 
 /* ── Save to dashboard ── */
@@ -767,6 +782,26 @@ function loadSavedIntakeRecord(recordId) {
     if (document.getElementById('iBirthplace')) document.getElementById('iBirthplace').value = record.birthplace || '';
     if (document.getElementById('iEduc')) document.getElementById('iEduc').value = record.educ || '';
     if (document.getElementById('iOccup')) document.getElementById('iOccup').value = record.occup || '';
+    // spouse fields (if saved)
+    if (document.getElementById('spName')) document.getElementById('spName').value = record.spName || record.spouseName || '';
+    if (document.getElementById('spNickname')) document.getElementById('spNickname').value = record.spNickname || '';
+    if (document.getElementById('spNationality')) document.getElementById('spNationality').value = record.spNationality || '';
+    if (document.getElementById('spContact')) document.getElementById('spContact').value = record.spContact || '';
+    if (document.getElementById('spAddress')) document.getElementById('spAddress').value = record.spAddress || '';
+    if (document.getElementById('spCivil')) document.getElementById('spCivil').value = record.spCivil || '';
+    if (document.getElementById('spSex')) document.getElementById('spSex').value = record.spSex || '';
+    if (document.getElementById('spReligion')) document.getElementById('spReligion').value = record.spReligion || '';
+    if (document.getElementById('spAge')) document.getElementById('spAge').value = record.spAge || '';
+    if (document.getElementById('spDob')) document.getElementById('spDob').value = record.spDob || '';
+    if (document.getElementById('spBirthplace')) document.getElementById('spBirthplace').value = record.spBirthplace || '';
+    if (document.getElementById('spEduc')) document.getElementById('spEduc').value = record.spEduc || '';
+    if (document.getElementById('spOccup')) document.getElementById('spOccup').value = record.spOccup || '';
+    // show spouse section if any spouse field exists
+    const hasSpouse = (record.spName||record.spNick||record.spOccup||record.spEduc||'').toString().trim() !== '';
+    if (hasSpouse) {
+        const cb = document.getElementById('includeSpouse'); if (cb) cb.checked = true;
+        const ss = document.getElementById('spouseSection'); if (ss) ss.style.display = 'block';
+    }
     if (document.getElementById('sProblem')) document.getElementById('sProblem').value = record.problemPresented || '';
     if (document.getElementById('sBackground')) document.getElementById('sBackground').value = record.backgroundInfo || '';
     if (document.getElementById('sAssessment')) document.getElementById('sAssessment').value = record.assessment || '';
@@ -774,7 +809,7 @@ function loadSavedIntakeRecord(recordId) {
     const famRows = record.familyComposition || [];
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
-    for (let i = 0; i < Math.max(famRows.length, 15); i++) {
+    for (let i = 0; i < Math.max(famRows.length, 5); i++) {
         addFamRow();
         const row = tbody.rows[i];
         const f = famRows[i] || {};
@@ -792,7 +827,7 @@ function loadSavedIntakeRecord(recordId) {
     const actionRows = record.actionPlan || [];
     const actionBody = document.getElementById('actionBody');
     while (actionBody.rows.length > 0) actionBody.removeChild(actionBody.lastChild);
-    for (let i = 0; i < Math.max(actionRows.length, 6); i++) {
+    for (let i = 0; i < Math.max(actionRows.length, 3); i++) {
         addActionRow();
         const row = actionBody.rows[i];
         const inputs = row.querySelectorAll('input');
@@ -865,8 +900,10 @@ function clearForm() {
     // Reset family table
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
-    for (let i = 0; i < 15; i++) addFamRow();
+    for (let i = 0; i < 5; i++) addFamRow();
     linkedAppId = null;
+    const cb = document.getElementById('includeSpouse'); if (cb) { cb.checked = false; }
+    const spouseSection = document.getElementById('spouseSection'); if (spouseSection) spouseSection.style.display = 'none';
     const searchInput = document.getElementById('prefillSearch');
     if (searchInput) searchInput.value = '';
     const detail = document.getElementById('prefillDetail');
