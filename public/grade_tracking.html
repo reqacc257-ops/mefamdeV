@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEFAMDEV-Life Grade Tracking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a2e44;
+            --navy2: #243b55;
+            --gold: #f5a623;
+            --gold-light: #fdf0d5;
+            --teal: #1abc9c;
+            --red: #e74c3c;
+            --orange: #f39c12;
+            --purple: #8e44ad;
+            --bg: #eef1f5;
+            --white: #ffffff;
+            --border: #dde3ec;
+            --text: #2c3e50;
+            --text-muted: #7f8c8d;
+            --sidebar-w: 260px;
+            --header-h: 64px;
+            --shadow-sm: 0 1px 4px rgba(26,46,68,.08);
+            --shadow: 0 3px 14px rgba(26,46,68,.11);
+            --radius: 10px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { min-height: 100%; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 50px; }
+        .topbar { height: var(--header-h); background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; }
+        .topbar-title { font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--navy); }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .content-area { margin-top: 18px; }
+        .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+        .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); }
+        .btn { border: 0; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s, transform .2s; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-ghost { background: rgba(15,33,48,.06); color: var(--navy); }
+        .btn-navy { background: var(--navy); color: #fff; }
+        .btn-gold { background: var(--gold); color: var(--navy); }
+        .btn-sm { padding: 8px 12px; font-size: .82rem; }
+        .search-wrap { position: relative; display: inline-flex; width: 100%; max-width: 320px; }
+        .search-input { width: 100%; padding: 12px 14px 12px 36px; border-radius: 10px; border: 1px solid var(--border); font-size: .92rem; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%237f8c8d"><path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm8.71 1.71-4.3-4.3A9.95 9.95 0 0 0 20 10a10 10 0 1 0-10 10 9.95 9.95 0 0 0 5.41-1.59l4.3 4.3a1 1 0 0 0 1.42-1.42Z"/></svg>') no-repeat center / contain;
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eef1f5; }
+        th { background: #f8fafc; color: var(--navy); font-size: .85rem; font-weight: 700; }
+        tbody tr:hover { background: #f9fbfd; }
+        .badge { display: inline-flex; align-items: center; justify-content: center; padding: 5px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+        .badge-grey { background: #f0f1f3; color: #5c6a7d; }
+        .badge-green { background: #e9f7ef; color: #1d7a3f; }
+        .badge-red { background: #fde8ea; color: #b41623; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(12,20,39,.65); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+        .modal-overlay.open { display: flex; }
+        .modal { width: min(100%, 560px); background: #fff; border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #eef1f5; }
+        .modal-header h2 { margin: 0; font-size: 1.1rem; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px 24px; border-top: 1px solid #eef1f5; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: .85rem; margin-bottom: 8px; color: var(--text-muted); }
+        input[type=text], input[type=number], select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: .95rem; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        .empty-state { background: #f8fbff; border: 1px solid #dfe8f3; color: #5f6d7a; padding: 24px; border-radius: 14px; text-align: center; }
+        .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .page-header-row > div { min-width: 140px; }
+    </style>
+</head>
+<body>
+    <main class="main">
+        <header class="topbar">
+            <div style="display:flex; align-items:center; gap:12px;"><span class="topbar-title">Grade Tracking</span></div>
+            <div class="topbar-right">
+                <button class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="card">
+                <div class="page-header-row" style="margin-bottom:18px;">
+                    <div>
+                        <div class="card-title">Grade Monitoring</div>
+                        <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">Track scholar grades and update performance per semester.</p>
+                    </div>
+                    <div style="display:grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr) auto; gap:10px; align-items:center;">
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <label style="font-size:.84rem; color:var(--text-muted); margin:0;">Semester:</label>
+                            <select id="gradeSemSelect" style="width:auto; min-width:160px; border-radius:10px; padding:10px 12px;"></select>
+                            <button class="btn btn-sm btn-ghost" type="button" onclick="addGradeSemester()">+ Add Semester</button>
+                        </div>
+                        <div class="search-wrap" style="width:100%; min-width:240px;">
+                            <span class="search-icon"></span>
+                            <input id="gradeSearchInput" class="search-input" placeholder="Search scholar, school, grade..." oninput="filterGrades()">
+                        </div>
+                        <select id="gradeFilterSelect" style="width:auto; min-width:170px; border-radius:10px; padding:10px 12px;" onchange="filterGrades()">
+                            <option value="">All Grade Levels</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Scholar Name</th><th>School</th><th>Grade/Year</th><th>Selected Semester</th><th>History</th><th>Action</th></tr></thead>
+                        <tbody id="grades-body"></tbody>
+                    </table>
+                    <div id="gradesPager" style="display:flex; justify-content:flex-end; gap:8px; padding:10px 0; align-items:center;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="gradeModal">
+        <div class="modal">
+            <div class="modal-header"><h2>Enter Scholar Grade</h2><button class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button></div>
+            <div class="modal-body">
+                <p id="gradeModalName" style="font-weight:700; margin-bottom:14px;"></p>
+                <div class="form-group"><label>School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
+                <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
+                <datalist id="subjectsList"></datalist>
+                <div class="form-group"><label>Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
+                <div class="form-group"><label>Grade (60-100)</label><input type="number" id="gradeInput" min="60" max="100"></div>
+                <input type="hidden" id="gradeModalId">
+                <input type="hidden" id="gradeModalAppId">
+            </div>
+            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button><button class="btn btn-navy" onclick="saveGrade()">Save Grade</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="subjectsModal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
+            <div class="modal-body">
+                <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
+                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
+                <div style="margin-top:16px;"><ul id="subjectsListView"></ul></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
+        </div>
+    </div>
+
+    <script src="/mefamdev-api.js"></script>
+    <script>
+        let savedGrades = {};
+        let currentGradeSemester = '';
+        let acceptedScholars = [];
+        let gradeSearchQuery = '';
+        let gradeFilterValue = '';
+
+        async function loadGradePage() {
+            try {
+                const apps = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
+                acceptedScholars = Array.isArray(apps) ? apps : [];
+                const grades = await MefamAPI.getGrades() || [];
+                const localGrades = JSON.parse(localStorage.getItem('mefamdev_grades') || '{}') || {};
+                savedGrades = mergeGradeData(localGrades, grades);
+                localStorage.setItem('mefamdev_grades', JSON.stringify(savedGrades));
+                await renderSubjectsDatalist();
+                populateGradeFilterOptions();
+                ensureGradeSemesterOptions();
+                renderGrades();
+            } catch (error) {
+                console.error('Failed to load grade page:', error);
+                acceptedScholars = Array.isArray(acceptedScholars) ? acceptedScholars : [];
+                populateGradeFilterOptions();
+                renderGrades();
+            }
+        }
+
+        function mergeGradeData(localData, remoteGrades) {
+            const next = typeof localData === 'object' && localData ? { ...localData } : {};
+            (Array.isArray(remoteGrades) ? remoteGrades : []).forEach(g => {
+                const appId = String(g.app_id || g.appId || '') || '';
+                if (!appId) return;
+                if (!next[appId]) next[appId] = { history: [] };
+                const semester = String(g.school_year || g.semester || '').trim();
+                const subject = String(g.subject || g.subject_name || g.subjectName || '').trim();
+                const quarter = String(g.quarter || '').trim();
+                const gradeVal = g.grade_val || g.grade || 0;
+                const existing = Array.isArray(next[appId].history) ? next[appId].history : [];
+                const duplicate = existing.some(r => String(r.semester) === semester && String(r.subject) === subject && String(r.quarter) === quarter && Number(r.grade_val) === Number(gradeVal));
+                if (!duplicate) {
+                    existing.push({ grade_val: gradeVal, semester, subject, quarter, schoolYear: String(g.school_year || ''), updated_at: g.updated_at || new Date().toISOString() });
+                }
+                next[appId].history = existing;
+            });
+            return next;
+        }
+
+        function ensureGradeSemesterOptions() {
+            const select = document.getElementById('gradeSemSelect');
+            if (!select) return;
+            let options = [];
+            const saved = JSON.parse(localStorage.getItem('mefamdev_grade_semesters') || '[]');
+            if (Array.isArray(saved)) options = options.concat(saved.filter(Boolean));
+            Object.values(savedGrades).forEach(entry => {
+                if (entry && Array.isArray(entry.history)) {
+                    entry.history.forEach(r => { if (r.semester) options.push(r.semester); });
+                }
+            });
+            options = Array.from(new Set(options)).filter(Boolean).sort();
+            if (options.length === 0) {
+                select.innerHTML = '<option value="">No semesters available</option>';
+                currentGradeSemester = '';
+                return;
+            }
+            select.innerHTML = options.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+            if (!options.includes(currentGradeSemester)) currentGradeSemester = options[0];
+            select.value = currentGradeSemester;
+            select.onchange = () => { currentGradeSemester = select.value; renderGrades(); };
+        }
+
+        function populateGradeFilterOptions() {
+            const select = document.getElementById('gradeFilterSelect');
+            if (!select) return;
+            const gradeLevels = Array.from(new Set((acceptedScholars || []).map(s => String(s.grade || '').trim()).filter(Boolean))).sort();
+            select.innerHTML = '<option value="">All Grade Levels</option>' + gradeLevels.map(level => `<option value="${escapeHtml(level)}">${escapeHtml(level)}</option>`).join('');
+        }
+
+        function filterGrades() {
+            gradeSearchQuery = document.getElementById('gradeSearchInput')?.value.trim().toLowerCase() || '';
+            gradeFilterValue = document.getElementById('gradeFilterSelect')?.value || '';
+            renderGrades();
+        }
+
+        function addGradeSemester() {
+            const semester = prompt('Enter a semester / grading period (e.g. 2025-2026)');
+            if (!semester) return;
+            const normalized = semester.trim();
+            if (!normalized) return;
+            const stored = JSON.parse(localStorage.getItem('mefamdev_grade_semesters') || '[]');
+            const next = Array.isArray(stored) ? stored.slice() : [];
+            if (!next.includes(normalized)) next.push(normalized);
+            localStorage.setItem('mefamdev_grade_semesters', JSON.stringify(next));
+            ensureGradeSemesterOptions();
+            renderGrades();
+        }
+
+        function renderGrades() {
+            const tbody = document.getElementById('grades-body');
+            const pager = document.getElementById('gradesPager');
+            if (!tbody) return;
+            const scholars = Array.isArray(acceptedScholars) ? acceptedScholars : [];
+            const filteredScholars = scholars.filter(s => {
+                const query = gradeSearchQuery.toLowerCase();
+                const text = `${s.name || ''} ${s.school || ''} ${s.grade || ''}`.toLowerCase();
+                const matchesSearch = !query || text.includes(query);
+                const matchesFilter = !gradeFilterValue || String(s.grade || '').toLowerCase() === gradeFilterValue.toLowerCase();
+                return matchesSearch && matchesFilter;
+            });
+            if (filteredScholars.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No matching scholars found.</div></td></tr>`;
+                if (pager) pager.innerHTML = '';
+                return;
+            }
+            tbody.innerHTML = filteredScholars.map(s => {
+                const record = savedGrades[String(s.id)] || {};
+                const selectedEntry = Array.isArray(record.history)
+                    ? record.history.find(r => String(r.semester) === String(currentGradeSemester))
+                    : null;
+                const selectedGrade = Number(selectedEntry?.grade_val || 0);
+                const historyRows = Array.isArray(record.history)
+                    ? record.history.filter(r => r !== selectedEntry).slice(0, 3)
+                    : [];
+                const historyHtml = historyRows.length > 0
+                    ? historyRows.map(r => `${escapeHtml(r.semester || 'Unspecified')}: ${escapeHtml(r.grade_val ?? '')}`).join('<br>')
+                    : '—';
+                const hasGrade = Boolean(selectedEntry);
+                const badge = !hasGrade
+                    ? `<span class="badge badge-grey">No Data</span>`
+                    : selectedGrade >= 80 ? `<span class="badge badge-green">Passed</span>` : `<span class="badge badge-red">Needs Intervention</span>`;
+                return `<tr>
+                    <td><strong>${escapeHtml(s.name || '—')}</strong></td>
+                    <td>${escapeHtml(s.school || '—')}</td>
+                    <td>${escapeHtml(s.grade || '—')}</td>
+                    <td>${hasGrade ? escapeHtml(String(selectedGrade)) : '—'}</td>
+                    <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
+                    <td><button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(s.id)||0}, ${makeJsString(s.name || 'Scholar')})'>Update</button></td>
+                </tr>`;
+            }).join('');
+            if (pager) pager.innerHTML = '';
+        }
+
+        function openGradeModal(id, name) {
+            document.getElementById('gradeModalName').innerText = name;
+            document.getElementById('gradeModalAppId').value = id;
+            document.getElementById('gradeModalId').value = id;
+            document.getElementById('gradeInput').value = '';
+            document.getElementById('gradeSchoolYear').value = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+            document.getElementById('gradeSubject').value = '';
+            document.getElementById('gradeQuarter').value = '';
+            document.getElementById('gradeModal').classList.add('open');
+        }
+
+        async function saveGrade() {
+            const appId = parseInt(document.getElementById('gradeModalAppId').value, 10);
+            const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
+            const subject = document.getElementById('gradeSubject').value.trim();
+            const quarter = document.getElementById('gradeQuarter').value.trim();
+            const grade = parseInt(document.getElementById('gradeInput').value, 10);
+            if (!schoolYear) return alert('Please enter a school year.');
+            if (!subject) return alert('Please select a subject.');
+            if (!quarter) return alert('Please select a quarter.');
+            if (!(grade >= 60 && grade <= 100)) return alert('Please enter a valid grade between 60 and 100.');
+            try {
+                await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
+                closeModal('gradeModal');
+                await loadGradePage();
+                alert('✅ Grade saved successfully!');
+            } catch (error) {
+                console.error('Failed to save grade:', error);
+                alert('Unable to save the grade right now.');
+            }
+        }
+
+        function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+        async function renderSubjectsDatalist() {
+            const list = document.getElementById('subjectsList');
+            const view = document.getElementById('subjectsListView');
+            if (!list) return;
+            let subjects = [];
+            try {
+                const res = await MefamAPI.getSubjects();
+                if (Array.isArray(res)) subjects = res;
+            } catch (e) {
+                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
+            }
+            const fallback = ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'];
+            const finalSubjects = subjects.length ? subjects : fallback;
+            list.innerHTML = finalSubjects.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+            if (view) {
+                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
+            }
+        }
+
+        function openSubjectsModal() {
+            document.getElementById('subjectsModal').classList.add('open');
+            renderSubjectsDatalist();
+        }
+
+        async function addSubject() {
+            const input = document.getElementById('newSubjectInput');
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) return alert('Enter a subject name to add.');
+            try {
+                const current = await MefamAPI.getSubjects() || [];
+                if (current.includes(val)) return alert('That subject already exists.');
+                const next = current.concat([val]);
+                await MefamAPI.saveSubjects(next);
+                input.value = '';
+                await renderSubjectsDatalist();
+            } catch (e) {
+                let subjects = [];
+                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
+                if (subjects.includes(val)) return alert('That subject already exists.');
+                subjects.push(val);
+                localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
+                input.value = '';
+                await renderSubjectsDatalist();
+            }
+        }
+
+        async function removeSubject(idx) {
+            try {
+                const current = await MefamAPI.getSubjects() || [];
+                if (idx < 0 || idx >= current.length) return;
+                if (!confirm(`Remove subject "${current[idx]}"?`)) return;
+                current.splice(idx, 1);
+                await MefamAPI.saveSubjects(current);
+                await renderSubjectsDatalist();
+            } catch (e) {
+                let subjects = [];
+                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
+                if (idx < 0 || idx >= subjects.length) return;
+                if (!confirm(`Remove subject "${subjects[idx]}"?`)) return;
+                subjects.splice(idx, 1);
+                localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
+                await renderSubjectsDatalist();
+            }
+        }
+
+        async function saveSubjects() {
+            closeModal('subjectsModal');
+            await renderSubjectsDatalist();
+        }
+
+        function makeJsString(value) {
+            return JSON.stringify(String(value || '')).replace(/</g, '\u003c').replace(/>/g, '\u003e').replace(/&/g, '\u0026');
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        window.addEventListener('DOMContentLoaded', loadGradePage);
+    </script>
+    <script src="global-actions.js"></script>
+</body>
+</html>
