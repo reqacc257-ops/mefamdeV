@@ -182,14 +182,15 @@
                 const appId = String(g.app_id || g.appId || '') || '';
                 if (!appId) return;
                 if (!next[appId]) next[appId] = { history: [] };
-                const semester = String(g.school_year || g.semester || '').trim();
+                const schoolYear = String(g.school_year || g.schoolYear || '').trim();
+                const semester = schoolYear || String(g.semester || '').trim();
                 const subject = String(g.subject || g.subject_name || g.subjectName || '').trim();
                 const quarter = String(g.quarter || '').trim();
                 const gradeVal = g.grade_val || g.grade || 0;
                 const existing = Array.isArray(next[appId].history) ? next[appId].history : [];
                 const duplicate = existing.some(r => String(r.semester) === semester && String(r.subject) === subject && String(r.quarter) === quarter && Number(r.grade_val) === Number(gradeVal));
                 if (!duplicate) {
-                    existing.push({ grade_val: gradeVal, semester, subject, quarter, schoolYear: String(g.school_year || ''), updated_at: g.updated_at || new Date().toISOString() });
+                    existing.push({ grade_val: gradeVal, semester, subject, quarter, schoolYear, updated_at: g.updated_at || new Date().toISOString() });
                 }
                 next[appId].history = existing;
             });
@@ -209,7 +210,10 @@
             if (Array.isArray(saved)) options = options.concat(saved.filter(Boolean));
             Object.values(savedGrades).forEach(entry => {
                 if (entry && Array.isArray(entry.history)) {
-                    entry.history.forEach(r => { if (r.semester) options.push(r.semester); });
+                    entry.history.forEach(r => {
+                        if (r.semester) options.push(r.semester);
+                        else if (r.schoolYear) options.push(r.schoolYear);
+                    });
                 }
             });
             options = Array.from(new Set(options)).filter(Boolean).sort();
@@ -277,16 +281,16 @@
                 const record = savedGrades[String(s.id)] || {};
                 const allHistory = Array.isArray(record.history) ? record.history : [];
                 // Entries that belong to the currently selected semester
-                const currentEntries = allHistory.filter(r => String(r.semester) === String(currentGradeSemester));
+                const currentEntries = allHistory.filter(r => String(r.semester || r.schoolYear) === String(currentGradeSemester));
                 // Everything else is genuine history from other semesters
-                const otherEntries = allHistory.filter(r => String(r.semester) !== String(currentGradeSemester));
+                const otherEntries = allHistory.filter(r => String(r.semester || r.schoolYear) !== String(currentGradeSemester));
                 const hasGrade = currentEntries.length > 0;
                 const avgGrade = hasGrade
                     ? Math.round((currentEntries.reduce((sum, r) => sum + Number(r.grade_val || 0), 0) / currentEntries.length) * 10) / 10
                     : null;
                 const historyRows = otherEntries.slice(0, 3);
                 const historyHtml = historyRows.length > 0
-                    ? historyRows.map(r => `${escapeHtml(r.semester || 'Unspecified')} — ${escapeHtml(r.subject || '')} Q${escapeHtml(r.quarter || '')}: ${escapeHtml(r.grade_val ?? '')}`).join('<br>')
+                    ? historyRows.map(r => `${escapeHtml(r.semester || r.schoolYear || 'Unspecified')} — ${escapeHtml(r.subject || '')} Q${escapeHtml(r.quarter || '')}: ${escapeHtml(r.grade_val ?? '')}`).join('<br>')
                     : '—';
                 const badge = !hasGrade
                     ? `<span class="badge badge-grey">No Data</span>`
