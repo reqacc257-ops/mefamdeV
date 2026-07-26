@@ -1,294 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEFAMDEV – Intake Sheet</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --navy: #1a2e44;
-            --navy2: #243b55;
-            --gold: #f5a623;
-            --gold-light: #fdf0d5;
-            --teal: #1abc9c;
-            --red: #e74c3c;
-            --green: #27ae60;
-            --bg: #eef1f5;
-            --white: #ffffff;
-            --border: #dde3ec;
-            --text: #2c3e50;
-            --text-muted: #7f8c8d;
-            --shadow: 0 2px 14px rgba(26,46,68,.1);
-            --radius: 10px;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 32px 16px 80px;
-            line-height: 1.6;
-        }
-        .shell { max-width: 900px; margin: 0 auto; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEFAMDEV – Intake Sheet (Simple / Print)</title>
+<style>
+    :root{
+        --ink:#111; --line:#333; --muted:#666;
+        --accent:#1a2e44;
+        --bg:#f4f5f7;
+        --red:#922b21;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{
+        font-family: Arial, Helvetica, sans-serif;
+        background:var(--bg);
+        color:var(--ink);
+        padding:24px 12px 60px;
+        line-height:1.4;
+        font-size:14px;
+    }
+    .shell{max-width:900px;margin:0 auto;background:#fff;border:1px solid #ccc;}
 
-        /* Header */
-        .doc-header {
-            background: var(--navy);
-            border-radius: var(--radius) var(--radius) 0 0;
-            padding: 26px 36px 22px;
-            text-align: center;
-            color: #fff;
-            position: relative;
-            overflow: hidden;
-        }
-        .doc-header::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: radial-gradient(ellipse at 80% -30%, rgba(245,166,35,.2) 0%, transparent 60%);
-        }
-        .doc-header .org { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.6); margin-bottom: 5px; }
-        .doc-header h1 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; color: #fff; margin-bottom: 3px; }
-        .doc-header .sub { font-size: .82rem; color: rgba(255,255,255,.55); }
+    .doc-header{padding:16px 20px 12px;border-bottom:2px solid var(--accent);text-align:center;}
+    .doc-header .org{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+    .doc-header h1{font-size:1.3rem;color:var(--accent);margin:2px 0;}
+    .doc-header .sub{font-size:.78rem;color:var(--muted);}
 
-        /* Body card */
-        .doc-body {
-            background: var(--white);
-            border-radius: 0 0 var(--radius) var(--radius);
-            box-shadow: var(--shadow);
-            padding: 36px 40px;
-        }
+    .doc-body{padding:16px 20px;}
 
-        /* Top meta row */
-        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-        .meta-grid-full { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 20px; }
+    /* Prefill */
+    .prefill-bar{border:1px solid #ccc;border-radius:6px;padding:10px 12px;margin-bottom:16px;background:#fafafa;}
+    .prefill-bar p{font-size:.8rem;color:#444;margin-bottom:8px;}
+    .search-input{width:100%;max-width:420px;padding:7px 10px;border:1px solid #ccc;border-radius:5px;font-size:.85rem;}
+    .search-results{display:grid;gap:6px;max-height:150px;overflow-y:auto;margin-top:8px;}
+    .search-result-item{text-align:left;border:1px solid #ddd;border-radius:5px;background:#fff;padding:8px 10px;cursor:pointer;font-size:.82rem;width:100%;}
+    .search-result-item:hover{border-color:var(--accent);}
+    .search-result-title{font-weight:700;}
+    .search-result-meta{color:var(--muted);font-size:.75rem;}
+    .prefill-detail-card{border:1px solid #ddd;border-radius:6px;padding:10px 12px;margin-top:10px;font-size:.8rem;}
 
-        /* Section blocks */
-        .section {
-            margin-bottom: 32px;
-            padding-bottom: 28px;
-            border-bottom: 2px dashed #eaedf2;
-        }
-        .section:last-of-type { border-bottom: none; }
-        .section-title {
-            display: flex; align-items: center; gap: 10px;
-            font-family: 'DM Serif Display', serif;
-            font-size: 1rem; color: var(--navy);
-            text-transform: uppercase; letter-spacing: .04em;
-            margin-bottom: 18px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--gold-light);
-        }
-        .section-title .num {
-            width: 26px; height: 26px; border-radius: 50%;
-            background: var(--navy); color: #fff;
-            font-size: .75rem; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
+    /* Fields */
+    label.fl{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:2px;}
+    .field{margin-bottom:8px;}
+    input[type="text"],input[type="date"],input[type="number"],select,textarea{
+        width:100%;padding:5px 8px;border:1px solid #999;border-radius:4px;font-family:inherit;font-size:.82rem;color:var(--ink);background:#fff;
+    }
+    textarea{resize:vertical;min-height:54px;}
 
-        /* Sub-section for Spouse */
-        .subsection {
-            background: #f8f9fb;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            padding: 16px 18px;
-            margin-top: 18px;
-        }
-        .subsection-title {
-            font-size: .75rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: .06em; color: var(--text-muted);
-            margin-bottom: 14px; border-left: 3px solid var(--gold);
-            padding-left: 8px;
-        }
+    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+    .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
 
-        /* Form controls */
-        label.fl {
-            display: block; font-size: .72rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: .04em;
-            color: #666; margin-bottom: 4px;
-        }
-        .field { margin-bottom: 14px; }
-        input[type="text"], input[type="date"], input[type="number"],
-        select, textarea {
-            width: 100%; padding: 9px 12px;
-            border: 1.5px solid var(--border); border-radius: 7px;
-            font-family: 'DM Sans', sans-serif; font-size: .9rem;
-            color: var(--text); background: #fff;
-            transition: border .2s, box-shadow .2s;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none; border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(245,166,35,.2);
-        }
-        textarea { resize: vertical; min-height: 90px; }
+    /* Sections */
+    .section{margin-bottom:16px;padding-bottom:12px;border-bottom:1px dashed #ccc;}
+    .section:last-of-type{border-bottom:none;}
+    .section-title{
+        display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--accent);
+        text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid var(--accent);
+    }
+    .section-title .num{
+        width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;
+        display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
 
-        /* Grids */
-        .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-        .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+    .subsection{border:1px solid #ddd;border-radius:6px;padding:10px 12px;margin-top:8px;background:#fafafa;}
+    .subsection-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;border-left:3px solid var(--accent);padding-left:6px;}
 
-        /* Family table */
-        .table-wrap { overflow-x: auto; margin-top: 6px; }
-        table.fam-table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 750px; }
-        .fam-table thead th {
-            background: var(--navy); color: #fff;
-            padding: 9px 8px; font-weight: 600; font-size: .73rem;
-            text-align: left; white-space: nowrap;
-        }
-        .fam-table tbody td { padding: 3px 4px; border-bottom: 1px solid #eaecf0; }
-        .fam-table tbody tr:nth-child(even) td { background: #f8f9fb; }
-        .fam-table td input, .fam-table td select {
-            padding: 7px 6px; border-radius: 5px; border: 1px solid #e0e3e8;
-            font-size: .82rem; width: 100%; background: transparent;
-        }
-        .fam-table td input:focus, .fam-table td select:focus {
-            border-color: var(--gold); outline: none;
-            box-shadow: 0 0 0 2px rgba(245,166,35,.15);
-        }
-        .row-num { color: var(--text-muted); font-size: .75rem; padding: 0 6px !important; text-align: center; }
+    /* Family table */
+    .table-wrap{overflow-x:auto;margin-top:4px;}
+    table.fam-table{width:100%;border-collapse:collapse;font-size:.72rem;min-width:680px;}
+    .fam-table thead th{background:#eee;color:#000;border:1px solid #999;padding:4px 6px;font-weight:700;text-align:left;white-space:nowrap;font-size:.66rem;text-transform:uppercase;}
+    .fam-table tbody td{padding:1px 2px;border:1px solid #ccc;}
+    .fam-table td input,.fam-table td select{padding:3px 5px;border:1px solid #ccc;border-radius:3px;font-size:.72rem;width:100%;background:#fff;}
+    .row-num{color:var(--muted);font-size:.68rem;padding:0 4px !important;text-align:center;}
 
-        /* Action plan table */
-        table.action-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
-        .action-table thead th {
-            background: #f4f6f9; color: #555;
-            padding: 10px 12px; font-size: .77rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: .05em;
-            border: 1px solid var(--border);
-        }
-        .action-table tbody td { padding: 4px 4px; border: 1px solid #eee; }
-        .action-table td input {
-            width: 100%; padding: 8px 10px; border: none;
-            font-size: .87rem; background: transparent;
-        }
-        .action-table td input:focus { outline: none; background: #fffbf0; }
-        .action-table tbody tr:hover td { background: #fafbfc; }
+    /* Action table */
+    table.action-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+    .action-table thead th{background:#eee;color:#000;padding:4px 8px;font-size:.66rem;font-weight:700;text-transform:uppercase;border:1px solid #999;}
+    .action-table tbody td{padding:2px;border:1px solid #ccc;}
+    .action-table td input{width:100%;padding:4px 6px;border:none;font-size:.78rem;background:transparent;}
 
-        /* Signature row */
-        .sig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 48px; }
-        .sig-field { text-align: center; }
-        .sig-line { border-bottom: 1.5px solid var(--text); height: 32px; margin-bottom: 6px; }
-        .sig-label { font-size: .73rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #555; }
+    /* Signature */
+    .sig-row{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px;}
+    .sig-field{text-align:center;}
+    .sig-line{border-bottom:1px solid #000;height:26px;margin-bottom:4px;}
+    .sig-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#444;}
 
-        /* Toolbar */
-        .toolbar {
-            position: sticky; bottom: 0; background: var(--white);
-            border-top: 1px solid var(--border);
-            padding: 14px 40px; display: flex; gap: 12px; justify-content: flex-end;
-            box-shadow: 0 -4px 18px rgba(26,46,68,.08);
-            border-radius: 0 0 var(--radius) var(--radius);
-        }
-        .btn {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 10px 22px; border: none; border-radius: 7px;
-            font-family: 'DM Sans', sans-serif; font-size: .88rem;
-            font-weight: 700; cursor: pointer; transition: .15s;
-        }
-        .btn-navy { background: var(--navy); color: #fff; }
-        .btn-navy:hover { background: var(--navy2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,46,68,.2); }
-        .btn-gold { background: var(--gold); color: var(--navy); }
-        .btn-gold:hover { background: #e09520; }
-        .btn-ghost { background: #eef0f4; color: var(--text); }
-        .btn-ghost:hover { background: #e2e5ea; }
-        .btn-green { background: var(--green); color: #fff; }
-        .btn-green:hover { background: #1f8b4c; }
+    .toolbar{position:sticky;bottom:0;background:#fff;border-top:1px solid #ccc;padding:10px 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+    .btn{padding:7px 16px;border:1px solid #999;border-radius:5px;background:#fff;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--ink);}
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .btn-add{font-size:.75rem;padding:5px 10px;}
+    .btn:hover{opacity:.85;}
 
-        /* Prefill banner */
-        .prefill-bar {
-            background: linear-gradient(135deg, #e8f4fd, #eaf7f4);
-            border: 1.5px solid #b3d9f5;
-            border-radius: 8px; padding: 14px 18px;
-            margin-bottom: 24px;
-            display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-        }
-        .prefill-bar p { font-size: .87rem; color: #2471a3; flex: 1; }
-        .prefill-bar select, .prefill-bar .search-input { width: auto; min-width: 260px; font-weight: 600; }
-        .search-input { width: 100%; padding: 10px 14px 10px 36px; border: 1.5px solid #d8e2ef; border-radius: 20px; background: #fff; color: var(--text); font-size: .9rem; }
-        .search-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
-        .search-wrap { position: relative; width: 100%; max-width: 420px; }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; color: #94a3b8; }
-        .search-results { display: grid; gap: 10px; width: 100%; max-height: 180px; overflow-y: auto; }
-        .search-results::-webkit-scrollbar { width: 8px; }
-        .search-results::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, .35); border-radius: 999px; }
-        .search-results::-webkit-scrollbar-track { background: rgba(15, 23, 42, .04); }
-        .search-result-item { width: 100%; text-align: left; border: 1px solid rgba(26,46,68,.12); border-radius: 14px; background: #fff; padding: 12px 14px; cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; }
-        .search-result-item:hover { transform: translateY(-1px); border-color: rgba(245,166,35,.35); box-shadow: 0 12px 30px rgba(15,23,42,.08); }
-        .search-result-title { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
-        .search-result-meta { font-size: .82rem; color: #64748b; }
-        .prefill-detail-card { background: #fff; border: 1px solid rgba(26,46,68,.12); border-radius: 18px; padding: 18px; box-shadow: 0 16px 40px rgba(15,23,42,.06); width: 100%; }
+    /* ===== PRINT: minimal ink, compact single-page target ===== */
+    @page{ size:A4; margin:8mm 10mm; }
+    @media print{
+        html,body{background:#fff !important;color:#000 !important;font-size:8pt;line-height:1.1;padding:0;margin:0;}
+        .shell{max-width:100%;border:none;}
+        .prefill-bar,.toolbar,.search-wrap,.btn-add{display:none !important;}
+        input,select,textarea{border:1px solid #000 !important;background:#fff !important;color:#000 !important;}
 
-        /* Print styles */
-        @media print {
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-            }
-            html, body {
-                background: #fff !important;
-                color: #000 !important;
-                margin: 0;
-                padding: 0;
-                font-size: 12pt;
-                line-height: 1.45;
-            }
-            body { padding: 20px !important; }
-            .shell { box-shadow: none !important; border: none !important; background: #fff !important; }
-            .prefill-bar, .toolbar, .search-wrap, .search-results, .btn { display: none !important; }
-            input, select, textarea { border: none !important; background: transparent !important; color: #000 !important; }
-            .doc-header {
-                background: #fff !important;
-                color: #000 !important;
-                border-bottom: 2px solid #000;
-                padding: 14px 0 8px;
-            }
-            .doc-header .org, .doc-header h1, .doc-header .sub { color: #000 !important; }
-            .doc-body {
-                background: transparent !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-            }
-            .doc-body > * { background: transparent !important; color: #000 !important; }
-            .section { page-break-inside: avoid; border-color: #000 !important; }
-            .section-title { border-color: #000 !important; }
-            .fam-table thead th { background: #000 !important; color: #fff !important; }
-            .fam-table tbody tr:nth-child(even) td { background: #f9f9f9 !important; }
-            .fam-table tbody td, .action-table tbody td, .action-table thead th { border-color: #000 !important; }
-            .sig-line { border-color: #000 !important; }
-            .template-type-label { display: block !important; margin-top: 12px; font-size: .88rem; color: #333; }
-        }
+        .doc-header{border-bottom:1pt solid #000;padding:0 0 3pt;margin-bottom:4pt;}
+        .doc-header .org{font-size:6.5pt;}
+        .doc-header h1{color:#000 !important;font-size:11pt;margin:1pt 0;}
+        .doc-header .sub{font-size:6.5pt;color:#000 !important;}
 
-        body.template-professional {
-            --bg: #ffffff;
-            --navy: #1a2e44;
-            --gold: #f5a623;
-            --text: #203141;
-            --border: #d8dce4;
-        }
+        .doc-body{padding:0;}
+        .meta-grid,.g2,.g3,.g4{gap:4pt;margin-bottom:3pt;}
+        .field{margin-bottom:2pt;}
+        label.fl{color:#000 !important;font-size:5.4pt;margin-bottom:0;}
+        input[type="text"],input[type="date"],input[type="number"],select{padding:1pt 3pt;font-size:7.2pt;height:13pt;}
+        textarea{font-size:7.2pt;min-height:26pt;padding:2pt 4pt;}
 
-        body.template-cmyk-proof {
-            --bg: #ffffff;
-            --navy: #111111;
-            --gold: #555555;
-            --text: #111111;
-            --border: #999999;
-        }
+        .section{margin-bottom:5pt;padding-bottom:4pt;border-bottom:.5pt dashed #999;page-break-inside:avoid;}
+        .section-title{font-size:7.4pt;margin-bottom:4pt;padding-bottom:2pt;border-bottom:1pt solid #000;color:#000 !important;}
+        .section-title .num{width:11pt;height:11pt;font-size:5.8pt;background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
-        @media (max-width: 640px) {
-            .doc-body { padding: 20px 18px; }
-            .g2, .g3, .g4, .meta-grid { grid-template-columns: 1fr; }
-            .sig-row { grid-template-columns: 1fr; gap: 30px; }
-            .toolbar { padding: 12px 16px; flex-wrap: wrap; }
-            .toolbar .btn { flex: 1; justify-content: center; }
-            .prefill-bar select { min-width: 0; width: 100%; }
-        }
-    </style>
+        .subsection{border:1pt solid #000;padding:4pt 6pt;margin-top:4pt;background:#fff !important;}
+        .subsection-title{font-size:6pt;margin-bottom:4pt;border-left:2pt solid #000;padding-left:4pt;color:#000 !important;}
+
+        table.fam-table{font-size:6.2pt;min-width:0;}
+        .fam-table thead th{background:#eee !important;color:#000 !important;border:1pt solid #000;padding:1.5pt 3pt;font-size:5.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .fam-table tbody td{border:1pt solid #999;padding:0 1pt;}
+        .fam-table td input,.fam-table td select{padding:1pt 2pt;font-size:6.2pt;border:none !important;}
+        .row-num{font-size:5.6pt;}
+
+        table.action-table{font-size:6.8pt;}
+        .action-table thead th{background:#eee !important;color:#000 !important;padding:2pt 4pt;font-size:5.8pt;border:1pt solid #000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+        .action-table tbody td{border:1pt solid #999;padding:1pt;}
+        .action-table td input{font-size:6.8pt;padding:1pt 3pt;}
+
+        .sig-row{gap:20pt;margin-top:10pt;}
+        .sig-line{height:14pt;border-color:#000;}
+        .sig-label{font-size:6pt;}
+
+        /* hide empty extra family rows beyond what's filled, kept via JS class */
+        tr.fam-row-empty-print{display:none;}
+    }
+
+    @media (max-width:640px){
+        .doc-body{padding:20px 18px;}
+        .g2,.g3,.g4,.meta-grid{grid-template-columns:1fr;}
+        .sig-row{grid-template-columns:1fr;gap:20px;}
+        .toolbar{padding:12px 16px;}
+        .toolbar .btn{flex:1;justify-content:center;}
+    }
+</style>
 </head>
 <body>
 <div class="shell">
 
-    <!-- Header -->
     <div class="doc-header">
         <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
         <h1>Intake Sheet</h1>
@@ -297,15 +160,12 @@
 
     <div class="doc-body">
 
-        <!-- Prefill from applications -->
+        <!-- Prefill (screen only) -->
         <div class="prefill-bar">
-            <p>⚡ <strong>Auto-fill from application:</strong> Search applicants to pre-populate this form.</p>
-            <div class="search-wrap" style="max-width:420px; margin-top:10px;">
-                <span class="search-icon"></span>
-                <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()">
-            </div>
-            <div id="prefillResults" class="search-results" style="margin-top:12px;"></div>
-            <div id="prefillDetail" class="prefill-detail-card" style="display:none; margin-top:16px;"></div>
+            <p>Link this intake sheet to a submitted application (optional).</p>
+            <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()">
+            <div id="prefillResults" class="search-results"></div>
+            <div id="prefillDetail" class="prefill-detail-card" style="display:none;"></div>
         </div>
 
         <!-- Top meta -->
@@ -313,19 +173,9 @@
             <div class="field"><label class="fl">Case No.</label><input type="text" id="caseNo" placeholder="e.g. 2026-001"></div>
             <div class="field"><label class="fl">Date</label><input type="date" id="caseDate"></div>
         </div>
-        <div class="g2" style="margin-bottom:20px;">
+        <div class="g2">
             <div class="field"><label class="fl">Case Category</label><input type="text" id="caseCategory" placeholder="Educational Assistance"></div>
             <div class="field"><label class="fl">Source of Referral</label><input type="text" id="caseReferral" value="Online Application"></div>
-        </div>
-        <div class="g2" style="margin-bottom:20px;">
-            <div class="field"><label class="fl">Template Type</label>
-                <select id="templateType">
-                    <option value="Standard">Standard</option>
-                    <option value="Professional">Professional</option>
-                    <option value="CMYK Proof">CMYK Proof</option>
-                </select>
-            </div>
-            <div class="field"><label class="fl">Print Preview</label><input type="text" id="templateTypeLabel" value="Select a template and click Print" disabled style="background:#f7f7f7; color:#555;"></div>
         </div>
 
         <!-- I. Identifying Information -->
@@ -343,16 +193,11 @@
             <div class="field"><label class="fl">Present Address</label><input type="text" id="iPresentAddr"></div>
             <div class="field"><label class="fl">Permanent Address</label><input type="text" id="iPermAddr"></div>
 
-            <div class="g4" style="margin-top:4px;">
+            <div class="g4">
                 <div class="field"><label class="fl">Civil Status</label>
-                    <select id="iCivilStatus">
-                        <option value="Single">Single</option><option value="Married">Married</option>
-                        <option value="Widowed">Widowed</option><option value="Separated">Separated</option>
-                    </select>
+                    <select id="iCivilStatus"><option value="Single">Single</option><option value="Married">Married</option><option value="Widowed">Widowed</option><option value="Separated">Separated</option></select>
                 </div>
-                <div class="field"><label class="fl">Sex</label>
-                    <select id="iSex"><option value="Male">Male</option><option value="Female">Female</option></select>
-                </div>
+                <div class="field"><label class="fl">Sex</label><select id="iSex"><option value="Male">Male</option><option value="Female">Female</option></select></div>
                 <div class="field"><label class="fl">Religion</label><input type="text" id="iReligion"></div>
                 <div class="field"><label class="fl">Age</label><input type="number" id="iAge" min="0"></div>
             </div>
@@ -365,9 +210,8 @@
                 <div class="field"><label class="fl">Occupation</label><input type="text" id="iOccup" value="Student"></div>
             </div>
 
-            <!-- Spouse (optional) -->
-            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-                <label style="font-size:.82rem; color:#556; display:flex; align-items:center; gap:8px;"><input id="includeSpouse" type="checkbox" onclick="toggleSpouseSection()"> Include Spouse / Partner information</label>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+                <label style="font-size:.78rem; color:#556; display:flex; align-items:center; gap:6px;"><input id="includeSpouse" type="checkbox" onclick="toggleSpouseSection()"> Include Spouse / Partner information</label>
             </div>
             <div id="spouseSection" class="subsection" style="display:none;">
                 <div class="subsection-title">Spouse / Partner Information</div>
@@ -381,15 +225,8 @@
                 </div>
                 <div class="field"><label class="fl">Present Address</label><input type="text" id="spAddress"></div>
                 <div class="g4">
-                    <div class="field"><label class="fl">Civil Status</label>
-                        <select id="spCivil">
-                            <option>Single</option><option selected>Married</option>
-                            <option>Widowed</option><option>Separated</option>
-                        </select>
-                    </div>
-                    <div class="field"><label class="fl">Sex</label>
-                        <select id="spSex"><option>Male</option><option>Female</option></select>
-                    </div>
+                    <div class="field"><label class="fl">Civil Status</label><select id="spCivil"><option>Single</option><option selected>Married</option><option>Widowed</option><option>Separated</option></select></div>
+                    <div class="field"><label class="fl">Sex</label><select id="spSex"><option>Male</option><option>Female</option></select></div>
                     <div class="field"><label class="fl">Religion</label><input type="text" id="spReligion"></div>
                     <div class="field"><label class="fl">Age</label><input type="number" id="spAge"></div>
                 </div>
@@ -409,104 +246,80 @@
                 <table class="fam-table">
                     <thead>
                         <tr>
-                            <th style="width:28px;">#</th>
-                            <th style="min-width:160px;">Name</th>
-                            <th style="min-width:48px;">Age</th>
-                            <th style="min-width:70px;">Sex</th>
-                            <th style="min-width:100px;">Rel. to Client</th>
-                            <th style="min-width:90px;">Civil Status</th>
-                            <th style="min-width:100px;">Educ. Attainment</th>
-                            <th style="min-width:100px;">Occupation</th>
-                            <th style="min-width:80px;">Income</th>
+                            <th style="width:22px;">#</th>
+                            <th style="min-width:140px;">Name</th>
+                            <th style="min-width:40px;">Age</th>
+                            <th style="min-width:60px;">Sex</th>
+                            <th style="min-width:90px;">Rel. to Client</th>
+                            <th style="min-width:80px;">Civil Status</th>
+                            <th style="min-width:90px;">Educ. Attainment</th>
+                            <th style="min-width:90px;">Occupation</th>
+                            <th style="min-width:70px;">Income</th>
                         </tr>
                     </thead>
                     <tbody id="famTableBody"></tbody>
                 </table>
             </div>
-            <div style="margin-top:10px; display:flex; gap:10px;">
-                <button type="button" class="btn btn-ghost" onclick="addFamRow()" style="font-size:.82rem; padding:7px 14px;">+ Add Row</button>
-                <button type="button" class="btn btn-ghost" onclick="removeFamRow()" style="font-size:.82rem; padding:7px 14px; color:var(--red);">− Remove Last Row</button>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button type="button" class="btn btn-add" onclick="addFamRow()">+ Add Row</button>
+                <button type="button" class="btn btn-add" onclick="removeFamRow()" style="color:var(--red);">− Remove Last Row</button>
             </div>
         </div>
 
         <!-- III. Problem Presented -->
         <div class="section">
             <div class="section-title"><span class="num">III</span> Problem Presented</div>
-            <textarea id="sProblem" rows="5" placeholder="Describe the presenting problem or need of the client..."></textarea>
+            <textarea id="sProblem" rows="3" placeholder="Describe the presenting problem or need of the client..."></textarea>
         </div>
 
         <!-- IV. Background Information -->
         <div class="section">
             <div class="section-title"><span class="num">IV</span> Background Information on the Stated Problem</div>
-            <textarea id="sBackground" rows="6" placeholder="Provide background details relevant to the stated problem..."></textarea>
+            <textarea id="sBackground" rows="3" placeholder="Provide background details relevant to the stated problem..."></textarea>
         </div>
 
         <!-- V. Assessment -->
         <div class="section">
             <div class="section-title"><span class="num">V</span> Social Worker's Assessment of the Problem</div>
-            <textarea id="sAssessment" rows="6" placeholder="Social Worker's professional assessment and analysis..."></textarea>
+            <textarea id="sAssessment" rows="3" placeholder="Social Worker's professional assessment and analysis..."></textarea>
         </div>
 
         <!-- VI. Action Plan -->
         <div class="section">
             <div class="section-title"><span class="num">VI</span> Social Worker's Intervention Action Plan</div>
             <table class="action-table" id="actionTable">
-                <thead>
-                    <tr>
-                        <th style="width:35%;">SERVICES</th>
-                        <th>SPECIFIC ACTIVITIES / PLAN OF ACTION</th>
-                    </tr>
-                </thead>
+                <thead><tr><th style="width:35%;">Services</th><th>Specific Activities / Plan of Action</th></tr></thead>
                 <tbody id="actionBody"></tbody>
             </table>
-            <div style="margin-top:10px; display:flex; gap:10px;">
-                <button type="button" class="btn btn-ghost" onclick="addActionRow()" style="font-size:.82rem; padding:7px 14px;">+ Add Row</button>
+            <div style="margin-top:8px;">
+                <button type="button" class="btn btn-add" onclick="addActionRow()">+ Add Row</button>
             </div>
         </div>
 
         <!-- Signatures -->
         <div class="sig-row">
-            <div class="sig-field">
-                <div class="sig-line"></div>
-                <div class="sig-label">Client's Signature over Printed Name</div>
-            </div>
-            <div class="sig-field">
-                <div class="sig-line"></div>
-                <div class="sig-label">Name of Interviewer / Social Worker</div>
-            </div>
+            <div class="sig-field"><div class="sig-line"></div><div class="sig-label">Client's Signature over Printed Name</div></div>
+            <div class="sig-field"><div class="sig-line"></div><div class="sig-label">Name of Interviewer / Social Worker</div></div>
         </div>
 
-        <!-- Toolbar -->
         <div class="toolbar">
-            <a href="admin_dashboard.html" class="btn btn-ghost" style="text-decoration:none;">← Dashboard</a>
-            <button class="btn btn-ghost" onclick="clearForm()">delete Clear Form</button>
-            <button class="btn btn-navy" onclick="printIntakeSheet()">🖨 Print</button>
-            <button class="btn btn-gold" onclick="saveIntake()">💾 Save Intake Sheet</button>
+            <button class="btn" onclick="clearForm()">Clear Form</button>
+            <button class="btn" onclick="printIntakeSheet()">Print</button>
+            <button class="btn btn-primary" onclick="saveIntake()">Save Intake Sheet</button>
         </div>
 
-    </div><!-- /doc-body -->
-</div><!-- /shell -->
+    </div>
+</div>
 
 <script>
-/* ── State ── */
 let linkedAppId = null;
 let currentIntakeId = null;
 
-/* ── Init ── */
 window.onload = function () {
-        // Session guard — staff only
-        const _raw = sessionStorage.getItem('mefamdev_session');
-        if (!_raw) { window.location.href = 'index.html'; return; }
-        try {
-            const _s = JSON.parse(_raw);
-            if (_s.type !== 'staff') { window.location.href = 'index.html'; return; }
-        } catch(e) { window.location.href = 'index.html'; return; }
-
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     initFamTable();
     initActionTable();
     populatePrefill();
-    updateTemplatePreview();
 
     const params = new URLSearchParams(window.location.search);
     const recordId = params.get('record');
@@ -516,32 +329,27 @@ window.onload = function () {
     } else if (incomingId) {
         const saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
         const intake = saved.find(r => String(r.id) === String(incomingId));
-        if (intake) {
-            loadSavedIntakeRecord(incomingId);
-        } else {
-            selectPrefillApplicant(incomingId);
-        }
+        if (intake) { loadSavedIntakeRecord(incomingId); }
+        else { selectPrefillApplicant(incomingId); }
     }
 };
 
-/* ── Family table ── */
-function initFamTable() {
-    for (let i = 0; i < 5; i++) addFamRow();
-}
+/* Family table */
+function initFamTable() { for (let i = 0; i < 5; i++) addFamRow(); }
 function addFamRow() {
     const tbody = document.getElementById('famTableBody');
     const n = tbody.rows.length + 1;
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td class="row-num">${n}</td>
-        <td><input type="text" placeholder="Full Name" style="min-width:140px;"></td>
-        <td><input type="number" placeholder="—" style="min-width:42px; text-align:center;"></td>
-        <td><select style="min-width:65px;"><option value="">—</option><option>Male</option><option>Female</option></select></td>
-        <td><input type="text" placeholder="Mother/Father..." style="min-width:90px;"></td>
-        <td><select style="min-width:80px;"><option value="">—</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></td>
-        <td><input type="text" placeholder="Elem/HS/College" style="min-width:90px;"></td>
-        <td><input type="text" placeholder="Occupation" style="min-width:90px;"></td>
-        <td><input type="number" placeholder="₱" style="min-width:70px; text-align:right;"></td>`;
+        <td><input type="text" placeholder="Full Name"></td>
+        <td><input type="number" placeholder="—" style="text-align:center;"></td>
+        <td><select><option value="">—</option><option>Male</option><option>Female</option></select></td>
+        <td><input type="text" placeholder="Mother/Father..."></td>
+        <td><select><option value="">—</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></td>
+        <td><input type="text" placeholder="Elem/HS/College"></td>
+        <td><input type="text" placeholder="Occupation"></td>
+        <td><input type="number" placeholder="₱" style="text-align:right;"></td>`;
     tbody.appendChild(tr);
 }
 function removeFamRow() {
@@ -549,10 +357,8 @@ function removeFamRow() {
     if (tbody.rows.length > 1) tbody.removeChild(tbody.lastChild);
 }
 
-/* ── Action plan table ── */
-function initActionTable() {
-    for (let i = 0; i < 3; i++) addActionRow();
-}
+/* Action table */
+function initActionTable() { for (let i = 0; i < 3; i++) addActionRow(); }
 function addActionRow() {
     const tbody = document.getElementById('actionBody');
     const tr = document.createElement('tr');
@@ -560,19 +366,19 @@ function addActionRow() {
     tbody.appendChild(tr);
 }
 
-/* ── Prefill from localStorage apps ── */
+/* Prefill */
 function populatePrefill() {
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+    let apps = [];
+    try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
     window.prefillApplicantsCache = apps;
     renderPrefillSearchList(apps);
 }
-
 function renderPrefillSearchList(apps) {
     const results = document.getElementById('prefillResults');
     const detail = document.getElementById('prefillDetail');
     if (!results) return;
     results.innerHTML = apps.length === 0
-        ? '<div class="empty-state" style="padding:14px; border-radius:14px; background:#fff; color:#666;">No applicants found.</div>'
+        ? '<div style="padding:10px;color:#666;">No applicants found.</div>'
         : apps.map(a => `
             <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})">
                 <div class="search-result-title">${a.name || 'Unknown Applicant'}</div>
@@ -581,7 +387,6 @@ function renderPrefillSearchList(apps) {
         `).join('');
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
-
 function filterPrefillApplicants() {
     const query = document.getElementById('prefillSearch')?.value.toLowerCase().trim() || '';
     const apps = window.prefillApplicantsCache || [];
@@ -591,13 +396,10 @@ function filterPrefillApplicants() {
         const barangay = (a.barangay || '').toLowerCase();
         const status = (a.status || '').toLowerCase();
         const grade = (a.grade || '').toLowerCase();
-        const nameParts = name.split(/\s+/);
-        const starts = nameParts.some(part => part.startsWith(query));
-        return starts || name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
+        return name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
     });
     renderPrefillSearchList(filtered);
 }
-
 function selectPrefillApplicant(appId) {
     const apps = window.prefillApplicantsCache || [];
     const app = apps.find(a => a.id == appId);
@@ -607,38 +409,26 @@ function selectPrefillApplicant(appId) {
     renderPrefillApplicantDetails(app);
     prefillFromApp(appId);
 }
-
 function renderPrefillApplicantDetails(app) {
     const detail = document.getElementById('prefillDetail');
     if (!detail) return;
-    detail.style.display = 'grid';
+    detail.style.display = 'block';
     detail.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-            <div>
-                <div style="font-size:1rem; font-weight:700; color: var(--navy);">${app.name || 'Unknown Applicant'}</div>
-                <div style="font-size:.82rem; color:#64748b;">${app.grade || 'No grade'} · ${app.school || 'No school'}${app.barangay ? ' · ' + app.barangay : ''}</div>
-            </div>
-            <div style="background:#e6f7f0; color:#1f8a6c; border-radius:999px; padding:8px 14px; font-size:.78rem; font-weight:700;">${app.status || 'Pending'}</div>
-        </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px;">
-            <div style="background:#fff; border:1px solid rgba(26,46,68,.08); border-radius:14px; padding:12px;"><div style="font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.08em;">Barangay</div><div style="font-weight:700; color:var(--navy);">${app.barangay || 'N/A'}</div></div>
-            <div style="background:#fff; border:1px solid rgba(26,46,68,.08); border-radius:14px; padding:12px;"><div style="font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.08em;">Contact</div><div style="font-weight:700; color:var(--navy);">${app.contact || 'N/A'}</div></div>
-            <div style="background:#fff; border:1px solid rgba(26,46,68,.08); border-radius:14px; padding:12px;"><div style="font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.08em;">School</div><div style="font-weight:700; color:var(--navy);">${app.school || 'N/A'}</div></div>
-            <div style="background:#fff; border:1px solid rgba(26,46,68,.08); border-radius:14px; padding:12px;"><div style="font-size:.72rem; color:#64748b; text-transform:uppercase; letter-spacing:.08em;">Gender</div><div style="font-weight:700; color:var(--navy);">${app.gender || 'N/A'}</div></div>
-        </div>
+        <div style="font-weight:700;">${app.name || 'Unknown Applicant'}</div>
+        <div style="color:#666;margin-bottom:6px;">${app.grade || 'No grade'} · ${app.school || 'No school'}${app.barangay ? ' · ' + app.barangay : ''}</div>
+        <div>Barangay: ${app.barangay || 'N/A'} &nbsp;|&nbsp; Contact: ${app.contact || 'N/A'} &nbsp;|&nbsp; Gender: ${app.gender || 'N/A'}</div>
     `;
 }
-
 function prefillFromApp(appId) {
     if (!appId) return;
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+    let apps = [];
+    try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
     const a = apps.find(x => x.id == appId);
     if (!a) return;
     linkedAppId = a.id;
     const input = document.getElementById('prefillSearch');
     if (input) input.value = a.name || '';
 
-    // Personal
     setVal('iName', a.name || '');
     setVal('iContact', a.contact || '');
     setVal('iPresentAddr', `${a.address || ''}, Brgy. ${a.barangay || ''}`);
@@ -650,13 +440,11 @@ function prefillFromApp(appId) {
     setVal('iBirthplace', a.birthplace || '');
     setVal('iEduc', `${a.eduLevel || ''} – ${a.grade || ''}`);
 
-    // Auto-fill problem & background from application data
     const income = a.totalIncome || '0';
     const expense = a.totalExpense || '0';
-    setVal('sProblem', `Applicant requires educational assistance for ${a.grade} at ${a.school} for S.Y. ${a.sy || '—'}. Reason stated: "${a.whyScholar || 'None provided.'}"`, true);
-    setVal('sBackground', `Family income: ₱${income}/month, Expenses: ₱${expense}/month. Living arrangement: ${a.livingWith || 'Not stated'}. Properties/benefits: ${(a.properties || []).join(', ') || 'None stated'}. Applicant's ambition: ${a.ambition || 'Not stated'}.`, true);
+    setVal('sProblem', `Applicant requires educational assistance for ${a.grade} at ${a.school} for S.Y. ${a.sy || '—'}. Reason stated: "${a.whyScholar || 'None provided.'}"`);
+    setVal('sBackground', `Family income: ₱${income}/month, Expenses: ₱${expense}/month. Living arrangement: ${a.livingWith || 'Not stated'}. Properties/benefits: ${(a.properties || []).join(', ') || 'None stated'}. Applicant's ambition: ${a.ambition || 'Not stated'}.`);
 
-    // Family composition
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
     const members = a.familyMembers || [];
@@ -685,27 +473,17 @@ function prefillFromApp(appId) {
             setSel('spSex', spouseCandidate.sex === 'Lalaki' ? 'Male' : (spouseCandidate.sex === 'Babae' ? 'Female' : (spouseCandidate.sex || '')));
             setVal('spOccup', spouseCandidate.occup || '');
             setVal('spEduc', spouseCandidate.educ || '');
-            // show spouse section when prefilled
             const cb = document.getElementById('includeSpouse');
             if (cb) { cb.checked = true; }
             toggleSpouseSection();
         }
     }
-
-    alert(`✅ Form pre-filled with data from ${a.name}'s application.`);
 }
-
-function setVal(id, val, textarea = false) {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-}
+function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 function setSel(id, val) {
     const el = document.getElementById(id);
-    if (el) {
-        for (let opt of el.options) { if (opt.value === val || opt.text === val) { el.value = opt.value; break; } }
-    }
+    if (el) { for (let opt of el.options) { if (opt.value === val || opt.text === val) { el.value = opt.value; break; } } }
 }
-
 function toggleSpouseSection() {
     const wrapper = document.getElementById('spouseSection');
     const cb = document.getElementById('includeSpouse');
@@ -713,10 +491,11 @@ function toggleSpouseSection() {
     wrapper.style.display = cb.checked ? 'block' : 'none';
 }
 
-/* ── Save to dashboard ── */
+/* Save */
 function saveIntake() {
     const data = collectData();
-    let saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || [];
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
 
     const recordId = data.id || window.currentIntakeId || Date.now();
     data.id = recordId;
@@ -724,11 +503,7 @@ function saveIntake() {
     data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
     const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
-    if (existing > -1) {
-        saved[existing] = data;
-    } else {
-        saved.unshift(data);
-    }
+    if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
     localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
     localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
 
@@ -736,9 +511,9 @@ function saveIntake() {
         window.opener.postMessage({ type: 'intake-saved', record: data }, '*');
     }
 
-    // Also update application status if linked
     if (linkedAppId) {
-        let apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+        let apps = [];
+        try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
         const i = apps.findIndex(a => a.id == linkedAppId);
         if (i > -1 && apps[i].status === 'Pending Review') {
             apps[i].status = 'Interviewing';
@@ -746,65 +521,57 @@ function saveIntake() {
             localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
         }
     }
-
-    alert(`✅ Intake Sheet saved to records! Case No: ${data.caseNo || '(no case no.)'}\n\nYou can view all saved intake sheets in the Admin Dashboard.`);
+    alert(`Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`);
 }
 
 function loadSavedIntakeRecord(recordId) {
-    const saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || [];
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
     const record = saved.find(r => String(r.id) === String(recordId));
-    if (!record) {
-        alert('Saved intake sheet not found.');
-        return;
-    }
+    if (!record) { alert('Saved intake sheet not found.'); return; }
 
     currentIntakeId = record.id;
     linkedAppId = record.linkedAppId || null;
 
-    if (document.getElementById('caseNo')) document.getElementById('caseNo').value = record.caseNo || '';
-    if (document.getElementById('caseDate')) document.getElementById('caseDate').value = record.caseDate || '';
-    if (document.getElementById('caseCategory')) document.getElementById('caseCategory').value = record.caseCategory || '';
-    if (document.getElementById('caseReferral')) document.getElementById('caseReferral').value = record.caseReferral || '';
-    if (document.getElementById('templateType')) document.getElementById('templateType').value = record.templateType || 'Standard';
-    if (document.getElementById('templateTypeLabel')) document.getElementById('templateTypeLabel').value = record.templateType ? `${record.templateType} template selected` : 'Select a template and click Print';
-    updateTemplatePreview();
-    if (document.getElementById('iName')) document.getElementById('iName').value = record.name || '';
-    if (document.getElementById('iNickname')) document.getElementById('iNickname').value = record.nickname || '';
-    if (document.getElementById('iNationality')) document.getElementById('iNationality').value = record.nationality || '';
-    if (document.getElementById('iContact')) document.getElementById('iContact').value = record.contact || '';
-    if (document.getElementById('iPresentAddr')) document.getElementById('iPresentAddr').value = record.presentAddr || '';
-    if (document.getElementById('iPermAddr')) document.getElementById('iPermAddr').value = record.permAddr || '';
-    if (document.getElementById('iCivilStatus')) document.getElementById('iCivilStatus').value = record.civilStatus || '';
-    if (document.getElementById('iSex')) document.getElementById('iSex').value = record.sex || '';
-    if (document.getElementById('iReligion')) document.getElementById('iReligion').value = record.religion || '';
-    if (document.getElementById('iAge')) document.getElementById('iAge').value = record.age || '';
-    if (document.getElementById('iDob')) document.getElementById('iDob').value = record.dob || '';
-    if (document.getElementById('iBirthplace')) document.getElementById('iBirthplace').value = record.birthplace || '';
-    if (document.getElementById('iEduc')) document.getElementById('iEduc').value = record.educ || '';
-    if (document.getElementById('iOccup')) document.getElementById('iOccup').value = record.occup || '';
-    // spouse fields (if saved)
-    if (document.getElementById('spName')) document.getElementById('spName').value = record.spName || record.spouseName || '';
-    if (document.getElementById('spNickname')) document.getElementById('spNickname').value = record.spNickname || '';
-    if (document.getElementById('spNationality')) document.getElementById('spNationality').value = record.spNationality || '';
-    if (document.getElementById('spContact')) document.getElementById('spContact').value = record.spContact || '';
-    if (document.getElementById('spAddress')) document.getElementById('spAddress').value = record.spAddress || '';
-    if (document.getElementById('spCivil')) document.getElementById('spCivil').value = record.spCivil || '';
-    if (document.getElementById('spSex')) document.getElementById('spSex').value = record.spSex || '';
-    if (document.getElementById('spReligion')) document.getElementById('spReligion').value = record.spReligion || '';
-    if (document.getElementById('spAge')) document.getElementById('spAge').value = record.spAge || '';
-    if (document.getElementById('spDob')) document.getElementById('spDob').value = record.spDob || '';
-    if (document.getElementById('spBirthplace')) document.getElementById('spBirthplace').value = record.spBirthplace || '';
-    if (document.getElementById('spEduc')) document.getElementById('spEduc').value = record.spEduc || '';
-    if (document.getElementById('spOccup')) document.getElementById('spOccup').value = record.spOccup || '';
-    // show spouse section if any spouse field exists
-    const hasSpouse = (record.spName||record.spNick||record.spOccup||record.spEduc||'').toString().trim() !== '';
+    setVal('caseNo', record.caseNo || '');
+    setVal('caseDate', record.caseDate || '');
+    setVal('caseCategory', record.caseCategory || '');
+    setVal('caseReferral', record.caseReferral || '');
+    setVal('iName', record.name || '');
+    setVal('iNickname', record.nickname || '');
+    setVal('iNationality', record.nationality || '');
+    setVal('iContact', record.contact || '');
+    setVal('iPresentAddr', record.presentAddr || '');
+    setVal('iPermAddr', record.permAddr || '');
+    setVal('iCivilStatus', record.civilStatus || '');
+    setVal('iSex', record.sex || '');
+    setVal('iReligion', record.religion || '');
+    setVal('iAge', record.age || '');
+    setVal('iDob', record.dob || '');
+    setVal('iBirthplace', record.birthplace || '');
+    setVal('iEduc', record.educ || '');
+    setVal('iOccup', record.occup || '');
+    setVal('spName', record.spName || record.spouseName || '');
+    setVal('spNickname', record.spNickname || '');
+    setVal('spNationality', record.spNationality || '');
+    setVal('spContact', record.spContact || '');
+    setVal('spAddress', record.spAddress || '');
+    setVal('spCivil', record.spCivil || '');
+    setVal('spSex', record.spSex || '');
+    setVal('spReligion', record.spReligion || '');
+    setVal('spAge', record.spAge || '');
+    setVal('spDob', record.spDob || '');
+    setVal('spBirthplace', record.spBirthplace || '');
+    setVal('spEduc', record.spEduc || '');
+    setVal('spOccup', record.spOccup || '');
+    const hasSpouse = (record.spName || record.spNick || record.spOccup || record.spEduc || '').toString().trim() !== '';
     if (hasSpouse) {
         const cb = document.getElementById('includeSpouse'); if (cb) cb.checked = true;
         const ss = document.getElementById('spouseSection'); if (ss) ss.style.display = 'block';
     }
-    if (document.getElementById('sProblem')) document.getElementById('sProblem').value = record.problemPresented || '';
-    if (document.getElementById('sBackground')) document.getElementById('sBackground').value = record.backgroundInfo || '';
-    if (document.getElementById('sAssessment')) document.getElementById('sAssessment').value = record.assessment || '';
+    setVal('sProblem', record.problemPresented || '');
+    setVal('sBackground', record.backgroundInfo || '');
+    setVal('sAssessment', record.assessment || '');
 
     const famRows = record.familyComposition || [];
     const tbody = document.getElementById('famTableBody');
@@ -862,7 +629,6 @@ function collectData() {
         caseDate: document.getElementById('caseDate').value,
         caseCategory: document.getElementById('caseCategory').value,
         caseReferral: document.getElementById('caseReferral').value,
-        templateType: document.getElementById('templateType').value || 'Standard',
         name: document.getElementById('iName').value,
         nickname: document.getElementById('iNickname').value,
         nationality: document.getElementById('iNationality').value,
@@ -894,10 +660,6 @@ function clearForm() {
     document.getElementById('iNationality').value = 'Filipino';
     document.getElementById('iOccup').value = 'Student';
     document.getElementById('caseReferral').value = 'Online Application';
-    document.getElementById('templateType').value = 'Standard';
-    document.getElementById('templateTypeLabel').value = 'Select a template and click Print';
-    updateTemplatePreview();
-    // Reset family table
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
     for (let i = 0; i < 5; i++) addFamRow();
@@ -910,21 +672,15 @@ function clearForm() {
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
 
-function updateTemplatePreview() {
-    const templateType = document.getElementById('templateType').value || 'Standard';
-    const label = document.getElementById('templateTypeLabel');
-    if (label) label.value = `${templateType} template selected`;
-    const className = templateType.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    document.body.className = `template-${className}`;
-}
-
 function printIntakeSheet() {
-    updateTemplatePreview();
-    setTimeout(() => window.print(), 50);
+    // hide fully empty family rows in print to save space
+    document.querySelectorAll('#famTableBody tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input, select');
+        const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
+        tr.classList.toggle('fam-row-empty-print', !hasData);
+    });
+    setTimeout(() => window.print(), 30);
 }
-
-const templateTypeSelect = document.getElementById('templateType');
-if (templateTypeSelect) templateTypeSelect.addEventListener('change', updateTemplatePreview);
 </script>
 </body>
 </html>
