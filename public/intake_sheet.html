@@ -715,6 +715,11 @@ function saveIntake() {
         saved.unshift(data);
     }
     localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
+    localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
+
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'intake-saved', record: data }, '*');
+    }
 
     // Also update application status if linked
     if (linkedAppId) {

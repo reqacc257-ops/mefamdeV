@@ -801,100 +801,13 @@ user51 / pass51 / Name: Leila Mendoza       / Email: test@gmail.com     / Ref: 2
         ═══════════════════════════════════════════════ -->
         <div id="intake-sheet" class="page">
             <div class="card" style="background:linear-gradient(135deg, #eaf3ff, #f0f8ff); border-left:5px solid var(--navy); margin-bottom:18px;">
-                <p style="font-size:.9rem; color:#444; margin-bottom:12px;">Search applicants to auto-fill the Social Worker Intake Sheet from submitted application data.</p>
-                <div class="search-wrap" style="max-width:420px; margin-bottom:14px;">
-                    <span class="search-icon"></span>
-                    <input type="text" id="pendingApplicantSearch" class="search-input" placeholder="Search applicants by name, school, or barangay..." oninput="filterPendingApplicants()">
+                <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy); margin-bottom:8px;">Dedicated Intake Sheet</h3>
+                <p style="font-size:.95rem; color:#444; margin-bottom:12px;">Open the standalone intake form to create a new social worker record and save it to the dashboard's Saved Records list.</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn btn-gold" onclick="window.open('intake_sheet.html','_blank')">📝 Open Intake Sheet</button>
+                    <button class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh Saved Records</button>
                 </div>
-                <div id="pendingApplicantResults" class="search-results"></div>
-                <div id="pendingApplicantDetail" class="pending-detail-card" style="display:none; margin-top:16px;"></div>
-            </div>
-
-            <div class="card" id="intakeFormContainer" style="display:none;">
-                <div class="intake-header">
-                    <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy);">Fr. Marie Eugene Family Development Foundation, Inc.</h3>
-                    <h4 style="font-size:.95rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; text-decoration:underline; color:#333; margin-top:5px;">INTAKE SHEET</h4>
-                </div>
-
-                <div class="intake-grid-4" style="margin-bottom:24px;">
-                    <div><span class="intake-label">CASE NO.</span><input type="text" id="in_caseNo"></div>
-                    <div><span class="intake-label">DATE</span><input type="date" id="in_date"></div>
-                    <div><span class="intake-label">CASE CATEGORY</span><input type="text" id="in_category" placeholder="Educational"></div>
-                    <div><span class="intake-label">SOURCE OF REFERRAL</span><input type="text" id="in_referral" value="Online Application"></div>
-                </div>
-
-                <div class="intake-section">
-                    <h4>I. IDENTIFYING INFORMATION</h4>
-                    <div class="intake-grid">
-                        <div><span class="intake-label">NAME</span><input type="text" id="in_name"></div>
-                        <div><span class="intake-label">NICKNAME</span><input type="text" id="in_nickname"></div>
-                    </div>
-                    <div class="intake-grid">
-                        <div><span class="intake-label">NATIONALITY</span><input type="text" id="in_nationality" value="Filipino"></div>
-                        <div><span class="intake-label">CONTACT NO.</span><input type="text" id="in_contact"></div>
-                    </div>
-                    <div style="margin-bottom:12px;"><span class="intake-label">PRESENT ADDRESS</span><input type="text" id="in_presentAddr"></div>
-                    <div style="margin-bottom:12px;"><span class="intake-label">PERMANENT ADDRESS</span><input type="text" id="in_permAddr"></div>
-                    <div class="intake-grid-4">
-                        <div><span class="intake-label">CIVIL STATUS</span><input type="text" id="in_civil" value="Single"></div>
-                        <div><span class="intake-label">SEX</span><input type="text" id="in_sex"></div>
-                        <div><span class="intake-label">RELIGION</span><input type="text" id="in_religion"></div>
-                        <div><span class="intake-label">AGE</span><input type="text" id="in_age"></div>
-                    </div>
-                    <div class="intake-grid-3">
-                        <div><span class="intake-label">DATE OF BIRTH</span><input type="date" id="in_dob"></div>
-                        <div style="grid-column:span 2"><span class="intake-label">PLACE OF BIRTH</span><input type="text" id="in_birthplace"></div>
-                    </div>
-                    <div class="intake-grid">
-                        <div><span class="intake-label">EDUCATIONAL ATTAINMENT</span><input type="text" id="in_educ"></div>
-                        <div><span class="intake-label">OCCUPATION</span><input type="text" id="in_occup" value="Student"></div>
-                    </div>
-                </div>
-
-                <div class="intake-section">
-                    <h4>II. FAMILY COMPOSITION</h4>
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="intakeFamilyTable" style="min-width:750px;">
-                            <thead><tr><th style="min-width:180px;">NAME</th><th>AGE</th><th>SEX</th><th>REL. TO CLIENT</th><th>CIVIL STATUS</th><th>EDUC. ATTAINMENT</th><th>OCCUPATION</th><th>INCOME</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="intake-section">
-                    <h4>III. PROBLEM PRESENTED</h4>
-                    <textarea rows="4" id="in_problem" placeholder="Enter details here..."></textarea>
-                </div>
-                <div class="intake-section">
-                    <h4>IV. BACKGROUND INFORMATION</h4>
-                    <textarea rows="5" id="in_background" placeholder="Enter background information..."></textarea>
-                </div>
-                <div class="intake-section">
-                    <h4>V. SOCIAL WORKER'S ASSESSMENT</h4>
-                    <textarea rows="5" id="in_assessment" placeholder="Social worker's assessment of the problem..."></textarea>
-                </div>
-                <div class="intake-section">
-                    <h4>VI. INTERVENTION ACTION PLAN</h4>
-                    <div style="overflow-x:auto;">
-                        <table class="data-table">
-                            <thead><tr><th style="width:35%">SERVICES</th><th>SPECIFIC ACTIVITIES / PLAN OF ACTION</th></tr></thead>
-                            <tbody>
-                                <tr><td><input type="text" class="table-input"></td><td><input type="text" class="table-input"></td></tr>
-                                <tr><td><input type="text" class="table-input"></td><td><input type="text" class="table-input"></td></tr>
-                                <tr><td><input type="text" class="table-input"></td><td><input type="text" class="table-input"></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="grid-2eq" style="margin-top:40px; text-align:center; gap:40px;">
-                    <div><div style="border-bottom:1px solid #333; height:30px; margin-bottom:6px;"></div><span style="font-size:.8rem; font-weight:700; text-transform:uppercase;">CLIENT'S SIGNATURE</span></div>
-                    <div><div style="border-bottom:1px solid #333; height:30px; margin-bottom:6px;"></div><span style="font-size:.8rem; font-weight:700; text-transform:uppercase;">SOCIAL WORKER</span></div>
-                </div>
-
-                <div style="text-align:right; margin-top:30px;">
-                    <button class="btn btn-gold" onclick="saveIntakeSheet()" style="font-size:1rem; padding:12px 28px;">💾 Save Intake Sheet</button>
-                </div>
+                <p style="font-size:.82rem; color:#64748b; margin-top:10px;">Saved sheets appear in the Saved Records section below and update automatically after each save.</p>
             </div>
         </div>
 
@@ -1772,6 +1685,18 @@ function loadSavedRecords() {
     renderSavedIntakeSheets(intakeSheets);
     renderSavedAssessments(assessments);
 }
+
+window.addEventListener('message', (event) => {
+    if (event.data?.type === 'intake-saved') {
+        loadSavedRecords();
+    }
+});
+
+window.addEventListener('storage', (event) => {
+    if (event.key === 'mefamdev_intake_sheets' || event.key === 'mefamdev_intake_sheet_saved') {
+        loadSavedRecords();
+    }
+});
 
 function renderSavedIntakeSheets(sheets) {
     const intakeList = document.getElementById('intakeSheetsList');
