@@ -52,7 +52,7 @@
         th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eef1f5; }
         th { background: #f8fafc; color: var(--navy); font-size: .85rem; font-weight: 700; }
         tbody tr:hover { background: #f9fbfd; }
-        .badge { display: inline-flex; align-items: center; justify-content: center; padding: 5px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+        .badge { display: inline-flex; align-items: center; justify-content: center; padding: 5px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; margin-left: 6px; }
         .badge-grey { background: #f0f1f3; color: #5c6a7d; }
         .badge-green { background: #e9f7ef; color: #1d7a3f; }
         .badge-red { background: #fde8ea; color: #b41623; }
@@ -156,7 +156,12 @@
                 const apps = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
                 acceptedScholars = Array.isArray(apps) ? apps : [];
                 const grades = await MefamAPI.getGrades() || [];
-                const localGrades = JSON.parse(localStorage.getItem('mefamdev_grades') || '{}') || {};
+                let localGrades = {};
+                try {
+                    localGrades = JSON.parse(localStorage.getItem('mefamdev_grades') || '{}') || {};
+                } catch (e) {
+                    localGrades = {};
+                }
                 savedGrades = mergeGradeData(localGrades, grades);
                 localStorage.setItem('mefamdev_grades', JSON.stringify(savedGrades));
                 await renderSubjectsDatalist();
@@ -195,7 +200,12 @@
             const select = document.getElementById('gradeSemSelect');
             if (!select) return;
             let options = [];
-            const saved = JSON.parse(localStorage.getItem('mefamdev_grade_semesters') || '[]');
+            let saved = [];
+            try {
+                saved = JSON.parse(localStorage.getItem('mefamdev_grade_semesters') || '[]');
+            } catch (e) {
+                saved = [];
+            }
             if (Array.isArray(saved)) options = options.concat(saved.filter(Boolean));
             Object.values(savedGrades).forEach(entry => {
                 if (entry && Array.isArray(entry.history)) {
@@ -232,10 +242,16 @@
             if (!semester) return;
             const normalized = semester.trim();
             if (!normalized) return;
-            const stored = JSON.parse(localStorage.getItem('mefamdev_grade_semesters') || '[]');
+            let stored = [];
+            try {
+                stored = JSON.parse(localStorage.getItem('mefamdev_grade_semesters') || '[]');
+            } catch (e) {
+                stored = [];
+            }
             const next = Array.isArray(stored) ? stored.slice() : [];
             if (!next.includes(normalized)) next.push(normalized);
             localStorage.setItem('mefamdev_grade_semesters', JSON.stringify(next));
+            currentGradeSemester = normalized;
             ensureGradeSemesterOptions();
             renderGrades();
         }
@@ -259,25 +275,27 @@
             }
             tbody.innerHTML = filteredScholars.map(s => {
                 const record = savedGrades[String(s.id)] || {};
-                const selectedEntry = Array.isArray(record.history)
-                    ? record.history.find(r => String(r.semester) === String(currentGradeSemester))
+                const allHistory = Array.isArray(record.history) ? record.history : [];
+                // Entries that belong to the currently selected semester
+                const currentEntries = allHistory.filter(r => String(r.semester) === String(currentGradeSemester));
+                // Everything else is genuine history from other semesters
+                const otherEntries = allHistory.filter(r => String(r.semester) !== String(currentGradeSemester));
+                const hasGrade = currentEntries.length > 0;
+                const avgGrade = hasGrade
+                    ? Math.round((currentEntries.reduce((sum, r) => sum + Number(r.grade_val || 0), 0) / currentEntries.length) * 10) / 10
                     : null;
-                const selectedGrade = Number(selectedEntry?.grade_val || 0);
-                const historyRows = Array.isArray(record.history)
-                    ? record.history.filter(r => r !== selectedEntry).slice(0, 3)
-                    : [];
+                const historyRows = otherEntries.slice(0, 3);
                 const historyHtml = historyRows.length > 0
-                    ? historyRows.map(r => `${escapeHtml(r.semester || 'Unspecified')}: ${escapeHtml(r.grade_val ?? '')}`).join('<br>')
+                    ? historyRows.map(r => `${escapeHtml(r.semester || 'Unspecified')} — ${escapeHtml(r.subject || '')} Q${escapeHtml(r.quarter || '')}: ${escapeHtml(r.grade_val ?? '')}`).join('<br>')
                     : '—';
-                const hasGrade = Boolean(selectedEntry);
                 const badge = !hasGrade
                     ? `<span class="badge badge-grey">No Data</span>`
-                    : selectedGrade >= 80 ? `<span class="badge badge-green">Passed</span>` : `<span class="badge badge-red">Needs Intervention</span>`;
+                    : avgGrade >= 80 ? `<span class="badge badge-green">Passed</span>` : `<span class="badge badge-red">Needs Intervention</span>`;
                 return `<tr>
                     <td><strong>${escapeHtml(s.name || '—')}</strong></td>
                     <td>${escapeHtml(s.school || '—')}</td>
                     <td>${escapeHtml(s.grade || '—')}</td>
-                    <td>${hasGrade ? escapeHtml(String(selectedGrade)) : '—'}</td>
+                    <td>${hasGrade ? escapeHtml(String(avgGrade)) + badge : '—'}</td>
                     <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
                     <td><button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(s.id)||0}, ${makeJsString(s.name || 'Scholar')})'>Update</button></td>
                 </tr>`;
@@ -290,7 +308,7 @@
             document.getElementById('gradeModalAppId').value = id;
             document.getElementById('gradeModalId').value = id;
             document.getElementById('gradeInput').value = '';
-            document.getElementById('gradeSchoolYear').value = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+            document.getElementById('gradeSchoolYear').value = currentGradeSemester || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
             document.getElementById('gradeSubject').value = '';
             document.getElementById('gradeQuarter').value = '';
             document.getElementById('gradeModal').classList.add('open');
@@ -391,11 +409,20 @@
         }
 
         function makeJsString(value) {
-            return JSON.stringify(String(value || '')).replace(/</g, '\u003c').replace(/>/g, '\u003e').replace(/&/g, '\u0026');
+            // NOTE: these replacements must produce the literal 6-character
+            // escape sequence text (e.g. "\u003c"), not the actual character,
+            // so the browser's JS parser re-decodes it at runtime instead of
+            // the HTML attribute containing a raw '<', '>', '&', or "'" that
+            // could break out of the surrounding onclick='...' attribute.
+            return JSON.stringify(String(value ?? ''))
+                .replace(/</g, '\\u003c')
+                .replace(/>/g, '\\u003e')
+                .replace(/&/g, '\\u0026')
+                .replace(/'/g, '\\u0027');
         }
 
         function escapeHtml(value) {
-            return String(value || '')
+            return String(value ?? '')
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
