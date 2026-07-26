@@ -767,7 +767,7 @@ user51 / pass51 / Name: Leila Mendoza       / Email: test@gmail.com     / Ref: 2
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                     <div class="search-wrap" style="min-width:240px; max-width:320px;">
                         <span class="search-icon"></span>
-                        <input type="text" class="search-input" id="pipelineSearch" placeholder="Search pipeline by name, barangay, school..." oninput="filterPipeline()">
+                        <input type="text" class="search-input" id="pipelineSearch" placeholder="Search by reference number or name (ref # or name)" oninput="filterPipeline()">
                     </div>
                     <button class="btn btn-gold" onclick="loadAllData()">🔄 Refresh</button>
                 </div>
@@ -889,6 +889,8 @@ user51 / pass51 / Name: Leila Mendoza       / Email: test@gmail.com     / Ref: 2
                     <table>
                         <thead><tr><th>Scholar Name</th><th>School</th><th>Grade/Year</th><th>Selected Quarter</th><th>History</th><th>Action</th></tr></thead>
                         <tbody id="grades-body"></tbody>
+                                </table>
+                                <div id="gradesPager" style="display:flex; justify-content:flex-end; gap:8px; padding:10px 0; align-items:center;"></div>
                     </table>
                 </div>
             </div>
@@ -1915,7 +1917,7 @@ function renderRecentApps(apps) {
     tbody.innerHTML = recent.map(a => `
         <tr>
             <td>
-                <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
+                <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.reference || a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
             </td>
             <td><strong>${a.name}</strong></td>
             <td>${a.barangay || '—'}</td>
@@ -1933,7 +1935,7 @@ function renderFullAppsTable(apps) {
     tbody.innerHTML = apps.map(a => `
         <tr data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}">
             <td>
-                <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
+                <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.reference || a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
             </td>
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
             <td><strong>${a.name}</strong></td>
@@ -2058,17 +2060,27 @@ function filterProfiles() {
 }
 
 function filterPipeline() {
-    const query = document.getElementById('pipelineSearch')?.value.toLowerCase().trim() || '';
+    const rawQuery = document.getElementById('pipelineSearch')?.value.trim() || '';
+    const query = rawQuery.toLowerCase();
     const apps = window.pipelineApps || JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+
+    // If query looks like a reference number (mostly digits or digits+letters, length >= 6), match against reference fields first
+    const looksLikeRef = /^[0-9\-]{4,}$/.test(rawQuery);
     const filtered = query === '' ? apps : apps.filter(app => {
         const name = (app.name || '').toLowerCase();
         const school = (app.school || '').toLowerCase();
         const barangay = (app.barangay || '').toLowerCase();
         const status = (app.status || '').toLowerCase();
         const grade = (app.grade || '').toLowerCase();
+        const ref = String(app.reference || app.referenceNumber || app.reference_number || app.reference_number || app.reference_number || '').toLowerCase();
+
+        if (looksLikeRef) {
+            return ref.includes(rawQuery.toLowerCase()) || String(app.id || '').includes(rawQuery);
+        }
+
         const nameParts = name.split(/\s+/);
         const starts = nameParts.some(part => part.startsWith(query));
-        return starts || name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
+        return starts || name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query) || ref.includes(query);
     });
     renderPipeline(filtered);
 }
@@ -2139,11 +2151,24 @@ function flagDocMissing(appId, docKey, containerId) {
 }
 
 /* ── Grades ── */
+let gradesPage = 1;
+const gradesPageSize = 20; // change as needed
+
 function renderGrades(scholars) {
     const tbody = document.getElementById('grades-body');
+    const pager = document.getElementById('gradesPager');
     if (!tbody) return;
-    if (scholars.length === 0) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No accepted scholars to display.</div></td></tr>`; return; }
-    tbody.innerHTML = scholars.map(s => {
+    if (!Array.isArray(scholars)) scholars = [];
+    if (scholars.length === 0) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No accepted scholars to display.</div></td></tr>`; if (pager) pager.innerHTML = ''; return; }
+
+    const total = scholars.length;
+    const totalPages = Math.max(1, Math.ceil(total / gradesPageSize));
+    if (gradesPage > totalPages) gradesPage = totalPages;
+    if (gradesPage < 1) gradesPage = 1;
+    const start = (gradesPage - 1) * gradesPageSize;
+    const pageItems = scholars.slice(start, start + gradesPageSize);
+
+    tbody.innerHTML = pageItems.map(s => {
         const record = savedGrades[s.id];
         const selectedEntry = record?.history?.find(r => r.semester === currentGradeSemester);
         const selectedGrade = Number(selectedEntry?.grade_val || 0);
@@ -2165,6 +2190,37 @@ function renderGrades(scholars) {
             <td><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},'${s.name}')">Update</button></td>
         </tr>`;
     }).join('');
+
+    // Pager
+    if (pager) {
+        pager.innerHTML = '';
+        const info = document.createElement('div');
+        info.style.marginRight = 'auto';
+        info.style.color = 'var(--text-muted)';
+        info.style.fontSize = '.9rem';
+        info.innerText = `Showing ${start + 1}–${Math.min(start + pageItems.length, total)} of ${total}`;
+        pager.appendChild(info);
+
+        const prev = document.createElement('button');
+        prev.className = 'btn btn-ghost btn-sm';
+        prev.innerText = '← Prev';
+        prev.disabled = gradesPage <= 1;
+        prev.onclick = () => { gradesPage = Math.max(1, gradesPage - 1); renderGrades(scholars); };
+        pager.appendChild(prev);
+
+        const pageIndicator = document.createElement('div');
+        pageIndicator.style.padding = '0 8px';
+        pageIndicator.style.alignSelf = 'center';
+        pageIndicator.innerText = `Page ${gradesPage} / ${totalPages}`;
+        pager.appendChild(pageIndicator);
+
+        const next = document.createElement('button');
+        next.className = 'btn btn-ghost btn-sm';
+        next.innerText = 'Next →';
+        next.disabled = gradesPage >= totalPages;
+        next.onclick = () => { gradesPage = Math.min(totalPages, gradesPage + 1); renderGrades(scholars); };
+        pager.appendChild(next);
+    }
 }
 
 function openGradeModal(id, name) {
