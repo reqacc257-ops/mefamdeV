@@ -418,6 +418,11 @@
                 <div class="ac-label">Requirements</div>
                 <div class="ac-sub">Documents needed</div>
             </div>
+            <div class="action-card" onclick="viewMyReportCard()">
+                <div class="ac-icon">📄</div>
+                <div class="ac-label">Report Card</div>
+                <div class="ac-sub">View & print grades</div>
+            </div>
             <div class="action-card" onclick="openAnnouncementsModal()">
                 <span class="ac-badge" id="annBadge" style="display:none;">0</span>
                 <div class="ac-icon">📢</div>
@@ -1173,6 +1178,75 @@ function logout() {
 }
 </script>
 <div class="image-modal" id="imageModal" onclick="if (event.target === this) closeImagePreview()">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">Image preview</div>
+            <button class="modal-close" type="button" aria-label="Close preview" onclick="closeImagePreview()">×</button>
+        </div>
+        <div class="modal-body">
+            <img src="" alt="Uploaded image preview">
+        </div>
+    </div>
+</div>
+
+<!-- Report Card modal -->
+<div class="image-modal" id="reportCardModal" onclick="if (event.target === this) closeReportCardModal()">
+    <div class="modal-card" style="max-width:940px; width:100%;">
+        <div class="modal-header">
+            <div class="modal-title">Report Card</div>
+            <div style="margin-left:12px; font-size:.85rem; color:var(--muted);">
+                School Year
+                <select id="myRCSchoolYear" style="margin-left:8px; padding:6px 8px; border-radius:6px; border:1px solid #e6eef6;"></select>
+            </div>
+            <div style="flex:1"></div>
+            <button class="modal-close" type="button" aria-label="Close" onclick="closeReportCardModal()">×</button>
+            <button class="btn btn-gold" style="margin-left:10px;" onclick="window.print()">🖨️ Print</button>
+        </div>
+        <div class="modal-body" id="reportCardModalContent" style="padding:20px; overflow:auto; max-height:70vh; background:var(--bg);"></div>
+    </div>
+</div>
+
+<script src="/components/report-card.js"></script>
+<script>
+async function viewMyReportCard() {
+    const sess = MefamAPI.getSession() || JSON.parse(localStorage.getItem('mefamdev_preview_session') || '{}');
+    const appId = sess?.appId || sess?.appId || null;
+    if (!appId) { alert('No applicant session found.'); return; }
+
+    // Fetch available school years for this applicant
+    let gradesAll = [];
+    try { gradesAll = await MefamAPI._get(`/events/grades?appId=${appId}`) || []; } catch (e) { gradesAll = []; }
+    const years = Array.from(new Set((gradesAll||[]).map(g => g.school_year || g.schoolYear).filter(Boolean)));
+    const defaultSY = years[0] || `${new Date().getFullYear()}-${new Date().getFullYear()+1}`;
+    const sel = document.getElementById('myRCSchoolYear');
+    if (sel) {
+        sel.innerHTML = years.length ? years.map(y => `<option value="${y}">${y}</option>`).join('') : `<option value="${defaultSY}">${defaultSY}</option>`;
+        sel.value = defaultSY;
+        sel.onchange = viewMyReportCard; // reload when changed
+    }
+    const schoolYear = sel ? sel.value : defaultSY;
+
+    let grades = [];
+    try { grades = await MefamAPI._get(`/events/grades?appId=${appId}&schoolYear=${encodeURIComponent(schoolYear)}`) || []; } catch (e) { grades = []; }
+
+    // scholar data from stored apps or preview session
+    let apps = [];
+    try { apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]'); } catch (e) { apps = []; }
+    const app = apps.find(a => String(a.id) === String(appId)) || {};
+    const scholarData = { name: app.name || sess.name || '', gradeLevel: app.grade || app.eduLevel || '', school: app.school || '', refNo: app.reference || app.referenceNumber || '', schoolYear };
+
+    const container = document.getElementById('reportCardModalContent');
+    if (!container) return;
+    const html = typeof buildReportCardHTML === 'function' ? buildReportCardHTML(scholarData, grades) : '<div style="padding:20px;">Report card component missing.</div>';
+    // Inject CSS styles from component if available
+    let styleHtml = '';
+    if (typeof REPORT_CARD_STYLES !== 'undefined') styleHtml = `<style>${REPORT_CARD_STYLES}</style>`;
+    container.innerHTML = styleHtml + html;
+    document.getElementById('reportCardModal').classList.add('open');
+}
+function closeReportCardModal() { document.getElementById('reportCardModal').classList.remove('open'); }
+</script>
+</body>
     <div class="modal-card">
         <div class="modal-header">
             <div class="modal-title">Image preview</div>

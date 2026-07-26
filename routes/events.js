@@ -281,10 +281,57 @@ router.delete('/absences/:appId', (req, res) => {
 // Grades
 router.get('/grades', (req, res) => {
   const semester = req.query.semester;
+  const appId = req.query.appId;
+  const schoolYear = req.query.schoolYear;
+  
+  if (appId && schoolYear) {
+    return res.json(db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? ORDER BY quarter ASC, subject ASC').all(appId, schoolYear));
+  }
   if (semester) {
     return res.json(db.prepare('SELECT * FROM grades WHERE semester = ?').all(semester));
   }
   res.json(db.prepare('SELECT * FROM grades').all());
+});
+router.get('/grades/:appId/report', (req, res) => {
+  const appId = req.params.appId;
+  const schoolYear = req.query.schoolYear || '';
+  const grades = db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? ORDER BY quarter ASC, subject ASC').all(appId, schoolYear);
+  res.json(grades || []);
+});
+
+// Subjects (persistent list shared across staff)
+router.get('/subjects', (req, res) => {
+  // stored as an array in db.data.subjects
+  const list = Array.isArray(db.data.subjects) ? db.data.subjects : [];
+  res.json(list);
+});
+
+router.put('/subjects', requireRole('director','edu'), (req, res) => {
+  // Expect { subjects: ["Subject A", "Subject B", ...] }
+  if (!req.body || !Array.isArray(req.body.subjects)) return res.status(400).json({ error: 'Request must include a subjects array in the body.' });
+
+  // Normalize: trim, collapse internal whitespace, filter empties
+  const raw = req.body.subjects.map(s => String(s || '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  // Dedupe while preserving order (case-insensitive)
+  const seen = new Set();
+  const normalized = [];
+  for (const s of raw) {
+    const key = s.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); normalized.push(s); }
+  }
+
+  // Basic limits for safety
+  if (normalized.length > 200) return res.status(400).json({ error: 'Too many subjects; limit is 200.' });
+  if (normalized.some(s => s.length > 120)) return res.status(400).json({ error: 'Each subject must be 120 characters or fewer.' });
+
+  db.data.subjects = normalized;
+  try { if (typeof db.save === 'function') db.save(); } catch (e) {
+    console.error('Failed saving subjects:', e);
+    return res.status(500).json({ error: 'Failed to persist subjects.' });
+  }
+
+  res.json({ ok: true, subjects: normalized });
 });
 router.get('/monitoring', (req, res) => {
   const applications = db.prepare('SELECT id, name, status FROM applications').all();
@@ -293,14 +340,27 @@ router.get('/monitoring', (req, res) => {
   res.json(buildMonitoringSummary(applications, grades, absences));
 });
 router.put('/grades/:appId', (req, res) => {
-  const { grade, semester } = req.body;
-  const sem = semester || '';
+  const { grade, semester, subject, quarter, schoolYear } = req.body;
   const timestamp = new Date().toISOString();
-  const existing = db.prepare('SELECT * FROM grades WHERE app_id = ? AND semester = ?').get(req.params.appId, sem);
-  if (existing) {
-    db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
+  const appId = req.params.appId;
+  
+  // Support both old (semester) and new (subject+quarter) format
+  if (subject && quarter && schoolYear) {
+    const existing = db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? AND subject = ? AND quarter = ?').get(appId, schoolYear, subject, quarter);
+    if (existing) {
+      db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
+    } else {
+      db.prepare('INSERT INTO grades (app_id, school_year, subject, quarter, grade_val, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(appId, schoolYear, subject, quarter, grade, timestamp);
+    }
   } else {
-    db.prepare('INSERT INTO grades (app_id, grade_val, semester, updated_at) VALUES (?, ?, ?, ?)').run(req.params.appId, grade, sem, timestamp);
+    // Legacy semester-based grades
+    const sem = semester || '';
+    const existing = db.prepare('SELECT * FROM grades WHERE app_id = ? AND semester = ?').get(appId, sem);
+    if (existing) {
+      db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
+    } else {
+      db.prepare('INSERT INTO grades (app_id, grade_val, semester, updated_at) VALUES (?, ?, ?, ?)').run(appId, grade, sem, timestamp);
+    }
   }
   if (typeof db.save === 'function') db.save();
   res.json({ ok: true });

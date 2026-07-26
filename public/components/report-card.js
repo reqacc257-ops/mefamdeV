@@ -1,0 +1,256 @@
+/**
+ * Report Card Component
+ * Displays DepEd "Report on Learning Progress and Achievement" format
+ */
+
+// Default learning areas; will be merged with configured subjects or grades-derived subjects
+const DEFAULT_AREAS = [
+  'Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'
+];
+
+function calculateFinalGrade(grades) {
+  if (!grades || grades.length === 0) return 0;
+  const sum = grades.reduce((acc, g) => acc + (Number(g) || 0), 0);
+  return Math.round((sum / grades.length) * 10) / 10;
+}
+
+function getRemarkFromGrade(grade) {
+  const g = Number(grade) || 0;
+  if (g >= 90) return 'Passed';
+  if (g >= 85) return 'Passed';
+  if (g >= 80) return 'Passed';
+  if (g >= 75) return 'Passed';
+  return 'Did Not Meet';
+}
+
+function buildReportCardHTML(scholarData, gradesData) {
+  const { name, gradeLevel, school, refNo, schoolYear } = scholarData;
+  
+  // Organize grades by subject and quarter
+  const gradesBySubject = {};
+  (gradesData || []).forEach(grade => {
+    const subj = grade.subject || grade.subject_name || grade.subjectName;
+    if (!subj) return;
+    if (!gradesBySubject[subj]) {
+      gradesBySubject[subj] = { Q1: '', Q2: '', Q3: '', Q4: '' };
+    }
+    if (grade.quarter) {
+      const q = `Q${grade.quarter}`;
+      gradesBySubject[subj][q] = grade.grade_val || grade.grade_val;
+    }
+  });
+
+  // If no configured subjects, assemble from grades and default areas
+  const configured = (() => {
+    try {
+      const raw = localStorage.getItem('mefamdev_subjects');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  })();
+
+  const subjectsFromGrades = Object.keys(gradesBySubject);
+  const finalSubjectList = configured && Array.isArray(configured) && configured.length > 0
+    ? configured
+    : Array.from(new Set([...DEFAULT_AREAS, ...subjectsFromGrades]));
+
+  const quarterlyAverages = { Q1: [], Q2: [], Q3: [], Q4: [] };
+  let tableRows = '';
+
+  // Render each subject in finalSubjectList; group MAPEH subjects under one header when present
+  const mapehSubs = ['Music','Arts','PE','Health'];
+  const hasMapeh = finalSubjectList.some(s => mapehSubs.includes(s));
+
+  for (const subj of finalSubjectList) {
+    if (hasMapeh && subj === 'Music') {
+      // Start MAPEH group header
+      tableRows += `<tr class="rc-group-head"><td class="rc-area" colspan="7">MAPEH</td></tr>`;
+    }
+
+    // Skip adding group header items individually (we still show them as rows)
+    const subjectGrades = gradesBySubject[subj] || {};
+    const q1 = subjectGrades.Q1 || '';
+    const q2 = subjectGrades.Q2 || '';
+    const q3 = subjectGrades.Q3 || '';
+    const q4 = subjectGrades.Q4 || '';
+    const finalGrade = calculateFinalGrade([q1, q2, q3, q4].filter(g => g !== ''));
+    const remark = getRemarkFromGrade(finalGrade);
+
+    if (q1) quarterlyAverages.Q1.push(Number(q1));
+    if (q2) quarterlyAverages.Q2.push(Number(q2));
+    if (q3) quarterlyAverages.Q3.push(Number(q3));
+    if (q4) quarterlyAverages.Q4.push(Number(q4));
+
+    const isMapehSub = mapehSubs.includes(subj);
+    tableRows += `
+      <tr>
+        <td class="${isMapehSub ? 'rc-sub' : 'rc-area'}">${subj}</td>
+        <td class="rc-grade">${q1 || '-'}</td>
+        <td class="rc-grade">${q2 || '-'}</td>
+        <td class="rc-grade">${q3 || '-'}</td>
+        <td class="rc-grade">${q4 || '-'}</td>
+        <td class="rc-final">${finalGrade > 0 ? finalGrade : '-'}</td>
+        <td class="rc-remark ${remark === 'Passed' ? 'remark-pass' : 'remark-pending'}">${finalGrade > 0 ? remark : '-'}</td>
+      </tr>
+    `;
+  }
+
+  // Calculate general average
+  const genAvgQ1 = quarterlyAverages.Q1.length > 0 ? Math.round((quarterlyAverages.Q1.reduce((a, b) => a + b, 0) / quarterlyAverages.Q1.length) * 10) / 10 : 0;
+  const genAvgQ2 = quarterlyAverages.Q2.length > 0 ? Math.round((quarterlyAverages.Q2.reduce((a, b) => a + b, 0) / quarterlyAverages.Q2.length) * 10) / 10 : 0;
+  const genAvgQ3 = quarterlyAverages.Q3.length > 0 ? Math.round((quarterlyAverages.Q3.reduce((a, b) => a + b, 0) / quarterlyAverages.Q3.length) * 10) / 10 : 0;
+  const genAvgQ4 = quarterlyAverages.Q4.length > 0 ? Math.round((quarterlyAverages.Q4.reduce((a, b) => a + b, 0) / quarterlyAverages.Q4.length) * 10) / 10 : 0;
+  const overallGenAvg = [genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).length > 0 
+    ? Math.round(([genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).reduce((a, b) => a + b, 0) / [genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).length) * 10) / 10
+    : 0;
+
+  tableRows += `
+    <tr class="rc-avg">
+      <td class="rc-area">General Average</td>
+      <td>${genAvgQ1 > 0 ? genAvgQ1 : '-'}</td>
+      <td>${genAvgQ2 > 0 ? genAvgQ2 : '-'}</td>
+      <td>${genAvgQ3 > 0 ? genAvgQ3 : '-'}</td>
+      <td>${genAvgQ4 > 0 ? genAvgQ4 : '-'}</td>
+      <td class="rc-final" style="background:transparent; color:#fff;">${overallGenAvg > 0 ? overallGenAvg : '-'}</td>
+      <td class="rc-remark" style="color:#8be3ae;">${overallGenAvg >= 75 ? 'Passed' : overallGenAvg > 0 ? 'Did Not Meet' : '-'}</td>
+    </tr>
+  `;
+
+  return `
+    <div class="rc-card">
+      <div class="rc-head">
+        <div class="rc-org">MEFAMDEV-Life · Angat, Bulacan</div>
+        <div class="rc-title">Report on Learning Progress and Achievement</div>
+        <div class="rc-sub">School Year ${schoolYear || 'N/A'} · Quarter 1–4</div>
+      </div>
+
+      <div class="rc-info">
+        <div class="rc-info-cell">
+          <div class="rc-lbl">Scholar</div>
+          <div class="rc-val">${name || 'N/A'}</div>
+        </div>
+        <div class="rc-info-cell">
+          <div class="rc-lbl">Grade / Level</div>
+          <div class="rc-val">${gradeLevel || 'N/A'}</div>
+        </div>
+        <div class="rc-info-cell">
+          <div class="rc-lbl">School</div>
+          <div class="rc-val">${school || 'N/A'}</div>
+        </div>
+        <div class="rc-info-cell">
+          <div class="rc-lbl">Reference No.</div>
+          <div class="rc-val">${refNo || 'N/A'}</div>
+        </div>
+      </div>
+
+      <div class="rc-table-wrap">
+        <table class="rc-table">
+          <thead>
+            <tr>
+              <th style="text-align:left; width:34%;">Learning Areas</th>
+              <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
+              <th>Final Grade</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rc-legend">Grading scale: 90–100 Outstanding · 85–89 Very Satisfactory · 80–84 Satisfactory · 75–79 Fairly Satisfactory · Below 75 Did Not Meet Expectations</div>
+
+      <div class="rc-footer">
+        <div class="rc-sign">
+          <div class="rc-line"><span class="rc-sign-name">Adviser's Signature</span></div>
+        </div>
+        <div class="rc-sign">
+          <div class="rc-line"><span class="rc-sign-name">MEFAMDEV Program Coordinator</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// CSS for report card
+const REPORT_CARD_STYLES = `
+  :root {
+    --navy: #1a2e44;
+    --gold: #f5a623;
+    --gold-light: #fdf0d5;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --bg: #f0f3f8;
+    --white: #ffffff;
+    --border: #d7dde6;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --shadow: 0 2px 14px rgba(26,46,68,.09);
+    --radius: 12px;
+  }
+
+  .rc-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin: 20px 0; }
+
+  .rc-head {
+    background: var(--navy); color: #fff; padding: 26px 32px 22px; text-align: center; position: relative;
+  }
+  .rc-head::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 90% -20%, rgba(255,255,255,.12) 0%, transparent 55%); }
+  .rc-head .rc-org { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.55); position: relative; z-index: 1; }
+  .rc-head .rc-title { font-family: 'DM Serif Display', serif; font-size: 1.55rem; margin: 6px 0 2px; position: relative; z-index: 1; }
+  .rc-head .rc-sub { font-size: .8rem; color: rgba(255,255,255,.65); position: relative; z-index: 1; }
+
+  .rc-info {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .rc-info-cell {
+    padding: 14px 20px; border-right: 1px solid var(--border);
+  }
+  .rc-info-cell:last-child { border-right: none; }
+  .rc-info-cell .rc-lbl { font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
+  .rc-info-cell .rc-val { font-size: .9rem; font-weight: 600; color: var(--text); }
+
+  .rc-table-wrap { padding: 24px 28px 8px; }
+  table.rc-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  table.rc-table caption { text-align: left; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+  table.rc-table th, table.rc-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
+  table.rc-table thead th { background: #f4f6fa; color: var(--navy); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+  table.rc-table td.rc-area { text-align: left; font-weight: 600; color: var(--text); }
+  table.rc-table td.rc-sub { text-align: left; padding-left: 24px; font-weight: 400; color: var(--muted); font-size: .8rem; }
+  table.rc-table td.rc-grade { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  table.rc-table tr.rc-group-head td { background: #fafbfd; }
+  table.rc-table td.rc-final { font-weight: 700; color: var(--navy); background: #f8f5ea; }
+  table.rc-table td.rc-remark { font-size: .74rem; font-weight: 600; }
+  .remark-pass { color: var(--green); }
+  .remark-pending { color: var(--muted); }
+  tr.rc-avg td { background: var(--navy); color: #fff; font-weight: 700; font-size: .86rem; }
+  tr.rc-avg td.rc-area { text-transform: uppercase; letter-spacing: .04em; font-size: .74rem; }
+
+  .rc-legend { padding: 6px 28px 20px; font-size: .72rem; color: var(--muted); }
+
+  .rc-footer {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    padding: 22px 32px 28px; border-top: 1px solid var(--border);
+  }
+  .rc-sign { text-align: center; }
+  .rc-sign .rc-line { border-top: 1px solid var(--text); margin-top: 34px; padding-top: 6px; font-size: .74rem; color: var(--muted); }
+  .rc-sign .rc-sign-name { font-weight: 700; font-size: .85rem; color: var(--text); }
+
+  @media (max-width: 700px) {
+    .rc-info { grid-template-columns: repeat(2, 1fr); }
+    table.rc-table { font-size: .72rem; }
+    table.rc-table td.rc-sub { padding-left: 14px; }
+    .rc-footer { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    @page { size: auto; margin: 8mm 10mm; }
+    .rc-card { box-shadow: none; border: 1px solid var(--border); }
+    .rc-head { padding: 16px 20px 14px; }
+    .rc-title { font-size: 1.2rem; }
+    .rc-table-wrap { padding: 14px 18px 4px; }
+    table.rc-table th, table.rc-table td { padding: 5px 7px; font-size: .72rem; }
+    .rc-footer { padding: 14px 20px 18px; }
+  }
+`;

@@ -236,9 +236,27 @@ const MefamAPI = {
   async getGrades(semester) {
     return semester ? this._get(`/events/grades?semester=${encodeURIComponent(semester)}`) : this._get('/events/grades');
   },
-  async saveGrade(appId, grade, semester) {
+  async saveGrade(appId, grade, semesterOrOptions, maybeOptions) {
+    // saveGrade supports legacy (appId, grade, semester) and new format
+    let options = {};
+    if (semesterOrOptions && typeof semesterOrOptions === 'object') {
+      options = semesterOrOptions;
+    } else if (maybeOptions && typeof maybeOptions === 'object') {
+      options = maybeOptions;
+    }
+
+    if (options.subject && options.quarter && options.schoolYear) {
+          // Use camelCase key for server-side handler (events.js expects schoolYear)
+          return this._put(`/events/grades/${appId}`, { grade, subject: options.subject, quarter: options.quarter, schoolYear: options.schoolYear });
+        }
+
+    const semester = typeof semesterOrOptions === 'string' ? semesterOrOptions : (options.semester || '');
     return this._put(`/events/grades/${appId}`, { grade, semester });
   },
+
+  // Subjects
+  async getSubjects() { return this._get('/events/subjects'); },
+  async saveSubjects(subjects) { return this._put('/events/subjects', { subjects }); },
 
   // ── Financials ────────────────────────────────────────────────────────────
   async getFinancialSummary() { return this._get('/financials/summary'); },
