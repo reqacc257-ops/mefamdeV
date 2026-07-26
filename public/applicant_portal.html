@@ -214,6 +214,29 @@
         .image-modal .modal-body { padding: 0; display: flex; justify-content: center; align-items: center; background: #f7f9fb; }
         .image-modal .modal-body img { width: 100%; max-height: calc(100vh - 94px); object-fit: contain; }
 
+        /* ── Generic content modal (Requirements / Announcements) ── */
+        .content-modal {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.55); z-index: 998; padding: 18px;
+        }
+        .content-modal.open { display: flex; }
+        .content-modal .modal-card {
+            width: min(560px, 100%); max-height: min(720px, 92vh); background: #fff;
+            border-radius: 18px; overflow: hidden; box-shadow: 0 28px 60px rgba(0,0,0,.3);
+            display: flex; flex-direction: column;
+        }
+        .content-modal .modal-header {
+            padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #f0f2f6; background: var(--navy); color: #fff;
+        }
+        .content-modal .modal-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+        .content-modal .modal-close {
+            border: none; background: rgba(255,255,255,.12); color: #fff; font-size: 1.3rem; line-height: 1;
+            cursor: pointer; padding: 0; width: 32px; height: 32px; border-radius: 50%; transition: .15s;
+        }
+        .content-modal .modal-close:hover { background: rgba(255,255,255,.25); }
+        .content-modal .modal-body { padding: 8px 22px 20px; overflow-y: auto; }
+
         /* ── Announcements ── */
         .ann-item { padding: 14px 0; border-bottom: 1px solid #f0f2f6; }
         .ann-item:last-child { border-bottom: none; }
@@ -231,11 +254,18 @@
             border: 2px solid transparent; text-align: center;
             text-decoration: none; color: var(--text);
             display: flex; flex-direction: column; align-items: center; gap: 8px;
+            position: relative;
         }
         .action-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,46,68,.12); }
         .action-card .ac-icon { font-size: 2rem; }
         .action-card .ac-label { font-size: .85rem; font-weight: 700; color: var(--navy); }
         .action-card .ac-sub { font-size: .75rem; color: var(--muted); }
+        .ac-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: var(--red); color: #fff; font-size: .68rem; font-weight: 800;
+            min-width: 18px; height: 18px; border-radius: 999px;
+            display: flex; align-items: center; justify-content: center; padding: 0 5px;
+        }
 
         /* ── Not-found screen ── */
         .not-found { text-align: center; padding: 80px 20px; }
@@ -251,6 +281,34 @@
             .sh-top { flex-direction: column; }
             .pt-label { font-size: .65rem; }
             .action-row { flex-direction: column; }
+        }
+
+        /* ── Print: compact single page ── */
+        @media print {
+            @page { size: auto; margin: 10mm 12mm; }
+            html, body { background: #fff !important; }
+            .topbar, .action-row, .attendance-card, #attendanceCard,
+            .btn-logout, .content-modal, .image-modal { display: none !important; }
+            .main { max-width: 100%; padding: 0; margin: 0; }
+            .status-hero {
+                color: #1a2e44 !important; background: #fff !important;
+                border: 1.5px solid var(--navy); padding: 14px 16px; margin-bottom: 10px;
+                border-radius: 8px;
+            }
+            .status-hero::before { display: none; }
+            .sh-name { font-size: 1.15rem; }
+            .sh-status-badge { background: #f0f3f8 !important; border: 1px solid var(--border); padding: 8px 12px; }
+            .sh-status-badge .sb-icon { font-size: 1.2rem; margin-bottom: 0; }
+            .progress-track { padding: 10px 14px; margin-bottom: 10px; box-shadow: none; border: 1px solid var(--border); page-break-inside: avoid; }
+            .pt-title { margin-bottom: 10px; }
+            .card, .timeline-card { box-shadow: none; border: 1px solid var(--border); margin-bottom: 10px; page-break-inside: avoid; }
+            .cards-grid { gap: 10px; margin-bottom: 10px; }
+            .card-header, .card-body { padding: 10px 14px; }
+            .info-row, .tl-item, .req-item { padding: 5px 0; font-size: .78rem; }
+            .tl-content .tl-note { padding: 5px 8px; font-size: .74rem; }
+            .doc-upload-row, .doc-upload-thumbnail { display: none !important; }
+            #announcementsCard { display: none !important; }
+            * { box-shadow: none !important; }
         }
     </style>
 </head>
@@ -339,12 +397,14 @@
                 <div class="ac-label">New Application</div>
                 <div class="ac-sub">Apply for next S.Y.</div>
             </a>
-            <div class="action-card" onclick="scrollTo({top:document.getElementById('requirementsCard').offsetTop-80,behavior:'smooth'})">
+            <div class="action-card" onclick="openRequirementsModal()">
+                <span class="ac-badge" id="reqBadge" style="display:none;">!</span>
                 <div class="ac-icon">📋</div>
                 <div class="ac-label">Requirements</div>
                 <div class="ac-sub">Documents needed</div>
             </div>
-            <div class="action-card" onclick="scrollTo({top:document.getElementById('announcementsCard').offsetTop-80,behavior:'smooth'})">
+            <div class="action-card" onclick="openAnnouncementsModal()">
+                <span class="ac-badge" id="annBadge" style="display:none;">0</span>
                 <div class="ac-icon">📢</div>
                 <div class="ac-label">Announcements</div>
                 <div class="ac-sub">Latest from MEFAMDEV</div>
@@ -413,24 +473,34 @@
             </div>
         </div>
 
-        <!-- Requirements checklist -->
-        <div class="card" id="requirementsCard" style="margin-bottom:24px;">
-            <div class="card-header"><span class="ch-icon">📋</span><h3>Document Requirements</h3></div>
-            <div class="card-body" id="requirementsBody">
-                <p style="color:#aaa;font-size:.85rem;">Loading…</p>
-            </div>
-        </div>
-
-        <!-- Announcements -->
-        <div class="card" id="announcementsCard">
-            <div class="card-header"><span class="ch-icon">📢</span><h3>Announcements from MEFAMDEV</h3></div>
-            <div class="card-body" id="annPortalList">
-                <!-- Populated dynamically from localStorage -->
-            </div>
-        </div>
-
     </div><!-- /portalContent -->
 </div><!-- /main -->
+
+<!-- Requirements modal -->
+<div class="content-modal" id="requirementsModal" onclick="if (event.target === this) closeRequirementsModal()">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">📋 Document Requirements</div>
+            <button class="modal-close" type="button" aria-label="Close" onclick="closeRequirementsModal()">×</button>
+        </div>
+        <div class="modal-body" id="requirementsBody">
+            <p style="color:#aaa;font-size:.85rem;padding-top:12px;">Loading…</p>
+        </div>
+    </div>
+</div>
+
+<!-- Announcements modal -->
+<div class="content-modal" id="announcementsModal" onclick="if (event.target === this) closeAnnouncementsModal()">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">📢 Announcements from MEFAMDEV</div>
+            <button class="modal-close" type="button" aria-label="Close" onclick="closeAnnouncementsModal()">×</button>
+        </div>
+        <div class="modal-body" id="annPortalList">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+</div>
 
 <script src="/mefamdev-api.js"></script>
 <script>
@@ -527,8 +597,11 @@ function normalizeStatus(status) {
     return ['Pending Review', 'Interviewing', 'Accepted', 'Rejected'].includes(value) ? value : 'Pending Review';
 }
 
+let currentAppId = null;
+
 function renderPortal(app, session) {
     const appData = normalizeApplication(app, session);
+    currentAppId = appData.id;
 
     // Top bar
     const firstName = String(appData.name || 'Applicant').split(',')[0].trim() || 'Applicant';
@@ -620,11 +693,9 @@ function renderPortal(app, session) {
             </div>
         </div>`).join('');
 
-    // Load live announcements from admin
-    renderAnnouncements();
-
-    // Document checklist (live, staff-managed)
-    renderRequirements(appData.id);
+    // Preload badge counts for announcements + requirements (without opening modals)
+    refreshAnnouncementsBadge();
+    refreshRequirementsBadge(appData.id);
 
     // Pre-fill attendance name and auto show Steam Guard style UI when code param present
     try {
@@ -780,6 +851,7 @@ async function uploadDocumentFromInput(input) {
 async function renderRequirements(appId) {
     const el = document.getElementById('requirementsBody');
     if (!el) return;
+    el.innerHTML = '<p style="color:#aaa;font-size:.85rem;padding-top:12px;">Loading…</p>';
     let items;
     try {
         items = await MefamAPI.getDocuments(appId);
@@ -790,7 +862,7 @@ async function renderRequirements(appId) {
         items = null;
     }
     if (!Array.isArray(items)) {
-        el.innerHTML = '<p style="color:#aaa;font-size:.85rem;">Could not load your document checklist right now. Please refresh the page.</p>';
+        el.innerHTML = '<p style="color:#aaa;font-size:.85rem;padding-top:12px;">Could not load your document checklist right now. Please refresh the page.</p>';
         return;
     }
 
@@ -829,6 +901,25 @@ async function renderRequirements(appId) {
         <p style="font-size:.8rem; color:var(--muted); margin-top:12px; padding:10px; background:#f7f9fb; border-radius:7px;">
             📌 <strong>Note:</strong> Please bring all original documents and photocopies during your scheduled interview. Contact MEFAMDEV for scheduling.
         </p>`;
+
+    // Update badge to reflect items still needing attention
+    const missingCount = items.filter(d => d.status !== 'Received').length;
+    const badge = document.getElementById('reqBadge');
+    if (badge) {
+        if (missingCount > 0) { badge.style.display = 'flex'; badge.innerText = missingCount; }
+        else badge.style.display = 'none';
+    }
+}
+
+async function refreshRequirementsBadge(appId) {
+    try {
+        const items = await MefamAPI.getDocuments(appId);
+        const badge = document.getElementById('reqBadge');
+        if (!badge || !Array.isArray(items)) return;
+        const missingCount = items.filter(d => d.status !== 'Received').length;
+        if (missingCount > 0) { badge.style.display = 'flex'; badge.innerText = missingCount; }
+        else badge.style.display = 'none';
+    } catch (e) { /* ignore */ }
 }
 
 function buildTimeline(app) {
@@ -862,9 +953,12 @@ function buildTimeline(app) {
     return events;
 }
 
+let lastSeenAnnouncementCount = parseInt(localStorage.getItem('mefamdev_ann_seen_count') || '0', 10);
+
 async function renderAnnouncements() {
     const container = document.getElementById('annPortalList');
     if (!container) return;
+    container.innerHTML = '<p style="color:#aaa;font-size:.85rem;padding-top:12px;">Loading…</p>';
     try {
         const anns = await MefamAPI.getAnnouncements();
         if (!Array.isArray(anns) || anns.length === 0) {
@@ -877,15 +971,54 @@ async function renderAnnouncements() {
         }
         container.innerHTML = anns.map(a => `
             <div class="ann-item">
-                <div class="ann-tag">${a.tag || ''}</div>
-                <div class="ann-title">${a.subject || ''}</div>
-                <div class="ann-body">${a.message || ''}</div>
-                <div class="ann-date">Posted: ${a.date || ''}</div>
+                <div class="ann-tag">${escapeHtml(a.tag || '')}</div>
+                <div class="ann-title">${escapeHtml(a.subject || '')}</div>
+                <div class="ann-body">${escapeHtml(a.message || '')}</div>
+                <div class="ann-date">Posted: ${escapeHtml(a.date || '')}</div>
             </div>`).join('');
+
+        // Mark all as seen and clear badge
+        lastSeenAnnouncementCount = anns.length;
+        localStorage.setItem('mefamdev_ann_seen_count', String(anns.length));
+        const badge = document.getElementById('annBadge');
+        if (badge) badge.style.display = 'none';
     } catch (error) {
         console.error('Failed to load announcements:', error);
         container.innerHTML = '<div style="padding:16px 0;color:var(--muted);font-size:.87rem;">Unable to load announcements right now.</div>';
     }
+}
+
+async function refreshAnnouncementsBadge() {
+    try {
+        const anns = await MefamAPI.getAnnouncements();
+        const badge = document.getElementById('annBadge');
+        if (!badge || !Array.isArray(anns)) return;
+        const unseen = anns.length - lastSeenAnnouncementCount;
+        if (unseen > 0) { badge.style.display = 'flex'; badge.innerText = unseen > 9 ? '9+' : unseen; }
+        else badge.style.display = 'none';
+    } catch (e) { /* ignore */ }
+}
+
+/* ── Requirements modal controls ── */
+function openRequirementsModal() {
+    document.getElementById('requirementsModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (currentAppId) renderRequirements(currentAppId);
+}
+function closeRequirementsModal() {
+    document.getElementById('requirementsModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+/* ── Announcements modal controls ── */
+function openAnnouncementsModal() {
+    document.getElementById('announcementsModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderAnnouncements();
+}
+function closeAnnouncementsModal() {
+    document.getElementById('announcementsModal').classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 function showImagePreview(element) {
@@ -911,6 +1044,8 @@ function closeImagePreview() {
 document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
         closeImagePreview();
+        closeRequirementsModal();
+        closeAnnouncementsModal();
     }
 });
 
