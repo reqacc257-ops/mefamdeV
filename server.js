@@ -39,7 +39,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRouter);
 app.use('/api/applications', requireAuth, appsRouter);
 app.use('/api/families', requireAuth, familiesRouter);
-app.use('/api/events', requireAuth, eventsRouter);
+app.use('/api/events', eventsRouter);
 app.use('/api/financials', requireAuth, financialsRouter);
 app.use('/api/records', requireAuth, recordsRouter);
 app.use('/api/documents', requireAuth, require('./routes/documents'));

@@ -3,7 +3,7 @@
  */
 const router = require('express').Router();
 const db = require('../db');
-const { requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
 function generateAttendanceCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -92,7 +92,7 @@ function buildMonitoringSummary(applications = [], grades = [], absences = []) {
 }
 
 // List events with attendance counts
-router.get('/', (req, res) => {
+router.get('/', requireAuth, (req, res) => {
   const events = db.prepare('SELECT * FROM events ORDER BY date DESC').all();
   const attData = {};
   db.prepare('SELECT event_id, app_id FROM event_attendance').all().forEach(r => {
@@ -103,7 +103,7 @@ router.get('/', (req, res) => {
 });
 
 // Create event
-router.post('/', (req, res) => {
+router.post('/', requireAuth, requireRole('director','program','edu'), (req, res) => {
   const b = req.body;
   if (!b.name) return res.status(400).json({ error: 'Event name required' });
   const info = db.prepare(
@@ -140,7 +140,7 @@ router.post('/:id/start', requireRole('director','program','edu'), (req, res) =>
 });
 
 // End an active attendance session
-router.post('/:id/end', requireRole('director','program','edu'), (req, res) => {
+router.post('/:id/end', requireAuth, requireRole('director','program','edu'), (req, res) => {
   const eventId = parseInt(req.params.id);
   const sessions = ensureTable('event_sessions');
   sessions.forEach(row => {
@@ -233,20 +233,20 @@ router.post('/checkin', (req, res) => {
 });
 
 // List check-in roster for the active session
-router.get('/:id/checkins', requireRole('director','program','edu'), (req, res) => {
+router.get('/:id/checkins', requireAuth, requireRole('director','program','edu'), (req, res) => {
   const eventId = parseInt(req.params.id);
   const list = getEventCheckins(eventId).slice().sort((a, b) => String(b.checked_in_at || '').localeCompare(String(a.checked_in_at || '')));
   res.json(list);
 });
 
 // Delete event
-router.delete('/:id', requireRole('director','program'), (req, res) => {
+router.delete('/:id', requireAuth, requireRole('director','program'), (req, res) => {
   db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
 
 // Save attendance for an event
-router.put('/:id/attendance', (req, res) => {
+router.put('/:id/attendance', requireAuth, (req, res) => {
   const eventId = parseInt(req.params.id);
   const appIds  = req.body.appIds || [];  // array of application IDs
 

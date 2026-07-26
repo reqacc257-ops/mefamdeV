@@ -604,6 +604,7 @@ function normalizeApplication(app, session = {}) {
         id: source.id || session.appId || null,
         name: source.name || source.fullName || source.full_name || session.name || 'Applicant',
         status: normalizedStatus,
+        referenceNumber: source.referenceNumber || source.reference || source.reference_number || '',
         school: source.school || source.nextSchool || '',
         grade: source.grade || source.nextGrade || '',
         sy: source.sy || source.schoolYear || '',
