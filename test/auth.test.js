@@ -204,7 +204,7 @@ test('forgot-password builds a reset link from the app origin instead of the log
   db.data.applications = [];
   db.prepare(
     'INSERT INTO applications (name, email, status) VALUES (?, ?, ?)' 
-  ).run('Path Bug Applicant', 'pathbug@example.com', 'Pending Review');
+  ).run('Path Fix Applicant', 'pathbug@example.com', 'Pending Review');
 
   const logs = [];
   const originalLog = console.log;

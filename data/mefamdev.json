@@ -39,13 +39,6 @@
   ],
   "applications": [
     {
-      "id": 1,
-      "name": "Path Bug Applicant",
-      "email": "pathbug@example.com",
-      "status": "Pending Review",
-      "reset_token": "f447f22b70ee6aac7c6352c0811e0e20"
-    },
-    {
       "id": 2,
       "name": "Maria Lopez",
       "portal_username": "user",
