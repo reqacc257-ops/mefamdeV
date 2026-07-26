@@ -463,7 +463,7 @@
             <div class="grid-3">
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Contact No." data-en="Contact No.">Contact No.</label>
-                    <input type="text" id="contact" placeholder="09xxxxxxxxx" required maxlength="11">
+                    <input type="tel" id="contact" placeholder="09xxxxxxxxx" required maxlength="11" inputmode="numeric" pattern="\d*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Email" data-en="Email">Email</label>
