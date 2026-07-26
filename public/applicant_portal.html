@@ -187,6 +187,21 @@
         .doc-preview-link { font-size: .75rem; color: var(--teal); font-weight: 600; text-decoration: none; }
         .doc-upload-thumbnail { margin-top: 10px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #dde3ec; cursor: pointer; }
         .doc-upload-thumbnail img { display: block; width: 100%; height: auto; }
+        .doc-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .doc-gallery-item { position: relative; width: 96px; height: 96px; border-radius: 10px; overflow: hidden; border: 1px solid #dde3ec; cursor: pointer; }
+        .doc-gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .doc-gallery-item .dg-remove {
+            position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(0,0,0,.6); color: #fff; border: none; font-size: .85rem; line-height: 1;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .doc-gallery-item .dg-remove:hover { background: var(--red); }
+        .doc-gallery-add {
+            width: 96px; height: 96px; border-radius: 10px; border: 2px dashed var(--gold);
+            background: var(--gold-light); color: var(--navy); font-size: .72rem; font-weight: 700;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            cursor: pointer; text-align: center; padding: 4px;
+        }
         .doc-preview-link {
             font-size: .75rem; color: var(--teal); font-weight: 600; text-decoration: none;
             border: none; background: transparent; padding: 0; cursor: pointer;
@@ -306,7 +321,7 @@
             .card-header, .card-body { padding: 10px 14px; }
             .info-row, .tl-item, .req-item { padding: 5px 0; font-size: .78rem; }
             .tl-content .tl-note { padding: 5px 8px; font-size: .74rem; }
-            .doc-upload-row, .doc-upload-thumbnail { display: none !important; }
+            .doc-upload-row, .doc-upload-thumbnail, .doc-gallery, #rcGalleryStatus { display: none !important; }
             #announcementsCard { display: none !important; }
             * { box-shadow: none !important; }
         }
@@ -848,6 +863,84 @@ async function uploadDocumentFromInput(input) {
     reader.readAsDataURL(file);
 }
 
+/* ── Report Card photo gallery (multiple pages/photos, unlike other requirements) ── */
+function isReportCardDoc(d) {
+    const label = String(d.label || '').toLowerCase();
+    const key = String(d.key || '').toLowerCase();
+    return label.includes('report card') || key.includes('reportcard') || key.includes('report_card');
+}
+
+function getReportCardGallery(appId, docKey) {
+    try {
+        const raw = localStorage.getItem(`mefamdev_rc_gallery_${appId}_${docKey}`);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
+
+function saveReportCardGallery(appId, docKey, arr) {
+    try {
+        localStorage.setItem(`mefamdev_rc_gallery_${appId}_${docKey}`, JSON.stringify(arr));
+    } catch (e) { /* storage full or unavailable */ }
+}
+
+async function uploadReportCardPhoto(input) {
+    const appId = input.dataset.appId;
+    const docKey = input.dataset.docKey;
+    const file = input.files && input.files[0];
+    if (!appId || !docKey || !file) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10 MB
+    const statusEl = document.getElementById('rcGalleryStatus');
+
+    if (file.size > maxSize) {
+        if (statusEl) statusEl.textContent = 'File is too large. Please select an image under 10MB.';
+        input.value = '';
+        return;
+    }
+
+    if (statusEl) statusEl.textContent = 'Uploading…';
+
+    const reader = new FileReader();
+    reader.onload = async function () {
+        try {
+            // Keep the official status/record in sync with the latest page for staff review
+            const result = await MefamAPI.uploadDocument(appId, docKey, {
+                status: 'Received',
+                note: 'Uploaded from applicant portal',
+                fileName: file.name,
+                fileType: file.type || 'image/*',
+                fileData: reader.result,
+                uploadMethod: input.getAttribute('capture') ? 'camera' : 'upload'
+            });
+            if (!result?.ok) {
+                if (statusEl) statusEl.textContent = result?.error || 'Upload failed';
+                return;
+            }
+            // Also keep this page in the applicant's own local gallery of all pages/photos
+            const gallery = getReportCardGallery(appId, docKey);
+            gallery.push({ fileData: reader.result, fileName: file.name, uploadedAt: new Date().toISOString() });
+            saveReportCardGallery(appId, docKey, gallery);
+            input.value = '';
+            await renderRequirements(appId);
+        } catch (error) {
+            console.error('Report card upload failed', error);
+            if (statusEl) statusEl.textContent = 'Upload failed';
+        }
+    };
+    reader.onerror = function () {
+        if (statusEl) statusEl.textContent = 'Upload failed';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeReportCardPhoto(appId, docKey, index) {
+    const gallery = getReportCardGallery(appId, docKey);
+    gallery.splice(index, 1);
+    saveReportCardGallery(appId, docKey, gallery);
+    renderRequirements(appId);
+}
+
 async function renderRequirements(appId) {
     const el = document.getElementById('requirementsBody');
     if (!el) return;
@@ -879,6 +972,29 @@ async function renderRequirements(appId) {
             const noteHTML = d.status === 'Missing' && d.note
                 ? `<div style="font-size:.78rem; color:#c0392b; margin:2px 0 8px 26px;">↳ ${escapeHtml(d.note)}</div>`
                 : '';
+
+            if (isReportCardDoc(d)) {
+                // Report Card: multi-photo gallery — lets the applicant add another page/photo
+                // instead of replacing the previous one.
+                const gallery = getReportCardGallery(appId, d.key);
+                const galleryThumbs = gallery.map((g, i) => `
+                    <div class="doc-gallery-item" data-image-src="${g.fileData}" data-image-label="${escapeHtml(d.label)} (${i + 1})" onclick="showImagePreview(this)">
+                        <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
+                        <button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>
+                    </div>`).join('');
+                const addTile = `<label class="doc-gallery-add">
+                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)">
+                        ➕<br>Add Photo
+                    </label>`;
+                const countLabel = gallery.length
+                    ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
+                    : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
+                return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}
+                    <div class="doc-gallery">${galleryThumbs}${addTile}</div>
+                    ${countLabel}
+                    <div id="rcGalleryStatus" style="font-size:.75rem; color:var(--muted);"></div>`;
+            }
+
             const uploadLabel = d.fileName
                 ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
                 : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
