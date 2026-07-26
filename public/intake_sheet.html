@@ -42,7 +42,7 @@
 
     /* Fields */
     label.fl{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-bottom:2px;}
-    .field{margin-bottom:8px;}
+    .field{margin-bottom:6px;}
     input[type="text"],input[type="date"],input[type="number"],select,textarea{
         width:100%;padding:5px 8px;border:1px solid #999;border-radius:4px;font-family:inherit;font-size:.82rem;color:var(--ink);background:#fff;
     }
@@ -65,8 +65,8 @@
         display:flex;align-items:center;justify-content:center;flex-shrink:0;
     }
 
-    .subsection{border:1px solid #ddd;border-radius:6px;padding:10px 12px;margin-top:8px;background:#fafafa;}
-    .subsection-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;border-left:3px solid var(--accent);padding-left:6px;}
+    .subsection{border:1px solid #ddd;border-radius:6px;padding:8px 10px;margin-top:4px;background:#fafafa;}
+    .subsection-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;border-left:3px solid var(--accent);padding-left:6px;}
 
     /* Family table */
     .table-wrap{overflow-x:auto;margin-top:4px;}
@@ -109,7 +109,7 @@
     @media print{
         html,body{background:#fff !important;color:#000 !important;font-size:8pt;line-height:1.1;padding:0;margin:0;}
         .shell{max-width:100%;border:none;}
-        .prefill-bar,.toolbar,.search-wrap,.btn-add{display:none !important;}
+        .prefill-bar,.toolbar,.search-wrap,.btn-add,.spouse-toggle-row{display:none !important;}
         input,select,textarea{border:1px solid #000 !important;background:#fff !important;color:#000 !important;}
 
         .doc-header{border-bottom:1pt solid #000;padding:0 0 3pt;margin-bottom:4pt;break-after:avoid;page-break-after:avoid;}
@@ -130,8 +130,8 @@
         .field{break-inside:avoid;page-break-inside:avoid;}
         .meta-grid,.g2,.g3,.g4{break-inside:avoid;page-break-inside:avoid;}
 
-        .subsection{border:1pt solid #000;padding:4pt 6pt;margin-top:4pt;background:#fff !important;break-inside:avoid;page-break-inside:avoid;}
-        .subsection-title{font-size:6pt;margin-bottom:4pt;border-left:2pt solid #000;padding-left:4pt;color:#000 !important;}
+        .subsection{border:1pt solid #000;padding:3pt 5pt;margin-top:1pt;background:#fff !important;break-inside:avoid;page-break-inside:avoid;}
+        .subsection-title{font-size:6pt;margin-bottom:3pt;border-left:2pt solid #000;padding-left:4pt;color:#000 !important;}
 
         table.fam-table{font-size:6.2pt;min-width:0;}
         .fam-table thead{display:table-header-group;}
@@ -232,7 +232,7 @@
                 <div class="field"><label class="fl">Occupation</label><input type="text" id="iOccup" value="Student"></div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+            <div class="spouse-toggle-row" style="display:flex; justify-content:flex-end; margin-bottom:6px;">
                 <label style="font-size:.78rem; color:#556; display:flex; align-items:center; gap:6px;"><input id="includeSpouse" type="checkbox" onclick="toggleSpouseSection()"> Include Spouse / Partner information</label>
             </div>
             <div id="spouseSection" class="subsection" style="display:none;">
