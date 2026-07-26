@@ -1395,11 +1395,6 @@ let currentRole = 'director';
 let savedGrades = {};
 let currentGradeSemester = '';
 
-// Enable server-side paged applications for grade monitoring to improve scalability
-// When true, the Grade Monitoring view requests /applications?page=.. instead of
-// loading the entire applications list into memory.
-window.useServerPagedApps = true;
-
 if (!localStorage.getItem('mefamdev_apps')) {
     localStorage.setItem('mefamdev_apps', JSON.stringify([]));
 }
@@ -2159,84 +2154,10 @@ function flagDocMissing(appId, docKey, containerId) {
 let gradesPage = 1;
 const gradesPageSize = 20; // change as needed
 
-async function renderGrades(scholars) {
+function renderGrades(scholars) {
     const tbody = document.getElementById('grades-body');
     const pager = document.getElementById('gradesPager');
     if (!tbody) return;
-
-    // Server-side paging mode: fetch paged apps instead of using the full client-side list
-    if (window.useServerPagedApps) {
-        try {
-            const res = await MefamAPI.getApplications({ status: 'Accepted', page: gradesPage, pageSize: gradesPageSize, includeLatestGrade: true });
-            const items = Array.isArray(res.items) ? res.items : [];
-            const total = Number(res.total || 0);
-            if (items.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No accepted scholars to display.</div></td></tr>`;
-                if (pager) pager.innerHTML = '';
-                return;
-            }
-
-            tbody.innerHTML = items.map(s => {
-                const record = savedGrades[s.id];
-                const selectedEntry = record?.history?.find(r => r.semester === currentGradeSemester);
-                const selectedGrade = Number(selectedEntry?.grade_val || s.latest_grade || 0);
-                const historyRows = record?.history?.filter(r => r !== selectedEntry) || [];
-                const historyHtml = historyRows.length > 0
-                    ? historyRows.slice(0, 3).map(r => `${r.semester || 'Unspecified'}: ${r.grade_val}`).join('<br>')
-                    : '—';
-                const hasGrade = !!selectedEntry || typeof s.latest_grade === 'number';
-                const displayGrade = hasGrade ? selectedGrade : '—';
-                return `<tr>
-                    <td><strong>${s.name}</strong></td>
-                    <td>${s.school}</td>
-                    <td>${s.grade}</td>
-                    <td id="grade-val-${s.id}">${displayGrade}</td>
-                    <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},'${s.name}')">Update</button></td>
-                </tr>`;
-            }).join('');
-
-            // Pager
-            if (pager) {
-                pager.innerHTML = '';
-                const info = document.createElement('div');
-                info.style.marginRight = 'auto';
-                info.style.color = 'var(--text-muted)';
-                info.style.fontSize = '.9rem';
-                const start = (gradesPage - 1) * gradesPageSize;
-                const showingFrom = start + 1;
-                const showingTo = Math.min(start + items.length, total);
-                info.innerText = `Showing ${showingFrom}–${showingTo} of ${total}`;
-                pager.appendChild(info);
-
-                const prev = document.createElement('button');
-                prev.className = 'btn btn-ghost btn-sm';
-                prev.innerText = '← Prev';
-                prev.disabled = gradesPage <= 1;
-                prev.onclick = () => { gradesPage = Math.max(1, gradesPage - 1); renderGrades(); };
-                pager.appendChild(prev);
-
-                const pageIndicator = document.createElement('div');
-                pageIndicator.style.padding = '0 8px';
-                pageIndicator.style.alignSelf = 'center';
-                const totalPages = Math.max(1, Math.ceil(total / gradesPageSize));
-                pageIndicator.innerText = `Page ${gradesPage} / ${totalPages}`;
-                pager.appendChild(pageIndicator);
-
-                const next = document.createElement('button');
-                next.className = 'btn btn-ghost btn-sm';
-                next.innerText = 'Next →';
-                next.disabled = gradesPage >= totalPages;
-                next.onclick = () => { gradesPage = Math.min(totalPages, gradesPage + 1); renderGrades(); };
-                pager.appendChild(next);
-            }
-            return;
-        } catch (e) {
-            console.error('Failed to load paged scholars:', e);
-            // fallback to client-side rendering below
-        }
-    }
-
     if (!Array.isArray(scholars)) scholars = [];
     if (scholars.length === 0) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No accepted scholars to display.</div></td></tr>`; if (pager) pager.innerHTML = ''; return; }
 
