@@ -285,6 +285,33 @@
         .replace(/'/g, '&#39;');
     }
 
+    function normalizeEvent(ev) {
+      if (!ev || typeof ev !== 'object') return { max: 0, id: ev?.id || null };
+      return {
+        ...ev,
+        id: ev.id != null ? ev.id : ev.eventId || ev.id,
+        max: Number(ev.max || ev.max_att || ev.maxAtt || 0) || 0,
+        activeAttendanceSession: ev.activeAttendanceSession || ev.active_attendance_session || null,
+        expiresAt: ev.expiresAt || ev.expires_at || null,
+        code: ev.code || ev.attendanceCode || ev.activeAttendanceSession?.code || null,
+      };
+    }
+
+    function findEventById(items, evtId) {
+      const normalizedId = String(evtId || '').trim();
+      if (!normalizedId || !Array.isArray(items)) return null;
+      return items.find(e => {
+        return String(e?.id || '').trim() === normalizedId
+            || String(e?.eventId || '').trim() === normalizedId
+            || String(e?.event_id || '').trim() === normalizedId;
+      }) || null;
+    }
+
+    function generateAttendanceCode() {
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      return Array.from({ length: 5 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+    }
+
     function showToast(message, type) {
       const stack = document.getElementById('toastStack');
       if (!stack) { return; }
@@ -342,7 +369,7 @@
 
     function sortedEvents() {
       const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
-      return [...events].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+      return [...events].map(normalizeEvent).sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
     }
 
     function syncEventAttendance(evtId, scholarId, isChecked) {
@@ -380,7 +407,8 @@
       container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Action</th></tr></thead><tbody>` +
         events.map(ev => {
           const attended = (attData[ev.id] || []).length;
-          const pct = ev.max > 0 ? Math.round(attended / ev.max * 100) : 0;
+          const max = Number(ev.max || 0) || 0;
+          const pct = max > 0 ? Math.round(attended / max * 100) : 0;
           const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
           const isPast = ev.date ? new Date(ev.date) < today : false;
           const active = ev.activeAttendanceSession || null;
@@ -391,7 +419,7 @@
             <td><strong>${escapeHtml(ev.name)}</strong>${isPast ? ' <span class="badge badge-muted" style="margin-left:4px;">Past</span>' : ''}</td>
             <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
             <td style="font-size:.82rem;">${escapeHtml(ev.venue || '—')}</td>
-            <td><span class="badge ${badgeCls}">${attended}/${ev.max}</span></td>
+            <td><span class="badge ${badgeCls}">${attended}/${max}</span></td>
             <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               ${sessionHtml}
               <button class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button>
@@ -403,12 +431,12 @@
 
     async function startEventSession(evtId) {
       try {
-        const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
-        const ev = events.find(e => e.id === evtId) || null;
+        const events = sortedEvents();
+        const ev = events.find(e => String(e.id) === String(evtId)) || null;
         const active = ev?.activeAttendanceSession || null;
         if (active) {
           if (!confirm('There is already an active attendance session for this event. End it and start a new one?')) return;
-          await MefamAPI.endEventSession(evtId);
+          await endEventSession(evtId);
         }
         let minutes = parseInt(prompt('Attendance duration in minutes (default 15):', localStorage.getItem(`attendance_last_duration_${evtId}`) || '15') || '15', 10);
         if (isNaN(minutes) || minutes <= 0) minutes = 15;
@@ -417,13 +445,36 @@
         __attendanceVisualSpeed = speed;
         localStorage.setItem('attendance_speed', String(speed));
         try { localStorage.setItem(`attendance_last_duration_${evtId}`, String(minutes)); } catch (e) {}
+
         const res = await MefamAPI.startEventSession(evtId, minutes);
-        if (!res?.ok) throw new Error(res?.error || 'Failed');
-        await refreshFormationData();
-        if (currentEventId === evtId) await openEventAttendance(evtId);
-        showToast('Attendance session started.', 'success');
+        if (res?.ok) {
+          await refreshFormationData();
+          if (currentEventId === evtId) await openEventAttendance(evtId);
+          showToast('Attendance session started.', 'success');
+          return;
+        }
+
+        throw new Error(res?.error || 'Failed');
       } catch (e) {
-        console.error('Failed to start session', e);
+        console.warn('Server attendance session start failed; falling back to local session.', e);
+        const rawEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        const rawEvent = findEventById(rawEvents, evtId);
+        if (rawEvent) {
+          rawEvent.activeAttendanceSession = {
+            id: rawEvent.id || rawEvent.eventId || rawEvent.event_id || evtId,
+            code: generateAttendanceCode(),
+            startedAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + (parseInt(localStorage.getItem(`attendance_last_duration_${evtId}`) || '15', 10) || 15) * 60000).toISOString(),
+            active: true,
+          };
+          localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
+          await refreshFormationData();
+          if (currentEventId === evtId) await openEventAttendance(evtId);
+          showToast('Attendance session started locally.', 'success');
+          return;
+        }
+
+        console.error('Unable to start local attendance session because the event was not found.', e);
         showToast('Unable to start attendance session.', 'error');
       }
     }
@@ -432,12 +483,29 @@
       try {
         if (!confirm('End the active attendance session for this event?')) return;
         const res = await MefamAPI.endEventSession(evtId);
-        if (!res?.ok) throw new Error(res?.error || 'Failed');
-        await refreshFormationData();
-        if (currentEventId === evtId) await openEventAttendance(evtId);
-        showToast('Attendance session ended.', 'success');
+        if (res?.ok) {
+          await refreshFormationData();
+          if (currentEventId === evtId) await openEventAttendance(evtId);
+          showToast('Attendance session ended.', 'success');
+          return;
+        }
+        throw new Error(res?.error || 'Failed');
       } catch (e) {
-        console.error('Failed to end session', e);
+        console.warn('Server attendance session end failed; falling back to local session.', e);
+        const rawEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+        const rawEvent = findEventById(rawEvents, evtId);
+        if (rawEvent) {
+          delete rawEvent.activeAttendanceSession;
+          delete rawEvent.expiresAt;
+          delete rawEvent.code;
+          rawEvent.activeAttendanceSession = null;
+          localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
+          await refreshFormationData();
+          if (currentEventId === evtId) await openEventAttendance(evtId);
+          showToast('Attendance session ended locally.', 'success');
+          return;
+        }
+        console.error('Unable to end local attendance session because the event was not found.', e);
         showToast('Unable to end attendance session.', 'error');
       }
     }
@@ -488,8 +556,8 @@
 
     async function openEventAttendance(evtId) {
       currentEventId = evtId;
-      const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
-      const ev = events.find(e => e.id === evtId);
+      const events = sortedEvents();
+      const ev = events.find(e => String(e.id) === String(evtId));
       if (!ev) return;
       const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
       const attended = attData[evtId] || [];
@@ -594,9 +662,10 @@
           formSummary.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
             events.map(ev => {
               const cnt = (attData[ev.id] || []).length;
-              const pct = ev.max > 0 ? Math.round(cnt / ev.max * 100) : 0;
+              const max = Number(ev.max || 0) || 0;
+              const pct = max > 0 ? Math.round(cnt / max * 100) : 0;
               const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
-              return `<tr><td><strong>${escapeHtml(ev.name)}</strong></td><td style="font-size:.82rem;">${escapeHtml(ev.date || '—')}</td><td><span class="badge ${cls}">${cnt}/${ev.max}</span></td></tr>`;
+              return `<tr><td><strong>${escapeHtml(ev.name)}</strong></td><td style="font-size:.82rem;">${escapeHtml(ev.date || '—')}</td><td><span class="badge ${cls}">${cnt}/${max}</span></td></tr>`;
             }).join('') + `</tbody></table>`;
         }
       }
