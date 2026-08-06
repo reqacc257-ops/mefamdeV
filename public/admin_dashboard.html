@@ -1557,9 +1557,12 @@ async function loadAllData() {
             if (!nextSavedGrades[appId]) {
                 nextSavedGrades[appId] = { history: [] };
             }
+            const schoolYear = String(row.school_year || row.schoolYear || '').trim();
+            const semester = schoolYear || String(row.semester || '').trim();
             nextSavedGrades[appId].history.push({
                 grade_val: Number(row.grade_val || row.grade || 0),
-                semester: row.semester || '',
+                semester,
+                schoolYear,
                 updated_at: row.updated_at || row.updatedAt || new Date().toISOString()
             });
         });
@@ -1996,7 +1999,7 @@ async function renderDocChecklist(appId, containerId) {
         return;
     }
 
-    const badgeFor = s => s === 'Received' ? 'badge-green' : s === 'Missing' ? 'badge-red' : 'badge-orange';
+    const badgeFor = s => s === 'Received' ? 'badge-green' : s === 'Missing' ? 'badge-red' : s === 'badge-orange';
     const submittedCount = items.filter(d => d.status === 'Received').length;
 
     el.innerHTML = `
@@ -2018,12 +2021,16 @@ async function renderDocChecklist(appId, containerId) {
                     <td><span class="badge ${badgeFor(d.status)}">${d.status}</span></td>
                     <td style="font-size:.78rem; color:#c0392b; max-width:200px;">${d.note ? d.note : '—'}</td>
                     <td style="white-space:nowrap;">
-                        <button class="btn btn-green btn-sm" onclick="setDocStatus(${appId},'${d.key}','Received','${containerId}')" ${d.status==='Received'?'disabled':''}>✓ Received</button>
+                        <button class="btn btn-green btn-sm" onclick="approveDoc(${appId},'${d.key}','${containerId}')" ${d.status==='Received'?'disabled':''}>${d.status === 'Pending' ? '✓ Approve' : '✓ Received'}</button>
                         <button class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${d.key}','${containerId}')">⚑ Flag</button>
                     </td>
                 </tr>`).join('')}
             </tbody>
         </table>`;
+}
+
+function approveDoc(appId, docKey, containerId) {
+    setDocStatus(appId, docKey, 'Received', containerId);
 }
 
 async function setDocStatus(appId, docKey, status, containerId, note) {
@@ -2061,11 +2068,11 @@ function renderGrades(scholars) {
 
     tbody.innerHTML = pageItems.map(s => {
         const record = savedGrades[s.id];
-        const selectedEntry = record?.history?.find(r => r.semester === currentGradeSemester);
+        const selectedEntry = record?.history?.find(r => String(r.semester || r.schoolYear) === String(currentGradeSemester));
         const selectedGrade = Number(selectedEntry?.grade_val || 0);
         const historyRows = record?.history?.filter(r => r !== selectedEntry) || [];
         const historyHtml = historyRows.length > 0
-            ? historyRows.slice(0, 3).map(r => `${r.semester || 'Unspecified'}: ${r.grade_val}`).join('<br>')
+            ? historyRows.slice(0, 3).map(r => `${escapeHtml(r.semester || r.schoolYear || 'Unspecified')}: ${escapeHtml(r.grade_val ?? '—')}`).join('<br>')
             : '—';
         const hasGrade = !!selectedEntry;
         const badge = !hasGrade
@@ -2073,12 +2080,12 @@ function renderGrades(scholars) {
             : selectedGrade >= 80 ? `<span class="badge badge-green">Passed</span>` : `<span class="badge badge-red">Needs Intervention</span>`;
         const displayGrade = hasGrade ? selectedGrade : '—';
         return `<tr>
-            <td><strong>${s.name}</strong></td>
-            <td>${s.school}</td>
-            <td>${s.grade}</td>
+            <td><strong>${escapeHtml(s.name || '—')}</strong></td>
+            <td>${escapeHtml(s.school || '—')}</td>
+            <td>${escapeHtml(s.grade || '—')}</td>
             <td id="grade-val-${s.id}">${displayGrade}</td>
             <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
-            <td><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},'${s.name}')">Update</button></td>
+            <td><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},${makeJsString(s.name || 'Scholar')})">Update</button></td>
         </tr>`;
     }).join('');
 

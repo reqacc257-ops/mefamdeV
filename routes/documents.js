@@ -91,7 +91,8 @@ function saveDocumentUpload(appId, docKey, payload) {
   }
 
   const existing = db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get([appId, docKey]);
-  const status = payload.status || (payload.fileData ? 'Received' : 'Required');
+  // If an applicant uploads a document, leave it in review state rather than marking it as received automatically.
+  const status = payload.status || (payload.fileData ? 'Pending' : 'Required');
   const note = payload.note || (existing?.note || '');
   const fileName = payload.fileName || existing?.file_name || '';
   const fileType = payload.fileType || existing?.file_type || '';
@@ -132,7 +133,7 @@ router.put('/:appId/:docKey', (req, res) => {
   }
 
   const status = req.body.status;
-  if (!['Required', 'Received', 'Missing'].includes(status)) {
+  if (!['Required', 'Pending', 'Received', 'Missing'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
   const note = req.body.note || '';

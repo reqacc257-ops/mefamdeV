@@ -844,7 +844,7 @@ async function uploadDocumentFromInput(input) {
     reader.onload = async function () {
         try {
             const result = await MefamAPI.uploadDocument(appId, docKey, {
-                status: 'Received',
+                status: 'Pending',
                 note: 'Uploaded from applicant portal',
                 fileName: file.name,
                 fileType: file.type || 'image/*',
@@ -908,9 +908,20 @@ async function uploadReportCardPhoto(input) {
     const reader = new FileReader();
     reader.onload = async function () {
         try {
-            // Keep the official status/record in sync with the latest page for staff review
+            if (statusEl) statusEl.textContent = 'Extracting report card…';
+            const extraction = await MefamAPI.uploadReportCardForExtraction(appId, {
+                fileName: file.name,
+                fileType: file.type || 'image/*',
+                fileData: reader.result,
+                uploadMethod: input.getAttribute('capture') ? 'camera' : 'upload'
+            });
+            if (!extraction?.ok) {
+                if (statusEl) statusEl.textContent = extraction?.error || 'Upload failed';
+                return;
+            }
+
             const result = await MefamAPI.uploadDocument(appId, docKey, {
-                status: 'Received',
+                status: 'Pending',
                 note: 'Uploaded from applicant portal',
                 fileName: file.name,
                 fileType: file.type || 'image/*',
@@ -921,6 +932,7 @@ async function uploadReportCardPhoto(input) {
                 if (statusEl) statusEl.textContent = result?.error || 'Upload failed';
                 return;
             }
+
             // Also keep this page in the applicant's own local gallery of all pages/photos
             const gallery = getReportCardGallery(appId, docKey);
             gallery.push({ fileData: reader.result, fileName: file.name, uploadedAt: new Date().toISOString() });
@@ -966,6 +978,7 @@ async function renderRequirements(appId) {
     const cfg = {
         'Received': { icon: '✅', cls: 'sbadge-accepted', label: 'Received' },
         'Missing':  { icon: '⚠️', cls: 'sbadge-rejected', label: 'Needs Attention' },
+        'Pending':  { icon: '⏳', cls: 'sbadge-pending',  label: 'Pending Review' },
         'Required': { icon: '📋', cls: 'sbadge-pending',  label: 'Required' },
     };
 
@@ -973,9 +986,12 @@ async function renderRequirements(appId) {
         `<div class="req-item"><span class="req-icon">✅</span> Application Form (Online) <span class="req-status"><span class="sbadge sbadge-accepted">Submitted</span></span></div>`,
         ...items.map(d => {
             const c = cfg[d.status] || cfg['Required'];
-            const noteHTML = d.status === 'Missing' && d.note
+            let noteHTML = d.status === 'Missing' && d.note
                 ? `<div style="font-size:.78rem; color:#c0392b; margin:2px 0 8px 26px;">↳ ${escapeHtml(d.note)}</div>`
                 : '';
+            if (isReportCardDoc(d) && d.status === 'Pending') {
+                noteHTML += `<div style="font-size:.78rem; color:#e67e22; margin:2px 0 8px 26px;">↳ Report card extraction pending review by staff.</div>`;
+            }
 
             if (isReportCardDoc(d)) {
                 // Report Card: multi-photo gallery — lets the applicant add another page/photo
@@ -986,8 +1002,9 @@ async function renderRequirements(appId) {
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
                         <button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>
                     </div>`).join('');
-                const addTile = `<label class="doc-gallery-add">
-                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)">
+                const allowUpload = d.status !== 'Received';
+                const addTile = `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
+                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)"${allowUpload ? '' : ' disabled'}>
                         ➕<br>Add Photo
                     </label>`;
                 const countLabel = gallery.length
@@ -1008,7 +1025,8 @@ async function renderRequirements(appId) {
             const previewImage = d.fileData
                 ? `<div class="doc-upload-thumbnail" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
                 : '';
-            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)">📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
+            const allowUpload = d.status !== 'Received';
+            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)"${allowUpload ? '' : ' disabled'}>📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
     ];
 

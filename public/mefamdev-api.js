@@ -295,6 +295,16 @@ const MefamAPI = {
     return this._post(`/documents/${appId}/${docKey}/upload`, payload);
   },
 
+  // ── Report Card Extraction (photo -> Claude -> staff review) ────────────
+  async uploadReportCardForExtraction(appId, payload) {
+    return this._post(`/grade-extraction/${appId}/upload`, payload);
+  },
+  async getPendingGradeExtractions() { return this._get('/grade-extraction/pending'); },
+  async getGradeExtractionHistory(appId) { return this._get(`/grade-extraction/${appId}`); },
+  async reviewGradeExtraction(id, action, subjects, reviewNotes) {
+    return this._put(`/grade-extraction/${id}/review`, { action, subjects, reviewNotes });
+  },
+
   // ── Admin: reset applicant password
   async resetApplicationPassword(id, password) {
     return this._post(`/applications/${id}/reset-password`, { password });

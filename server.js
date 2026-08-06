@@ -10,6 +10,7 @@ const familiesRouter = require('./routes/families');
 const eventsRouter = require('./routes/events');
 const financialsRouter = require('./routes/financials');
 const recordsRouter = require('./routes/records');
+const gradeExtractionRouter = require('./routes/gradeExtraction');
 const commsRouter = require('./routes/comms');
 const { requireAuth } = require('./middleware/auth');
 
@@ -43,6 +44,7 @@ app.use('/api/events', eventsRouter);
 app.use('/api/financials', requireAuth, financialsRouter);
 app.use('/api/records', requireAuth, recordsRouter);
 app.use('/api/documents', requireAuth, require('./routes/documents'));
+app.use('/api/grade-extraction', requireAuth, gradeExtractionRouter);
 app.use('/api/comms', requireAuth, commsRouter);
 
 // Public submit route

@@ -183,14 +183,16 @@
                 if (!appId) return;
                 if (!next[appId]) next[appId] = { history: [] };
                 const schoolYear = String(g.school_year || g.schoolYear || '').trim();
-                const semester = schoolYear || String(g.semester || '').trim();
+                const rawSemester = String(g.semester || '').trim();
+                const semester = schoolYear || rawSemester;
+                const normalizedSemester = semester || 'Unspecified';
                 const subject = String(g.subject || g.subject_name || g.subjectName || '').trim();
                 const quarter = String(g.quarter || '').trim();
                 const gradeVal = g.grade_val || g.grade || 0;
                 const existing = Array.isArray(next[appId].history) ? next[appId].history : [];
-                const duplicate = existing.some(r => String(r.semester) === semester && String(r.subject) === subject && String(r.quarter) === quarter && Number(r.grade_val) === Number(gradeVal));
+                const duplicate = existing.some(r => String(r.semester || r.schoolYear || '') === normalizedSemester && String(r.subject) === subject && String(r.quarter) === quarter && Number(r.grade_val) === Number(gradeVal));
                 if (!duplicate) {
-                    existing.push({ grade_val: gradeVal, semester, subject, quarter, schoolYear, updated_at: g.updated_at || new Date().toISOString() });
+                    existing.push({ grade_val: gradeVal, semester: normalizedSemester, subject, quarter, schoolYear, updated_at: g.updated_at || new Date().toISOString() });
                 }
                 next[appId].history = existing;
             });
@@ -211,8 +213,7 @@
             Object.values(savedGrades).forEach(entry => {
                 if (entry && Array.isArray(entry.history)) {
                     entry.history.forEach(r => {
-                        if (r.semester) options.push(r.semester);
-                        else if (r.schoolYear) options.push(r.schoolYear);
+                        options.push(String(r.semester || r.schoolYear || 'Unspecified').trim() || 'Unspecified');
                     });
                 }
             });
@@ -290,7 +291,7 @@
                     : null;
                 const historyRows = otherEntries.slice(0, 3);
                 const historyHtml = historyRows.length > 0
-                    ? historyRows.map(r => `${escapeHtml(r.semester || r.schoolYear || 'Unspecified')} — ${escapeHtml(r.subject || '')} Q${escapeHtml(r.quarter || '')}: ${escapeHtml(r.grade_val ?? '')}`).join('<br>')
+                    ? historyRows.map(r => `${escapeHtml(r.semester || r.schoolYear || 'Unspecified')} — ${escapeHtml(r.subject || 'Unknown')} Q${escapeHtml(r.quarter || 'N/A')}: ${escapeHtml(r.grade_val ?? '—')}`).join('<br>')
                     : '—';
                 const badge = !hasGrade
                     ? `<span class="badge badge-grey">No Data</span>`

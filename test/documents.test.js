@@ -9,7 +9,7 @@ test('document uploads persist file metadata for the applicant checklist', () =>
   db.prepare('DELETE FROM document_status WHERE app_id = ?').run(appId);
 
   const checklist = documentsRouter.__test.saveDocumentUpload(appId, 'reportCard', {
-    status: 'Received',
+    status: 'Pending',
     note: 'Uploaded from phone',
     fileName: 'report-card.jpg',
     fileType: 'image/jpeg',
@@ -19,11 +19,27 @@ test('document uploads persist file metadata for the applicant checklist', () =>
 
   const reportCard = checklist.find(item => item.key === 'reportCard');
   assert.ok(reportCard);
-  assert.equal(reportCard.status, 'Received');
+  assert.equal(reportCard.status, 'Pending');
   assert.equal(reportCard.fileName, 'report-card.jpg');
   assert.equal(reportCard.fileType, 'image/jpeg');
   assert.equal(reportCard.fileData, 'data:image/jpeg;base64,abc123');
   assert.equal(reportCard.uploadMethod, 'camera');
+});
+
+test('applicant document uploads default to Pending status for review', () => {
+  const appId = 1000;
+  db.prepare('DELETE FROM document_status WHERE app_id = ?').run(appId);
+
+  const checklist = documentsRouter.__test.saveDocumentUpload(appId, 'reportCard', {
+    fileName: 'report-card.jpg',
+    fileType: 'image/jpeg',
+    fileData: 'data:image/jpeg;base64,abc123',
+    uploadMethod: 'upload'
+  });
+
+  const reportCard = checklist.find(item => item.key === 'reportCard');
+  assert.ok(reportCard);
+  assert.equal(reportCard.status, 'Pending');
 });
 
 test('public application submission preserves the application date from the paper-style form', () => {
