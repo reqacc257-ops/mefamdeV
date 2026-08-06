@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEFAMDEV-Life Student Grade/Card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a2e44;
+            --navy2: #243b55;
+            --gold: #f5a623;
+            --gold-light: #fdf0d5;
+            --teal: #1abc9c;
+            --red: #e74c3c;
+            --orange: #f39c12;
+            --purple: #8e44ad;
+            --bg: #eef1f5;
+            --white: #ffffff;
+            --border: #dde3ec;
+            --text: #2c3e50;
+            --text-muted: #7f8c8d;
+            --header-h: 64px;
+            --shadow-sm: 0 1px 4px rgba(26,46,68,.08);
+            --shadow: 0 3px 14px rgba(26,46,68,.11);
+            --radius: 10px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { min-height: 100%; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 50px; }
+        .topbar { height: var(--header-h); background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; }
+        .topbar-title { font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--navy); }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .content-area { margin-top: 18px; }
+        .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+        .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); }
+        .btn { border: 0; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s, transform .2s; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-ghost { background: rgba(15,33,48,.06); color: var(--navy); }
+        .btn-navy { background: var(--navy); color: #fff; }
+        .btn-gold { background: var(--gold); color: var(--navy); }
+        .btn-sm { padding: 8px 12px; font-size: .82rem; }
+        .search-wrap { position: relative; display: inline-flex; width: 100%; max-width: 320px; }
+        .search-input { width: 100%; padding: 12px 14px 12px 36px; border-radius: 10px; border: 1px solid var(--border); font-size: .92rem; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%237f8c8d"><path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm8.71 1.71-4.3-4.3A9.95 9.95 0 0 0 20 10a10 10 0 1 0-10 10 9.95 9.95 0 0 0 5.41-1.59l4.3 4.3a1 1 0 0 0 1.42-1.42Z"/></svg>') no-repeat center / contain; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eef1f5; }
+        th { background: #f8fafc; color: var(--navy); font-size: .85rem; font-weight: 700; }
+        tbody tr:hover { background: #f9fbfd; }
+        .app-id-badge { background: #eef4ff; color: #1d4ed8; padding: 4px 9px; border-radius: 999px; font-size: .78rem; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(12,20,39,.65); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+        .modal-overlay.open { display: flex; }
+        .modal { width: min(100%, 900px); background: #fff; border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #eef1f5; }
+        .modal-header h2 { margin: 0; font-size: 1.1rem; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px 24px; border-top: 1px solid #eef1f5; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: .85rem; margin-bottom: 8px; color: var(--text-muted); }
+        input[type=text], select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: .95rem; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        .empty-state { background: #f8fbff; border: 1px solid #dfe8f3; color: #5f6d7a; padding: 24px; border-radius: 14px; text-align: center; }
+        .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .page-header-row > div { min-width: 140px; }
+    </style>
+</head>
+<body>
+    <main class="main">
+        <header class="topbar">
+            <div style="display:flex; align-items:center; gap:12px;"><span class="topbar-title">Student Grade/Card</span></div>
+            <div class="topbar-right">
+                <button class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="card">
+                <div class="page-header-row" style="margin-bottom:18px;">
+                    <div>
+                        <div class="card-title">Student Grade/Cards</div>
+                        <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">View student grade cards and print academic progress.</p>
+                    </div>
+                    <div style="display:grid; gap:10px; grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto; align-items:center;">
+                        <div class="search-wrap"><span class="search-icon"></span><input type="text" id="rcSearchInput" class="search-input" placeholder="Search student, school, grade..." oninput="filterReportCards()"></div>
+                        <div class="search-wrap" style="min-width:240px; max-width:320px;"><span class="search-icon"></span><input type="text" id="rcSchoolYearFilter" class="search-input" placeholder="Filter by school year" oninput="filterReportCards()"></div>
+                        <button class="btn btn-gold btn-sm" type="button" onclick="filterReportCards()">🔍 Filter</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Scholar Name</th><th>Reference No.</th><th>School Year</th><th>Grade Level</th><th>School</th><th>Action</th></tr></thead>
+                        <tbody id="report-cards-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="reportCardModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:12px;"><h2 style="margin:0;">Report Card</h2><button class="btn btn-sm btn-ghost" onclick="printReportCard()" style="padding:6px 12px;">🖨️ Print</button></div>
+                <button class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
+            </div>
+            <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
+                <div id="reportCardContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="subjectsModal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
+            <div class="modal-body">
+                <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
+                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
+                <div style="margin-top:16px;"><ul id="subjectsListView"></ul></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
+        </div>
+    </div>
+
+    <script src="/components/report-card.js"></script>
+    <script src="/mefamdev-api.js"></script>
+    <script>
+        let acceptedScholars = [];
+        let currentSchoolYearFilter = '';
+
+        async function loadReportCardsPage() {
+            try {
+                acceptedScholars = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
+                await renderSubjectsDatalist();
+                renderReportCards();
+            } catch (error) {
+                console.error('Failed to load report cards page:', error);
+                acceptedScholars = Array.isArray(acceptedScholars) ? acceptedScholars : [];
+                renderReportCards();
+            }
+        }
+
+        async function renderReportCards() {
+            const body = document.getElementById('report-cards-body');
+            if (!body) return;
+            const schoolYear = document.getElementById('rcSchoolYearFilter')?.value.trim().toLowerCase();
+            const searchQuery = document.getElementById('rcSearchInput')?.value.trim().toLowerCase();
+            const accepted = Array.isArray(acceptedScholars) ? acceptedScholars : [];
+            const filtered = accepted.filter(app => {
+                const yearMatch = !schoolYear || String(app.sy || app.school_year || '').toLowerCase().includes(schoolYear) || String(app.school_year || '').toLowerCase().includes(schoolYear);
+                const searchMatch = !searchQuery || `${app.name || ''} ${app.school || ''} ${app.grade || ''} ${app.reference || app.referenceNumber || ''}`.toLowerCase().includes(searchQuery);
+                return yearMatch && searchMatch;
+            });
+            if (filtered.length === 0) {
+                body.innerHTML = '<tr><td colspan="6"><div class="empty-state">No accepted scholars yet.</div></td></tr>';
+                return;
+            }
+            let grades = [];
+            try {
+                grades = await MefamAPI.getGrades() || [];
+            } catch (error) {
+                console.error('Failed to load grades:', error);
+            }
+            body.innerHTML = filtered.map(app => {
+                const appGrades = grades.filter(g => Number(g.app_id || g.appId) === Number(app.id));
+                const schoolYears = Array.from(new Set(appGrades.map(g => g.school_year || g.schoolYear).filter(Boolean))).sort();
+                const latestSY = schoolYears.length > 0 ? schoolYears[schoolYears.length - 1] : String(app.sy || '2025-2026');
+                const refNo = app.reference || app.referenceNumber || app.reference_number || String(app.id || '—');
+                return `<tr>
+                    <td><strong>${escapeHtml(app.name || '—')}</strong></td>
+                    <td><span class="app-id-badge">${escapeHtml(refNo)}</span></td>
+                    <td>${escapeHtml(latestSY)}</td>
+                    <td>${escapeHtml(app.grade || '—')}</td>
+                    <td>${escapeHtml(app.school || '—')}</td>
+                    <td>
+                        <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
+                        <button class="btn btn-ghost btn-sm" style="margin-left:6px;" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
+            try {
+                const allGrades = await MefamAPI.getGrades() || [];
+                const scholarGrades = allGrades.filter(g => Number(g.app_id || g.appId) === Number(appId));
+                const scholarData = { name, gradeLevel, school, refNo: refNo || appId, schoolYear: schoolYear || 'N/A' };
+                const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades);
+                document.getElementById('reportCardContent').innerHTML = reportCardHTML;
+                if (!document.getElementById('reportCardStyles')) {
+                    const styleEl = document.createElement('style');
+                    styleEl.id = 'reportCardStyles';
+                    styleEl.textContent = REPORT_CARD_STYLES;
+                    document.head.appendChild(styleEl);
+                }
+                document.getElementById('reportCardModal').classList.add('open');
+            } catch (error) {
+                console.error('Failed to view report card:', error);
+                alert('Unable to load the report card right now.');
+            }
+        }
+
+        async function openGradeModal(appId, name, schoolYear) {
+            document.getElementById('gradeModalName').innerText = name;
+            document.getElementById('gradeModalAppId').value = appId;
+            document.getElementById('gradeSchoolYear').value = schoolYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+            document.getElementById('gradeSubject').value = '';
+            document.getElementById('gradeQuarter').value = '';
+            document.getElementById('gradeInput').value = '';
+            renderSubjectsDatalist();
+            document.getElementById('gradeModal').classList.add('open');
+        }
+
+        async function saveGrade() {
+            const appId = parseInt(document.getElementById('gradeModalAppId').value, 10);
+            const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
+            const subject = document.getElementById('gradeSubject').value.trim();
+            const quarter = document.getElementById('gradeQuarter').value.trim();
+            const grade = parseInt(document.getElementById('gradeInput').value, 10);
+            if (!schoolYear) return alert('Please enter a school year.');
+            if (!subject) return alert('Please select a subject.');
+            if (!quarter) return alert('Please select a quarter.');
+            if (!(grade >= 60 && grade <= 100)) return alert('Please enter a valid grade between 60 and 100.');
+            try {
+                await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
+                closeModal('gradeModal');
+                await renderReportCards();
+                alert('✅ Grade saved successfully!');
+            } catch (error) {
+                console.error('Failed to save grade:', error);
+                alert('Unable to save the grade right now.');
+            }
+        }
+
+        function printReportCard() { window.print(); }
+
+        async function filterReportCards() { await renderReportCards(); }
+
+        function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+
+        async function renderSubjectsDatalist() {
+            const list = document.getElementById('subjectsList');
+            const view = document.getElementById('subjectsListView');
+            if (!list) return;
+            let subjects = [];
+            try {
+                const res = await MefamAPI.getSubjects();
+                if (Array.isArray(res)) subjects = res;
+            } catch (e) {
+                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
+            }
+            const fallback = ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'];
+            const finalSubjects = subjects.length ? subjects : fallback;
+            list.innerHTML = finalSubjects.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+            if (view) {
+                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
+            }
+        }
+
+        function openSubjectsModal() { document.getElementById('subjectsModal').classList.add('open'); renderSubjectsDatalist(); }
+
+        async function addSubject() {
+            const input = document.getElementById('newSubjectInput');
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) return alert('Enter a subject name to add.');
+            try {
+                const current = await MefamAPI.getSubjects() || [];
+                if (current.includes(val)) return alert('That subject already exists.');
+                const next = current.concat([val]);
+                await MefamAPI.saveSubjects(next);
+                input.value = '';
+                await renderSubjectsDatalist();
+            } catch (e) {
+                let subjects = [];
+                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
+                if (subjects.includes(val)) return alert('That subject already exists.');
+                subjects.push(val);
+                localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
+                input.value = '';
+                await renderSubjectsDatalist();
+            }
+        }
+
+        async function removeSubject(idx) {
+            try {
+                const current = await MefamAPI.getSubjects() || [];
+                if (idx < 0 || idx >= current.length) return;
+                if (!confirm(`Remove subject "${current[idx]}"?`)) return;
+                current.splice(idx, 1);
+                await MefamAPI.saveSubjects(current);
+                await renderSubjectsDatalist();
+            } catch (e) {
+                let subjects = [];
+                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
+                if (idx < 0 || idx >= subjects.length) return;
+                if (!confirm(`Remove subject "${subjects[idx]}"?`)) return;
+                subjects.splice(idx, 1);
+                localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
+                await renderSubjectsDatalist();
+            }
+        }
+
+        async function saveSubjects() { closeModal('subjectsModal'); await renderSubjectsDatalist(); }
+
+        function makeJsString(value) {
+            return JSON.stringify(String(value || '')).replace(/</g, '\u003c').replace(/>/g, '\u003e').replace(/&/g, '\u0026');
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        window.addEventListener('DOMContentLoaded', loadReportCardsPage);
+    </script>
+    <script src="global-actions.js"></script>
+</body>
+</html>
