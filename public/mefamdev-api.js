@@ -301,8 +301,8 @@ const MefamAPI = {
   },
   async getPendingGradeExtractions() { return this._get('/grade-extraction/pending'); },
   async getGradeExtractionHistory(appId) { return this._get(`/grade-extraction/${appId}`); },
-  async reviewGradeExtraction(id, action, subjects, reviewNotes) {
-    return this._put(`/grade-extraction/${id}/review`, { action, subjects, reviewNotes });
+  async reviewGradeExtraction(id, action, subjects, reviewNotes, schoolYear) {
+    return this._put(`/grade-extraction/${id}/review`, { action, subjects, reviewNotes, schoolYear });
   },
 
   // ── Admin: reset applicant password

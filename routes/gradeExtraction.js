@@ -100,6 +100,7 @@ router.put('/:id/review', requireRole('director', 'edu'), (req, res) => {
   const extracted = row.extracted ? JSON.parse(row.extracted) : null;
   const subjects = Array.isArray(req.body.subjects) ? req.body.subjects : [];
   const reviewNotes = String(req.body.reviewNotes || '');
+  const schoolYear = String(req.body.schoolYear || extracted?.schoolYear || '').trim();
   const reviewerId = req.user.id || req.user.username || 'staff';
 
   let rejectedCells = [];
@@ -108,7 +109,6 @@ router.put('/:id/review', requireRole('director', 'edu'), (req, res) => {
       return res.status(400).json({ error: 'Reviewed subjects are required for approval' });
     }
 
-    const schoolYear = extracted?.schoolYear || String(req.body.schoolYear || '').trim();
     if (!schoolYear) {
       return res.status(400).json({ error: 'School year is required to save grades' });
     }

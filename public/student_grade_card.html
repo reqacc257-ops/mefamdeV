@@ -77,6 +77,16 @@
         </header>
 
         <div class="content-area">
+            <div class="card" style="margin-bottom:18px;">
+                <div class="page-header-row" style="margin-bottom:12px;">
+                    <div>
+                        <div class="card-title">Pending Grade Reviews</div>
+                        <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">Applicant-uploaded report cards await staff approval before becoming finalized grades.</p>
+                    </div>
+                </div>
+                <div id="pendingGradeReviews"></div>
+            </div>
+
             <div class="card">
                 <div class="page-header-row" style="margin-bottom:18px;">
                     <div>
@@ -111,6 +121,32 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="gradeModal">
+        <div class="modal" style="max-width:640px;">
+            <div class="modal-header"><h2>Update Grade</h2><button class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button></div>
+            <div class="modal-body">
+                <p id="gradeModalName" style="font-weight:700; margin-bottom:14px;"></p>
+                <div class="form-group"><label>School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
+                <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
+                <datalist id="subjectsList"></datalist>
+                <div class="form-group"><label>Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
+                <div class="form-group"><label>Grade (60-100)</label><input type="number" id="gradeInput" min="60" max="100"></div>
+                <input type="hidden" id="gradeModalAppId">
+            </div>
+            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button><button class="btn btn-navy" onclick="saveGrade()">Save Grade</button></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="reviewExtractionModal">
+        <div class="modal" style="max-width:760px;">
+            <div class="modal-header"><h2>Review Pending Grades</h2><button class="btn btn-ghost" onclick="closeModal('reviewExtractionModal')">✕</button></div>
+            <div class="modal-body" style="max-height:72vh; overflow:auto;">
+                <div id="reviewExtractionContent"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-ghost" onclick="saveReview('reject')">Reject</button><button class="btn btn-navy" onclick="saveReview('approve')">Approve & Finalize</button></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="subjectsModal">
         <div class="modal" style="max-width:520px;">
             <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
@@ -127,17 +163,50 @@
     <script src="/mefamdev-api.js"></script>
     <script>
         let acceptedScholars = [];
+        let pendingExtractions = [];
+        let activeExtractionId = null;
         let currentSchoolYearFilter = '';
 
         async function loadReportCardsPage() {
             try {
                 acceptedScholars = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
                 await renderSubjectsDatalist();
+                await loadPendingGradeReviews();
                 renderReportCards();
             } catch (error) {
                 console.error('Failed to load report cards page:', error);
                 acceptedScholars = Array.isArray(acceptedScholars) ? acceptedScholars : [];
                 renderReportCards();
+            }
+        }
+
+        async function loadPendingGradeReviews() {
+            const container = document.getElementById('pendingGradeReviews');
+            if (!container) return;
+            try {
+                const rows = await MefamAPI.getPendingGradeExtractions() || [];
+                pendingExtractions = Array.isArray(rows) ? rows : [];
+                if (!pendingExtractions.length) {
+                    container.innerHTML = '<div class="empty-state">No pending grade submissions from applicants right now.</div>';
+                    return;
+                }
+                container.innerHTML = pendingExtractions.map(extraction => {
+                    const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
+                    const scholarName = scholar?.name || `Applicant #${extraction.appId || '—'}`;
+                    const schoolYear = extraction?.extracted?.schoolYear || 'Pending school year';
+                    const fileName = extraction?.fileName || 'report-card.jpg';
+                    const uploadedAt = extraction?.uploadedAt ? new Date(extraction.uploadedAt).toLocaleString() : 'Recently uploaded';
+                    return `<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #eef1f5; flex-wrap:wrap;">
+                        <div>
+                            <div style="font-weight:700; color:var(--navy);">${escapeHtml(scholarName)}</div>
+                            <div style="font-size:.85rem; color:var(--text-muted); margin-top:3px;">${escapeHtml(fileName)} · ${escapeHtml(schoolYear)} · ${escapeHtml(uploadedAt)}</div>
+                        </div>
+                        <button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(extraction.id) || 0})">Review / Finalize</button>
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                console.error('Failed to load pending grade reviews:', error);
+                container.innerHTML = '<div class="empty-state">Unable to load pending grade reviews right now.</div>';
             }
         }
 
@@ -198,6 +267,81 @@
             } catch (error) {
                 console.error('Failed to view report card:', error);
                 alert('Unable to load the report card right now.');
+            }
+        }
+
+        async function openReviewModal(id) {
+            const extraction = pendingExtractions.find(item => Number(item.id) === Number(id));
+            if (!extraction) return;
+            activeExtractionId = Number(id);
+            const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
+            const extracted = extraction?.extracted || {};
+            const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
+            const content = document.getElementById('reviewExtractionContent');
+            if (!content) return;
+            if (!subjects.length) {
+                content.innerHTML = '<div class="empty-state">No extracted subjects were found for review.</div>';
+                document.getElementById('reviewExtractionModal').classList.add('open');
+                return;
+            }
+            content.innerHTML = `
+                <div class="form-group">
+                    <label>Student</label>
+                    <div style="font-weight:700;">${escapeHtml(scholar?.name || `Applicant #${extraction.appId || '—'}`)}</div>
+                </div>
+                <div class="form-group">
+                    <label>School Year</label>
+                    <input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead>
+                        <tbody>
+                            ${subjects.map((subject, idx) => `
+                                <tr class="review-subject-row" data-index="${idx}">
+                                    <td><input type="text" class="review-subject-name" value="${escapeHtml(subject.name || '')}" style="width:100%;"></td>
+                                    <td><input type="number" class="review-quarter-input" data-quarter="q1" value="${subject.q1 ?? ''}" min="60" max="100" style="width:70px;"></td>
+                                    <td><input type="number" class="review-quarter-input" data-quarter="q2" value="${subject.q2 ?? ''}" min="60" max="100" style="width:70px;"></td>
+                                    <td><input type="number" class="review-quarter-input" data-quarter="q3" value="${subject.q3 ?? ''}" min="60" max="100" style="width:70px;"></td>
+                                    <td><input type="number" class="review-quarter-input" data-quarter="q4" value="${subject.q4 ?? ''}" min="60" max="100" style="width:70px;"></td>
+                                    <td><input type="number" class="review-quarter-input" data-quarter="final" value="${subject.final ?? ''}" min="60" max="100" style="width:70px;"></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-group" style="margin-top:12px;"><label>Review Notes</label><textarea id="reviewNotes" rows="3" style="width:100%; border:1px solid var(--border); border-radius:10px; padding:10px;"></textarea></div>
+            `;
+            document.getElementById('reviewExtractionModal').classList.add('open');
+        }
+
+        function collectReviewSubjects() {
+            const rows = Array.from(document.querySelectorAll('.review-subject-row'));
+            return rows.map(row => {
+                const payload = { name: row.querySelector('.review-subject-name')?.value?.trim() || '' };
+                ['q1', 'q2', 'q3', 'q4', 'final'].forEach(key => {
+                    const raw = row.querySelector(`[data-quarter="${key}"]`)?.value;
+                    payload[key] = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+                });
+                return payload;
+            }).filter(item => item.name);
+        }
+
+        async function saveReview(action) {
+            const subjects = collectReviewSubjects();
+            if (!activeExtractionId) return alert('No pending review is selected.');
+            if (!subjects.length) return alert('Add at least one subject before approving.');
+            try {
+                const reviewNotes = document.getElementById('reviewNotes')?.value || '';
+                const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim() || '';
+                await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear);
+                closeModal('reviewExtractionModal');
+                await loadPendingGradeReviews();
+                await renderReportCards();
+                alert(action === 'approve' ? '✅ Grades approved and finalized.' : '⚠️ Review rejected and saved.');
+            } catch (error) {
+                console.error('Failed to review extraction:', error);
+                alert('Unable to finalize the review right now.');
             }
         }
 
