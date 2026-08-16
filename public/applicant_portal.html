@@ -25,6 +25,8 @@
             --shadow: 0 2px 14px rgba(26,46,68,.09);
             --radius: 12px;
         }
+
+        
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
@@ -483,6 +485,34 @@
                     <div class="info-row"><span class="ir-label">School</span><span class="ir-val" id="dSchool">—</span></div>
                     <div class="info-row"><span class="ir-label">Level / Year</span><span class="ir-val" id="dGrade">—</span></div>
                     <div class="info-row"><span class="ir-label">Barangay</span><span class="ir-val" id="dBrgy">—</span></div>
+                </div>
+            </div>
+
+            <!-- Submit Report Card Quarter -->
+            <div class="card">
+                <div class="card-header"><span class="ch-icon">🏷️</span><h3>Submit Report Card Quarter</h3></div>
+                <div class="card-body">
+                    <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                        <input type="text" id="rcSchoolYear" placeholder="School Year (e.g. 2025-2026)" style="flex:1; padding:8px;">
+                        <select id="rcQuarter" style="width:140px; padding:8px;">
+                            <option value="1">Quarter 1</option>
+                            <option value="2">Quarter 2</option>
+                            <option value="3">Quarter 3</option>
+                            <option value="4">Quarter 4</option>
+                        </select>
+                    </div>
+                    <div id="rcSubjects" style="margin-bottom:8px;">
+                        <div style="display:flex; gap:8px; margin-bottom:6px;">
+                            <input placeholder="Subject" class="rc-subject" style="flex:1; padding:8px;">
+                            <input placeholder="Grade" class="rc-grade" style="width:120px; padding:8px;">
+                            <button class="btn btn-gold" onclick="removeSubjectRow(this)" style="padding:8px 10px;">−</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-navy" onclick="addSubjectRow()">Add Subject</button>
+                        <button class="btn btn-gold" onclick="submitReportCardQuarter()">Submit Quarter</button>
+                    </div>
+                    <div id="rcStatus" style="margin-top:8px; color:var(--muted);"></div>
                 </div>
             </div>
 

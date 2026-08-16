@@ -4,8 +4,10 @@
   "description": "MEFAMDEV-Life Scholarship System Backend",
   "main": "server.js",
   "scripts": {
+    "migrate": "node scripts/run_migrations.js",
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test:grades": "node --test test/grades.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

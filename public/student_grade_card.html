@@ -172,6 +172,7 @@
                 acceptedScholars = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
                 await renderSubjectsDatalist();
                 await loadPendingGradeReviews();
+                await loadPendingQuarterSubmissions();
                 renderReportCards();
             } catch (error) {
                 console.error('Failed to load report cards page:', error);
@@ -207,6 +208,107 @@
             } catch (error) {
                 console.error('Failed to load pending grade reviews:', error);
                 container.innerHTML = '<div class="empty-state">Unable to load pending grade reviews right now.</div>';
+            }
+        }
+
+        // Load pending quarterly submissions (students submitted quarters)
+        async function loadPendingQuarterSubmissions() {
+            const container = document.getElementById('pendingGradeReviews');
+            if (!container) return;
+            try {
+                const rows = await MefamAPI.pendingGrades() || [];
+                if (!rows.length) return; // nothing to add
+                const html = rows.map(r => {
+                    const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(r.student_id));
+                    const name = scholar?.name || `Applicant #${r.student_id || '—'}`;
+                    return `<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #eef1f5; flex-wrap:wrap;">
+                        <div>
+                            <div style="font-weight:700; color:var(--navy);">${escapeHtml(name)}</div>
+                            <div style="font-size:.85rem; color:var(--text-muted); margin-top:3px;">${escapeHtml(r.school_year || '')} · ${escapeHtml(r.subject || '')} · Q${escapeHtml(String(r.quarter || ''))} · ${r.grade_value ?? '—'}</div>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
+                            <button class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
+                            <button class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                // prepend to existing pendingExtractions list
+                container.innerHTML = (container.innerHTML || '') + html;
+            } catch (err) {
+                console.error('Failed to load pending quarterly submissions', err);
+            }
+        }
+
+        async function approveQuarter(id) {
+            if (!confirm('Approve this quarter grade?')) return;
+            try {
+                await MefamAPI.approveGrade(id);
+                await loadPendingGradeReviews();
+                await loadPendingQuarterSubmissions();
+                await renderReportCards();
+                alert('Grade approved.');
+            } catch (e) { console.error(e); alert('Unable to approve grade.'); }
+        }
+
+        async function rejectQuarter(id) {
+            const reason = prompt('Enter rejection reason (optional):', '');
+            try {
+                await MefamAPI.rejectGrade(id, reason || '');
+                await loadPendingGradeReviews();
+                await loadPendingQuarterSubmissions();
+                await renderReportCards();
+                alert('Grade rejected.');
+            } catch (e) { console.error(e); alert('Unable to reject grade.'); }
+        }
+
+        function openEditQuarterModal(id) {
+            // fetch the specific row from pendingGrades
+            (async () => {
+                try {
+                    const rows = await MefamAPI.pendingGrades() || [];
+                    const row = rows.find(r => Number(r.id) === Number(id));
+                    if (!row) return alert('Grade row not found');
+                    // populate grade modal fields
+                    document.getElementById('gradeModalName').innerText = `Applicant #${row.student_id}`;
+                    document.getElementById('gradeModalAppId').value = row.student_id;
+                    document.getElementById('gradeSchoolYear').value = row.school_year || '';
+                    document.getElementById('gradeSubject').value = row.subject || '';
+                    document.getElementById('gradeQuarter').value = String(row.quarter || '');
+                    document.getElementById('gradeInput').value = row.grade_value || '';
+                    // store the grade row id on modal for save
+                    document.getElementById('gradeModal').dataset.gradeRowId = String(row.id);
+                    renderSubjectsDatalist();
+                    document.getElementById('gradeModal').classList.add('open');
+                } catch (e) { console.error(e); alert('Unable to open edit modal.'); }
+            })();
+        }
+
+        async function saveGrade() {
+            const appId = parseInt(document.getElementById('gradeModalAppId').value, 10);
+            const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
+            const subject = document.getElementById('gradeSubject').value.trim();
+            const quarter = document.getElementById('gradeQuarter').value.trim();
+            const grade = parseInt(document.getElementById('gradeInput').value, 10);
+            const gradeRowId = document.getElementById('gradeModal').dataset.gradeRowId ? Number(document.getElementById('gradeModal').dataset.gradeRowId) : null;
+            if (!schoolYear) return alert('Please enter a school year.');
+            if (!subject) return alert('Please select a subject.');
+            if (!quarter) return alert('Please select a quarter.');
+            if (!(grade >= 0 && grade <= 100)) return alert('Please enter a valid grade between 0 and 100.');
+            try {
+                if (gradeRowId) {
+                    await MefamAPI.editGrade(gradeRowId, grade);
+                } else {
+                    await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
+                }
+                closeModal('gradeModal');
+                await loadPendingGradeReviews();
+                await loadPendingQuarterSubmissions();
+                await renderReportCards();
+                alert('✅ Grade saved successfully!');
+            } catch (error) {
+                console.error('Failed to save grade:', error);
+                alert('Unable to save the grade right now.');
             }
         }
 

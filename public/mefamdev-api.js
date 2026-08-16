@@ -305,6 +305,31 @@ const MefamAPI = {
     return this._put(`/grade-extraction/${id}/review`, { action, subjects, reviewNotes, schoolYear });
   },
 
+  // ── Grades (applicant + admin) ─────────────────────────────────────────
+  async submitQuarter(schoolYear, quarter, subjects = [], fileData = '') {
+    return this._post(`/grades`, { schoolYear, quarter, subjects, fileData });
+  },
+
+  async myGrades(schoolYear) {
+    return this._get(`/grades/mine?school_year=${encodeURIComponent(schoolYear)}`);
+  },
+
+  async pendingGrades() {
+    return this._get(`/grades/pending`);
+  },
+
+  async approveGrade(id) {
+    return this._patch(`/grades/${id}/approve`);
+  },
+
+  async rejectGrade(id, reason = '') {
+    return this._patch(`/grades/${id}/reject`, { reason });
+  },
+
+  async editGrade(id, grade_value) {
+    return this._patch(`/grades/${id}`, { grade_value });
+  },
+
   // ── Admin: reset applicant password
   async resetApplicationPassword(id, password) {
     return this._post(`/applications/${id}/reset-password`, { password });
