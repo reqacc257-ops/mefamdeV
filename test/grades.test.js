@@ -1,9 +1,8 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import jwt from 'jsonwebtoken';
-import fetch from 'node-fetch';
-import { run as runMigrations } from '../scripts/run_migrations.js';
-import app from '../server.js';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const jwt = require('jsonwebtoken');
+const { run: runMigrations } = require('../scripts/run_migrations');
+const app = require('../server');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mefamdev-secret-change-in-production';
 

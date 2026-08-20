@@ -205,14 +205,47 @@
         }
         .btn-applicant:hover { background: #e09520; }
 
-        /* Error */
-        .error-banner {
-            background: #fdedeb; border: 1px solid #f5b7b1;
-            border-radius: 7px; padding: 10px 14px;
-            font-size: .85rem; color: #c0392b; margin-bottom: 16px;
-            display: none; align-items: center; gap: 8px;
-        }
+        /* Login error dialog */
+        .error-banner { display: none; }
         .error-banner.show { display: flex; }
+        .error-dialog-backdrop {
+            position: fixed; inset: 0; z-index: 10000;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px; background: rgba(12, 24, 42, .58);
+            backdrop-filter: blur(3px);
+        }
+        .error-dialog-backdrop.show { display: flex; }
+        .error-dialog {
+            width: min(340px, 100%); overflow: hidden;
+            background: #fff; border-radius: 14px;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, .28);
+            animation: errorDialogIn .16s ease-out;
+        }
+        .error-dialog-body {
+            display: grid; grid-template-columns: 36px 1fr; gap: 12px;
+            padding: 28px 24px 20px; background: #fff4f3;
+            border-bottom: 1px solid #f5d1ce; color: #8f2926;
+        }
+        .error-dialog-icon {
+            width: 34px; height: 34px; display: grid; place-items: center;
+            border-radius: 50%; background: #ef4444; color: #fff;
+            font-size: 1.25rem; font-weight: 800; line-height: 1;
+        }
+        .error-dialog-title { margin: 0 0 6px; font-size: .98rem; color: #9d2926; }
+        .error-dialog-message { margin: 0; font-size: .84rem; line-height: 1.55; color: #a13b37; }
+        .error-dialog-actions { display: flex; justify-content: flex-end; padding: 10px 15px; background: #fff; }
+        .error-dialog-ok {
+            min-width: 68px; padding: 9px 17px; border: 3px solid #b9e0ff;
+            border-radius: 10px; background: #eb4141; color: #fff;
+            font: 700 .86rem 'DM Sans', sans-serif; cursor: pointer;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, .12);
+        }
+        .error-dialog-ok:hover { background: #d93636; }
+        .error-dialog-ok:focus-visible { outline: 2px solid #1d75bd; outline-offset: 2px; }
+        @keyframes errorDialogIn {
+            from { opacity: 0; transform: translateY(8px) scale(.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
         /* Demo hint */
         .demo-hint {
@@ -306,9 +339,22 @@
         "></div>
     </div>
 
-    <!-- Error banner (shared) -->
-    <div class="error-banner" id="loginError">
-        <span>⚠️</span> <span id="loginErrorMsg">Invalid credentials. Please try again.</span>
+    <!-- Error dialog (shared by staff and applicant login) -->
+    <div class="error-banner" id="loginError" role="alertdialog" aria-modal="true" aria-labelledby="loginErrorTitle" aria-describedby="loginErrorMsg">
+        <div class="error-dialog-backdrop" id="loginErrorBackdrop" onclick="if(event.target===this) hideError()">
+            <div class="error-dialog" role="document">
+                <div class="error-dialog-body">
+                    <div class="error-dialog-icon" aria-hidden="true">!</div>
+                    <div>
+                        <h3 class="error-dialog-title" id="loginErrorTitle">Incorrect username or password</h3>
+                        <p class="error-dialog-message" id="loginErrorMsg">The username or password you entered doesn't match our records. Check for typos and try again.</p>
+                    </div>
+                </div>
+                <div class="error-dialog-actions">
+                    <button class="error-dialog-ok" type="button" onclick="hideError()">OK</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- ── STEP 1: Username / Reference ── -->
@@ -418,6 +464,19 @@
     </div>
 </div>
 
+<div id="directorOtpModal" style="display:none; position:fixed; inset:0; background:rgba(10,20,40,.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="width:min(420px, 100%); background:#fff; border-radius:16px; padding:24px; box-shadow:0 18px 50px rgba(0,0,0,.25);">
+        <h3 style="margin:0 0 8px; color:var(--navy);">Director Verification</h3>
+        <p id="directorOtpMessage" style="margin:0 0 14px; color:#5f6b7a; font-size:.92rem;">Enter the six-digit code sent to the Director email.</p>
+        <input type="text" id="directorOtpInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="width:100%; padding:12px; border:1px solid #d7dde6; border-radius:8px; font-size:1.2rem; letter-spacing:.25em; text-align:center;">
+        <p id="directorOtpStatus" style="display:none; margin:10px 0 0; font-size:.88rem; color:#c0392b; font-weight:700;"></p>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button type="button" class="btn btn-secondary" onclick="closeDirectorOtpModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="verifyDirectorOtp()">Verify & Continue</button>
+        </div>
+    </div>
+</div>
+
 <script src="/mefamdev-api.js"></script>
 <script>
 /* ══════════════════════════════════════
@@ -431,6 +490,7 @@ const STAFF_ACCOUNTS = [
 ];
 
 const STAFF_USERNAMES = STAFF_ACCOUNTS.map(a => a.username);
+let directorOtpChallengeId = '';
 
 /* ══════════════════════════════════════
    SMART USERNAME DETECTION
@@ -592,7 +652,10 @@ async function doStaffLogin(username) {
 
     try {
         const res = await MefamAPI.loginStaff(username, pass);
-        if (res?.token) {
+        if (res?.requiresOtp) {
+            directorOtpChallengeId = res.challengeId;
+            openDirectorOtpModal(res);
+        } else if (res?.token) {
             showLoading('Signing in…', () => {
                 window.location.assign('/admin_dashboard.html');
             });
@@ -605,6 +668,43 @@ async function doStaffLogin(username) {
         console.error('Staff login failed:', error);
         showError('Unable to sign in right now. Please try again.');
     }
+}
+
+function openDirectorOtpModal(response) {
+    const modal = document.getElementById('directorOtpModal');
+    const input = document.getElementById('directorOtpInput');
+    const status = document.getElementById('directorOtpStatus');
+    const message = document.getElementById('directorOtpMessage');
+    if (!modal || !input) return;
+    message.textContent = response.message || 'Enter the six-digit code sent to the Director email.';
+    status.style.display = 'none';
+    input.value = response.developmentOtp || '';
+    modal.style.display = 'flex';
+    setTimeout(() => input.focus(), 0);
+}
+
+function closeDirectorOtpModal() {
+    directorOtpChallengeId = '';
+    document.getElementById('directorOtpModal').style.display = 'none';
+}
+
+async function verifyDirectorOtp() {
+    const input = document.getElementById('directorOtpInput');
+    const status = document.getElementById('directorOtpStatus');
+    const otp = input.value.trim();
+    if (!directorOtpChallengeId || !/^\d{6}$/.test(otp)) {
+        status.textContent = 'Enter the six-digit verification code.';
+        status.style.display = 'block';
+        return;
+    }
+    const result = await MefamAPI.verifyDirectorOtp(directorOtpChallengeId, otp);
+    if (!result?.token) {
+        status.textContent = result?.error || 'Verification failed.';
+        status.style.display = 'block';
+        return;
+    }
+    closeDirectorOtpModal();
+    showLoading('Opening Director Dashboard…', () => window.location.assign('/admin_dashboard.html?director=1'));
 }
 
 async function doApplicantLogin(ref) {
@@ -638,10 +738,21 @@ async function doApplicantLogin(ref) {
 function showError(msg) {
     document.getElementById('loginError').classList.add('show');
     document.getElementById('loginErrorMsg').textContent = msg;
+    document.getElementById('loginErrorBackdrop').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    document.querySelector('.error-dialog-ok').focus();
 }
 function hideError() {
     document.getElementById('loginError').classList.remove('show');
+    document.getElementById('loginErrorBackdrop').classList.remove('show');
+    document.body.style.overflow = '';
 }
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.getElementById('loginErrorBackdrop').classList.contains('show')) {
+        hideError();
+    }
+});
 
 function showLoading(msg, callback) {
     document.getElementById('loadingMsg').innerText = msg;

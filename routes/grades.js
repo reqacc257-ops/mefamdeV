@@ -24,6 +24,44 @@ db.exec(`
   )
 `);
 
+const RETENTION_YEARS = 7;
+
+function getGradeRetention(appId) {
+  const legacy = db.prepare('SELECT * FROM grades WHERE app_id = ?').all(appId);
+  const quarterly = db.prepare('SELECT * FROM quarterly_grades WHERE student_id = ?').all(appId);
+  const extraction = db.prepare('SELECT * FROM grade_extraction WHERE app_id = ?').all(appId);
+  const dates = [...legacy, ...quarterly, ...extraction]
+    .map(row => row.updated_at || row.submitted_at || row.uploaded_at || row.created_at)
+    .filter(Boolean)
+    .map(value => new Date(value).getTime())
+    .filter(Number.isFinite);
+  const oldest = dates.length ? new Date(Math.min(...dates)) : null;
+  const eligibleAt = oldest ? new Date(oldest).setFullYear(new Date(oldest).getFullYear() + RETENTION_YEARS) : null;
+  return {
+    appId: Number(appId),
+    recordCount: legacy.length + quarterly.length + extraction.length,
+    oldestRecordAt: oldest ? oldest.toISOString() : null,
+    eligibleAt: eligibleAt ? new Date(eligibleAt).toISOString() : null,
+    eligible: Boolean(eligibleAt && Date.now() >= eligibleAt),
+  };
+}
+
+router.get('/retention/:appId', requireRole('director'), (req, res) => {
+  res.json(getGradeRetention(req.params.appId));
+});
+
+router.post('/retention/:appId/delete', requireRole('director'), (req, res) => {
+  if (req.body?.confirm !== true) return res.status(400).json({ error: 'Final confirmation is required.' });
+  const retention = getGradeRetention(req.params.appId);
+  if (!retention.eligible) {
+    return res.status(400).json({ error: 'Grade records cannot be deleted before the seven-year retention period.', retention });
+  }
+  db.prepare('DELETE FROM grades WHERE app_id = ?').run(req.params.appId);
+  db.prepare('DELETE FROM quarterly_grades WHERE student_id = ?').run(req.params.appId);
+  db.prepare('DELETE FROM grade_extraction WHERE app_id = ?').run(req.params.appId);
+  res.json({ ok: true, deleted: true, appId: Number(req.params.appId) });
+});
+
 // Student: submit a quarter (array of subjects)
 router.post('/', (req, res) => {
   const user = req.user || {};

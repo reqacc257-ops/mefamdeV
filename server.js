@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -32,6 +34,14 @@ app.use((req, res, next) => {
     res.set('Expires', '0');
   }
   next();
+});
+
+// Friendly entry points for the staff backend dashboard.
+app.get(['/admin', '/backend'], (req, res) => {
+  res.redirect('/admin_dashboard.html?director=1');
+});
+app.get('/director', (req, res) => {
+  res.redirect('/admin_dashboard.html?director=1');
 });
 
 // Serve static files from the public/ folder

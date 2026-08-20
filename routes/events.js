@@ -161,7 +161,7 @@ router.post('/:id/checkin', (req, res) => {
 
   const session = getActiveAttendanceSession(eventId);
   if (!session) {
-    return res.status(400).json({ error: 'There is no active attendance session for this event right now.' });
+    return res.status(400).json({ error: 'The attendance session is inactive or expired.' });
   }
 
   const now = new Date();

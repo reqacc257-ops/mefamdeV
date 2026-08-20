@@ -283,7 +283,15 @@
         .modal-section { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 20px 0 12px; }
         .modal-body p { margin-bottom: 6px; font-size: .9rem; }
         .modal-body p strong { color: #444; display: inline-block; min-width: 110px; }
+        .table-actions { vertical-align: top; white-space: nowrap; }
+        .table-actions .btn { display: block; min-width: 76px; margin: 0 0 4px !important; text-align: center; }
+        .table-actions .btn:last-child { margin-bottom: 0 !important; }
         .modal-footer { padding: 16px 26px; background: #f7f9fb; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; border-radius: 0 0 12px 12px; }
+        .tool-modal { width: min(1100px, 96vw); height: min(92vh, 900px); max-height: 92vh; overflow: hidden; }
+        .tool-modal .modal-header { flex-shrink: 0; }
+        .tool-modal-frame { display: block; width: 100%; height: calc(100% - 69px); border: 0; background: #f4f5f7; }
+        .director-only .user-pill { pointer-events: none; }
+        .director-only .role-dropdown { display: none !important; }
 
         /* Intake sheet */
         .intake-header { text-align: center; padding: 20px; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
@@ -468,12 +476,8 @@
         <div class="nav-item" onclick="nav('pipeline',this)" data-roles="director,program">
             <span class="nav-icon">📋</span> Applicant Pipeline
         </div>
-        <div class="nav-item" onclick="nav('intake-sheet',this)" data-roles="director,program">
-            <span class="nav-icon">📝</span> Intake Sheet
-        </div>
-    
-        <div class="nav-item" onclick="window.open('staff_assessment.html','_blank')" data-roles="director,program">
-            <span class="nav-icon"></span> Staff Assessment
+        <div class="nav-item" onclick="openAssessment(null)" data-roles="director,program">
+            <span class="nav-icon">📝</span> Staff Assessment
         </div>
         <div class="nav-item" onclick="nav('saved-records',this)" data-roles="director,program">
             <span class="nav-icon">🗂️</span> Saved Records
@@ -486,7 +490,7 @@
         <div class="nav-item" onclick="nav('profiles',this)" data-roles="director,edu">
             <span class="nav-icon">🎓</span> Scholar Profiles
         </div>
-        <div class="nav-item" onclick="window.open('student_grade_card.html','_blank')" data-roles="director,edu" title="Open Student Grade/Card in a new tab">
+        <div class="nav-item" onclick="openToolModal('student_grade_card.html', '📄 Student Grade/Card')" data-roles="director,edu" title="Open Student Grade/Card">
             <span class="nav-icon">📄</span> Student Grade/Card
         </div>
         <div class="nav-item" onclick="nav('attendance',this)" data-roles="director,edu,program">
@@ -724,7 +728,6 @@
                 <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy); margin-bottom:8px;">Dedicated Intake Sheet</h3>
                 <p style="font-size:.95rem; color:#444; margin-bottom:12px;">Open the standalone intake form to create a new social worker record and save it to the dashboard's Saved Records list.</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <button class="btn btn-gold" onclick="window.open('intake_sheet.html','_blank')">📝 Open Intake Sheet</button>
                     <button class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh Saved Records</button>
                 </div>
                 <p style="font-size:.82rem; color:#64748b; margin-top:10px;">Saved sheets appear in the Saved Records section below and update automatically after each save.</p>
@@ -1172,8 +1175,7 @@
                     <p style="color:var(--text-muted); font-size:.87rem;">All saved Intake Sheets and Staff Assessments.</p>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-gold" onclick="window.open('intake_sheet.html','_blank')">+ New Intake Sheet</button>
-                    <button class="btn btn-navy" onclick="window.open('staff_assessment.html','_blank')">+ New Assessment</button>
+                    <button class="btn btn-navy" onclick="openAssessment(null)">+ New Assessment</button>
                     <button class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh</button>
                 </div>
             </div>
@@ -1276,6 +1278,51 @@
     </div>
 </div>
 
+<!-- Application edit modal -->
+<div class="modal-overlay" id="applicationEditModal" onclick="if(event.target===this) closeModal('applicationEditModal')">
+    <div class="modal" style="max-width:720px;">
+        <div class="modal-header">
+            <h2>Edit Application</h2>
+            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('applicationEditModal')">✕ Close</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editAppId">
+            <div class="grid-2eq" style="gap:12px;">
+                <div><label>Name</label><input id="editAppName" type="text"></div>
+                <div><label>Status</label><select id="editAppStatus"><option>Pending Review</option><option>Interviewing</option><option>Accepted</option><option>Rejected</option></select></div>
+                <div><label>School Year</label><input id="editAppSy" type="text"></div>
+                <div><label>School</label><input id="editAppSchool" type="text"></div>
+                <div><label>Grade / Year Level</label><input id="editAppGrade" type="text"></div>
+                <div><label>Education Level</label><input id="editAppEduLevel" type="text"></div>
+                <div><label>Contact</label><input id="editAppContact" type="text"></div>
+                <div><label>Email</label><input id="editAppEmail" type="email"></div>
+                <div><label>Barangay</label><input id="editAppBarangay" type="text"></div>
+                <div><label>Date of Birth</label><input id="editAppDob" type="date"></div>
+                <div><label>Monthly Income</label><input id="editAppIncome" type="number"></div>
+                <div><label>Monthly Expenses</label><input id="editAppExpense" type="number"></div>
+            </div>
+            <div style="margin-top:12px;"><label>Address</label><input id="editAppAddress" type="text"></div>
+            <div style="margin-top:12px;"><label>Ambition</label><textarea id="editAppAmbition" rows="2"></textarea></div>
+            <div style="margin-top:12px;"><label>Why Scholar</label><textarea id="editAppWhyScholar" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('applicationEditModal')">Cancel</button>
+            <button class="btn btn-navy" onclick="saveApplicationEdit()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Standalone forms opened inside the dashboard -->
+<div class="modal-overlay" id="toolModal" onclick="if(event.target===this) closeToolModal()">
+    <div class="modal tool-modal">
+        <div class="modal-header">
+            <h2 id="toolModalTitle">Staff Assessment</h2>
+            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeToolModal()">✕ Close</button>
+        </div>
+        <iframe class="tool-modal-frame" id="toolModalFrame" title="Staff form"></iframe>
+    </div>
+</div>
+
 </script>
 <script src="/components/report-card.js"></script>
 <script src="/mefamdev-api.js"></script>
@@ -1305,6 +1352,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (session.type !== 'staff') { window.location.href = 'index.html'; return; }
 
     // ── Load session into UI ──
+    const directorOnly = new URLSearchParams(window.location.search).get('director') === '1';
+    if (directorOnly && session.role !== 'director') {
+        window.location.href = 'index.html';
+        return;
+    }
+    document.body.classList.toggle('director-only', directorOnly);
     currentRole = session.role || 'director';
     document.getElementById('user-name').innerText = session.name || 'Staff';
     document.getElementById('user-role').innerText = session.title || '';
@@ -1653,6 +1706,7 @@ function loadSavedRecords() {
 window.addEventListener('message', (event) => {
     if (event.data?.type === 'intake-saved') {
         loadSavedRecords();
+        closeToolModal();
     }
 });
 
@@ -1744,12 +1798,33 @@ function filterSavedRecords() {
 function openIntakeSheet(recordId) {
     const id = recordId === null || recordId === undefined || recordId === 'null' || recordId === 'undefined' ? null : recordId;
     const url = id ? `intake_sheet.html?id=${encodeURIComponent(id)}` : 'intake_sheet.html';
-    window.open(url, '_blank');
+    openToolModal(url, '📝 Intake Sheet');
 }
 function openAssessment(appId) {
     const id = appId === null || appId === undefined || appId === 'null' || appId === 'undefined' ? null : appId;
     const url = id ? `staff_assessment.html?id=${encodeURIComponent(id)}` : 'staff_assessment.html';
-    window.open(url, '_blank');
+    openToolModal(url, '📝 Staff Assessment');
+}
+function openToolModal(url, title) {
+    if (url === 'student_grade_card.html' && window.matchMedia('(max-width: 640px)').matches) {
+        window.open(url, '_blank');
+        return;
+    }
+    const modal = document.getElementById('toolModal');
+    const frame = document.getElementById('toolModalFrame');
+    const titleEl = document.getElementById('toolModalTitle');
+    if (!modal || !frame) return;
+    if (titleEl) titleEl.textContent = title || 'Staff Form';
+    frame.src = url;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeToolModal() {
+    const modal = document.getElementById('toolModal');
+    const frame = document.getElementById('toolModalFrame');
+    if (frame) frame.src = 'about:blank';
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
 }
 function deleteRecord(key, id) {
     if (!confirm('Delete this record?')) return;
@@ -1815,7 +1890,7 @@ function renderRecentApps(apps) {
             <td>${a.grade} <span style="color:var(--text-muted); font-size:.78rem;">${a.school}</span></td>
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
             <td>${statusBadge(a.status)}</td>
-            <td><button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button></td>
+            <td class="table-actions"><button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button></td>
         </tr>`).join('') || `<tr><td colspan="7" class="empty-state">No applications yet.</td></tr>`;
 }
 
@@ -1825,7 +1900,7 @@ function renderFullAppsTable(apps) {
     if (!tbody) return;
     tbody.innerHTML = apps.map(a => `
         <tr data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}">
-            <td>
+            <td class="table-actions">
                 <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.reference || a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
             </td>
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
@@ -2082,7 +2157,7 @@ function renderGrades(scholars) {
             <td>${escapeHtml(s.grade || '—')}</td>
             <td id="grade-val-${s.id}">${displayGrade}</td>
             <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
-            <td><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},${makeJsString(s.name || 'Scholar')})">Update</button></td>
+            <td class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},${makeJsString(s.name || 'Scholar')})">Update</button></td>
         </tr>`;
     }).join('');
 
@@ -2325,12 +2400,109 @@ function viewApp(id) {
     renderDocChecklist(a.id, 'appModalDocs');
 
     let footerHTML = `<button class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
+    footerHTML += `<button class="btn btn-gold" onclick="openApplicationEdit(${a.id})">✎ Edit Application</button>`;
+    if (currentRole === 'director') {
+        footerHTML += `<button class="btn btn-ghost" style="color:var(--red);" onclick="deleteRetainedGrades(${a.id})">🗑️ Grade Retention</button>`;
+    }
+    if (currentRole === 'director' && a.status === 'Accepted') footerHTML += `<button class="btn btn-orange" onclick="endApplicationYear(${a.id})">📚 End School Year</button>`;
     if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
     if (a.status !== 'Accepted') footerHTML += `<button class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
-    if (a.status !== 'Rejected') footerHTML += `<button class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
+    if (!['Accepted', 'Year Ended', 'Rejected'].includes(a.status)) footerHTML += `<button class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
 
     document.getElementById('appModalFooter').innerHTML = footerHTML;
     document.getElementById('appModal').classList.add('open');
+}
+
+async function endApplicationYear(id) {
+    if (!confirm('End this applicant\'s school year? Their grades will be retained and the applicant can choose whether to re-apply.')) return;
+    try {
+        const result = await MefamAPI.endApplicationYear(id);
+        if (!result?.ok) throw new Error(result?.error || 'Unable to close the school-year cycle right now.');
+        closeModal('appModal');
+        await loadAllData();
+    } catch (error) {
+        console.error('Failed to end school year:', error);
+        alert('Unable to close the school-year cycle right now.');
+    }
+}
+
+async function deleteRetainedGrades(appId) {
+    try {
+        const retention = await MefamAPI.getGradeRetention(appId);
+        if (!retention?.eligible) {
+            const eligible = retention?.eligibleAt ? new Date(retention.eligibleAt).toLocaleDateString() : 'seven years after the first grade record';
+            alert(`Grade records are protected until ${eligible}.`);
+            return;
+        }
+        if (!confirm('FINAL ACTION: permanently delete this applicant\'s retained grade records? This cannot be undone.')) return;
+        const result = await MefamAPI.deleteRetainedGrades(appId);
+        if (!result?.ok) throw new Error(result?.error || 'Unable to delete retained grade records.');
+        alert('Retained grade records were permanently deleted.');
+    } catch (error) {
+        alert(error?.message || 'Unable to delete retained grade records.');
+    }
+}
+
+function openApplicationEdit(id) {
+    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    const app = apps.find(item => String(item.id) === String(id));
+    if (!app) return;
+
+    const values = {
+        editAppId: app.id,
+        editAppName: app.name,
+        editAppStatus: app.status || 'Pending Review',
+        editAppSy: app.sy,
+        editAppSchool: app.school,
+        editAppGrade: app.grade,
+        editAppEduLevel: app.eduLevel || app.edu_level,
+        editAppContact: app.contact,
+        editAppEmail: app.email,
+        editAppBarangay: app.barangay,
+        editAppDob: app.dob,
+        editAppIncome: app.totalIncome || app.total_income,
+        editAppExpense: app.totalExpense || app.total_expense,
+        editAppAddress: app.address,
+        editAppAmbition: app.ambition,
+        editAppWhyScholar: app.whyScholar || app.why_scholar
+    };
+    Object.entries(values).forEach(([fieldId, value]) => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = value ?? '';
+    });
+    closeModal('appModal');
+    document.getElementById('applicationEditModal').classList.add('open');
+}
+
+async function saveApplicationEdit() {
+    const id = document.getElementById('editAppId').value;
+    const payload = {
+        name: document.getElementById('editAppName').value.trim(),
+        status: document.getElementById('editAppStatus').value,
+        sy: document.getElementById('editAppSy').value.trim(),
+        school: document.getElementById('editAppSchool').value.trim(),
+        grade: document.getElementById('editAppGrade').value.trim(),
+        edu_level: document.getElementById('editAppEduLevel').value.trim(),
+        contact: document.getElementById('editAppContact').value.trim(),
+        email: document.getElementById('editAppEmail').value.trim(),
+        barangay: document.getElementById('editAppBarangay').value.trim(),
+        dob: document.getElementById('editAppDob').value,
+        total_income: document.getElementById('editAppIncome').value,
+        total_expense: document.getElementById('editAppExpense').value,
+        address: document.getElementById('editAppAddress').value.trim(),
+        ambition: document.getElementById('editAppAmbition').value.trim(),
+        why_scholar: document.getElementById('editAppWhyScholar').value.trim()
+    };
+    if (!payload.name) return alert('Please enter the applicant name.');
+
+    try {
+        await MefamAPI.updateApplication(id, payload);
+        closeModal('applicationEditModal');
+        await loadAllData();
+    } catch (error) {
+        console.error('Failed to update application:', error);
+        alert('Unable to save application changes right now.');
+    }
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -2658,6 +2830,7 @@ function statusBadge(status) {
         'Accepted': 'badge-green',
         'Interviewing': 'badge-orange',
         'Pending Review': 'badge-red',
+        'Year Ended': 'badge-grey',
     };
     return `<span class="badge ${map[status]||'badge-grey'}">${status||'Unknown'}</span>`;
 }

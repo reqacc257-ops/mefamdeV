@@ -6,6 +6,7 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'mefamdev-secret-change-in-production';
 function requireAuth(req, res, next) {
+  if (req.user) return next();
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'No token provided' });
   const token = header.startsWith('Bearer ') ? header.slice(7) : header;

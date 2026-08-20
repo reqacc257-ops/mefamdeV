@@ -82,7 +82,7 @@ const MefamAPI = {
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');
     try {
-      const res = await this._post('/auth/login', { username, password });
+      const res = await this._post('/auth/login', { username, password }, false);
       if (res?.token) {
         storeSession(res.user, res.token);
         return res;
@@ -104,6 +104,11 @@ const MefamAPI = {
       return { error: 'Unable to reach the server. Please try again.' };
     }
   },
+  async verifyDirectorOtp(challengeId, otp) {
+    const res = await this._post('/auth/director/verify-otp', { challengeId, otp }, false);
+    if (res?.token) storeSession(res.user, res.token);
+    return res;
+  },
 
   async loginApplicant(refNo, name, password, username) {
     sessionStorage.removeItem('mefamdev_token');
@@ -111,7 +116,7 @@ const MefamAPI = {
     const payload = { refNo, name, password };
     if (username) payload.username = username;
     try {
-      const res = await this._post('/auth/applicant', payload);
+      const res = await this._post('/auth/applicant', payload, false);
       if (res?.token) {
         storeSession(res.user, res.token);
         return res;
@@ -170,6 +175,12 @@ const MefamAPI = {
   },
   async updateApplication(id, fields) {
     return this._patch(`/applications/${id}`, fields);
+  },
+  async endApplicationYear(id) {
+    return this._post(`/applications/${id}/end-year`, {});
+  },
+  async reapplyApplication(id, schoolYear) {
+    return this._post(`/applications/${id}/reapply`, { schoolYear });
   },
   async deleteApplication(id) {
     return this._delete(`/applications/${id}`);
@@ -245,6 +256,8 @@ const MefamAPI = {
   async getGrades(semester) {
     return semester ? this._get(`/events/grades?semester=${encodeURIComponent(semester)}`) : this._get('/events/grades');
   },
+  async getGradeRetention(appId) { return this._get(`/grades/retention/${appId}`); },
+  async deleteRetainedGrades(appId) { return this._post(`/grades/retention/${appId}/delete`, { confirm: true }); },
   async saveGrade(appId, grade, semesterOrOptions, maybeOptions) {
     // saveGrade supports legacy (appId, grade, semester) and new format
     let options = {};

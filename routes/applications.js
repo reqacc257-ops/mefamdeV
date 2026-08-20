@@ -13,7 +13,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const crypto = require('crypto');
-const { requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
 const documentsRouter = require('./documents');
 
 // Runtime toggle for submission cooldown (minutes). 0 = disabled.
@@ -46,12 +46,12 @@ function parseApp(row) {
     reference:      row.reference || row.reference_number || row.referenceNumber || '',
     referenceNumber: row.reference_number || row.referenceNumber || row.reference || '',
     date:            row.date_label || row.date || '—',
-    submittedData: (() => {
+    submittedData: typeof row.submitted_data === 'string' ? (() => {
       try { return JSON.parse(row.submitted_data || '{}'); } catch { return row.submitted_data || {}; }
-    })(),
-    statusHistory: (() => {
+    })() : (row.submitted_data || {}),
+    statusHistory: typeof row.status_history === 'string' ? (() => {
       try { return JSON.parse(row.status_history || '[]'); } catch { return []; }
-    })(),
+    })() : (row.status_history || []),
     submittedAt: row.submitted_at || row.submittedAt || '',
     statusUpdatedAt: row.status_updated_at || row.statusUpdatedAt || '',
   };
@@ -117,7 +117,11 @@ router.get('/:id', (req, res) => {
 router.patch('/:id', (req, res) => {
   if (req.user.type === 'applicant') return res.status(403).json({ error: 'Forbidden' });
 
-  const allowed = ['status','sy','school','grade','contact','ambition','why_scholar'];
+  const allowed = [
+    'status', 'sy', 'name', 'address', 'barangay', 'dob', 'gender', 'email',
+    'school', 'grade', 'edu_level', 'contact', 'ambition', 'why_scholar',
+    'total_income', 'total_expense'
+  ];
   const updates = [];
   const values  = [];
   for (const key of allowed) {
@@ -152,6 +156,50 @@ router.patch('/:id', (req, res) => {
   values.push(req.params.id);
   db.prepare(`UPDATE applications SET ${updates.join(', ')} WHERE id = ?`).run(...values);
   res.json({ ok: true });
+});
+
+// Close an applicant's current school-year cycle without deleting history.
+router.post('/:id/end-year', requireRole('director'), (req, res) => {
+  const id = req.params.id;
+  const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+
+  const now = new Date().toISOString();
+  const history = typeof app.status_history === 'string'
+    ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
+    : (app.status_history || []);
+  history.push({ status: 'Year Ended', changedAt: now, note: 'School-year cycle closed by staff.' });
+  db.prepare(`
+    UPDATE applications
+    SET status = ?, status_updated_at = ?, status_history = ?, cycle_ended_at = ?, reapply_allowed = ?
+    WHERE id = ?
+  `).run('Year Ended', now, history, now, 1, id);
+  res.json({ ok: true, status: 'Year Ended', gradesRetained: true });
+});
+
+// Let the applicant start a new cycle while retaining the previous record and grades.
+router.post('/:id/reapply', requireAuth, (req, res) => {
+  const id = req.params.id;
+  if (req.user?.type !== 'applicant' || String(req.user.appId) !== String(id)) {
+    return res.status(403).json({ error: 'Applicants may only reapply for their own record.' });
+  }
+  const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+  if (String(app.status) !== 'Year Ended') return res.status(400).json({ error: 'This application is not closed for reapplication.' });
+
+  const schoolYear = String(req.body?.schoolYear || '').trim();
+  if (!schoolYear) return res.status(400).json({ error: 'School year is required.' });
+  const now = new Date().toISOString();
+  const history = typeof app.status_history === 'string'
+    ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
+    : (app.status_history || []);
+  history.push({ status: 'Pending Review', changedAt: now, note: `Applicant reapplied for ${schoolYear}.` });
+  db.prepare(`
+    UPDATE applications
+    SET status = ?, sy = ?, status_updated_at = ?, status_history = ?, reapply_allowed = ?
+    WHERE id = ?
+  `).run('Pending Review', schoolYear, now, history, 0, id);
+  res.json({ ok: true, status: 'Pending Review', schoolYear, gradesRetained: true });
 });
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
@@ -226,9 +274,9 @@ function submitPublicApplication(req, res) {
     portal_username: b.username ? String(b.username).trim() : null,
     reference_number: b.referenceNumber || b.reference_number || '',
     submitted_at: b.submittedAt || b.submitted_at || new Date().toISOString(),
-    submitted_data: JSON.stringify(b.submittedData || {}),
-    status_updated_at: b.statusUpdatedAt || b.status_updated_at || new Date().toISOString(),
-    status_history: JSON.stringify(b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }])
+    submitted_data: b.submittedData || {},
+    status_updated_at: b.statusUpdatedAt || b.status_updated_at || b.submittedAt || b.submitted_at || new Date().toISOString(),
+    status_history: b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }]
   };
   if (hasId) params.id = Number(b.id);
 
@@ -240,9 +288,9 @@ function submitPublicApplication(req, res) {
     WHERE id = ?
   `).run(
     b.submittedAt || b.submitted_at || new Date().toISOString(),
-    JSON.stringify(b.submittedData || {}),
-    b.statusUpdatedAt || b.status_updated_at || new Date().toISOString(),
-    JSON.stringify(b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }]),
+    b.submittedData || {},
+    b.statusUpdatedAt || b.status_updated_at || b.submittedAt || b.submitted_at || new Date().toISOString(),
+    b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }],
     info.lastInsertRowid
   );
 

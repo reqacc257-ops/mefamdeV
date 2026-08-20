@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.self !== window.top) return;
     const current = window.location.pathname.split('/').pop().toLowerCase();
     const container = document.createElement('div');
     container.id = 'globalActions';
@@ -13,20 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const css = document.createElement('style');
     css.innerHTML = `
     #globalActions .ga-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-family:inherit}
-    #globalActions .ga-intake{background:#f5a623;color:#0f2130}
     #globalActions .ga-back{background:transparent;border:1px solid rgba(15,33,48,.08);color:#0f2130}
     @media print{#globalActions{display:none!important}}`;
     document.head.appendChild(css);
-
-    // Intake button (hide on intake page itself)
-    if (!current || current.indexOf('intake_sheet.html') === -1 && current.indexOf('intake_sheet') === -1) {
-        const btn = document.createElement('button');
-        btn.className = 'ga-btn ga-intake';
-        btn.innerHTML = '📄 Intake Sheet';
-        btn.title = 'Open Intake Sheet';
-        btn.onclick = () => { window.location.href = 'intake_sheet.html'; };
-        container.appendChild(btn);
-    }
 
     // Back to dashboard (show when not on dashboard)
     if (!current || current.indexOf('admin_dashboard.html') === -1 && current.indexOf('admin_dashboard') === -1) {

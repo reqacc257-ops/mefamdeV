@@ -7,10 +7,15 @@
     "migrate": "node scripts/run_migrations.js",
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "frontend:dev": "npm --prefix frontend/react run dev",
+    "frontend:build": "npm --prefix frontend/react run build",
+    "test": "node --test --test-concurrency=1",
+    "test:watch": "node --test --watch --test-concurrency=1",
     "test:grades": "node --test test/grades.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^4.18.3",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.1",

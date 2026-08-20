@@ -103,11 +103,11 @@ class QueryBuilder {
     this.query = query.trim();
   }
 
-  get(params) {
-    return this.all(params)[0];
+  get(...params) {
+    return this.all(...params)[0];
   }
 
-  all(params) {
+  all(...params) {
     const table = this.detectTable();
     if (!table) return [];
 
