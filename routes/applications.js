@@ -65,9 +65,18 @@ router.get('/', async (req, res) => {
   const q = req.query.q ? String(req.query.q).trim() : null;
   const includeLatestGrade = req.query.includeLatestGrade === 'true' || req.query.includeLatestGrade === '1';
 
-  // If no paging requested, maintain original behavior
+  // If no paging requested, maintain the original array response while still honoring filters.
   if (!page) {
-    const rows = await db.prepare('SELECT * FROM applications ORDER BY id DESC').all();
+    const where = [];
+    const params = [];
+    if (status) { where.push('status = ?'); params.push(status); }
+    if (q) {
+      where.push('(LOWER(name) LIKE ? OR LOWER(reference_number) LIKE ?)');
+      const like = '%' + q.toLowerCase().replace(/%/g, '\\%') + '%';
+      params.push(like, like);
+    }
+    const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
+    const rows = await db.prepare(`SELECT * FROM applications ${whereSql} ORDER BY id DESC`).all(...params);
     return res.json(rows.map(parseApp));
   }
 
