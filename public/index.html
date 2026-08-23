@@ -366,9 +366,10 @@
                 <input type="text" id="unifiedUsername"
                     placeholder="e.g. Director or 20260724153022"
                     autocomplete="username"
+                    autocapitalize="none"
+                    spellcheck="false"
                     oninput="onUsernameInput(this)"
-                    onkeydown="if(event.key==='Enter') proceedLogin()"
-                    style="text-transform: capitalize;">
+                    onkeydown="if(event.key==='Enter') proceedLogin()">
             </div>
             <p id="usernameHint" style="font-size:.74rem; color:#aaa; margin-top:5px;"></p>
         </div>
@@ -398,6 +399,8 @@
                 <div class="input-wrap">
                     <input type="text" id="unifiedName"
                         placeholder="As submitted in your application"
+                        autocapitalize="none"
+                        spellcheck="false"
                         onkeydown="if(event.key==='Enter') proceedLogin()">
                 </div>
             </div>
@@ -500,20 +503,6 @@ let detectedType = null; // 'staff' | 'applicant' | null
 function onUsernameInput(input) {
     if (!input) return;
     const rawValue = String(input.value || '');
-    let displayValue = rawValue;
-
-    if (/^app-/i.test(rawValue.trim())) {
-        displayValue = rawValue.trim().replace(/^app-/i, 'APP-');
-    } else if (/^\d+$/.test(rawValue.trim())) {
-        displayValue = rawValue.trim();
-    } else {
-        displayValue = rawValue.replace(/\b([a-z])/g, char => char.toUpperCase());
-    }
-
-    if (displayValue !== rawValue) {
-        input.value = displayValue;
-    }
-
     const v = input.value.trim().toLowerCase();
     hideError();
 
