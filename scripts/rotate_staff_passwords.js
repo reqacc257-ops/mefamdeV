@@ -7,7 +7,7 @@ if (!databaseUrl) {
 }
 
 const usernames = ['director', 'edu', 'finance', 'program'];
-const pool = new Pool({ connectionString: databaseUrl });
+const pool = new Pool({ connectionString: databaseUrl, ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false } });
 
 function generatePassword() {
   return crypto.randomBytes(24).toString('base64url');
