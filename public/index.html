@@ -698,6 +698,7 @@ async function verifyDirectorOtp() {
         status.style.display = 'block';
         return;
     }
+    if (trustCheckbox?.checked) localStorage.setItem('mefamdev_trusted_device_until', String(Date.now() + 24 * 60 * 60 * 1000));
     closeDirectorOtpModal();
     showLoading('Opening Director Dashboard…', () => window.location.assign('/admin_dashboard.html?director=1'));
 }

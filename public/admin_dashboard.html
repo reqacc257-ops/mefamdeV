@@ -551,9 +551,6 @@
                     </div>
                 </div>
             </div>
-            <button onclick="openChangePasswordModal()" style="background:rgba(26,46,68,.08);border:1px solid rgba(26,46,68,.2);color:#1a2e44;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer; margin-left:8px;">
-                &#128272; Change Password
-            </button>
             <button onclick="adminLogout()" style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer; margin-left:8px;">
                 &#128682; Logout
             </button>
@@ -1237,19 +1234,46 @@
              SETTINGS
         ═══════════════════════════════════════════════ -->
         <div id="settings" class="page">
+            <div style="display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:20px;">
+                <div>
+                    <h2 style="margin:0 0 5px;">System Configuration</h2>
+                    <p style="margin:0; color:var(--text-muted); font-size:.9rem;">Manage the workspace defaults, security, and daily operating preferences.</p>
+                </div>
+                <span id="settingsSaveStatus" style="font-size:.82rem; color:#27734d; font-weight:700;"></span>
+            </div>
             <div class="grid-2eq" style="align-items:start;">
                 <div class="card">
-                    <div class="card-title">System Configuration</div>
-                    <div style="margin-bottom:12px;"><label>Organization Name</label><input type="text" value="MEFAMDEV-Life"></div>
-                    <div style="margin-bottom:12px;"><label>Chapter</label><input type="text" value="Angat, Bulacan"></div>
-                    <div style="margin-bottom:12px;"><label>Active School Year</label><select><option>2025-2026</option><option>2026-2027</option></select></div>
-                    <div style="margin-bottom:14px;"><label>Scholar Stipend (₱/month)</label><input type="number" value="3000"></div>
-                    <button class="btn btn-navy" onclick="alert('Settings saved!')">Save Changes</button>
+                    <div class="card-title">Organization</div>
+                    <div style="margin-bottom:12px;"><label for="settingOrgName">Organization Name</label><input id="settingOrgName" type="text" value="MEFAMDEV-Life"></div>
+                    <div style="margin-bottom:12px;"><label for="settingChapter">Chapter / Location</label><input id="settingChapter" type="text" value="Angat, Bulacan"></div>
+                    <div style="margin-bottom:12px;"><label for="settingContactEmail">Primary Contact Email</label><input id="settingContactEmail" type="email" value="reqacc257@gmail.com"></div>
+                    <div><label for="settingTimezone">Timezone</label><select id="settingTimezone"><option value="Asia/Manila">Asia/Manila (UTC+8)</option><option value="UTC">UTC</option></select></div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Data Management</div>
-                    <p style="font-size:.87rem; color:var(--text-muted); margin-bottom:14px;">Export or reset application data.</p>
-                    <button class="btn btn-ghost" style="width:100%; margin-bottom:10px;" onclick="exportData()">📥 Export Data as JSON</button>
+                    <div class="card-title">Academic & Finance</div>
+                    <div style="margin-bottom:12px;"><label for="settingSchoolYear">Active School Year</label><select id="settingSchoolYear"><option>2025-2026</option><option>2026-2027</option><option>2027-2028</option></select></div>
+                    <div style="margin-bottom:12px;"><label for="settingStipend">Scholar Stipend (₱ / month)</label><input id="settingStipend" type="number" min="0" step="100" value="3000"></div>
+                    <div><label for="settingCurrency">Currency</label><select id="settingCurrency"><option value="PHP">PHP (₱)</option><option value="USD">USD ($)</option></select></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Security</div>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:0 0 14px;">Password changes send a confirmation email. Director email verification can trust this browser for 24 hours when selected during sign-in.</p>
+                    <button class="btn btn-navy" onclick="openChangePasswordModal()">&#128272; Change Password</button>
+                    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+                        <div style="font-weight:700; font-size:.88rem; margin-bottom:5px;">Trusted device</div>
+                        <div id="trustedDeviceStatus" style="font-size:.82rem; color:var(--text-muted); margin-bottom:10px;">Trust is requested during Director email verification.</div>
+                        <button class="btn btn-ghost btn-sm" onclick="forgetTrustedDevice()">Forget this browser</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Operations</div>
+                    <label style="display:flex; align-items:center; gap:9px; margin-bottom:13px; font-size:.88rem;"><input id="settingReviewAlerts" type="checkbox" checked> Show pending application alerts</label>
+                    <label style="display:flex; align-items:center; gap:9px; margin-bottom:14px; font-size:.88rem;"><input id="settingAutoRefresh" type="checkbox"> Refresh dashboard data automatically</label>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-navy" onclick="saveSystemSettings()">Save Settings</button>
+                        <button class="btn btn-ghost" onclick="exportData()">&#128228; Export Backup</button>
+                        <button class="btn btn-ghost" onclick="resetSystemSettings()">Reset Defaults</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1396,6 +1420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     applyRBAC();
+    loadSystemSettings();
     initCharts();
     ensureGradeSemesterOptions();
     currentGradeSemester = document.getElementById('gradeSemSelect')?.value || '';
@@ -2653,6 +2678,83 @@ async function submitChangePassword() {
         console.error('Failed to change staff password:', error);
         alert(error.message || 'Unable to update password right now.');
     }
+}
+
+const SYSTEM_SETTING_DEFAULTS = {
+    orgName: 'MEFAMDEV-Life',
+    chapter: 'Angat, Bulacan',
+    contactEmail: 'reqacc257@gmail.com',
+    timezone: 'Asia/Manila',
+    schoolYear: '2025-2026',
+    stipend: '3000',
+    currency: 'PHP',
+    reviewAlerts: true,
+    autoRefresh: false
+};
+
+function loadSystemSettings() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_system_settings') || '{}'); } catch (error) { saved = {}; }
+    const settings = { ...SYSTEM_SETTING_DEFAULTS, ...saved };
+    const fields = {
+        settingOrgName: settings.orgName,
+        settingChapter: settings.chapter,
+        settingContactEmail: settings.contactEmail,
+        settingTimezone: settings.timezone,
+        settingSchoolYear: settings.schoolYear,
+        settingStipend: settings.stipend,
+        settingCurrency: settings.currency,
+        settingReviewAlerts: settings.reviewAlerts,
+        settingAutoRefresh: settings.autoRefresh
+    };
+    Object.entries(fields).forEach(([id, value]) => {
+        const field = document.getElementById(id);
+        if (!field) return;
+        if (field.type === 'checkbox') field.checked = Boolean(value);
+        else field.value = value;
+    });
+    const trustStatus = document.getElementById('trustedDeviceStatus');
+    const trustedUntil = Number(localStorage.getItem('mefamdev_trusted_device_until') || 0);
+    if (trustStatus && trustedUntil > Date.now()) {
+        trustStatus.textContent = `This browser is trusted until ${new Date(trustedUntil).toLocaleString()}.`;
+    }
+}
+
+function saveSystemSettings() {
+    const settings = {
+        orgName: document.getElementById('settingOrgName').value.trim(),
+        chapter: document.getElementById('settingChapter').value.trim(),
+        contactEmail: document.getElementById('settingContactEmail').value.trim(),
+        timezone: document.getElementById('settingTimezone').value,
+        schoolYear: document.getElementById('settingSchoolYear').value,
+        stipend: document.getElementById('settingStipend').value,
+        currency: document.getElementById('settingCurrency').value,
+        reviewAlerts: document.getElementById('settingReviewAlerts').checked,
+        autoRefresh: document.getElementById('settingAutoRefresh').checked
+    };
+    localStorage.setItem('mefamdev_system_settings', JSON.stringify(settings));
+    const status = document.getElementById('settingsSaveStatus');
+    status.textContent = 'Settings saved';
+    setTimeout(() => { status.textContent = ''; }, 2500);
+}
+
+function resetSystemSettings() {
+    if (!confirm('Reset system settings to their defaults?')) return;
+    localStorage.removeItem('mefamdev_system_settings');
+    loadSystemSettings();
+    const status = document.getElementById('settingsSaveStatus');
+    status.textContent = 'Defaults restored';
+    setTimeout(() => { status.textContent = ''; }, 2500);
+}
+
+async function forgetTrustedDevice() {
+    if (!confirm('Require email verification the next time this browser signs in?')) return;
+    const deviceId = `browser:${navigator.userAgent || 'unknown-device'}`;
+    const result = await MefamAPI.revokeTrustedDevice(deviceId);
+    if (result?.error) return alert(result.error);
+    localStorage.removeItem('mefamdev_trusted_device_until');
+    const status = document.getElementById('trustedDeviceStatus');
+    if (status) status.textContent = 'This browser will require email verification next time.';
 }
 
 /* ══════════════════════════════════════

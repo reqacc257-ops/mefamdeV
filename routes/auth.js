@@ -450,4 +450,11 @@ router.post('/change-password', require('../middleware/auth').requireAuth, async
   res.json({ ok: true });
 });
 
+router.post('/director/trusted-device/revoke', require('../middleware/auth').requireAuth, async (req, res) => {
+  if (req.user.type !== 'staff' || req.user.role !== 'director') return res.status(403).json({ error: 'Director only' });
+  const deviceId = normalizeDeviceId(req.body?.deviceId);
+  if (deviceId) trustedDevices.delete(getTrustedDeviceKey(req.user.username, deviceId));
+  res.json({ ok: true });
+});
+
 module.exports = router;

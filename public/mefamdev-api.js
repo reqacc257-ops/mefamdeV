@@ -63,6 +63,10 @@ const MefamAPI = {
     return this._post('/auth/change-password', { oldPassword, newPassword });
   },
 
+  async revokeTrustedDevice(deviceId) {
+    return this._post('/auth/director/trusted-device/revoke', { deviceId });
+  },
+
   logout() {
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');
