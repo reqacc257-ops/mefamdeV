@@ -41,9 +41,9 @@ MEFAMDEV is a scholarship management web application that supports:
   - comms
 
 ### Data Layer
-- JSON-based persistence through a lightweight in-memory storage layer
-- Data is stored in the project data directory
-- The current structure is simple and suitable for deployment and small-to-medium use
+- PostgreSQL through the `pg` pool when `DATABASE_URL` is configured
+- Idempotent SQL migrations create the application schema before production startup
+- The existing synchronous JSON memory store remains the local/test fallback when `DATABASE_URL` is absent
 
 ## 4. Core Components
 
@@ -84,13 +84,13 @@ MEFAMDEV is a scholarship management web application that supports:
 - Cache-control headers applied to HTML and JS assets
 
 ## 7. Deployment Architecture
-- Node.js app hosted on Railway
+- Node.js app hosted on Railway with a managed PostgreSQL database
 - Static frontend files served by the same Express server
 - Environment variables used for runtime configuration
 - Port exposed through the hosting platform
 
 ## 8. Recommended Future Enhancements
-- Move from JSON storage to PostgreSQL or SQLite for better scalability
+- Add connection-pool metrics and backup/restore runbooks
 - Add file upload support for scanned documents
 - Introduce audit logs for applicant and staff actions
 - Add email/SMS notifications
@@ -106,10 +106,10 @@ Client Browser
   -> Data Store
 
 ## 10. Summary
-MEFAMDEV currently uses a simple full-stack web architecture built with:
+MEFAMDEV uses a full-stack web architecture built with:
 - Node.js + Express for the backend
 - HTML/CSS/JavaScript for the frontend
-- JSON-based storage for persistence
+- PostgreSQL for production persistence with a JSON fallback for local/test use
 - JWT authentication for secure access
 
 This architecture is practical, lightweight, and suitable for the current scholarship management workflow.

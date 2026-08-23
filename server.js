@@ -26,6 +26,13 @@ app.set('trust proxy', true);
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 
+let databaseReady;
+app.use((req, res, next) => {
+  if (!db.isPostgres) return next();
+  databaseReady ||= db.initialize();
+  databaseReady.then(() => next(), next);
+});
+
 // Prevent browsers and phones from serving stale login/dashboard pages
 app.use((req, res, next) => {
   if (req.path.endsWith('.html') || req.path.endsWith('.js') || req.path.endsWith('.css')) {
@@ -90,10 +97,13 @@ app.get('/test-email', async (req, res) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  db.initialize().then(() => app.listen(PORT, () => {
     console.log(`\n✅ MEFAMDEV Server running at http://localhost:${PORT}`);
     console.log(`    API base: http://localhost:${PORT}/api`);
     console.log(`    Dashboard: http://localhost:${PORT}/admin_dashboard.html\n`);
+  })).catch(error => {
+    console.error('Database initialization failed:', error);
+    process.exitCode = 1;
   });
 }
 

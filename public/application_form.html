@@ -1301,12 +1301,6 @@
         try {
             const res = await MefamAPI.submitApplication(data);
             if (res?.ok) {
-                const appId = res.id || data.id;
-                const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-                const stored = { ...data, id: appId };
-                if (stored.password) delete stored.password;
-                apps.unshift(stored);
-                localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
                 document.getElementById('refNumberDisplay').innerText = data.referenceNumber;
                 document.getElementById('refStatusDisplay').innerText = 'Pending Review';
                 document.getElementById('successMessage').style.display = 'flex';

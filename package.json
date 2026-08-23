@@ -11,7 +11,8 @@
     "frontend:build": "npm --prefix frontend/react run build",
     "test": "node --test --test-concurrency=1",
     "test:watch": "node --test --watch --test-concurrency=1",
-    "test:grades": "node --test test/grades.test.js"
+    "test:grades": "node --test test/grades.test.js",
+    "test:postgres-adapter": "node --test test/postgres-adapter.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -19,6 +20,7 @@
     "express": "^4.18.3",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.1",
+    "pg": "^8.16.3",
     "resend": "^4.0.0"
   },
   "engines": {

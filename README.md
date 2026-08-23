@@ -46,8 +46,22 @@ Open <http://localhost:3000/>. Useful local endpoints include:
 - <http://localhost:3000/applicant_portal.html>
 - <http://localhost:3000/admin_dashboard.html>
 
-The JSON data store is kept in `data/mefamdev.json`. To use a separate local
-database file, set `DB_PATH` before starting the server.
+Without `DATABASE_URL`, the app keeps its existing local/test JSON fallback in
+`data/mefamdev.json`. For production, set `DATABASE_URL` to a PostgreSQL
+connection string. The server applies the idempotent SQL migrations and seeds
+the staff accounts before it starts accepting requests.
+
+Example environment configuration:
+
+```powershell
+$env:DATABASE_URL = "postgresql://user:password@host:5432/mefamdev?sslmode=require"
+$env:JWT_SECRET = "replace-this-in-production"
+npm start
+```
+
+Run migrations explicitly with `npm run migrate`; it uses `DATABASE_URL` when
+present and otherwise remains a no-op-compatible operation against the local
+fallback.
 
 ## Run the React frontend
 

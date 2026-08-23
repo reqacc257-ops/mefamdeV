@@ -145,12 +145,12 @@ async function sendPasswordResetEmail(app, token, req) {
 }
 
 // ── Staff login ───────────────────────────────────────────────────────────────
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username) return res.status(400).json({ error: 'Username required' });
   if (!password) return res.status(400).json({ error: 'Password required' });
 
-  const staff = db.prepare('SELECT * FROM staff WHERE username = ?').get(username);
+  const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(username);
   if (!staff) return res.status(401).json({ error: 'Invalid username or password' });
   if (staff.password !== hashPassword(password)) return res.status(401).json({ error: 'Invalid username or password' });
 
@@ -179,7 +179,7 @@ router.post('/login', (req, res) => {
   res.json({ token, user: payload });
 });
 
-router.post('/director/verify-otp', (req, res) => {
+router.post('/director/verify-otp', async (req, res) => {
   const challengeId = String(req.body?.challengeId || '').trim();
   const otp = String(req.body?.otp || '').trim();
   const challenge = directorOtpChallenges.get(challengeId);
@@ -194,7 +194,7 @@ router.post('/director/verify-otp', (req, res) => {
   }
   if (hashPassword(otp) !== challenge.codeHash) return res.status(401).json({ error: 'Incorrect verification code.' });
 
-  const staff = db.prepare('SELECT * FROM staff WHERE username = ?').get(challenge.username);
+  const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(challenge.username);
   directorOtpChallenges.delete(challengeId);
   if (!staff || staff.role !== 'director') return res.status(403).json({ error: 'Director access required.' });
   const payload = { type: 'staff', id: staff.id, username: staff.username, role: 'director', name: staff.name };
@@ -202,8 +202,8 @@ router.post('/director/verify-otp', (req, res) => {
   res.json({ token, user: payload });
 });
 
-function findApplicantByIdentifier(identifier, name) {
-  const rows = db.prepare('SELECT * FROM applications').all();
+async function findApplicantByIdentifier(identifier, name) {
+  const rows = await db.prepare('SELECT * FROM applications').all();
   if (!identifier) return null;
 
   const clean = String(identifier).trim();
@@ -229,7 +229,7 @@ function findApplicantByIdentifier(identifier, name) {
 
   const byRef = clean.replace(/^app-/i, '').trim();
   if (/^\d+$/.test(byRef)) {
-    const appById = db.prepare('SELECT * FROM applications WHERE id = ?').get(byRef);
+    const appById = await db.prepare('SELECT * FROM applications WHERE id = ?').get(byRef);
     if (appById) return appById;
   }
 
@@ -255,11 +255,11 @@ function findApplicantByIdentifier(identifier, name) {
   }) || null;
 }
 
-router.post('/lookup', (req, res) => {
+router.post('/lookup', async (req, res) => {
   const identifier = String(req.body?.identifier || req.body?.username || req.body?.refNo || '').trim();
   if (!identifier) return res.status(400).json({ error: 'Reference number or portal username required' });
 
-  const app = findApplicantByIdentifier(identifier);
+  const app = await findApplicantByIdentifier(identifier);
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
   res.json({
@@ -277,12 +277,12 @@ async function handleForgotPassword(req, res) {
   const email = String(req.body?.email || req.query?.email || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'Email required' });
 
-  const apps = db.prepare('SELECT * FROM applications').all();
+  const apps = await db.prepare('SELECT * FROM applications').all();
   const app = apps.find(row => String(row.email || '').trim().toLowerCase() === email);
   if (!app) return res.status(404).json({ error: 'No application found for that email.' });
 
   const resetToken = crypto.randomBytes(16).toString('hex');
-  db.prepare('UPDATE applications SET reset_token = ? WHERE id = ?').run(resetToken, app.id);
+  await db.prepare('UPDATE applications SET reset_token = ? WHERE id = ?').run(resetToken, app.id);
 
   const sent = await sendPasswordResetEmail(app, resetToken, req);
   if (!sent) return res.status(502).json({ error: 'Unable to send reset email right now.' });
@@ -294,27 +294,27 @@ async function handleForgotPassword(req, res) {
 router.post('/applicant/forgot-password', handleForgotPassword);
 router.get('/applicant/forgot-password', handleForgotPassword);
 
-router.post('/applicant/reset-password', (req, res) => {
+router.post('/applicant/reset-password', async (req, res) => {
   const token = String(req.body?.token || '').trim();
   const password = String(req.body?.password || '').trim();
   if (!token) return res.status(400).json({ error: 'Reset token required' });
   if (!password) return res.status(400).json({ error: 'New password required' });
 
-  const app = db.prepare('SELECT * FROM applications WHERE reset_token = ?').get(token);
+  const app = await db.prepare('SELECT * FROM applications WHERE reset_token = ?').get(token);
   if (!app) return res.status(404).json({ error: 'Invalid or expired reset link.' });
 
   const hashed = crypto.createHash('sha256').update(password).digest('hex');
-  db.prepare('UPDATE applications SET password_hash = ?, reset_token = NULL WHERE id = ?').run(hashed, app.id);
+  await db.prepare('UPDATE applications SET password_hash = ?, reset_token = NULL WHERE id = ?').run(hashed, app.id);
   res.json({ ok: true, message: 'Your password has been reset successfully.' });
 });
 
 // ── Applicant portal login ────────────────────────────────────────────────────
-router.post('/applicant', (req, res) => {
+router.post('/applicant', async (req, res) => {
   const { refNo, name, password, username } = req.body;
   const identifier = String(username || refNo || '').trim();
   if (!identifier) return res.status(400).json({ error: 'Reference number or portal username required' });
 
-  const app = findApplicantByIdentifier(identifier, name);
+  const app = await findApplicantByIdentifier(identifier, name);
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
   if (!app) return res.status(404).json({ error: 'Application not found' });
@@ -342,16 +342,16 @@ router.post('/applicant', (req, res) => {
 });
 
 // ── Change staff password ─────────────────────────────────────────────────────
-router.post('/change-password', require('../middleware/auth').requireAuth, (req, res) => {
+router.post('/change-password', require('../middleware/auth').requireAuth, async (req, res) => {
   if (req.user.type !== 'staff') return res.status(403).json({ error: 'Staff only' });
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Both passwords required' });
 
-  const staff = db.prepare('SELECT * FROM staff WHERE id = ?').get(req.user.id);
+  const staff = await db.prepare('SELECT * FROM staff WHERE id = ?').get(req.user.id);
   if (staff.password !== hashPassword(oldPassword)) {
     return res.status(401).json({ error: 'Current password is incorrect' });
   }
-  db.prepare('UPDATE staff SET password = ? WHERE id = ?').run(hashPassword(newPassword), req.user.id);
+  await db.prepare('UPDATE staff SET password = ? WHERE id = ?').run(hashPassword(newPassword), req.user.id);
   res.json({ ok: true });
 });
 

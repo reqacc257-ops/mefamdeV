@@ -10,23 +10,6 @@
 const router = require('express').Router();
 const db = require('../db');
 
-// Self-contained: creates its own table if it doesn't exist yet.
-db.exec(`
-  CREATE TABLE IF NOT EXISTS document_status (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    app_id INTEGER NOT NULL,
-    doc_key TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'Required',
-    note TEXT DEFAULT '',
-    updated_at TEXT DEFAULT (datetime('now')),
-    file_name TEXT DEFAULT '',
-    file_type TEXT DEFAULT '',
-    file_data TEXT DEFAULT '',
-    upload_method TEXT DEFAULT '',
-    UNIQUE(app_id, doc_key)
-  )
-`);
-
 // The fixed list of documents every applicant needs. Add/remove entries here
 // and both the admin dashboard and applicant portal will pick it up automatically.
 const REQUIRED_DOCS = [
@@ -74,6 +57,30 @@ function seedChecklistForApplication(appId) {
   return buildChecklist(appId);
 }
 
+async function buildChecklistAsync(appId) {
+  const rows = await db.prepare('SELECT doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method FROM document_status WHERE app_id = ?').all(appId);
+  const map = Object.fromEntries(rows.map(row => [row.doc_key, row]));
+  return REQUIRED_DOCS.map(d => ({ key: d.key, label: d.label, status: map[d.key]?.status || 'Required', note: map[d.key]?.note || '', updatedAt: map[d.key]?.updated_at || null, fileName: map[d.key]?.file_name || '', fileType: map[d.key]?.file_type || '', fileData: map[d.key]?.file_data || '', uploadMethod: map[d.key]?.upload_method || '' }));
+}
+
+async function seedChecklistForApplicationAsync(appId) {
+  const existing = await db.prepare('SELECT doc_key FROM document_status WHERE app_id = ?').all(appId);
+  const keys = new Set(existing.map(row => row.doc_key));
+  for (const doc of REQUIRED_DOCS) {
+    if (!keys.has(doc.key)) await db.prepare('INSERT INTO document_status (app_id, doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(appId, doc.key, 'Required', '', new Date().toISOString(), '', '', '', '');
+  }
+  return buildChecklistAsync(appId);
+}
+
+async function saveDocumentUploadAsync(appId, docKey, payload) {
+  const existing = await db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
+  const status = payload.status || (payload.fileData ? 'Pending' : 'Required');
+  const values = [status, payload.note || existing?.note || '', new Date().toISOString(), payload.fileName || existing?.file_name || '', payload.fileType || existing?.file_type || '', payload.fileData || '', payload.uploadMethod || existing?.upload_method || '', appId, docKey];
+  if (existing) await db.prepare('UPDATE document_status SET status = ?, note = ?, updated_at = ?, file_name = ?, file_type = ?, file_data = ?, upload_method = ? WHERE app_id = ? AND doc_key = ?').run(...values);
+  else await db.prepare('INSERT INTO document_status (app_id, doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(appId, docKey, ...values.slice(0, 7));
+  return buildChecklistAsync(appId);
+}
+
 function saveDocumentUpload(appId, docKey, payload) {
   if (!REQUIRED_DOCS.some(d => d.key === docKey)) {
     throw new Error('Unknown document type');
@@ -115,16 +122,16 @@ function saveDocumentUpload(appId, docKey, payload) {
 }
 
 // ── GET checklist ─────────────────────────────────────────────────────────
-router.get('/:appId', (req, res) => {
+router.get('/:appId', async (req, res) => {
   const appId = parseInt(req.params.appId);
   if (req.user.type === 'applicant' && req.user.appId !== appId) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  res.json(buildChecklist(appId));
+  res.json(await buildChecklistAsync(appId));
 });
 
 // ── PUT update one document ───────────────────────────────────────────────
-router.put('/:appId/:docKey', (req, res) => {
+router.put('/:appId/:docKey', async (req, res) => {
   if (req.user.type === 'applicant') return res.status(403).json({ error: 'Forbidden' });
 
   const { appId, docKey } = req.params;
@@ -138,29 +145,29 @@ router.put('/:appId/:docKey', (req, res) => {
   }
   const note = req.body.note || '';
 
-  const existing = db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get([appId, docKey]);
+  const existing = await db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get([appId, docKey]);
   const fileName = existing?.file_name || '';
   const fileType = existing?.file_type || '';
   const fileData = existing?.file_data || '';
   const uploadMethod = existing?.upload_method || '';
 
   if (existing) {
-    db.prepare(`
+    await db.prepare(`
       UPDATE document_status
       SET status = ?, note = ?, updated_at = ?, file_name = ?, file_type = ?, file_data = ?, upload_method = ?
       WHERE app_id = ? AND doc_key = ?
     `).run(status, note, new Date().toISOString(), fileName, fileType, fileData, uploadMethod, appId, docKey);
   } else {
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO document_status (app_id, doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(appId, docKey, status, note, new Date().toISOString(), fileName, fileType, fileData, uploadMethod);
   }
 
-  res.json({ ok: true, checklist: buildChecklist(appId) });
+  res.json({ ok: true, checklist: await buildChecklistAsync(appId) });
 });
 
-router.post('/:appId/:docKey/upload', (req, res) => {
+router.post('/:appId/:docKey/upload', async (req, res) => {
   const { appId, docKey } = req.params;
   if (req.user.type === 'applicant' && req.user.appId !== parseInt(appId)) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -176,13 +183,13 @@ router.post('/:appId/:docKey/upload', (req, res) => {
   }
 
   try {
-    const checklist = saveDocumentUpload(appId, docKey, payload);
+    const checklist = db.isPostgres ? await saveDocumentUploadAsync(appId, docKey, payload) : saveDocumentUpload(appId, docKey, payload);
     res.json({ ok: true, checklist });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Unable to save document upload' });
   }
 });
 
-router.seedChecklistForApplication = seedChecklistForApplication;
+router.seedChecklistForApplication = db.isPostgres ? seedChecklistForApplicationAsync : seedChecklistForApplication;
 router.__test = { saveDocumentUpload, seedChecklistForApplication };
 module.exports = router;

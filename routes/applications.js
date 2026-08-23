@@ -58,7 +58,7 @@ function parseApp(row) {
 }
 
 // ── GET all (supports optional paging & filtering) ─────────────────────────────────
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const page = req.query.page ? Math.max(1, parseInt(req.query.page, 10) || 1) : null;
   const pageSize = req.query.pageSize ? Math.max(1, parseInt(req.query.pageSize, 10) || 20) : null;
   const status = req.query.status ? String(req.query.status).trim() : null;
@@ -67,7 +67,7 @@ router.get('/', (req, res) => {
 
   // If no paging requested, maintain original behavior
   if (!page) {
-    const rows = db.prepare('SELECT * FROM applications ORDER BY id DESC').all();
+    const rows = await db.prepare('SELECT * FROM applications ORDER BY id DESC').all();
     return res.json(rows.map(parseApp));
   }
 
@@ -84,13 +84,13 @@ router.get('/', (req, res) => {
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
   // Count total
-  const countRow = db.prepare(`SELECT COUNT(*) as c FROM applications ${whereSql}`).get(...params);
+  const countRow = await db.prepare(`SELECT COUNT(*) as c FROM applications ${whereSql}`).get(...params);
   const total = countRow ? Number(countRow.c || 0) : 0;
 
   const offset = (page - 1) * (pageSize || 20);
   // Select fields — include latest grade via subquery when requested
   const latestGradeSql = includeLatestGrade ? `, (SELECT grade_val FROM grades g WHERE g.app_id = applications.id ORDER BY datetime(updated_at) DESC LIMIT 1) as latest_grade` : '';
-  const rows = db.prepare(`SELECT * ${latestGradeSql} FROM applications ${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, pageSize || 20, offset);
+  const rows = await db.prepare(`SELECT * ${latestGradeSql} FROM applications ${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, pageSize || 20, offset);
 
   const items = rows.map(r => {
     const parsed = parseApp(r);
@@ -102,8 +102,8 @@ router.get('/', (req, res) => {
 });
 
 // ── GET single ────────────────────────────────────────────────────────────────
-router.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
+router.get('/:id', async (req, res) => {
+  const row = await db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Not found' });
 
   // Applicants can only see their own application
@@ -114,7 +114,7 @@ router.get('/:id', (req, res) => {
 });
 
 // ── PATCH status / fields ─────────────────────────────────────────────────────
-router.patch('/:id', (req, res) => {
+router.patch('/:id', async (req, res) => {
   if (req.user.type === 'applicant') return res.status(403).json({ error: 'Forbidden' });
 
   const allowed = [
@@ -130,14 +130,14 @@ router.patch('/:id', (req, res) => {
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
 
   const newStatus = req.body.status;
-  const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
+  const app = await db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
   if (!app) return res.status(404).json({ error: 'Not found' });
 
   if (newStatus && newStatus.toLowerCase() === 'accepted') {
     const familyMembers = JSON.parse(app.family_members || '[]');
     const applicantName = app.name || '';
     const lastName = applicantName.trim().split(/\s+/).slice(-1)[0] || 'Family';
-    const alreadyExists = db.prepare('SELECT id FROM families WHERE surname = ?').get(lastName);
+    const alreadyExists = await db.prepare('SELECT id FROM families WHERE surname = ?').get(lastName);
 
     if (!alreadyExists && familyMembers.length > 0) {
       const guardianName = familyMembers.find(member => /father|mother|guardian/i.test(member.relation || ''))?.name || applicantName;
@@ -146,7 +146,7 @@ router.patch('/:id', (req, res) => {
       const income = app.total_income || '';
       const benefits = JSON.parse(app.properties || '[]').join(', ') || '';
 
-      db.prepare(`
+      await db.prepare(`
         INSERT INTO families (surname, guardian, barangay, contact, income, bracket, benefits)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run(lastName, guardianName, barangay, contact, income, '', benefits);
@@ -154,14 +154,14 @@ router.patch('/:id', (req, res) => {
   }
 
   values.push(req.params.id);
-  db.prepare(`UPDATE applications SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+  await db.prepare(`UPDATE applications SET ${updates.join(', ')} WHERE id = ?`).run(...values);
   res.json({ ok: true });
 });
 
 // Close an applicant's current school-year cycle without deleting history.
-router.post('/:id/end-year', requireRole('director'), (req, res) => {
+router.post('/:id/end-year', requireRole('director'), async (req, res) => {
   const id = req.params.id;
-  const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
+  const app = await db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
   const now = new Date().toISOString();
@@ -169,7 +169,7 @@ router.post('/:id/end-year', requireRole('director'), (req, res) => {
     ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
     : (app.status_history || []);
   history.push({ status: 'Year Ended', changedAt: now, note: 'School-year cycle closed by staff.' });
-  db.prepare(`
+  await db.prepare(`
     UPDATE applications
     SET status = ?, status_updated_at = ?, status_history = ?, cycle_ended_at = ?, reapply_allowed = ?
     WHERE id = ?
@@ -178,12 +178,12 @@ router.post('/:id/end-year', requireRole('director'), (req, res) => {
 });
 
 // Let the applicant start a new cycle while retaining the previous record and grades.
-router.post('/:id/reapply', requireAuth, (req, res) => {
+router.post('/:id/reapply', requireAuth, async (req, res) => {
   const id = req.params.id;
   if (req.user?.type !== 'applicant' || String(req.user.appId) !== String(id)) {
     return res.status(403).json({ error: 'Applicants may only reapply for their own record.' });
   }
-  const app = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
+  const app = await db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
   if (!app) return res.status(404).json({ error: 'Application not found' });
   if (String(app.status) !== 'Year Ended') return res.status(400).json({ error: 'This application is not closed for reapplication.' });
 
@@ -194,7 +194,7 @@ router.post('/:id/reapply', requireAuth, (req, res) => {
     ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
     : (app.status_history || []);
   history.push({ status: 'Pending Review', changedAt: now, note: `Applicant reapplied for ${schoolYear}.` });
-  db.prepare(`
+  await db.prepare(`
     UPDATE applications
     SET status = ?, sy = ?, status_updated_at = ?, status_history = ?, reapply_allowed = ?
     WHERE id = ?
@@ -203,13 +203,13 @@ router.post('/:id/reapply', requireAuth, (req, res) => {
 });
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
-router.delete('/:id', requireRole('director'), (req, res) => {
-  db.prepare('DELETE FROM applications WHERE id = ?').run(req.params.id);
+router.delete('/:id', requireRole('director'), async (req, res) => {
+  await db.prepare('DELETE FROM applications WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
 
 // ── Public form submit (exported separately, mounted without auth) ─────────────
-function submitPublicApplication(req, res) {
+async function submitPublicApplication(req, res) {
   const b = req.body;
   if (!b.name || !b.sy) return res.status(400).json({ error: 'Name and school year required' });
   if (!b.username) return res.status(400).json({ error: 'Portal username required' });
@@ -217,7 +217,7 @@ function submitPublicApplication(req, res) {
 
   // Server-side submission cooldown (minutes). Uses runtime value `submitCooldownMinutes` (0 = disabled).
   if (submitCooldownMinutes > 0 && b.contact) {
-    const recent = db.prepare(
+    const recent = await db.prepare(
       `SELECT id FROM applications WHERE contact = ? AND submitted_at > datetime('now', '-${submitCooldownMinutes} minutes')`
     ).get(b.contact);
     if (recent) return res.status(429).json({ error: `Please wait ${submitCooldownMinutes} minutes before resubmitting.` });
@@ -280,9 +280,29 @@ function submitPublicApplication(req, res) {
   };
   if (hasId) params.id = Number(b.id);
 
-  const info = stmt.run(params);
+  let info;
+  if (db.isPostgres) info = await stmt.run(params);
+  else info = stmt.run(params);
 
-  db.prepare(`
+  if (!db.isPostgres) {
+    db.prepare(`
+      UPDATE applications
+      SET submitted_at = ?, submitted_data = ?, status_updated_at = ?, status_history = ?
+      WHERE id = ?
+    `).run(
+      b.submittedAt || b.submitted_at || new Date().toISOString(),
+      b.submittedData || {},
+      b.statusUpdatedAt || b.status_updated_at || b.submittedAt || b.submitted_at || new Date().toISOString(),
+      b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }],
+      info.lastInsertRowid
+    );
+    if (documentsRouter && typeof documentsRouter.seedChecklistForApplication === 'function') {
+      documentsRouter.seedChecklistForApplication(info.lastInsertRowid);
+    }
+    return res.json({ ok: true, id: info.lastInsertRowid });
+  }
+
+  await db.prepare(`
     UPDATE applications
     SET submitted_at = ?, submitted_data = ?, status_updated_at = ?, status_history = ?
     WHERE id = ?
@@ -295,7 +315,7 @@ function submitPublicApplication(req, res) {
   );
 
   if (documentsRouter && typeof documentsRouter.seedChecklistForApplication === 'function') {
-    documentsRouter.seedChecklistForApplication(info.lastInsertRowid);
+    await documentsRouter.seedChecklistForApplication(info.lastInsertRowid);
   }
 
   res.json({ ok: true, id: info.lastInsertRowid });
@@ -305,20 +325,20 @@ module.exports = router;
 module.exports.submitPublicApplication = submitPublicApplication;
 
 // ── Admin: reset / set applicant password ───────────────────────────────────
-router.post('/:id/reset-password', requireRole('director','program','finance'), (req, res) => {
+router.post('/:id/reset-password', requireRole('director','program','finance'), async (req, res) => {
   const id = req.params.id;
   const newPass = req.body.password;
-  const app = db.prepare('SELECT id FROM applications WHERE id = ?').get(id);
+  const app = await db.prepare('SELECT id FROM applications WHERE id = ?').get(id);
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
   if (newPass === null || newPass === undefined || newPass === '') {
     // Clear password
-    db.prepare('UPDATE applications SET password_hash = NULL WHERE id = ?').run(id);
+    await db.prepare('UPDATE applications SET password_hash = NULL WHERE id = ?').run(id);
     return res.json({ ok: true, message: 'Password cleared' });
   }
 
   const hash = crypto.createHash('sha256').update(String(newPass)).digest('hex');
-  db.prepare('UPDATE applications SET password_hash = ? WHERE id = ?').run(hash, id);
+  await db.prepare('UPDATE applications SET password_hash = ? WHERE id = ?').run(hash, id);
   res.json({ ok: true });
 });
 

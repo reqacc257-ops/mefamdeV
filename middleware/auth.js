@@ -6,10 +6,12 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'mefamdev-secret-change-in-production';
 function requireAuth(req, res, next) {
-  if (req.user) return next();
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'No token provided' });
-  const token = header.startsWith('Bearer ') ? header.slice(7) : header;
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return res.status(401).json({ error: 'Invalid authorization header' });
+  const token = match[1].trim();
+  if (!token) return res.status(401).json({ error: 'Invalid authorization header' });
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
@@ -19,7 +21,8 @@ function requireAuth(req, res, next) {
 }
 function requireRole(...roles) {
   return (req, res, next) => {
-    if (!roles.includes(req.user?.role)) {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+    if (req.user.type !== 'staff' || !roles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     next();

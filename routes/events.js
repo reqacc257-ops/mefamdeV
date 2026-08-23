@@ -17,19 +17,21 @@ function ensureTable(tableName) {
   return db.data[tableName];
 }
 
-function getActiveAttendanceSession(eventId) {
+async function getActiveAttendanceSession(eventId) {
+  if (db.isPostgres) return db.prepare('SELECT * FROM event_sessions WHERE event_id = ? AND active = 1 ORDER BY id DESC LIMIT 1').get(eventId);
   const sessions = ensureTable('event_sessions').filter(row => Number(row.event_id) === Number(eventId) && (row.active === 1 || row.active === true));
   return sessions.sort((a, b) => Number(b.id || 0) - Number(a.id || 0))[0] || null;
 }
 
-function getEventCheckins(eventId) {
+async function getEventCheckins(eventId) {
+  if (db.isPostgres) return db.prepare('SELECT * FROM event_checkins WHERE event_id = ?').all(eventId);
   return ensureTable('event_checkins').filter(row => Number(row.event_id) === Number(eventId));
 }
 
-function buildEventPayload(event) {
+async function buildEventPayload(event) {
   const eventId = event.id;
-  const activeSession = db.prepare('SELECT * FROM event_sessions WHERE event_id = ? AND active = 1 ORDER BY id DESC LIMIT 1').get(eventId);
-  const checkins = db.prepare('SELECT * FROM event_checkins WHERE event_id = ?').all(eventId);
+  const activeSession = await db.prepare('SELECT * FROM event_sessions WHERE event_id = ? AND active = 1 ORDER BY id DESC LIMIT 1').get(eventId);
+  const checkins = await db.prepare('SELECT * FROM event_checkins WHERE event_id = ?').all(eventId);
   return {
     ...event,
     activeAttendanceSession: activeSession ? {
@@ -92,34 +94,39 @@ function buildMonitoringSummary(applications = [], grades = [], absences = []) {
 }
 
 // List events with attendance counts
-router.get('/', requireAuth, (req, res) => {
-  const events = db.prepare('SELECT * FROM events ORDER BY date DESC').all();
+router.get('/', requireAuth, async (req, res) => {
+  const events = await db.prepare('SELECT * FROM events ORDER BY date DESC').all();
   const attData = {};
-  db.prepare('SELECT event_id, app_id FROM event_attendance').all().forEach(r => {
+  (await db.prepare('SELECT event_id, app_id FROM event_attendance').all()).forEach(r => {
     if (!attData[r.event_id]) attData[r.event_id] = [];
     attData[r.event_id].push(r.app_id);
   });
-  res.json(events.map(e => ({ ...buildEventPayload(e), attendees: attData[e.id] || [] })));
+  res.json(await Promise.all(events.map(async e => ({ ...await buildEventPayload(e), attendees: attData[e.id] || [] }))));
 });
 
 // Create event
-router.post('/', requireAuth, requireRole('director','program','edu'), (req, res) => {
+router.post('/', requireAuth, requireRole('director','program','edu'), async (req, res) => {
   const b = req.body;
   if (!b.name) return res.status(400).json({ error: 'Event name required' });
-  const info = db.prepare(
+  const info = await db.prepare(
     'INSERT INTO events (name, date, venue, max_att) VALUES (?, ?, ?, ?)'
   ).run(b.name, b.date || '', b.venue || '', b.max || 75);
   res.json({ ok: true, id: info.lastInsertRowid });
 });
 
 // Start an attendance session for an event
-router.post('/:id/start', requireRole('director','program','edu'), (req, res) => {
+router.post('/:id/start', requireRole('director','program','edu'), async (req, res) => {
   const eventId = parseInt(req.params.id);
   const expiresInMinutes = Math.max(1, parseInt(req.body.expiresInMinutes || req.body.expiresIn || 15) || 15);
   const code = generateAttendanceCode();
   const startedAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000).toISOString();
 
+  if (db.isPostgres) {
+    await db.prepare('UPDATE event_sessions SET active = 0 WHERE event_id = ?').run(eventId);
+    const info = await db.prepare('INSERT INTO event_sessions (event_id, code, started_at, expires_at, active) VALUES (?, ?, ?, ?, ?)').run(eventId, code, startedAt, expiresAt, 1);
+    return res.json({ ok: true, session: { id: info.lastInsertRowid, code, expiresAt, startedAt, active: true } });
+  }
   const sessions = ensureTable('event_sessions');
   sessions.forEach(row => {
     if (Number(row.event_id) === eventId) row.active = 0;
@@ -134,24 +141,25 @@ router.post('/:id/start', requireRole('director','program','edu'), (req, res) =>
     active: 1,
   };
   sessions.push(newSession);
-  db.save();
+  if (typeof db.save === 'function') db.save();
 
   res.json({ ok: true, session: { id: newSession.id, code, expiresAt, startedAt, active: true } });
 });
 
 // End an active attendance session
-router.post('/:id/end', requireAuth, requireRole('director','program','edu'), (req, res) => {
+router.post('/:id/end', requireAuth, requireRole('director','program','edu'), async (req, res) => {
   const eventId = parseInt(req.params.id);
-  const sessions = ensureTable('event_sessions');
+  if (db.isPostgres) await db.prepare('UPDATE event_sessions SET active = 0 WHERE event_id = ?').run(eventId);
+  const sessions = db.isPostgres ? [] : ensureTable('event_sessions');
   sessions.forEach(row => {
     if (Number(row.event_id) === eventId) row.active = 0;
   });
-  db.save();
+  if (typeof db.save === 'function') db.save();
   res.json({ ok: true });
 });
 
 // Student self-checkin using an active code
-router.post('/:id/checkin', (req, res) => {
+router.post('/:id/checkin', async (req, res) => {
   const eventId = parseInt(req.params.id);
   const { code, name, studentId } = req.body || {};
 
@@ -159,7 +167,7 @@ router.post('/:id/checkin', (req, res) => {
     return res.status(400).json({ error: 'Attendance code and name are required.' });
   }
 
-  const session = getActiveAttendanceSession(eventId);
+  const session = await getActiveAttendanceSession(eventId);
   if (!session) {
     return res.status(400).json({ error: 'The attendance session is inactive or expired.' });
   }
@@ -168,7 +176,7 @@ router.post('/:id/checkin', (req, res) => {
   const expiresAt = session.expires_at ? new Date(session.expires_at) : null;
   if (expiresAt && now > expiresAt) {
     session.active = 0;
-    db.save();
+    if (db.isPostgres) await db.prepare('UPDATE event_sessions SET active = 0 WHERE id = ?').run(session.id); else db.save();
     return res.status(400).json({ error: 'That attendance code has expired. Please ask staff for a new one.' });
   }
 
@@ -177,11 +185,16 @@ router.post('/:id/checkin', (req, res) => {
     return res.status(400).json({ error: 'That attendance code is invalid. Please try again.' });
   }
 
-  const existing = getEventCheckins(eventId).find(row => Number(row.session_id) === Number(session.id) && String(row.student_id) === String(studentId || name));
+  const existingRows = await getEventCheckins(eventId);
+  const existing = existingRows.find(row => Number(row.session_id) === Number(session.id) && String(row.student_id) === String(studentId || name));
   if (existing) {
     return res.json({ ok: true, duplicate: true, message: 'You have already checked in for this event.' });
   }
 
+  if (db.isPostgres) {
+    await db.prepare('INSERT INTO event_checkins (event_id, session_id, student_id, student_name, checked_in_at) VALUES (?, ?, ?, ?, ?)').run(eventId, session.id, studentId || name, name, now.toISOString());
+    return res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.' });
+  }
   const checkins = ensureTable('event_checkins');
   checkins.push({
     id: (checkins[checkins.length - 1]?.id || 0) + 1,
@@ -191,34 +204,39 @@ router.post('/:id/checkin', (req, res) => {
     student_name: name,
     checked_in_at: now.toISOString(),
   });
-  db.save();
+  if (typeof db.save === 'function') db.save();
   res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.' });
 });
 
 // Public check-in by code (students may not know the event id)
-router.post('/checkin', (req, res) => {
+router.post('/checkin', async (req, res) => {
   const { code, name, studentId } = req.body || {};
   if (!code || !name) {
     return res.status(400).json({ error: 'Attendance code and name are required.' });
   }
 
   const normalizedCode = String(code).trim().toUpperCase();
-  const sessions = ensureTable('event_sessions');
-  const session = sessions.find(s => s && (s.active === 1 || s.active === true) && String(s.code || '').trim().toUpperCase() === normalizedCode);
+  const sessions = db.isPostgres ? await db.prepare('SELECT * FROM event_sessions WHERE active = 1 AND UPPER(code) = ? ORDER BY id DESC LIMIT 1').all(normalizedCode) : ensureTable('event_sessions');
+  const session = db.isPostgres ? sessions[0] : sessions.find(s => s && (s.active === 1 || s.active === true) && String(s.code || '').trim().toUpperCase() === normalizedCode);
   if (!session) return res.status(400).json({ error: 'That attendance code is invalid or inactive.' });
 
   const now = new Date();
   const expiresAt = session.expires_at ? new Date(session.expires_at) : null;
   if (expiresAt && now > expiresAt) {
     session.active = 0;
-    db.save();
+    if (db.isPostgres) await db.prepare('UPDATE event_sessions SET active = 0 WHERE id = ?').run(session.id); else db.save();
     return res.status(400).json({ error: 'That attendance code has expired.' });
   }
 
   const eventId = Number(session.event_id);
-  const existing = getEventCheckins(eventId).find(row => Number(row.session_id) === Number(session.id) && String(row.student_id) === String(studentId || name));
+  const existingRows = await getEventCheckins(eventId);
+  const existing = existingRows.find(row => Number(row.session_id) === Number(session.id) && String(row.student_id) === String(studentId || name));
   if (existing) return res.json({ ok: true, duplicate: true, message: 'You have already checked in for this event.' });
 
+  if (db.isPostgres) {
+    await db.prepare('INSERT INTO event_checkins (event_id, session_id, student_id, student_name, checked_in_at) VALUES (?, ?, ?, ?, ?)').run(eventId, session.id, studentId || name, name, now.toISOString());
+    return res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.', eventId });
+  }
   const checkins = ensureTable('event_checkins');
   checkins.push({
     id: (checkins[checkins.length - 1]?.id || 0) + 1,
@@ -228,44 +246,44 @@ router.post('/checkin', (req, res) => {
     student_name: name,
     checked_in_at: now.toISOString(),
   });
-  db.save();
+  if (typeof db.save === 'function') db.save();
   res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.', eventId });
 });
 
 // List check-in roster for the active session
-router.get('/:id/checkins', requireAuth, requireRole('director','program','edu'), (req, res) => {
+router.get('/:id/checkins', requireAuth, requireRole('director','program','edu'), async (req, res) => {
   const eventId = parseInt(req.params.id);
-  const list = getEventCheckins(eventId).slice().sort((a, b) => String(b.checked_in_at || '').localeCompare(String(a.checked_in_at || '')));
+  const list = (await getEventCheckins(eventId)).slice().sort((a, b) => String(b.checked_in_at || '').localeCompare(String(a.checked_in_at || '')));
   res.json(list);
 });
 
 // Delete event
-router.delete('/:id', requireAuth, requireRole('director','program'), (req, res) => {
-  db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
+router.delete('/:id', requireAuth, requireRole('director','program'), async (req, res) => {
+  await db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
 
 // Save attendance for an event
-router.put('/:id/attendance', requireAuth, (req, res) => {
+router.put('/:id/attendance', requireAuth, async (req, res) => {
   const eventId = parseInt(req.params.id);
   const appIds  = req.body.appIds || [];  // array of application IDs
 
   // Replace attendance for this event
   const del = db.prepare('DELETE FROM event_attendance WHERE event_id = ?');
   const ins = db.prepare('INSERT OR IGNORE INTO event_attendance (event_id, app_id) VALUES (?, ?)');
-  del.run(eventId);
-  appIds.forEach(id => ins.run(eventId, id));
+  await del.run(eventId);
+  for (const id of appIds) await ins.run(eventId, id);
   if (typeof db.save === 'function') db.save();
   res.json({ ok: true });
 });
 
 // Get absence log
-router.get('/absences', (req, res) => {
-  res.json(db.prepare('SELECT * FROM absences').all());
+router.get('/absences', async (req, res) => {
+  res.json(await db.prepare('SELECT * FROM absences').all());
 });
-router.post('/absences', (req, res) => {
+router.post('/absences', async (req, res) => {
   const { appId, days, reason } = req.body;
-  db.prepare(`
+  await db.prepare(`
     INSERT INTO absences (app_id, days, reason) VALUES (?, ?, ?)
     ON CONFLICT(app_id) DO UPDATE SET
       days = days + excluded.days,
@@ -273,40 +291,40 @@ router.post('/absences', (req, res) => {
   `).run(appId, days || 1, reason || '');
   res.json({ ok: true });
 });
-router.delete('/absences/:appId', (req, res) => {
-  db.prepare('DELETE FROM absences WHERE app_id = ?').run(req.params.appId);
+router.delete('/absences/:appId', async (req, res) => {
+  await db.prepare('DELETE FROM absences WHERE app_id = ?').run(req.params.appId);
   res.json({ ok: true });
 });
 
 // Grades
-router.get('/grades', (req, res) => {
+router.get('/grades', async (req, res) => {
   const semester = req.query.semester;
   const appId = req.query.appId;
   const schoolYear = req.query.schoolYear;
   
   if (appId && schoolYear) {
-    return res.json(db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? ORDER BY quarter ASC, subject ASC').all(appId, schoolYear));
+    return res.json(await db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? ORDER BY quarter ASC, subject ASC').all(appId, schoolYear));
   }
   if (semester) {
-    return res.json(db.prepare('SELECT * FROM grades WHERE semester = ?').all(semester));
+    return res.json(await db.prepare('SELECT * FROM grades WHERE semester = ?').all(semester));
   }
-  res.json(db.prepare('SELECT * FROM grades').all());
+  res.json(await db.prepare('SELECT * FROM grades').all());
 });
-router.get('/grades/:appId/report', (req, res) => {
+router.get('/grades/:appId/report', async (req, res) => {
   const appId = req.params.appId;
   const schoolYear = req.query.schoolYear || '';
-  const grades = db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? ORDER BY quarter ASC, subject ASC').all(appId, schoolYear);
+  const grades = await db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? ORDER BY quarter ASC, subject ASC').all(appId, schoolYear);
   res.json(grades || []);
 });
 
 // Subjects (persistent list shared across staff)
-router.get('/subjects', (req, res) => {
+router.get('/subjects', async (req, res) => {
   // stored as an array in db.data.subjects
-  const list = Array.isArray(db.data.subjects) ? db.data.subjects : [];
+  const list = db.isPostgres ? (await db.prepare('SELECT subjects FROM app_settings WHERE key = ?').get('subjects'))?.subjects || [] : (Array.isArray(db.data.subjects) ? db.data.subjects : []);
   res.json(list);
 });
 
-router.put('/subjects', requireRole('director','edu'), (req, res) => {
+router.put('/subjects', requireRole('director','edu'), async (req, res) => {
   // Expect { subjects: ["Subject A", "Subject B", ...] }
   if (!req.body || !Array.isArray(req.body.subjects)) return res.status(400).json({ error: 'Request must include a subjects array in the body.' });
 
@@ -325,7 +343,8 @@ router.put('/subjects', requireRole('director','edu'), (req, res) => {
   if (normalized.length > 200) return res.status(400).json({ error: 'Too many subjects; limit is 200.' });
   if (normalized.some(s => s.length > 120)) return res.status(400).json({ error: 'Each subject must be 120 characters or fewer.' });
 
-  db.data.subjects = normalized;
+  if (db.isPostgres) await db.prepare('INSERT INTO app_settings (key, subjects) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET subjects = EXCLUDED.subjects').run('subjects', normalized);
+  else db.data.subjects = normalized;
   try { if (typeof db.save === 'function') db.save(); } catch (e) {
     console.error('Failed saving subjects:', e);
     return res.status(500).json({ error: 'Failed to persist subjects.' });
@@ -333,33 +352,33 @@ router.put('/subjects', requireRole('director','edu'), (req, res) => {
 
   res.json({ ok: true, subjects: normalized });
 });
-router.get('/monitoring', (req, res) => {
-  const applications = db.prepare('SELECT id, name, status FROM applications').all();
-  const grades = db.prepare('SELECT * FROM grades').all();
-  const absences = db.prepare('SELECT * FROM absences').all();
+router.get('/monitoring', async (req, res) => {
+  const applications = await db.prepare('SELECT id, name, status FROM applications').all();
+  const grades = await db.prepare('SELECT * FROM grades').all();
+  const absences = await db.prepare('SELECT * FROM absences').all();
   res.json(buildMonitoringSummary(applications, grades, absences));
 });
-router.put('/grades/:appId', (req, res) => {
+router.put('/grades/:appId', async (req, res) => {
   const { grade, semester, subject, quarter, schoolYear } = req.body;
   const timestamp = new Date().toISOString();
   const appId = req.params.appId;
   
   // Support both old (semester) and new (subject+quarter) format
   if (subject && quarter && schoolYear) {
-    const existing = db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? AND subject = ? AND quarter = ?').get(appId, schoolYear, subject, quarter);
+    const existing = await db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? AND subject = ? AND quarter = ?').get(appId, schoolYear, subject, quarter);
     if (existing) {
-      db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
+      await db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
     } else {
-      db.prepare('INSERT INTO grades (app_id, school_year, subject, quarter, grade_val, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(appId, schoolYear, subject, quarter, grade, timestamp);
+      await db.prepare('INSERT INTO grades (app_id, school_year, subject, quarter, grade_val, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(appId, schoolYear, subject, quarter, grade, timestamp);
     }
   } else {
     // Legacy semester-based grades
     const sem = semester || '';
-    const existing = db.prepare('SELECT * FROM grades WHERE app_id = ? AND semester = ?').get(appId, sem);
+    const existing = await db.prepare('SELECT * FROM grades WHERE app_id = ? AND semester = ?').get(appId, sem);
     if (existing) {
-      db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
+      await db.prepare('UPDATE grades SET grade_val = ?, updated_at = ? WHERE id = ?').run(grade, timestamp, existing.id);
     } else {
-      db.prepare('INSERT INTO grades (app_id, grade_val, semester, updated_at) VALUES (?, ?, ?, ?)').run(appId, grade, sem, timestamp);
+      await db.prepare('INSERT INTO grades (app_id, grade_val, semester, updated_at) VALUES (?, ?, ?, ?)').run(appId, grade, sem, timestamp);
     }
   }
   if (typeof db.save === 'function') db.save();

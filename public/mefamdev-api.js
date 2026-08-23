@@ -12,67 +12,9 @@
  */
 
 const API_BASE = (window.MEFAMDEV_API_BASE || '/api').replace(/\/$/, '');
-const FALLBACK_STAFF = [
-  { username: 'director', password: 'director123', role: 'director', name: 'Director', title: 'Primary Social Worker', initials: 'DR' },
-  { username: 'edu', password: 'edu123', role: 'edu', name: 'Edu Staff', title: 'Education Social Worker', initials: 'ED' },
-  { username: 'finance', password: 'finance123', role: 'finance', name: 'Finance Staff', title: 'Finance Officer', initials: 'FN' },
-  { username: 'program', password: 'program123', role: 'program', name: 'Coordinator', title: 'Program Coordinator', initials: 'PC' },
-];
-
-function storeSession(user, token = 'local-demo') {
+function storeSession(user, token) {
   sessionStorage.setItem('mefamdev_token', token);
   sessionStorage.setItem('mefamdev_session', JSON.stringify({ ...user, loginTime: Date.now() }));
-}
-
-function readStoredApplications() {
-  try { return JSON.parse(localStorage.getItem('mefamdev_apps') || '[]'); } catch { return []; }
-}
-
-function findStoredApplicant(identifier, name, password) {
-  const apps = readStoredApplications();
-  const normalizedIdentifier = String(identifier || '').trim().toLowerCase();
-  const normalizedDigits = normalizedIdentifier.replace(/\D+/g, '');
-  const matchingUsernameApps = apps.filter(app => {
-    const appUsername = String(app.username || app.portal_username || '').trim().toLowerCase();
-    return appUsername && appUsername === normalizedIdentifier;
-  });
-
-  if (matchingUsernameApps.length === 1) {
-    return matchingUsernameApps[0];
-  }
-  if (matchingUsernameApps.length > 1) {
-    const normalizedName = String(name || '').trim().toLowerCase();
-    if (normalizedName) {
-      const nameMatch = matchingUsernameApps.find(app => {
-        const appName = String(app.name || '').trim().toLowerCase();
-        if (!appName) return false;
-        if (appName === normalizedName) return true;
-        const normalizedParts = appName.split(/\s+/).filter(Boolean);
-        return normalizedParts.length > 0 && normalizedParts.every(part => normalizedName.includes(part));
-      });
-      if (nameMatch) return nameMatch;
-    }
-    return matchingUsernameApps[0];
-  }
-
-  return apps.find(app => {
-    const appId = String(app.id || '').trim().toLowerCase();
-    const appUsername = String(app.username || app.portal_username || '').trim().toLowerCase();
-    const appReference = String(app.referenceNumber || app.reference_number || '').trim().toLowerCase();
-    const appReferenceDigits = appReference.replace(/\D+/g, '');
-    const appName = String(app.name || '').trim().toLowerCase();
-    const nameMatches = !name || !String(name).trim() || (appName && String(app.name || '').toLowerCase().includes(String(name).trim().toLowerCase()));
-    const passwordMatches = !password || String(password || '').trim() === '' || String(app.password || '') === String(password || '');
-
-    const referenceMatch = appReference && (appReference === normalizedIdentifier || (normalizedDigits && appReferenceDigits && appReferenceDigits === normalizedDigits));
-    const nameMatch = appName && (appName === normalizedIdentifier || normalizedIdentifier.includes(appName) || appName.includes(normalizedIdentifier));
-
-    return (appId && appId === normalizedIdentifier)
-        || (appUsername && appUsername === normalizedIdentifier)
-        || referenceMatch
-        || nameMatch
-        || (!normalizedIdentifier && nameMatches && passwordMatches);
-  });
 }
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
@@ -83,24 +25,9 @@ const MefamAPI = {
     sessionStorage.removeItem('mefamdev_session');
     try {
       const res = await this._post('/auth/login', { username, password }, false);
-      if (res?.token) {
-        storeSession(res.user, res.token);
-        return res;
-      }
-      const fallback = FALLBACK_STAFF.find(account => account.username.toLowerCase() === String(username || '').trim().toLowerCase());
-      if (fallback && fallback.password === String(password || '')) {
-        const user = { type: 'staff', id: fallback.username, username: fallback.username, role: fallback.role, name: fallback.name };
-        storeSession(user, 'local-demo');
-        return { token: 'local-demo', user };
-      }
+      if (res?.token) storeSession(res.user, res.token);
       return res;
     } catch (error) {
-      const fallback = FALLBACK_STAFF.find(account => account.username.toLowerCase() === String(username || '').trim().toLowerCase());
-      if (fallback && fallback.password === String(password || '')) {
-        const user = { type: 'staff', id: fallback.username, username: fallback.username, role: fallback.role, name: fallback.name };
-        storeSession(user, 'local-demo');
-        return { token: 'local-demo', user };
-      }
       return { error: 'Unable to reach the server. Please try again.' };
     }
   },
@@ -117,24 +44,9 @@ const MefamAPI = {
     if (username) payload.username = username;
     try {
       const res = await this._post('/auth/applicant', payload, false);
-      if (res?.token) {
-        storeSession(res.user, res.token);
-        return res;
-      }
-      const storedApplicant = findStoredApplicant(username || refNo || '', name, password);
-      if (storedApplicant) {
-        const user = { type: 'applicant', appId: storedApplicant.id, name: storedApplicant.name };
-        storeSession(user, 'local-demo');
-        return { token: 'local-demo', user };
-      }
+      if (res?.token) storeSession(res.user, res.token);
       return res;
     } catch (error) {
-      const storedApplicant = findStoredApplicant(username || refNo || '', name, password);
-      if (storedApplicant) {
-        const user = { type: 'applicant', appId: storedApplicant.id, name: storedApplicant.name };
-        storeSession(user, 'local-demo');
-        return { token: 'local-demo', user };
-      }
       return { error: 'Unable to reach the server. Please try again.' };
     }
   },
@@ -194,39 +106,12 @@ const MefamAPI = {
       if (res?.ok || res?.id) {
         const appId = res.id || payload.id;
         const loginRes = await this.loginApplicant(appId, payload.name, payload.password, payload.username);
-        if (loginRes?.token) {
-          sessionStorage.setItem('mefamdev_token', loginRes.token);
-        }
-        sessionStorage.setItem('mefamdev_session', JSON.stringify({
-          type: 'applicant', appId, name: payload.name, loginTime: Date.now()
-        }));
-        const apps = readStoredApplications();
-        const existing = apps.find(item => String(item.id) === String(appId));
-        const stored = { ...payload, id: appId, username: payload.username || payload.portal_username || null, password: payload.password || '' };
-        if (existing) {
-          Object.assign(existing, stored);
-          apps[apps.indexOf(existing)] = existing;
-        } else {
-          apps.unshift(stored);
-        }
-        localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        if (!loginRes?.token) return loginRes || { error: 'Unable to sign in after submitting application.' };
         return { ok: true, id: appId };
       }
       throw new Error(res?.error || 'Unable to submit application');
     } catch (error) {
-      const appId = payload.id || Date.now();
-      const apps = readStoredApplications();
-      const stored = { ...payload, id: appId, username: payload.username || payload.portal_username || null, password: payload.password || '' };
-      const existing = apps.find(item => String(item.id) === String(appId));
-      if (existing) {
-        Object.assign(existing, stored);
-        apps[apps.indexOf(existing)] = existing;
-      } else {
-        apps.unshift(stored);
-      }
-      localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
-      sessionStorage.setItem('mefamdev_session', JSON.stringify({ type: 'applicant', appId, name: payload.name, loginTime: Date.now() }));
-      return { ok: true, id: appId, fallback: true };
+      return { error: error.message || 'Unable to submit application. Please try again.' };
     }
   },
 

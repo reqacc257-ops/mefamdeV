@@ -40,8 +40,10 @@
   "applications": [
     {
       "id": 1,
-      "name": "Student One",
-      "status": "Accepted"
+      "name": "Path Fix Applicant",
+      "email": "pathbug@example.com",
+      "status": "Pending Review",
+      "reset_token": "959de8992a852cb2bd449b0f83506171"
     }
   ],
   "families": [],
