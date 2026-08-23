@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { run: runMigrations } = require('../scripts/run_migrations');
 const app = require('../server');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mefamdev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'local-development-only-jwt-secret';
 
 test('grades workflow: submit -> pending -> approve -> visible in grade-card', async (t) => {
   // apply migrations

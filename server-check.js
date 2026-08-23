@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const app = require('./server');
 
 const server = app.listen(3101, () => {
-  const token = jwt.sign({ type: 'applicant', appId: 1, name: 'Test Applicant' }, 'mefamdev-secret-change-in-production');
+  const token = jwt.sign({ type: 'applicant', appId: 1, name: 'Test Applicant' }, process.env.JWT_SECRET || 'local-development-only-jwt-secret');
   const req = http.request({
     hostname: '127.0.0.1',
     port: 3101,

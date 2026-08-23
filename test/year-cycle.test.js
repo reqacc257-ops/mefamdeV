@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const app = require('../server');
 const db = require('../db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mefamdev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'local-development-only-jwt-secret';
 const appId = 7001;
 
 test('director can close a school year and applicant can reapply without losing grades', async () => {

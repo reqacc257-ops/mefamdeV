@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const jwt = require('jsonwebtoken');
 const { requireAuth, requireRole } = require('../middleware/auth');
 
-const secret = process.env.JWT_SECRET || 'mefamdev-secret-change-in-production';
+const secret = process.env.JWT_SECRET || 'local-development-only-jwt-secret';
 
 test('requireAuth does not trust a pre-populated request user', () => {
   const req = { user: { type: 'staff', role: 'director' }, headers: {} };

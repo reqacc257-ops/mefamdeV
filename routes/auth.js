@@ -11,7 +11,11 @@ const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const db = require('../db');
 
-const JWT_SECRET  = process.env.JWT_SECRET  || 'mefamdev-secret-change-in-production';
+const JWT_SECRET  = process.env.JWT_SECRET;
+if (process.env.NODE_ENV === 'production' && !JWT_SECRET) {
+  throw new Error('JWT_SECRET must be set in production.');
+}
+const signingSecret = JWT_SECRET || 'local-development-only-jwt-secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '8h';
 const directorOtpChallenges = new Map();
 
@@ -175,7 +179,7 @@ router.post('/login', async (req, res) => {
   }
 
   const payload = { type: 'staff', id: staff.id, username: staff.username, role: staff.role, name: staff.name };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
   res.json({ token, user: payload });
 });
 
@@ -198,7 +202,7 @@ router.post('/director/verify-otp', async (req, res) => {
   directorOtpChallenges.delete(challengeId);
   if (!staff || staff.role !== 'director') return res.status(403).json({ error: 'Director access required.' });
   const payload = { type: 'staff', id: staff.id, username: staff.username, role: 'director', name: staff.name };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
   res.json({ token, user: payload });
 });
 
@@ -337,7 +341,7 @@ router.post('/applicant', async (req, res) => {
   }
 
   const payload = { type: 'applicant', appId: app.id, name: app.name };
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
   res.json({ token, user: payload });
 });
 

@@ -1,4 +1,9 @@
 node_modules/
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
+data/mefamdev.json
+tmp-*
+tmp_*
 .env

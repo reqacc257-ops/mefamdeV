@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "migrate": "node scripts/run_migrations.js",
+    "rotate-passwords": "node scripts/rotate_staff_passwords.js",
     "start": "node server.js",
     "dev": "node --watch server.js",
     "frontend:dev": "npm --prefix frontend/react run dev",

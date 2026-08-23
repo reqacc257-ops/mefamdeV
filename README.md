@@ -59,6 +59,16 @@ $env:JWT_SECRET = "replace-this-in-production"
 npm start
 ```
 
+After configuring the live database, rotate all seeded staff passwords once:
+
+```powershell
+npm run rotate-passwords
+```
+
+This command requires `DATABASE_URL`, updates the PostgreSQL staff rows in one
+transaction, and prints each generated password only once. Set the generated
+passwords in your password manager; do not commit them.
+
 Run migrations explicitly with `npm run migrate`; it uses `DATABASE_URL` when
 present and otherwise remains a no-op-compatible operation against the local
 fallback.
