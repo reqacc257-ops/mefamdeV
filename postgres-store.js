@@ -53,8 +53,7 @@ class PostgresStore {
       await this.pool.query(`
         INSERT INTO staff (username, password, role, name, title, initials)
         VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, role = EXCLUDED.role,
-          name = EXCLUDED.name, title = EXCLUDED.title, initials = EXCLUDED.initials
+        ON CONFLICT (username) DO NOTHING
       `, [row.username, row.password, row.role, row.name, row.title, row.initials]);
     }
   }
