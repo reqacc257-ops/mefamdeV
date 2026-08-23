@@ -95,12 +95,12 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
       return res.status(400).json({ error: 'School year is required to save grades' });
     }
 
-    subjects.forEach(subject => {
+    for (const subject of subjects) {
       const name = String(subject.name || '').trim();
-      if (!name) return;
-      ['q1', 'q2', 'q3', 'q4'].forEach((quarterKey, index) => {
+      if (!name) continue;
+      for (const [index, quarterKey] of ['q1', 'q2', 'q3', 'q4'].entries()) {
         const raw = subject[quarterKey];
-        if (raw === null || raw === undefined || raw === '') return;
+        if (raw === null || raw === undefined || raw === '') continue;
         const value = Number(raw);
         if (!Number.isFinite(value) || value < 60 || value > 100) {
           rejectedCells.push(`${name} ${quarterKey.toUpperCase()}`);
@@ -114,8 +114,8 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
           await db.prepare('INSERT INTO grades (app_id, school_year, subject, quarter, grade_val, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
             .run(row.app_id, schoolYear, name, quarter, value, new Date().toISOString());
         }
-      });
-    });
+      }
+    }
   }
 
   const status = action === 'approve' ? 'approved' : 'rejected';
