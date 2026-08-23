@@ -1,7 +1,17 @@
+function isNamedParamsObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
+}
+
+function normalizeParams(params) {
+  if (Array.isArray(params)) return params;
+  if (isNamedParamsObject(params)) return Object.entries(params).map(([name, value]) => ({ name, value }));
+  return [params];
+}
+
 function translateQuery(sql, params) {
   let index = 0;
   const values = [];
-  const source = Array.isArray(params) ? params : Object.entries(params || {}).map(([name, value]) => ({ name, value }));
+  const source = normalizeParams(params);
   const translated = sql
     .replace(/INSERT\s+OR\s+IGNORE/gi, 'INSERT')
     .replace(/datetime\(\s*'now'\s*,\s*'(-?\d+)\s+minutes'\s*\)/gi, "CURRENT_TIMESTAMP - INTERVAL '$1 minutes'")
@@ -85,7 +95,8 @@ class PostgresStatement {
   }
 
   async all(...params) {
-    const result = await this.store.pool.query(translateQuery(this.sql, params.length === 1 ? params[0] : params));
+    const normalizedParams = params.length === 1 && isNamedParamsObject(params[0]) ? params[0] : params;
+    const result = await this.store.pool.query(translateQuery(this.sql, normalizedParams));
     return result.rows;
   }
 
@@ -102,7 +113,8 @@ class PostgresStatement {
     if (/INSERT\s+OR\s+IGNORE/i.test(this.sql) && !/ON\s+CONFLICT/i.test(sql)) {
       sql = sql.replace(/(\)\s*VALUES\s*\([^)]*\))/i, '$1 ON CONFLICT DO NOTHING');
     }
-    const result = await this.store.pool.query(translateQuery(sql, params.length === 1 ? params[0] : params));
+    const normalizedParams = params.length === 1 && isNamedParamsObject(params[0]) ? params[0] : params;
+    const result = await this.store.pool.query(translateQuery(sql, normalizedParams));
     return { lastInsertRowid: result.rows[0]?.id, changes: result.rowCount };
   }
 }

@@ -14,9 +14,15 @@ test('translates positional and named parameters without a live database', () =>
   assert.deepEqual(named.values, ['A', '{"source":"form"}']);
 });
 
+test('preserves single scalar parameters instead of iterating characters', () => {
+  const query = translateQuery('SELECT * FROM staff WHERE username = ?', 'director');
+  assert.equal(query.text, 'SELECT * FROM staff WHERE username = $1');
+  assert.deepEqual(query.values, ['director']);
+});
+
 test('translates SQLite JSON extraction and preserves insert-ignore intent', () => {
   const query = translateQuery('INSERT OR IGNORE INTO event_attendance (event_id, app_id) VALUES (?, ?)', [1, 2]);
-  assert.equal(query.text, 'INSERT OR IGNORE INTO event_attendance (event_id, app_id) VALUES ($1, $2)');
+  assert.equal(query.text, 'INSERT INTO event_attendance (event_id, app_id) VALUES ($1, $2)');
   assert.deepEqual(query.values, [1, 2]);
   assert.equal(translateQuery('SELECT json_extract(data,"$.name") as name FROM intake_sheets', []).text,
     "SELECT (data::jsonb)->>'name' as name FROM intake_sheets");
