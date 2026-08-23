@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');
-const { extractReportCard, computeFlags } = require('../lib/gradeExtraction');
+const { extractReportCard, computeFlags, normalizeExtractionResult } = require('../lib/gradeExtraction');
 
 function normalizeExtraction(row) {
   return {
@@ -33,7 +33,7 @@ router.post('/:appId/upload', async (req, res) => {
   }
 
   try {
-    const extracted = await extractReportCard({ fileData, fileType });
+    const extracted = normalizeExtractionResult(await extractReportCard({ fileData, fileType }));
     const flags = computeFlags(extracted);
     const info = await db.prepare(`
       INSERT INTO grade_extraction (app_id, status, file_name, file_type, file_data, extracted, flags, uploaded_at)
@@ -98,14 +98,29 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
     for (const subject of subjects) {
       const name = String(subject.name || '').trim();
       if (!name) continue;
-      for (const [index, quarterKey] of ['q1', 'q2', 'q3', 'q4'].entries()) {
+      for (const quarterKey of ['q1', 'q2', 'q3', 'q4']) {
         const raw = subject[quarterKey];
         if (raw === null || raw === undefined || raw === '') continue;
         const value = Number(raw);
         if (!Number.isFinite(value) || value < 60 || value > 100) {
           rejectedCells.push(`${name} ${quarterKey.toUpperCase()}`);
-          return;
         }
+      }
+    }
+    if (rejectedCells.length) {
+      return res.status(400).json({
+        error: 'Some grades are outside the allowed 60-100 range.',
+        rejectedCells,
+      });
+    }
+
+    for (const subject of subjects) {
+      const name = String(subject.name || '').trim();
+      if (!name) continue;
+      for (const [index, quarterKey] of ['q1', 'q2', 'q3', 'q4'].entries()) {
+        const raw = subject[quarterKey];
+        if (raw === null || raw === undefined || raw === '') continue;
+        const value = Number(raw);
         const quarter = String(index + 1);
         const existing = await db.prepare('SELECT * FROM grades WHERE app_id = ? AND school_year = ? AND subject = ? AND quarter = ?').get(row.app_id, schoolYear, name, quarter);
         if (existing) {
