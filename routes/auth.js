@@ -18,9 +18,71 @@ if (process.env.NODE_ENV === 'production' && !JWT_SECRET) {
 const signingSecret = JWT_SECRET || 'local-development-only-jwt-secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES || '8h';
 const directorOtpChallenges = new Map();
+const trustedDevices = new Map();
+const TRUSTED_DEVICE_MS = 24 * 60 * 60 * 1000;
 
 function hashPassword(pw) {
   return crypto.createHash('sha256').update(pw).digest('hex');
+}
+
+function normalizeDeviceId(deviceId) {
+  return String(deviceId || '').trim();
+}
+
+function getStaffEmail(staff) {
+  return String(process.env.DIRECTOR_EMAIL || staff?.email || '').trim().toLowerCase();
+}
+
+function getTrustedDeviceKey(username, deviceId) {
+  return `${String(username || '').trim()}:${normalizeDeviceId(deviceId)}`;
+}
+
+function isTrustedDevice(username, deviceId) {
+  const key = getTrustedDeviceKey(username, deviceId);
+  const entry = trustedDevices.get(key);
+  return Boolean(entry && entry.expiresAt > Date.now());
+}
+
+function clearTrustedDevicesForUser(username) {
+  for (const [key, value] of trustedDevices.entries()) {
+    if (value && value.username === username) trustedDevices.delete(key);
+  }
+}
+
+async function sendMailWithFallback(email, subject, html) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      const resend = new Resend(resendApiKey);
+      const result = await resend.emails.send({ from: process.env.RESEND_FROM || 'onboarding@resend.dev', to: email, subject, html });
+      if (result?.error) throw new Error(result.error.message || 'Resend returned an error');
+      return true;
+    } catch (error) {
+      console.error('[staff-email] Resend delivery failed:', error.message);
+    }
+  }
+
+  const smtpHost = process.env.SMTP_HOST;
+  if (smtpHost) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      });
+      await transporter.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject, html });
+      return true;
+    } catch (error) {
+      console.error('[staff-email] SMTP delivery failed:', error.message);
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[staff-email] ${subject} -> ${email}`);
+    return 'development';
+  }
+  return false;
 }
 
 async function sendDirectorOtp(email, code) {
@@ -150,7 +212,7 @@ async function sendPasswordResetEmail(app, token, req) {
 
 // ── Staff login ───────────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, deviceId } = req.body;
   if (!username) return res.status(400).json({ error: 'Username required' });
   if (!password) return res.status(400).json({ error: 'Password required' });
 
@@ -159,8 +221,16 @@ router.post('/login', async (req, res) => {
   if (staff.password !== hashPassword(password)) return res.status(401).json({ error: 'Invalid username or password' });
 
   if (staff.role === 'director') {
-    const email = String(process.env.DIRECTOR_EMAIL || staff.email || '').trim().toLowerCase();
+    const email = getStaffEmail(staff);
     if (!email) return res.status(503).json({ error: 'Director email verification is not configured. Set DIRECTOR_EMAIL.' });
+    const normalizedDeviceId = normalizeDeviceId(deviceId);
+    const trusted = isTrustedDevice(staff.username, normalizedDeviceId);
+    if (trusted) {
+      const payload = { type: 'staff', id: staff.id, username: staff.username, role: 'director', name: staff.name };
+      const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
+      return res.json({ token, user: payload, trustedDevice: true });
+    }
+
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const challengeId = crypto.randomBytes(24).toString('hex');
     const sent = sendDirectorOtp(email, code);
@@ -171,6 +241,7 @@ router.post('/login', async (req, res) => {
         codeHash: hashPassword(code),
         expiresAt: Date.now() + 10 * 60 * 1000,
         attempts: 0,
+        deviceId: normalizedDeviceId,
       });
       const response = { requiresOtp: true, challengeId, expiresIn: 600, message: `Verification code sent to ${email.replace(/(.{2}).+(@.*)/, '$1***$2')}` };
       if (delivery === 'development') response.developmentOtp = code;
@@ -186,6 +257,8 @@ router.post('/login', async (req, res) => {
 router.post('/director/verify-otp', async (req, res) => {
   const challengeId = String(req.body?.challengeId || '').trim();
   const otp = String(req.body?.otp || '').trim();
+  const deviceId = normalizeDeviceId(req.body?.deviceId);
+  const trustDevice = Boolean(req.body?.trustDevice);
   const challenge = directorOtpChallenges.get(challengeId);
   if (!challenge || challenge.expiresAt < Date.now()) {
     directorOtpChallenges.delete(challengeId);
@@ -201,9 +274,14 @@ router.post('/director/verify-otp', async (req, res) => {
   const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(challenge.username);
   directorOtpChallenges.delete(challengeId);
   if (!staff || staff.role !== 'director') return res.status(403).json({ error: 'Director access required.' });
+
+  if (trustDevice && deviceId) {
+    trustedDevices.set(getTrustedDeviceKey(staff.username, deviceId), { username: staff.username, expiresAt: Date.now() + TRUSTED_DEVICE_MS });
+  }
+
   const payload = { type: 'staff', id: staff.id, username: staff.username, role: 'director', name: staff.name };
   const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
-  res.json({ token, user: payload });
+  res.json({ token, user: payload, trustedDevice: Boolean(trustDevice && deviceId) });
 });
 
 async function findApplicantByIdentifier(identifier, name) {
@@ -356,6 +434,19 @@ router.post('/change-password', require('../middleware/auth').requireAuth, async
     return res.status(401).json({ error: 'Current password is incorrect' });
   }
   await db.prepare('UPDATE staff SET password = ? WHERE id = ?').run(hashPassword(newPassword), req.user.id);
+  clearTrustedDevicesForUser(staff.username);
+
+  const email = getStaffEmail(staff);
+  if (email) {
+    const subject = 'MEFAMDEV staff password changed';
+    const html = `
+      <p>Hello ${staff.name || staff.username},</p>
+      <p>Your MEFAMDEV staff password was changed successfully.</p>
+      <p>If you did not make this change, please reset your password immediately and contact the system administrator.</p>
+    `;
+    await sendMailWithFallback(email, subject, html);
+  }
+
   res.json({ ok: true });
 });
 

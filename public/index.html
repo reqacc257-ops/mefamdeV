@@ -472,6 +472,10 @@
         <h3 style="margin:0 0 8px; color:var(--navy);">Director Verification</h3>
         <p id="directorOtpMessage" style="margin:0 0 14px; color:#5f6b7a; font-size:.92rem;">Enter the six-digit code sent to the Director email.</p>
         <input type="text" id="directorOtpInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="width:100%; padding:12px; border:1px solid #d7dde6; border-radius:8px; font-size:1.2rem; letter-spacing:.25em; text-align:center;">
+        <label style="display:flex; align-items:center; gap:10px; margin-top:14px; font-size:.9rem; color:#374151;">
+            <input type="checkbox" id="directorTrustDevice" checked>
+            Trust this device for 24 hours (skip email verification for a day)
+        </label>
         <p id="directorOtpStatus" style="display:none; margin:10px 0 0; font-size:.88rem; color:#c0392b; font-weight:700;"></p>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
             <button type="button" class="btn btn-secondary" onclick="closeDirectorOtpModal()">Cancel</button>
@@ -680,13 +684,15 @@ function closeDirectorOtpModal() {
 async function verifyDirectorOtp() {
     const input = document.getElementById('directorOtpInput');
     const status = document.getElementById('directorOtpStatus');
+    const trustCheckbox = document.getElementById('directorTrustDevice');
     const otp = input.value.trim();
     if (!directorOtpChallengeId || !/^\d{6}$/.test(otp)) {
         status.textContent = 'Enter the six-digit verification code.';
         status.style.display = 'block';
         return;
     }
-    const result = await MefamAPI.verifyDirectorOtp(directorOtpChallengeId, otp);
+    const deviceId = `browser:${navigator.userAgent || 'unknown-device'}`;
+    const result = await MefamAPI.verifyDirectorOtp(directorOtpChallengeId, otp, deviceId, trustCheckbox?.checked);
     if (!result?.token) {
         status.textContent = result?.error || 'Verification failed.';
         status.style.display = 'block';
