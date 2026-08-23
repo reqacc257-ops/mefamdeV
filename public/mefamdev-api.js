@@ -59,6 +59,10 @@ const MefamAPI = {
     return this._post('/auth/applicant/reset-password', { token, password }, false);
   },
 
+  async changeStaffPassword(oldPassword, newPassword) {
+    return this._post('/auth/change-password', { oldPassword, newPassword });
+  },
+
   logout() {
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');

@@ -551,7 +551,10 @@
                     </div>
                 </div>
             </div>
-            <button onclick="adminLogout()" style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;">
+            <button onclick="openChangePasswordModal()" style="background:rgba(26,46,68,.08);border:1px solid rgba(26,46,68,.2);color:#1a2e44;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer; margin-left:8px;">
+                &#128272; Change Password
+            </button>
+            <button onclick="adminLogout()" style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer; margin-left:8px;">
                 &#128682; Logout
             </button>
             <button id="cooldownToggleBtn" class="btn btn-ghost" style="margin-left:8px;" onclick="openCooldownPrompt()">Cooldown: Off</button>
@@ -883,6 +886,29 @@
                 <div class="modal-footer">
                     <button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button>
                     <button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-overlay" id="changePasswordModal">
+            <div class="modal" style="max-width:440px;">
+                <div class="modal-header"><h2>Change Password</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('changePasswordModal')">✕</button></div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Current password</label>
+                        <input type="password" id="changePasswordCurrent" placeholder="Enter current password" style="width:100%;padding:10px 12px;border:1px solid #dfe7ef;border-radius:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>New password</label>
+                        <input type="password" id="changePasswordNew" placeholder="Enter a new password" style="width:100%;padding:10px 12px;border:1px solid #dfe7ef;border-radius:8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm new password</label>
+                        <input type="password" id="changePasswordConfirm" placeholder="Confirm new password" style="width:100%;padding:10px 12px;border:1px solid #dfe7ef;border-radius:8px;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" onclick="closeModal('changePasswordModal')">Cancel</button>
+                    <button class="btn btn-gold" onclick="submitChangePassword()">Update Password</button>
                 </div>
             </div>
         </div>
@@ -2583,6 +2609,50 @@ async function removeSubject(idx) {
 async function saveSubjects() {
     closeModal('subjectsModal');
     await renderSubjectsDatalist();
+}
+
+function openChangePasswordModal() {
+    const modal = document.getElementById('changePasswordModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    setTimeout(() => {
+        const field = document.getElementById('changePasswordCurrent');
+        if (field) field.focus();
+    }, 50);
+}
+
+async function submitChangePassword() {
+    const oldPassword = document.getElementById('changePasswordCurrent')?.value || '';
+    const newPassword = document.getElementById('changePasswordNew')?.value || '';
+    const confirmPassword = document.getElementById('changePasswordConfirm')?.value || '';
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        alert('Please fill in the current password, new password, and confirmation.');
+        return;
+    }
+    if (newPassword.length < 8) {
+        alert('New password must be at least 8 characters long.');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        alert('New passwords do not match.');
+        return;
+    }
+
+    try {
+        const result = await MefamAPI.changeStaffPassword(oldPassword, newPassword);
+        if (!result || result.error) {
+            throw new Error(result?.error || 'Unable to update password right now.');
+        }
+        document.getElementById('changePasswordCurrent').value = '';
+        document.getElementById('changePasswordNew').value = '';
+        document.getElementById('changePasswordConfirm').value = '';
+        closeModal('changePasswordModal');
+        alert('Password updated successfully.');
+    } catch (error) {
+        console.error('Failed to change staff password:', error);
+        alert(error.message || 'Unable to update password right now.');
+    }
 }
 
 /* ══════════════════════════════════════
