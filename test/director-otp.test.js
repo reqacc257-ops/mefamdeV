@@ -1,12 +1,22 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('crypto');
 const app = require('../server');
+const db = require('../memory-store');
+
+const TEST_DIRECTOR_PASSWORD = 'test-director-password';
+const TEST_DIRECTOR_HASH = crypto.createHash('sha256').update(TEST_DIRECTOR_PASSWORD).digest('hex');
+
+function setTestDirectorPassword() {
+  db.prepare('UPDATE staff SET password = ? WHERE username = ?').run(TEST_DIRECTOR_HASH, 'director');
+}
 
 test('director login requires an OTP before issuing a dashboard token', async () => {
   const previousEmail = process.env.DIRECTOR_EMAIL;
   const previousNodeEnv = process.env.NODE_ENV;
   process.env.DIRECTOR_EMAIL = 'director@example.com';
   delete process.env.NODE_ENV;
+  setTestDirectorPassword();
 
   const server = app.listen(0);
   await new Promise(resolve => server.once('listening', resolve));
@@ -16,7 +26,7 @@ test('director login requires an OTP before issuing a dashboard token', async ()
     const loginRes = await fetch(`${base}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'director', password: 'director123' })
+      body: JSON.stringify({ username: 'director', password: TEST_DIRECTOR_PASSWORD })
     });
     const challenge = await loginRes.json();
     assert.equal(loginRes.status, 200);
@@ -46,6 +56,7 @@ test('director can trust a device for one day after email verification', async (
   const previousNodeEnv = process.env.NODE_ENV;
   process.env.DIRECTOR_EMAIL = 'director@example.com';
   delete process.env.NODE_ENV;
+  setTestDirectorPassword();
 
   const server = app.listen(0);
   await new Promise(resolve => server.once('listening', resolve));
@@ -55,7 +66,7 @@ test('director can trust a device for one day after email verification', async (
     const firstLoginRes = await fetch(`${base}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'director', password: 'director123', deviceId: 'device-123' })
+      body: JSON.stringify({ username: 'director', password: TEST_DIRECTOR_PASSWORD, deviceId: 'device-123' })
     });
     const firstChallenge = await firstLoginRes.json();
     assert.equal(firstLoginRes.status, 200);
@@ -73,7 +84,7 @@ test('director can trust a device for one day after email verification', async (
     const secondLoginRes = await fetch(`${base}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'director', password: 'director123', deviceId: 'device-123' })
+      body: JSON.stringify({ username: 'director', password: TEST_DIRECTOR_PASSWORD, deviceId: 'device-123' })
     });
     const secondLoginBody = await secondLoginRes.json();
     assert.equal(secondLoginRes.status, 200);

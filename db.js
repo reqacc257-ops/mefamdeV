@@ -15,10 +15,10 @@ function hashPassword(pw) {
 }
 
 const seedStaff = [
-  { username: 'director', password: 'director123', role: 'director', name: 'Director', title: 'Primary Social Worker', initials: 'DR' },
-  { username: 'edu', password: 'edu123', role: 'edu', name: 'Edu Staff', title: 'Education Social Worker', initials: 'ED' },
-  { username: 'finance', password: 'finance123', role: 'finance', name: 'Finance Staff', title: 'Finance Officer', initials: 'FN' },
-  { username: 'program', password: 'program123', role: 'program', name: 'Coordinator', title: 'Program Coordinator', initials: 'PC' },
+  { username: 'director', password: 'uVP-OzXLaTSm7pga3hM6rUgrii-nzyy9', role: 'director', name: 'Director', title: 'Primary Social Worker', initials: 'DR' },
+  { username: 'edu', password: 'upmD_tpQEXK128keN8x4rv2JVRmMbIm7', role: 'edu', name: 'Edu Staff', title: 'Education Social Worker', initials: 'ED' },
+  { username: 'finance', password: 'Z_jJd9Qos26bQvFnYE_056OFo1ffvHdi', role: 'finance', name: 'Finance Staff', title: 'Finance Officer', initials: 'FN' },
+  { username: 'program', password: 'kowUdbhQzT9RF4J5b3KOHtseMyg7FadB', role: 'program', name: 'Coordinator', title: 'Program Coordinator', initials: 'PC' },
 ];
 
 let initializationPromise;
