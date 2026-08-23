@@ -32,7 +32,8 @@ class PostgresStore {
   constructor(databaseUrl) {
     const { Pool } = require('pg');
     this.isPostgres = true;
-    this.pool = new Pool({ connectionString: databaseUrl, max: Number(process.env.PG_POOL_MAX || 10) });
+    const ssl = process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false };
+    this.pool = new Pool({ connectionString: databaseUrl, max: Number(process.env.PG_POOL_MAX || 10), ssl });
   }
 
   prepare(sql) {
