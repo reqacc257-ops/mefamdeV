@@ -2371,10 +2371,23 @@ function escapeHtml(value) {
 /* ══════════════════════════════════════
    VIEW APP MODAL
 ══════════════════════════════════════ */
-function viewApp(id) {
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
-    const a = apps.find(x => x.id === id);
-    if (!a) return;
+async function viewApp(id) {
+    let a;
+    try {
+        a = await MefamAPI.getApplication(id);
+    } catch (error) {
+        console.error('Failed to load application:', error);
+        try {
+            const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+            a = apps.find(x => x.id == id);
+        } catch (_error) {
+            a = null;
+        }
+    }
+    if (!a) {
+        alert('Unable to load this application right now. Please refresh and try again.');
+        return;
+    }
 
     const famHTML = a.familyMembers?.length > 0
         ? `<table style="width:100%; font-size:.83rem; margin-top:8px;">
