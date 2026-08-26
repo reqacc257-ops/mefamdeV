@@ -219,6 +219,10 @@ const MefamAPI = {
   async myGrades(schoolYear) {
     return this._get(`/grades/mine?school_year=${encodeURIComponent(schoolYear)}`);
   },
+  async getApprovedGradeCard(appId, schoolYear) {
+    const query = schoolYear ? `?school_year=${encodeURIComponent(schoolYear)}` : '';
+    return this._get(`/grades/student/${encodeURIComponent(appId)}/grade-card${query}`);
+  },
 
   async pendingGrades() {
     return this._get(`/grades/pending`);

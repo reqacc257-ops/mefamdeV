@@ -360,8 +360,12 @@
 
         async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
             try {
-                const allGrades = await MefamAPI.getGrades() || [];
-                const scholarGrades = allGrades.filter(g => Number(g.app_id || g.appId) === Number(appId));
+                const approvedSubjects = await MefamAPI.getApprovedGradeCard(appId, schoolYear) || [];
+                const scholarGrades = approvedSubjects.flatMap(subject => Object.entries(subject.quarters || {}).map(([quarter, grade_value]) => ({
+                    subject: subject.subject,
+                    quarter: String(quarter).replace(/^Q/i, ''),
+                    grade_val: grade_value,
+                })));
                 const scholarData = { name, gradeLevel, school, refNo: refNo || appId, schoolYear: schoolYear || 'N/A' };
                 const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades);
                 document.getElementById('reportCardContent').innerHTML = reportCardHTML;
