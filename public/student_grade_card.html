@@ -71,6 +71,25 @@
         .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
         .review-flags ul { margin: 6px 0 0 18px; list-style: disc; }
         @media (max-width: 760px) { .review-source { grid-template-columns: 1fr; } }
+
+        /* Grouped/stacked pending-review rows: one header per student with a
+           count badge, items collapse underneath instead of repeating the
+           student's name for every single upload. */
+        .review-group { border-bottom: 1px solid #eef1f5; }
+        .review-group:last-child { border-bottom: none; }
+        .review-group-header { display: flex; align-items: center; gap: 10px; padding: 13px 4px; cursor: pointer; border-radius: 8px; user-select: none; }
+        .review-group-header:hover { background: #f9fbfd; }
+        .review-group-name { font-weight: 700; color: var(--navy); }
+        .review-count-badge { background: var(--gold-light); color: #8a5a00; border: 1px solid #f0d9a8; font-weight: 700; font-size: .74rem; padding: 2px 9px; border-radius: 999px; letter-spacing: .2px; }
+        .review-group-sub { font-size: .82rem; color: var(--text-muted); }
+        .review-group-chevron { margin-left: auto; color: var(--text-muted); font-size: .8rem; transition: transform .18s ease; flex-shrink: 0; }
+        .review-group.open .review-group-chevron { transform: rotate(180deg); }
+        .review-group-items { display: none; margin: 0 4px 12px 14px; padding-left: 14px; border-left: 2px solid #eef1f5; }
+        .review-group.open .review-group-items { display: block; }
+        .review-item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #eef1f5; flex-wrap: wrap; }
+        .review-item-row:last-child { border-bottom: none; }
+        .review-item-meta { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
+        .review-item-type { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #5f6d7a; background: #eef1f5; padding: 2px 7px; border-radius: 6px; margin-right: 6px; }
     </style>
 </head>
 <body>
@@ -173,6 +192,9 @@
         let pendingQuarterGrades = [];
         let activeExtractionId = null;
         let currentSchoolYearFilter = '';
+        // Which student groups the reviewer has manually expanded, so a
+        // re-render (after approve/reject/save) doesn't snap them shut.
+        let expandedReviewGroups = new Set();
 
         async function loadReportCardsPage() {
             try {
@@ -213,43 +235,110 @@
             }
         }
 
+        // Builds one entry per pending item (either an uploaded-report-card
+        // extraction or a submitted quarter grade), tagged with a student id
+        // and a display timestamp, so both sources can be grouped together.
+        function buildPendingReviewItems() {
+            const items = [];
+
+            pendingExtractions.forEach(extraction => {
+                const studentId = extraction.appId != null ? Number(extraction.appId) : null;
+                const scholar = (acceptedScholars || []).find(app => Number(app.id) === studentId);
+                const schoolYear = extraction?.extracted?.schoolYear || 'Pending school year';
+                const fileName = extraction?.fileName || 'report-card.jpg';
+                const uploadedAt = extraction?.uploadedAt ? new Date(extraction.uploadedAt) : null;
+                items.push({
+                    studentId,
+                    studentName: scholar?.name || `Applicant #${extraction.appId ?? '—'}`,
+                    sortTime: uploadedAt ? uploadedAt.getTime() : 0,
+                    typeLabel: 'Upload',
+                    meta: `${fileName} · ${schoolYear} · ${uploadedAt ? uploadedAt.toLocaleString() : 'Recently uploaded'}`,
+                    actionsHtml: `<button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(extraction.id) || 0})">Review / Finalize</button>`,
+                });
+            });
+
+            pendingQuarterGrades.forEach(r => {
+                const studentId = r.student_id != null ? Number(r.student_id) : null;
+                const scholar = (acceptedScholars || []).find(app => Number(app.id) === studentId);
+                items.push({
+                    studentId,
+                    studentName: scholar?.name || `Applicant #${r.student_id ?? '—'}`,
+                    sortTime: r.submitted_at ? new Date(r.submitted_at).getTime() : 0,
+                    typeLabel: 'Quarter grade',
+                    meta: `${r.school_year || ''} · ${r.subject || ''} · Q${String(r.quarter || '')} · ${r.grade_value ?? '—'}`,
+                    actionsHtml: `<button class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
+                        <button class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
+                        <button class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>`,
+                });
+            });
+
+            return items;
+        }
+
         function renderPendingReviewsPanel() {
             const container = document.getElementById('pendingGradeReviews');
             if (!container) return;
 
-            const extractionHtml = pendingExtractions.map(extraction => {
-                const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
-                const scholarName = scholar?.name || `Applicant #${extraction.appId || '—'}`;
-                const schoolYear = extraction?.extracted?.schoolYear || 'Pending school year';
-                const fileName = extraction?.fileName || 'report-card.jpg';
-                const uploadedAt = extraction?.uploadedAt ? new Date(extraction.uploadedAt).toLocaleString() : 'Recently uploaded';
-                return `<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #eef1f5; flex-wrap:wrap;">
-                    <div>
-                        <div style="font-weight:700; color:var(--navy);">${escapeHtml(scholarName)}</div>
-                        <div style="font-size:.85rem; color:var(--text-muted); margin-top:3px;">${escapeHtml(fileName)} · ${escapeHtml(schoolYear)} · ${escapeHtml(uploadedAt)}</div>
+            const items = buildPendingReviewItems();
+            if (!items.length) {
+                container.innerHTML = '<div class="empty-state">No pending grade submissions from applicants right now.</div>';
+                return;
+            }
+
+            // Group by student so a scholar with several uploads/submissions
+            // shows up once, with a "×N" badge, instead of repeating their
+            // name for every row — keeps the panel readable as volume grows.
+            const groups = new Map();
+            items.forEach(item => {
+                const key = item.studentId != null ? `id-${item.studentId}` : `name-${item.studentName}`;
+                if (!groups.has(key)) groups.set(key, { key, studentName: item.studentName, items: [] });
+                groups.get(key).items.push(item);
+            });
+
+            const groupList = Array.from(groups.values());
+            groupList.forEach(g => g.items.sort((a, b) => b.sortTime - a.sortTime));
+            // Students with the most pending items float to the top.
+            groupList.sort((a, b) => b.items.length - a.items.length);
+
+            container.innerHTML = groupList.map(group => {
+                const count = group.items.length;
+                const isOpen = expandedReviewGroups.has(group.key) || count === 1;
+                const latestMeta = group.items[0]?.meta || '';
+                const itemsHtml = group.items.map(item => `
+                    <div class="review-item-row">
+                        <div>
+                            <span class="review-item-type">${escapeHtml(item.typeLabel)}</span>
+                            <span class="review-item-meta">${escapeHtml(item.meta)}</span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">${item.actionsHtml}</div>
+                    </div>`).join('');
+
+                return `<div class="review-group${isOpen ? ' open' : ''}" id="reviewGroup-${escapeHtml(group.key)}">
+                    <div class="review-group-header" onclick="toggleReviewGroup('${group.key.replace(/'/g, "\\'")}', ${count})">
+                        <span class="review-group-name">${escapeHtml(group.studentName)}</span>
+                        ${count > 1 ? `<span class="review-count-badge">×${count}</span>` : ''}
+                        ${count === 1 ? `<span class="review-group-sub">${escapeHtml(latestMeta)}</span>` : ''}
+                        <span class="review-group-chevron">▾</span>
                     </div>
-                    <button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(extraction.id) || 0})">Review / Finalize</button>
+                    <div class="review-group-items">${itemsHtml}</div>
                 </div>`;
             }).join('');
+        }
 
-            const quarterHtml = pendingQuarterGrades.map(r => {
-                const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(r.student_id));
-                const name = scholar?.name || `Applicant #${r.student_id || '—'}`;
-                return `<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #eef1f5; flex-wrap:wrap;">
-                    <div>
-                        <div style="font-weight:700; color:var(--navy);">${escapeHtml(name)}</div>
-                        <div style="font-size:.85rem; color:var(--text-muted); margin-top:3px;">${escapeHtml(r.school_year || '')} · ${escapeHtml(r.subject || '')} · Q${escapeHtml(String(r.quarter || ''))} · ${r.grade_value ?? '—'}</div>
-                    </div>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <button class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
-                        <button class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
-                        <button class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>
-                    </div>
-                </div>`;
-            }).join('');
-
-            const combined = extractionHtml + quarterHtml;
-            container.innerHTML = combined || '<div class="empty-state">No pending grade submissions from applicants right now.</div>';
+        // Expands/collapses a student's stacked pending items. Single-item
+        // groups always stay open (nothing to hide), so this only toggles
+        // groups with more than one pending submission.
+        function toggleReviewGroup(key, count) {
+            if (count <= 1) return;
+            const el = document.getElementById(`reviewGroup-${key}`);
+            if (!el) return;
+            if (expandedReviewGroups.has(key)) {
+                expandedReviewGroups.delete(key);
+                el.classList.remove('open');
+            } else {
+                expandedReviewGroups.add(key);
+                el.classList.add('open');
+            }
         }
 
         async function approveQuarter(id) {
