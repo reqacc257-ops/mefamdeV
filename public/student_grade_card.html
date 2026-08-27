@@ -67,6 +67,10 @@
         .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .page-header-row > div { min-width: 140px; }
         .review-source { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(0, 1.5fr); gap: 18px; align-items: start; }
+        .review-source > div, .review-source .table-wrap { min-width: 0; max-width: 100%; }
+        .review-source .table-wrap { overflow-x: auto; }
+        .review-source table { min-width: 610px; }
+        .review-source input { max-width: 100%; }
         .review-photo { min-height: 240px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
         .review-photo img { display: block; width: 100%; max-height: 520px; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
         .image-zoom-modal { background: rgba(12,20,39,.9); }
