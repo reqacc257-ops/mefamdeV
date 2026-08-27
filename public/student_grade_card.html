@@ -71,6 +71,8 @@
         .review-source .table-wrap { overflow-x: auto; }
         .review-source table { min-width: 610px; }
         .review-source input { max-width: 100%; }
+        .review-source > .review-image-column { grid-column: 2; grid-row: 1; }
+        .review-source > .review-grade-column { grid-column: 1; grid-row: 1; }
         .review-photo { min-height: 240px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
         .review-photo img { display: block; width: 100%; max-height: 520px; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
         .image-zoom-modal { background: rgba(12,20,39,.9); }
@@ -78,7 +80,11 @@
         .image-zoom-modal img { display: block; width: 100%; height: auto; max-height: 84vh; object-fit: contain; border-radius: 8px; }
         .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
         .review-flags ul { margin: 6px 0 0 18px; list-style: disc; }
-        @media (max-width: 760px) { .review-source { grid-template-columns: 1fr; } }
+        @media (max-width: 760px) {
+            .review-source { grid-template-columns: 1fr; }
+            .review-source > .review-image-column,
+            .review-source > .review-grade-column { grid-column: 1; grid-row: auto; }
+        }
 
         /* Grouped/stacked pending-review rows: one header per student with a
            count badge, items collapse underneath instead of repeating the
@@ -568,8 +574,8 @@
                 <div class="form-group"><label>Student</label><div style="font-weight:700;">${escapeHtml(scholar?.name || `Applicant #${extraction.appId || '—'}`)}</div></div>
                 ${flags.length ? `<div class="review-flags"><strong>Review warnings</strong><ul>${flags.map(flag => `<li>${escapeHtml(flag)}</li>`).join('')}</ul></div>` : ''}
                 <div class="review-source">
-                    <div><label>Uploaded report card</label><div class="review-photo">${photo}</div></div>
-                    <div>
+                    <div class="review-image-column"><label>Uploaded report card</label><div class="review-photo">${photo}</div></div>
+                    <div class="review-grade-column">
                         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
                         <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead><tbody>${reviewSubjects.map((subject, idx) => `
                             <tr class="review-subject-row" data-index="${idx}">
