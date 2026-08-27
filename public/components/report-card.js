@@ -23,22 +23,48 @@ function getRemarkFromGrade(grade) {
   return 'Did Not Meet';
 }
 
+function canonicalSubjectName(name) {
+  const normalized = String(name || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
+  if (['music', 'arts', 'pe', 'physical education', 'health', 'mapeh'].includes(normalized)) return 'MAPEH';
+  if (normalized === 'esp' || normalized === 'edukasyon sa pagpapakatao') return 'EsP';
+  if (normalized === 'tle' || normalized.includes('technology') && normalized.includes('livelihood') || normalized === 'education (tle)') return 'TLE';
+  return String(name || '').trim();
+}
+
+function mergeSubjectGrades(target, source) {
+  ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
+    if (target[quarter] === '' && source[quarter] !== '') target[quarter] = source[quarter];
+  });
+}
+
 function buildReportCardHTML(scholarData, gradesData) {
   const { name, gradeLevel, school, refNo, schoolYear } = scholarData;
   
   // Organize grades by subject and quarter
   const gradesBySubject = {};
   (gradesData || []).forEach(grade => {
-    const subj = grade.subject || grade.subject_name || grade.subjectName;
+    const rawSubject = grade.subject || grade.subject_name || grade.subjectName;
+    const subj = canonicalSubjectName(rawSubject);
     if (!subj) return;
     if (!gradesBySubject[subj]) {
       gradesBySubject[subj] = { Q1: '', Q2: '', Q3: '', Q4: '' };
     }
     if (grade.quarter) {
       const q = `Q${grade.quarter}`;
-      gradesBySubject[subj][q] = grade.grade_val || grade.grade_val;
+      const value = grade.grade_val ?? grade.grade_value;
+      if (value !== null && value !== undefined && value !== '') gradesBySubject[subj][q] = value;
     }
   });
+
+  const componentNames = new Set(['Music', 'Arts', 'PE', 'Physical Education', 'Health']);
+  const componentGrades = (gradesData || []).filter(grade => componentNames.has(grade.subject || grade.subject_name || grade.subjectName));
+  if (!gradesBySubject.MAPEH && componentGrades.length) {
+    gradesBySubject.MAPEH = { Q1: '', Q2: '', Q3: '', Q4: '' };
+    ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
+      const values = componentGrades.map(grade => grade.quarter && `Q${grade.quarter}` === quarter ? Number(grade.grade_val ?? grade.grade_value) : null).filter(Number.isFinite);
+      if (values.length) gradesBySubject.MAPEH[quarter] = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length * 10) / 10;
+    });
+  }
 
   // If no configured subjects, assemble from grades and default areas
   const configured = (() => {
@@ -50,24 +76,14 @@ function buildReportCardHTML(scholarData, gradesData) {
   })();
 
   const subjectsFromGrades = Object.keys(gradesBySubject);
-  const finalSubjectList = configured && Array.isArray(configured) && configured.length > 0
-    ? configured
-    : Array.from(new Set([...DEFAULT_AREAS, ...subjectsFromGrades]));
+  const configuredSubjects = configured && Array.isArray(configured) && configured.length > 0 ? configured : DEFAULT_AREAS;
+  const finalSubjectList = Array.from(new Set([...configuredSubjects, ...subjectsFromGrades].map(canonicalSubjectName)))
+    .filter(subject => subject && !componentNames.has(subject));
 
   const quarterlyAverages = { Q1: [], Q2: [], Q3: [], Q4: [] };
   let tableRows = '';
 
-  // Render each subject in finalSubjectList; group MAPEH subjects under one header when present
-  const mapehSubs = ['Music','Arts','PE','Health'];
-  const hasMapeh = finalSubjectList.some(s => mapehSubs.includes(s));
-
   for (const subj of finalSubjectList) {
-    if (hasMapeh && subj === 'Music') {
-      // Start MAPEH group header
-      tableRows += `<tr class="rc-group-head"><td class="rc-area" colspan="7">MAPEH</td></tr>`;
-    }
-
-    // Skip adding group header items individually (we still show them as rows)
     const subjectGrades = gradesBySubject[subj] || {};
     const q1 = subjectGrades.Q1 || '';
     const q2 = subjectGrades.Q2 || '';
@@ -81,10 +97,9 @@ function buildReportCardHTML(scholarData, gradesData) {
     if (q3) quarterlyAverages.Q3.push(Number(q3));
     if (q4) quarterlyAverages.Q4.push(Number(q4));
 
-    const isMapehSub = mapehSubs.includes(subj);
     tableRows += `
       <tr>
-        <td class="${isMapehSub ? 'rc-sub' : 'rc-area'}">${subj}</td>
+        <td class="rc-area">${subj}</td>
         <td class="rc-grade">${q1 || '-'}</td>
         <td class="rc-grade">${q2 || '-'}</td>
         <td class="rc-grade">${q3 || '-'}</td>
@@ -224,7 +239,7 @@ const REPORT_CARD_STYLES = `
   table.rc-table td.rc-remark { font-size: .74rem; font-weight: 600; }
   .remark-pass { color: var(--green); }
   .remark-pending { color: var(--muted); }
-  tr.rc-avg td { background: var(--navy); color: #fff; font-weight: 700; font-size: .86rem; }
+  tr.rc-avg td, tr.rc-avg td.rc-area { background: var(--navy); color: #fff !important; font-weight: 700; font-size: .86rem; }
   tr.rc-avg td.rc-area { text-transform: uppercase; letter-spacing: .04em; font-size: .74rem; }
 
   .rc-legend { padding: 6px 28px 20px; font-size: .72rem; color: var(--muted); }
