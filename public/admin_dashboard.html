@@ -377,9 +377,6 @@
             position: relative;
         }
         .ann-item:last-child { margin-bottom: 0; }
-        .announcement-levels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fafbfc; }
-        .announcement-levels label { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); cursor: pointer; }
-        .announcement-levels input { width: auto; accent-color: var(--navy); }
         .ann-tag { font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
         .ann-title { font-size: .92rem; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
         .ann-body { font-size: .84rem; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
@@ -1199,13 +1196,11 @@
                             <option value="All Scholars">All Scholars</option>
                             <option value="All Families">All Families</option>
                             <option value="Pending Applicants">Pending Applicants</option>
+                            <option value="Education Levels: Elementary">Elementary</option>
+                            <option value="Education Levels: HS">Highschool</option>
+                            <option value="Education Levels: SHS">Senior high School</option>
+                            <option value="Education Levels: College">College</option>
                         </select>
-                        <div class="announcement-levels" aria-label="Optional education levels">
-                            <label><input type="checkbox" name="annLevel" value="Elementary"> Elementary</label>
-                            <label><input type="checkbox" name="annLevel" value="HS"> Highschool</label>
-                            <label><input type="checkbox" name="annLevel" value="SHS"> Senior high School</label>
-                            <label><input type="checkbox" name="annLevel" value="College"> College</label>
-                        </div>
                     </div>
                     <div style="margin-bottom:12px;">
                         <label>Category / Tag</label>
@@ -3113,8 +3108,7 @@ function makeJsString(value) {
 async function sendAnnouncement() {
     const subject = document.getElementById('annSubject').value.trim();
     const message = document.getElementById('annMessage').value.trim();
-    const selectedLevels = Array.from(document.querySelectorAll('input[name="annLevel"]:checked')).map(input => input.value);
-    const target = selectedLevels.length ? `Education Levels: ${selectedLevels.join(', ')}` : document.getElementById('annTarget').value;
+    const target = document.getElementById('annTarget').value;
     const tag     = document.getElementById('annTag').value;
 
     if (!subject) { alert('Please enter a subject/title for the announcement.'); return; }
@@ -3124,7 +3118,6 @@ async function sendAnnouncement() {
         await MefamAPI.postAnnouncement(subject, message, target, tag);
         document.getElementById('annSubject').value = '';
         document.getElementById('annMessage').value = '';
-        document.querySelectorAll('input[name="annLevel"]').forEach(input => { input.checked = false; });
         await loadAllData();
         alert('Announcement posted! Students can now see it on their portal.');
     } catch (error) {
