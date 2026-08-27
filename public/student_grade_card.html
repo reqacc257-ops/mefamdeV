@@ -551,6 +551,9 @@
             const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
             const extracted = extraction?.extracted || {};
             const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
+            const reviewSubjects = subjects.length
+                ? subjects
+                : DEFAULT_REVIEW_SUBJECTS.map(name => ({ name, q1: null, q2: null, q3: null, q4: null, final: null }));
             const content = document.getElementById('reviewExtractionContent');
             if (!content) return;
             const flags = Array.isArray(extraction.flags) ? extraction.flags : [];
@@ -564,7 +567,7 @@
                     <div><label>Uploaded report card</label><div class="review-photo">${photo}</div></div>
                     <div>
                         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
-                        ${subjects.length ? `<div class="table-wrap"><table><thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead><tbody>${subjects.map((subject, idx) => `
+                        <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead><tbody>${reviewSubjects.map((subject, idx) => `
                             <tr class="review-subject-row" data-index="${idx}">
                                 <td><input type="text" class="review-subject-name" value="${escapeHtml(subject.name || '')}" style="width:100%;"></td>
                                 <td><input type="number" class="review-quarter-input" data-quarter="q1" value="${subject.q1 ?? ''}" min="60" max="100" style="width:70px;"></td>
@@ -572,7 +575,7 @@
                                 <td><input type="number" class="review-quarter-input" data-quarter="q3" value="${subject.q3 ?? ''}" min="60" max="100" style="width:70px;"></td>
                                 <td><input type="number" class="review-quarter-input" data-quarter="q4" value="${subject.q4 ?? ''}" min="60" max="100" style="width:70px;"></td>
                                 <td><input type="number" class="review-quarter-input" data-quarter="final" value="${subject.final ?? ''}" min="60" max="100" style="width:70px;"></td>
-                            </tr>`).join('')}</tbody></table></div>` : '<div class="empty-state">No extracted subjects were found. Reject this upload or enter the grades manually.</div>'}
+                            </tr>`).join('')}</tbody></table></div>
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:12px;"><label>Review Notes</label><textarea id="reviewNotes" rows="3" style="width:100%; border:1px solid var(--border); border-radius:10px; padding:10px;"></textarea></div>
@@ -705,6 +708,13 @@
                 .replace(/&/g, '\\u0026')
                 .replace(/'/g, '\\u0027');
         }
+
+            const DEFAULT_REVIEW_SUBJECTS = [
+                'Filipino', 'English', 'Mathematics', 'Science',
+                'Araling Panlipunan', 'Technology and Livelihood Education',
+                'MAPEH', 'Music', 'Arts', 'Physical Education', 'Health',
+                'Edukasyon sa Pagpapakatao'
+            ];
 
         function escapeHtml(value) {
             return String(value || '')
