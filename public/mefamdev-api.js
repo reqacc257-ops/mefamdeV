@@ -102,8 +102,8 @@ const MefamAPI = {
   async reapplyApplication(id, schoolYear) {
     return this._post(`/applications/${id}/reapply`, { schoolYear });
   },
-  async deleteApplication(id) {
-    return this._delete(`/applications/${id}`);
+  async deleteApplication(id, confirmation = {}) {
+    return this._delete(`/applications/${id}`, confirmation);
   },
 
   /** Public (no auth): submit the application form */
@@ -326,13 +326,14 @@ const MefamAPI = {
     if (r.status === 401) { this.logout(); return; }
     return r.json();
   },
-  async _delete(path) {
-    const headers = {};
+  async _delete(path, body) {
+    const headers = body ? { 'Content-Type': 'application/json' } : {};
     const token = this._token();
     if (token) headers['Authorization'] = 'Bearer ' + token;
     const r = await fetch(`${API_BASE}${path}`, {
       method: 'DELETE',
       headers,
+      ...(body ? { body: JSON.stringify(body) } : {}),
       credentials: 'same-origin'
     });
     if (r.status === 401) { this.logout(); return; }

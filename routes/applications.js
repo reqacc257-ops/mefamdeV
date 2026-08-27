@@ -213,8 +213,18 @@ router.post('/:id/reapply', requireAuth, async (req, res) => {
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
 router.delete('/:id', requireRole('director'), async (req, res) => {
+  const app = await db.prepare('SELECT id, name, status FROM applications WHERE id = ?').get(req.params.id);
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+
+  if (app.status === 'Accepted') {
+    const confirmedName = String(req.body?.confirmationName || '').trim();
+    if (req.body?.confirmAccepted !== true || confirmedName.toLowerCase() !== String(app.name || '').trim().toLowerCase()) {
+      return res.status(400).json({ error: 'Accepted applicants require a second confirmation using the exact applicant name.' });
+    }
+  }
+
   await db.prepare('DELETE FROM applications WHERE id = ?').run(req.params.id);
-  res.json({ ok: true });
+  res.json({ ok: true, deletedId: Number(req.params.id) });
 });
 
 // ── Public form submit (exported separately, mounted without auth) ─────────────

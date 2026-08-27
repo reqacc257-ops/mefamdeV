@@ -2784,13 +2784,36 @@ async function changeStatus(id, status) {
 }
 
 async function deleteApp(id) {
-    if (!confirm('Permanently delete this application?')) return;
+    let app;
     try {
-        await MefamAPI.deleteApplication(id);
+        app = await MefamAPI.getApplication(id);
+    } catch (error) {
+        console.error('Failed to load application before deletion:', error);
+        alert('Unable to verify this application before deleting it. Please refresh and try again.');
+        return;
+    }
+    if (!app) return;
+
+    if (!confirm(`Permanently delete ${app.name || 'this application'}? This cannot be undone.`)) return;
+
+    let confirmation = {};
+    if (app.status === 'Accepted') {
+        if (!confirm(`FINAL WARNING: ${app.name} is an accepted applicant. Deleting this record may remove access to their program history. Continue?`)) return;
+        const typedName = prompt(`Type the accepted applicant's full name to confirm deletion:\n\n${app.name}`);
+        if (typedName === null || typedName.trim().toLowerCase() !== String(app.name || '').trim().toLowerCase()) {
+            alert('Deletion cancelled. The name did not match exactly.');
+            return;
+        }
+        confirmation = { confirmAccepted: true, confirmationName: typedName.trim() };
+    }
+
+    try {
+        const result = await MefamAPI.deleteApplication(id, confirmation);
+        if (!result?.ok) throw new Error(result?.error || 'Delete request was rejected.');
         await loadAllData();
     } catch (error) {
         console.error('Failed to delete application:', error);
-        alert('Unable to delete the application right now.');
+        alert(error.message || 'Unable to delete the application right now.');
     }
 }
 
