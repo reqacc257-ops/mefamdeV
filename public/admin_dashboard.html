@@ -2011,9 +2011,9 @@ function renderFullAppsTable(apps) {
             <td>${a.barangay||'—'}</td>
             <td>${a.grade}<br><small style="color:var(--text-muted);">${a.school}</small></td>
             <td>${statusBadge(a.status)}</td>
-            <td>
+            <td class="table-actions">
                 <button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteApp(${a.id})" style="margin-left:4px; color:var(--red);">Delete</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteApp(${a.id})" style="color:var(--red);">Delete</button>
             </td>
         </tr>`).join('') || `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><p>No digital applications found.</p></div></td></tr>`;
 }

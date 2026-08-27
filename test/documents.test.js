@@ -101,12 +101,16 @@ test('public application submission seeds the required document checklist', () =
   const createdAppId = res.body.id;
   const rows = db.prepare('SELECT doc_key, status FROM document_status WHERE app_id = ?').all(createdAppId);
   assert.equal(res.statusCode, 200);
-  assert.ok(rows.length >= 5);
+  assert.ok(rows.length >= 9);
   assert.deepEqual(rows.map(row => ({ doc_key: row.doc_key, status: row.status })).sort((a, b) => a.doc_key.localeCompare(b.doc_key)), [
+    { doc_key: 'baptismal', status: 'Required' },
     { doc_key: 'barangayCert', status: 'Required' },
+    { doc_key: 'birthCertificate', status: 'Required' },
     { doc_key: 'certEnrollment', status: 'Required' },
+    { doc_key: 'confirmationLetter', status: 'Required' },
     { doc_key: 'guardianId', status: 'Required' },
     { doc_key: 'idPhoto', status: 'Required' },
+    { doc_key: 'letterOfIntent', status: 'Required' },
     { doc_key: 'reportCard', status: 'Required' }
   ]);
 });

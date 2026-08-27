@@ -18,6 +18,10 @@ const REQUIRED_DOCS = [
   { key: 'idPhoto',        label: '1 pc. 2x2 ID Photo' },
   { key: 'barangayCert',   label: 'Barangay Certificate of Indigency' },
   { key: 'guardianId',     label: 'Parent/Guardian Valid ID' },
+  { key: 'baptismal',      label: 'Baptismal Certificate' },
+  { key: 'confirmationLetter', label: 'Confirmation Letter' },
+  { key: 'letterOfIntent', label: 'Letter of Intent from Student and Parents' },
+  { key: 'birthCertificate', label: 'Birth Certificate' },
 ];
 
 function buildChecklist(appId) {
