@@ -1637,14 +1637,9 @@ async function loadAllData() {
         const existingAssessments = JSON.parse(localStorage.getItem('mefamdev_assessments') || '[]');
 
         function mergeAppLists(serverApps, localApps) {
-            const merged = Array.isArray(serverApps) ? [...serverApps] : [];
-            if (!Array.isArray(localApps)) return merged;
-            localApps.forEach(localApp => {
-                if (!merged.some(app => String(app.id) === String(localApp.id))) {
-                    merged.push(localApp);
-                }
-            });
-            return merged;
+            // The server is authoritative so deleted applications are not resurrected from an old cache.
+            if (Array.isArray(serverApps)) return serverApps;
+            return Array.isArray(localApps) ? localApps : [];
         }
 
         const appList = mergeAppLists(apps, existingApps);
