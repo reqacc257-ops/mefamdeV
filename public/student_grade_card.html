@@ -73,8 +73,11 @@
         .review-source th:first-child, .review-source td:first-child { width: 155px; }
         .review-source .review-quarter-input { width: 58px !important; padding-left: 6px; padding-right: 6px; }
         .review-source input { max-width: 100%; }
-        .review-source > .review-image-column { grid-column: 2; grid-row: 1; }
-        .review-source > .review-grade-column { grid-column: 1; grid-row: 1; }
+        .review-source > .review-image-column,
+        .review-source > .review-grade-column { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: #fff; }
+        .review-source > .review-image-column { grid-column: 1; grid-row: 1; }
+        .review-source > .review-grade-column { grid-column: 2; grid-row: 1; }
+        .review-panel-title { margin-bottom: 10px; color: var(--navy); font-size: .92rem; font-weight: 700; }
         .review-photo { min-height: 460px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
         .review-photo img { display: block; width: 100%; max-height: 68vh; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
         .image-zoom-modal { background: transparent; z-index: 100; pointer-events: none; align-items: center; justify-content: flex-end; padding: 20px; }
@@ -613,8 +616,9 @@
                 ${flags.length ? `<div class="review-flags"><strong>Review warnings</strong><ul>${flags.map(flag => `<li>${escapeHtml(flag)}</li>`).join('')}</ul></div>` : ''}
                 <div class="review-legend"><strong>Highlighted cells:</strong> blank values or values the extraction could not read confidently. Check them against the uploaded photo.</div>
                 <div class="review-source">
-                    <div class="review-image-column"><label>Uploaded report card</label><div class="review-photo">${photo}</div></div>
+                    <div class="review-image-column"><div class="review-panel-title">Uploaded report card</div><div class="review-photo">${photo}</div></div>
                     <div class="review-grade-column">
+                        <div class="review-panel-title">Grade entry</div>
                         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
                         <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead><tbody>${reviewSubjects.map((subject, idx) => `
                             <tr class="review-subject-row" data-index="${idx}">
