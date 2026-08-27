@@ -57,6 +57,16 @@ function parseApp(row) {
   };
 }
 
+function parseJsonArray(value) {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 // ── GET all (supports optional paging & filtering) ─────────────────────────────────
 router.get('/', async (req, res) => {
   const page = req.query.page ? Math.max(1, parseInt(req.query.page, 10) || 1) : null;
@@ -143,7 +153,7 @@ router.patch('/:id', async (req, res) => {
   if (!app) return res.status(404).json({ error: 'Not found' });
 
   if (newStatus && newStatus.toLowerCase() === 'accepted') {
-    const familyMembers = JSON.parse(app.family_members || '[]');
+    const familyMembers = parseJsonArray(app.family_members);
     const applicantName = app.name || '';
     const lastName = applicantName.trim().split(/\s+/).slice(-1)[0] || 'Family';
     const alreadyExists = await db.prepare('SELECT id FROM families WHERE surname = ?').get(lastName);
@@ -153,7 +163,7 @@ router.patch('/:id', async (req, res) => {
       const contact = app.contact || '';
       const barangay = app.barangay || '';
       const income = app.total_income || '';
-      const benefits = JSON.parse(app.properties || '[]').join(', ') || '';
+      const benefits = parseJsonArray(app.properties).join(', ') || '';
 
       await db.prepare(`
         INSERT INTO families (surname, guardian, barangay, contact, income, bracket, benefits)
@@ -184,6 +194,25 @@ router.post('/:id/end-year', requireRole('director'), async (req, res) => {
     WHERE id = ?
   `).run('Year Ended', now, history, now, 1, id);
   res.json({ ok: true, status: 'Year Ended', gradesRetained: true });
+});
+
+// Close every accepted applicant's current school-year cycle without deleting history.
+router.post('/end-year-all', requireRole('director'), async (req, res) => {
+  if (req.body?.confirmAll !== true) return res.status(400).json({ error: 'Final confirmation is required.' });
+  const accepted = await db.prepare("SELECT id, status_history FROM applications WHERE status = 'Accepted'").all();
+  const now = new Date().toISOString();
+  for (const app of accepted) {
+    const history = typeof app.status_history === 'string'
+      ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
+      : (app.status_history || []);
+    history.push({ status: 'Year Ended', changedAt: now, note: 'School-year cycle closed for all accepted applicants by staff.' });
+    await db.prepare(`
+      UPDATE applications
+      SET status = ?, status_updated_at = ?, status_history = ?, cycle_ended_at = ?, reapply_allowed = ?
+      WHERE id = ?
+    `).run('Year Ended', now, history, now, 1, app.id);
+  }
+  res.json({ ok: true, status: 'Year Ended', updated: accepted.length, gradesRetained: true });
 });
 
 // Let the applicant start a new cycle while retaining the previous record and grades.

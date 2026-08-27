@@ -1288,10 +1288,8 @@
                 </div>
                 <div class="card" style="border-left:4px solid var(--gold);">
                     <div class="card-title">School Year Management</div>
-                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Close one accepted applicant's current school-year cycle while retaining their grades and history.</p>
-                    <label for="settingEndYearApplicant">Accepted applicant</label>
-                    <select id="settingEndYearApplicant" style="margin-bottom:12px;"><option value="">Select an accepted applicant</option></select>
-                    <button class="btn btn-gold" type="button" onclick="endSelectedSchoolYear()">📚 End School Year</button>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Close the current school year for every accepted applicant while retaining grades and history.</p>
+                    <button class="btn btn-gold" type="button" onclick="endAllSchoolYears()">📚 End All Accepted School Years</button>
                 </div>
             </div>
         </div>
@@ -1767,7 +1765,6 @@ async function loadAllData() {
         renderFamilies();
         renderFinancials();
         renderAnnouncements();
-        populateEndYearApplicants(appList);
         // populate subjects datalist for Grade Entry
         renderSubjectsDatalist();
     } catch (error) {
@@ -2299,7 +2296,8 @@ async function saveGrade() {
     if (!(grade >= 60 && grade <= 100)) { alert('Please enter a valid grade between 60 and 100.'); return; }
 
     try {
-        await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
+        const result = await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
+        if (!result?.ok) throw new Error(result?.error || 'Unable to save the grade.');
         closeModal('gradeModal');
         await loadAllData();
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
@@ -2520,25 +2518,23 @@ async function endApplicationYear(id) {
     }
 }
 
-function populateEndYearApplicants(apps) {
-    const select = document.getElementById('settingEndYearApplicant');
-    if (!select) return;
-    const previous = select.value;
-    const accepted = (Array.isArray(apps) ? apps : []).filter(app => app.status === 'Accepted');
-    select.innerHTML = '<option value="">Select an accepted applicant</option>' + accepted.map(app =>
-        `<option value="${Number(app.id)}">${escapeHtml(app.name || `Applicant #${app.id}`)} · ${escapeHtml(app.sy || 'Current school year')}</option>`
-    ).join('');
-    if (accepted.some(app => String(app.id) === previous)) select.value = previous;
-}
-
-async function endSelectedSchoolYear() {
-    const select = document.getElementById('settingEndYearApplicant');
-    const id = Number(select?.value || 0);
-    if (!id) {
-        alert('Select an accepted applicant first.');
+async function endAllSchoolYears() {
+    const accepted = (window.pipelineApps || []).filter(app => app.status === 'Accepted');
+    if (!accepted.length) {
+        alert('There are no accepted applicants to update.');
         return;
     }
-    await endApplicationYear(id);
+    if (!confirm(`End the school year for all ${accepted.length} accepted applicant${accepted.length === 1 ? '' : 's'}? Their grades and history will be retained.`)) return;
+    if (!confirm('FINAL CONFIRMATION: Move every accepted applicant to Year Ended? They can reapply for a new school year later.')) return;
+    try {
+        const result = await MefamAPI.endAllApplicationYears();
+        if (!result?.ok) throw new Error(result?.error || 'Unable to end all school years.');
+        await loadAllData();
+        alert(`${result.updated || accepted.length} school-year cycle${result.updated === 1 ? '' : 's'} ended. Grades and history were retained.`);
+    } catch (error) {
+        console.error('Failed to end all school years:', error);
+        alert(error.message || 'Unable to end all school years right now.');
+    }
 }
 
 async function deleteRetainedGrades(appId) {
@@ -2826,11 +2822,12 @@ async function forgetTrustedDevice() {
 ══════════════════════════════════════ */
 async function changeStatus(id, status) {
     try {
-        await MefamAPI.updateApplication(id, { status });
+        const result = await MefamAPI.updateApplication(id, { status });
+        if (!result?.ok) throw new Error(result?.error || 'Unable to update the application status.');
         await loadAllData();
     } catch (error) {
         console.error('Failed to update status:', error);
-        alert('Unable to update the application status right now.');
+        alert(error.message || 'Unable to update the application status right now.');
     }
 }
 
