@@ -699,7 +699,8 @@
             try {
                 const reviewNotes = document.getElementById('reviewNotes')?.value || '';
                 const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim() || '';
-                await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear);
+                const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear);
+                if (response?.error) throw new Error(response.error);
                 closeModal('reviewExtractionModal');
                 await loadPendingGradeReviews();
                 await loadPendingQuarterSubmissions();

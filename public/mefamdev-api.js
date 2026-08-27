@@ -294,7 +294,7 @@ const MefamAPI = {
     }
     const r = await fetch(`${API_BASE}${path}`, { headers, credentials: 'same-origin' });
     if (r.status === 401) { this.logout(); return; }
-    return r.json();
+    return this._parseJsonResponse(r);
   },
   async _post(path, body, auth = true) {
     const headers = { 'Content-Type': 'application/json' };
@@ -304,7 +304,7 @@ const MefamAPI = {
     }
     const r = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });
     if (auth && r.status === 401) { this.logout(); return; }
-    return r.json();
+    return this._parseJsonResponse(r);
   },
   async _patch(path, body) {
     const headers = { 'Content-Type': 'application/json' };
@@ -317,7 +317,7 @@ const MefamAPI = {
       credentials: 'same-origin'
     });
     if (r.status === 401) { this.logout(); return; }
-    return r.json();
+    return this._parseJsonResponse(r);
   },
   async _put(path, body) {
     const headers = { 'Content-Type': 'application/json' };
@@ -330,7 +330,7 @@ const MefamAPI = {
       credentials: 'same-origin'
     });
     if (r.status === 401) { this.logout(); return; }
-    return r.json();
+    return this._parseJsonResponse(r);
   },
   async _delete(path, body) {
     const headers = body ? { 'Content-Type': 'application/json' } : {};
@@ -343,8 +343,15 @@ const MefamAPI = {
       credentials: 'same-origin'
     });
     if (r.status === 401) { this.logout(); return; }
-    return r.json();
+    return this._parseJsonResponse(r);
+  },
+  async _parseJsonResponse(response) {
+    const text = await response.text();
+    if (!text.trim()) return {};
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error(`Server returned invalid JSON (${response.status}).`);
+    }
   },
 };
-
-window.MefamAPI = MefamAPI;
