@@ -674,10 +674,12 @@ function declineReapply() {
 }
 
 let currentAppId = null;
+let currentApplicant = null;
 
 function renderPortal(app, session) {
     const appData = normalizeApplication(app, session);
     currentAppId = appData.id;
+    currentApplicant = appData;
 
     // Top bar
     const firstName = String(appData.name || 'Applicant').split(',')[0].trim() || 'Applicant';
@@ -1159,7 +1161,11 @@ async function renderAnnouncements() {
     if (!container) return;
     container.innerHTML = '<p style="color:#aaa;font-size:.85rem;padding-top:12px;">Loading…</p>';
     try {
-        const anns = await MefamAPI.getAnnouncements();
+        const allAnnouncements = await MefamAPI.getAnnouncements();
+        const currentLevel = getApplicantEducationLevel();
+        const anns = Array.isArray(allAnnouncements)
+            ? allAnnouncements.filter(announcement => announcementVisibleToApplicant(announcement, currentLevel))
+            : allAnnouncements;
         if (!Array.isArray(anns) || anns.length === 0) {
             container.innerHTML = `
                 <div style="text-align:center; padding:24px 0; color:var(--muted); font-size:.87rem;">
@@ -1185,6 +1191,22 @@ async function renderAnnouncements() {
         console.error('Failed to load announcements:', error);
         container.innerHTML = '<div style="padding:16px 0;color:var(--muted);font-size:.87rem;">Unable to load announcements right now.</div>';
     }
+}
+
+function getApplicantEducationLevel() {
+    const levelText = `${currentApplicant?.eduLevel || ''} ${currentApplicant?.educationLevel || ''} ${currentApplicant?.grade || ''} ${currentApplicant?.gradeLevel || ''}`.toLowerCase();
+    if (/college|university|tertiary/.test(levelText)) return 'college';
+    if (/shs|senior high|grade\s*1[12]|grade\s*12|grade\s*11/.test(levelText)) return 'shs';
+    if (/elementary|grade\s*[1-6]\b/.test(levelText)) return 'elementary';
+    if (/high school|junior high|jhs|grade\s*(7|8|9|10)\b/.test(levelText)) return 'hs';
+    return '';
+}
+
+function announcementVisibleToApplicant(announcement, level) {
+    const target = String(announcement?.target || '').toLowerCase();
+    if (!target.startsWith('education levels:')) return true;
+    if (!level) return false;
+    return target.split(':')[1].split(',').some(value => value.trim().toLowerCase() === level);
 }
 
 async function refreshAnnouncementsBadge() {
