@@ -768,6 +768,7 @@
                             <div style="width:70px; height:70px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6rem; font-family:'DM Serif Display',serif; flex-shrink:0;" id="pd-avatar"></div>
                             <div>
                                 <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy);" id="pd-name"></h3>
+                                <span id="pd-mekong-badge" class="mekong-badge" style="display:none; margin-top:5px;">Mekong</span>
                                 <label style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:.8rem; color:var(--text-muted); cursor:pointer;">
                                     <input type="checkbox" id="pd-mekong-toggle" onchange="saveMekongStatus()">
                                     <span>Mark as Mekong</span>
@@ -2078,7 +2079,7 @@ function renderProfiles(scholars) {
 
 function viewProfile(id) {
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
-    const s = apps.find(a => a.id === id);
+    const s = apps.find(a => String(a.id) === String(id));
     if (!s) return;
     currentProfileId = id;
     document.querySelectorAll('.profile-item').forEach(el => el.classList.remove('selected'));
@@ -2089,6 +2090,7 @@ function viewProfile(id) {
     document.getElementById('pd-avatar').innerText = s.name.charAt(0);
     document.getElementById('pd-name').innerText = s.name;
     document.getElementById('pd-name').classList.toggle('mekong-student-name', Boolean(s.mekong));
+    document.getElementById('pd-mekong-badge').style.display = s.mekong ? 'inline-block' : 'none';
     document.getElementById('pd-mekong-toggle').checked = Boolean(s.mekong);
     document.getElementById('pd-grade').innerText = s.grade;
     document.getElementById('pd-school').innerText = s.school;
@@ -2134,6 +2136,7 @@ async function saveMekongStatus() {
         if (app) app.mekong = mekong;
         localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
         document.getElementById('pd-name')?.classList.toggle('mekong-student-name', mekong);
+        document.getElementById('pd-mekong-badge').style.display = mekong ? 'inline-block' : 'none';
         renderProfiles(apps.filter(item => item.status === 'Accepted'));
         document.getElementById(`pi-${currentProfileId}`)?.classList.add('selected');
     } catch (error) {
