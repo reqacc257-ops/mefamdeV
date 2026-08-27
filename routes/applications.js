@@ -27,6 +27,7 @@ function parseApp(row) {
     name: row.name || '',
     email: row.email || '',
     status: row.status || 'Pending Review',
+    mekong: Boolean(Number(row.mekong || 0)),
     school: row.school || '',
     grade: row.grade || '',
     sy: row.sy || '',
@@ -139,12 +140,15 @@ router.patch('/:id', async (req, res) => {
   const allowed = [
     'status', 'sy', 'name', 'address', 'barangay', 'dob', 'gender', 'email',
     'school', 'grade', 'edu_level', 'contact', 'ambition', 'why_scholar',
-    'total_income', 'total_expense'
+    'total_income', 'total_expense', 'mekong'
   ];
   const updates = [];
   const values  = [];
   for (const key of allowed) {
-    if (req.body[key] !== undefined) { updates.push(`${key} = ?`); values.push(req.body[key]); }
+    if (req.body[key] !== undefined) {
+      updates.push(`${key} = ?`);
+      values.push(key === 'mekong' ? (req.body[key] ? 1 : 0) : req.body[key]);
+    }
   }
   if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
 

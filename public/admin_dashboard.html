@@ -256,6 +256,7 @@
         .profile-item { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: .15s; border-radius: 6px; }
         .profile-item:hover, .profile-item.selected { background: #f0f6ff; border-left: 3px solid var(--gold); padding-left: 11px; }
         .profile-item strong { font-size: .88rem; }
+        .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
         .profile-item small { color: var(--text-muted); font-size: .77rem; }
 
         /* Modal */
@@ -764,6 +765,10 @@
                             <div style="width:70px; height:70px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6rem; font-family:'DM Serif Display',serif; flex-shrink:0;" id="pd-avatar"></div>
                             <div>
                                 <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy);" id="pd-name"></h3>
+                                <label style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:.8rem; color:var(--text-muted); cursor:pointer;">
+                                    <input type="checkbox" id="pd-mekong-toggle" onchange="saveMekongStatus()">
+                                    <span>Mark as Mekong</span>
+                                </label>
                                 <span id="pd-grade" style="font-size:.85rem; color:var(--text-muted);"></span>
                                 <span class="badge badge-green" style="margin-left:8px;">Active</span>
                             </div>
@@ -2057,7 +2062,7 @@ function renderProfiles(scholars) {
     if (scholars.length === 0) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎓</div><p>No accepted scholars yet.</p></div>'; return; }
     list.innerHTML = scholars.map(s => `
         <div class="profile-item" onclick="viewProfile(${s.id})" id="pi-${s.id}">
-            <strong>${s.name}</strong><br>
+            <strong class="${s.mekong ? 'mekong-student-name' : ''}">${s.name}${s.mekong ? ' <span class="badge badge-green" style="font-size:.65rem; margin-left:5px;">Mekong</span>' : ''}</strong><br>
             <small>${s.grade} · ${s.school}</small>
         </div>`).join('');
 }
@@ -2074,6 +2079,8 @@ function viewProfile(id) {
     detail.style.display = 'block';
     document.getElementById('pd-avatar').innerText = s.name.charAt(0);
     document.getElementById('pd-name').innerText = s.name;
+    document.getElementById('pd-name').classList.toggle('mekong-student-name', Boolean(s.mekong));
+    document.getElementById('pd-mekong-toggle').checked = Boolean(s.mekong);
     document.getElementById('pd-grade').innerText = s.grade;
     document.getElementById('pd-school').innerText = s.school;
     document.getElementById('pd-brgy').innerText = s.barangay || 'N/A';
@@ -2104,6 +2111,26 @@ function viewProfile(id) {
     }
 
     renderDocChecklist(id, 'pd-documents');
+}
+
+async function saveMekongStatus() {
+    if (currentProfileId === null) return;
+    const toggle = document.getElementById('pd-mekong-toggle');
+    const mekong = Boolean(toggle?.checked);
+    try {
+        const result = await MefamAPI.updateApplication(currentProfileId, { mekong });
+        if (!result?.ok) throw new Error(result?.error || 'Unable to save Mekong status');
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const app = apps.find(item => String(item.id) === String(currentProfileId));
+        if (app) app.mekong = mekong;
+        localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        document.getElementById('pd-name')?.classList.toggle('mekong-student-name', mekong);
+        renderProfiles(apps.filter(item => item.status === 'Accepted'));
+        document.getElementById(`pi-${currentProfileId}`)?.classList.add('selected');
+    } catch (error) {
+        toggle.checked = !mekong;
+        alert('Unable to save the Mekong status right now.');
+    }
 }
 
 function filterProfiles() {
