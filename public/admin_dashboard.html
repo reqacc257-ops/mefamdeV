@@ -514,7 +514,7 @@
         <div class="nav-item" onclick="nav('comms',this)" data-roles="director,program">
             <span class="nav-icon">📢</span> Communications
         </div>
-        <div class="nav-item" onclick="nav('settings',this)" data-ro les="director">
+        <div class="nav-item" onclick="nav('settings',this)" data-roles="director">
             <span class="nav-icon">⚙️</span> Settings
         </div>
     </div>
@@ -1282,6 +1282,13 @@
                         <button class="btn btn-ghost" onclick="resetSystemSettings()">Reset Defaults</button>
                     </div>
                 </div>
+                <div class="card" style="border-left:4px solid var(--gold);">
+                    <div class="card-title">School Year Management</div>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Close one accepted applicant's current school-year cycle while retaining their grades and history.</p>
+                    <label for="settingEndYearApplicant">Accepted applicant</label>
+                    <select id="settingEndYearApplicant" style="margin-bottom:12px;"><option value="">Select an accepted applicant</option></select>
+                    <button class="btn btn-gold" type="button" onclick="endSelectedSchoolYear()">📚 End School Year</button>
+                </div>
             </div>
         </div>
 
@@ -1761,6 +1768,7 @@ async function loadAllData() {
         renderFamilies();
         renderFinancials();
         renderAnnouncements();
+        populateEndYearApplicants(appList);
         // populate subjects datalist for Grade Entry
         renderSubjectsDatalist();
     } catch (error) {
@@ -2492,7 +2500,6 @@ async function viewApp(id) {
     if (currentRole === 'director') {
         footerHTML += `<button class="btn btn-ghost" style="color:var(--red);" onclick="deleteRetainedGrades(${a.id})">🗑️ Grade Retention</button>`;
     }
-    if (currentRole === 'director' && a.status === 'Accepted') footerHTML += `<button class="btn btn-orange" onclick="endApplicationYear(${a.id})">📚 End School Year</button>`;
     if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
     if (a.status !== 'Accepted') footerHTML += `<button class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
     if (!['Accepted', 'Year Ended', 'Rejected'].includes(a.status)) footerHTML += `<button class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
@@ -2512,6 +2519,27 @@ async function endApplicationYear(id) {
         console.error('Failed to end school year:', error);
         alert('Unable to close the school-year cycle right now.');
     }
+}
+
+function populateEndYearApplicants(apps) {
+    const select = document.getElementById('settingEndYearApplicant');
+    if (!select) return;
+    const previous = select.value;
+    const accepted = (Array.isArray(apps) ? apps : []).filter(app => app.status === 'Accepted');
+    select.innerHTML = '<option value="">Select an accepted applicant</option>' + accepted.map(app =>
+        `<option value="${Number(app.id)}">${escapeHtml(app.name || `Applicant #${app.id}`)} · ${escapeHtml(app.sy || 'Current school year')}</option>`
+    ).join('');
+    if (accepted.some(app => String(app.id) === previous)) select.value = previous;
+}
+
+async function endSelectedSchoolYear() {
+    const select = document.getElementById('settingEndYearApplicant');
+    const id = Number(select?.value || 0);
+    if (!id) {
+        alert('Select an accepted applicant first.');
+        return;
+    }
+    await endApplicationYear(id);
 }
 
 async function deleteRetainedGrades(appId) {
