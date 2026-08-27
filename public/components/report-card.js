@@ -87,6 +87,7 @@ function buildReportCardHTML(scholarData, gradesData) {
     .filter(subject => subject && !excludedSubjects.has(String(subject).toLowerCase()) && subject !== 'Music' && subject !== 'Arts' && subject !== 'PE' && subject !== 'Health');
 
   const quarterlyAverages = { Q1: [], Q2: [], Q3: [], Q4: [] };
+  const subjectFinalGrades = [];
   let tableRows = '';
 
   for (const subj of finalSubjectList) {
@@ -97,6 +98,7 @@ function buildReportCardHTML(scholarData, gradesData) {
     const q4 = subjectGrades.Q4 || '';
     const finalGrade = calculateFinalGrade([q1, q2, q3, q4].filter(g => g !== ''));
     const remark = getRemarkFromGrade(finalGrade);
+    if (finalGrade > 0) subjectFinalGrades.push(finalGrade);
 
     if (q1) quarterlyAverages.Q1.push(Number(q1));
     if (q2) quarterlyAverages.Q2.push(Number(q2));
@@ -124,6 +126,9 @@ function buildReportCardHTML(scholarData, gradesData) {
   const overallGenAvg = [genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).length > 0 
     ? Math.round(([genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).reduce((a, b) => a + b, 0) / [genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).length) * 10) / 10
     : 0;
+  const overallFinalGrade = subjectFinalGrades.length
+    ? Math.round((subjectFinalGrades.reduce((sum, grade) => sum + grade, 0) / subjectFinalGrades.length) * 10) / 10
+    : 0;
 
   tableRows += `
     <tr class="rc-avg">
@@ -132,7 +137,7 @@ function buildReportCardHTML(scholarData, gradesData) {
       <td>${genAvgQ2 > 0 ? genAvgQ2 : '-'}</td>
       <td>${genAvgQ3 > 0 ? genAvgQ3 : '-'}</td>
       <td>${genAvgQ4 > 0 ? genAvgQ4 : '-'}</td>
-      <td class="rc-final" style="background:transparent; color:#fff;">${overallGenAvg > 0 ? overallGenAvg : '-'}</td>
+      <td class="rc-final" style="background:transparent; color:#fff;">${overallFinalGrade > 0 ? overallFinalGrade : '-'}</td>
       <td class="rc-remark" style="color:#8be3ae;">${overallGenAvg >= 75 ? 'Passed' : overallGenAvg > 0 ? 'Did Not Meet' : '-'}</td>
     </tr>
   `;
