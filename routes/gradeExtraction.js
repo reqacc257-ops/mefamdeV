@@ -134,8 +134,20 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   }
 
   const status = action === 'approve' ? 'approved' : 'rejected';
-  await db.prepare('UPDATE grade_extraction SET status = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
-    .run(status, reviewNotes, reviewerId, new Date().toISOString(), id);
+  const reviewedAt = new Date().toISOString();
+  if (action === 'reject') {
+    const applicantNote = reviewNotes || 'Your report card upload was rejected. Please upload a clearer photo for review.';
+    await db.prepare('UPDATE grade_extraction SET status = ?, file_data = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
+      .run(status, '', applicantNote, reviewerId, reviewedAt, id);
+    await db.prepare(`
+      UPDATE document_status
+      SET status = ?, note = ?, updated_at = ?, file_name = ?, file_type = ?, file_data = ?, upload_method = ?
+      WHERE app_id = ? AND doc_key = ?
+    `).run('Missing', applicantNote, reviewedAt, '', '', '', '', row.app_id, 'reportCard');
+  } else {
+    await db.prepare('UPDATE grade_extraction SET status = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
+      .run(status, reviewNotes, reviewerId, reviewedAt, id);
+  }
 
   const updated = await db.prepare('SELECT * FROM grade_extraction WHERE id = ?').get(id);
   res.json({ ok: true, extraction: normalizeExtraction(updated), rejectedCells });

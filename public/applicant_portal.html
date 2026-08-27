@@ -1056,7 +1056,8 @@ async function renderRequirements(appId) {
             if (isReportCardDoc(d)) {
                 // Report Card: multi-photo gallery — lets the applicant add another page/photo
                 // instead of replacing the previous one.
-                const gallery = getReportCardGallery(appId, d.key);
+                const gallery = d.status === 'Missing' ? [] : getReportCardGallery(appId, d.key);
+                if (d.status === 'Missing') saveReportCardGallery(appId, d.key, []);
                 const galleryThumbs = gallery.map((g, i) => `
                     <div class="doc-gallery-item" data-image-src="${g.fileData}" data-image-label="${escapeHtml(d.label)} (${i + 1})" onclick="showImagePreview(this)">
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
