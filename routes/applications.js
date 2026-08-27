@@ -128,7 +128,7 @@ router.get('/:id', async (req, res) => {
   if (!row) return res.status(404).json({ error: 'Not found' });
 
   // Applicants can only see their own application
-  if (req.user.type === 'applicant' && req.user.appId !== row.id) {
+  if (req.user.type === 'applicant' && String(req.user.appId) !== String(row.id)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   res.json(parseApp(row));

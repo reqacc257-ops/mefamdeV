@@ -23,7 +23,7 @@ function normalizeExtraction(row) {
 router.post('/:appId/upload', async (req, res) => {
   const appId = parseInt(req.params.appId, 10);
   if (!appId) return res.status(400).json({ error: 'Invalid application ID' });
-  if (req.user.type === 'applicant' && req.user.appId !== appId) {
+  if (req.user.type === 'applicant' && String(req.user.appId) !== String(appId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -61,7 +61,7 @@ router.get('/pending', requireRole('director', 'edu'), async (req, res) => {
 router.get('/:appId', async (req, res) => {
   const appId = parseInt(req.params.appId, 10);
   if (!appId) return res.status(400).json({ error: 'Invalid application ID' });
-  if (req.user.type === 'applicant' && req.user.appId !== appId) {
+  if (req.user.type === 'applicant' && String(req.user.appId) !== String(appId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const rows = await db.prepare('SELECT * FROM grade_extraction WHERE app_id = ? ORDER BY uploaded_at DESC').all(appId);

@@ -175,7 +175,7 @@ router.put('/:appId/:docKey', async (req, res) => {
 router.post('/:appId/:docKey/upload', async (req, res) => {
   const { appId, docKey } = req.params;
   if (!parseInt(appId)) return res.status(400).json({ error: 'Invalid application ID' });
-  if (req.user.type === 'applicant' && String(req.user.appId) !== String(parseInt(appId))) {
+  if (req.user.type === 'applicant' && String(req.user.appId) !== String(parseInt(appId, 10))) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
