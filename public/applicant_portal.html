@@ -508,15 +508,15 @@
                         </select>
                     </div>
                     <div id="rcSubjects" style="margin-bottom:8px;">
-                        <div style="display:flex; gap:8px; margin-bottom:6px;">
-                            <select class="rc-subject" onchange="toggleCustomSubject(this)" style="flex:1; padding:8px;"><option value="">Select subject</option></select>
-                            <input placeholder="Custom subject" class="rc-custom-subject" style="display:none; flex:1; padding:8px;">
-                            <input placeholder="Grade" class="rc-grade" style="width:120px; padding:8px;">
+                        <div class="rc-subject-row" style="display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
+                            <select class="rc-subject" onchange="toggleCustomSubject(this)" style="flex:1 1 150px; min-width:0; padding:8px;"><option value="">Select subject</option></select>
+                            <input placeholder="Custom subject" class="rc-custom-subject" style="display:none; flex:1 1 150px; min-width:0; padding:8px;">
+                            <input placeholder="Grade" class="rc-grade" style="width:110px; flex:0 1 110px; min-width:80px; padding:8px;">
                             <button class="btn btn-gold" onclick="removeSubjectRow(this)" style="padding:8px 10px;">−</button>
                         </div>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button class="btn btn-navy" onclick="addSubjectRow()">Add Subject</button>
+                        <button class="btn btn-navy" onclick="addSubjectRow()">Add Grade</button>
                         <button class="btn btn-gold" onclick="submitReportCardQuarter()">Submit Quarter</button>
                     </div>
                     <div id="rcStatus" style="margin-top:8px; color:var(--muted);"></div>
@@ -1277,10 +1277,11 @@ function addSubjectRow() {
     const container = document.getElementById('rcSubjects');
     if (!container) return;
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex; gap:8px; margin-bottom:6px;';
-    row.innerHTML = `<select class="rc-subject" onchange="toggleCustomSubject(this)" style="flex:1; padding:8px;">${subjectOptions()}</select>
-        <input placeholder="Custom subject" class="rc-custom-subject" style="display:none; flex:1; padding:8px;">
-        <input placeholder="Grade" class="rc-grade" style="width:120px; padding:8px;">
+    row.className = 'rc-subject-row';
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;';
+    row.innerHTML = `<select class="rc-subject" onchange="toggleCustomSubject(this)" style="flex:1 1 150px; min-width:0; padding:8px;">${subjectOptions()}</select>
+        <input placeholder="Custom subject" class="rc-custom-subject" style="display:none; flex:1 1 150px; min-width:0; padding:8px;">
+        <input placeholder="Grade" class="rc-grade" style="width:110px; flex:0 1 110px; min-width:80px; padding:8px;">
         <button class="btn btn-gold" onclick="removeSubjectRow(this)" style="padding:8px 10px;">−</button>`;
     container.appendChild(row);
 }
