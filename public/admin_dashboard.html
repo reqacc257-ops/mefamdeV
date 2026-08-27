@@ -1116,10 +1116,9 @@
                 <div class="card" style="border-top:4px solid var(--gold);">
                     <div class="card-title">💸 Disburse Stipend</div>
                     <div style="margin-bottom:12px;"><label>Scholar</label>
-                        <input type="search" id="disbScholarSearch" placeholder="Search scholar by name, school, or grade..." oninput="renderFinancials()" style="width:100%; margin-bottom:8px;">
-                        <select id="disbScholar" style="width:100%;">
-                            <option value="">— Select Scholar —</option>
-                        </select>
+                        <input type="search" id="disbScholarSearch" placeholder="Search scholar by name, school, or grade..." oninput="renderFinancials()" style="width:100%;">
+                        <input type="hidden" id="disbScholar">
+                        <div id="disbScholarResults" style="margin-top:6px;"></div>
                         <div id="disbScholarSummary" style="min-height:18px; margin-top:7px; color:var(--text-muted); font-size:.8rem;"></div>
                     </div>
                     <div style="margin-bottom:12px;"><label>Amount (₱)</label><input type="number" id="disbAmount" value="3000" min="1" style="width:100%;"></div>
@@ -4019,17 +4018,20 @@ function renderFinancials() {
     if (elDashBalance) elDashBalance.textContent = fmt(balance);
     if (elFinStipendsDash) elFinStipendsDash.textContent = fmt(totalDisbursed);
 
-    // Populate scholar dropdown
-    const sel = document.getElementById('disbScholar');
-    if (sel) {
-        const cur = sel.value;
+    // Populate searchable scholar results
+    const results = document.getElementById('disbScholarResults');
+    if (results) {
+        const selectedId = document.getElementById('disbScholar')?.value || '';
         const query = (document.getElementById('disbScholarSearch')?.value || '').trim().toLowerCase();
         const filteredScholars = scholars.filter(s => `${s.name || ''} ${s.school || ''} ${s.grade || ''}`.toLowerCase().includes(query));
-        sel.innerHTML = '<option value="">— Select Scholar —</option>' + filteredScholars.map(s => `<option value="${s.id}">${escapeHtml(s.name || 'Unnamed scholar')} · ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.grade || 'Grade not listed')}</option>`).join('');
-        if (cur && filteredScholars.some(s => String(s.id) === String(cur))) sel.value = cur;
-        const selected = scholars.find(s => String(s.id) === String(sel.value));
+        results.innerHTML = !query
+            ? '<div style="padding:9px 11px; border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:.8rem;">Type to search accepted scholars.</div>'
+            : filteredScholars.length
+                ? filteredScholars.slice(0, 8).map(s => `<button type="button" onclick="selectDisbursementScholar(${Number(s.id)})" style="display:block; width:100%; padding:9px 11px; border:1px solid var(--border); border-top:0; background:#fff; color:var(--navy); text-align:left; cursor:pointer; font-family:inherit;"><strong>${escapeHtml(s.name || 'Unnamed scholar')}</strong><span style="display:block; margin-top:2px; color:var(--text-muted); font-size:.78rem;">${escapeHtml(s.school || 'School not listed')} · Grade ${escapeHtml(s.grade || '—')}</span></button>`).join('')
+                : '<div style="padding:9px 11px; border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:.8rem;">No accepted scholars match that search.</div>';
+        const selected = scholars.find(s => String(s.id) === String(selectedId));
         const summary = document.getElementById('disbScholarSummary');
-        if (summary) summary.textContent = selected ? `${selected.name} · ${selected.school || 'School not listed'} · Grade ${selected.grade || '—'}` : (query && !filteredScholars.length ? 'No accepted scholars match that search.' : '');
+        if (summary) summary.textContent = selected ? `Selected: ${selected.name} · ${selected.school || 'School not listed'} · Grade ${selected.grade || '—'}` : '';
     }
 
     // Fund log table
@@ -4058,6 +4060,15 @@ function renderFinancials() {
               </tr>`).join('')
             : '<tr><td colspan="5" class="empty-state">No disbursements yet.</td></tr>';
     }
+}
+
+function selectDisbursementScholar(id) {
+    const scholars = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]').filter(app => app.status === 'Accepted');
+    const scholar = scholars.find(app => String(app.id) === String(id));
+    if (!scholar) return;
+    document.getElementById('disbScholar').value = String(scholar.id);
+    document.getElementById('disbScholarSearch').value = scholar.name || '';
+    renderFinancials();
 }
 
 async function addFunds() {
@@ -4096,6 +4107,7 @@ async function disburseStipend() {
         const result = await MefamAPI.disburseStipend(scholarId, amount, period);
         if (!result?.ok) throw new Error(result?.error || 'Unable to release the stipend.');
         document.getElementById('disbScholar').value = '';
+        document.getElementById('disbScholarSearch').value = '';
         document.getElementById('disbAmount').value = '3000';
         document.getElementById('disbPeriod').value = '';
         await loadAllData();
