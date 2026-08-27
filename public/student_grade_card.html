@@ -80,7 +80,9 @@
         .image-zoom-modal { background: transparent; z-index: 100; pointer-events: none; align-items: center; justify-content: flex-end; padding: 20px; }
         .image-zoom-modal .modal { width: min(46vw, 600px); max-height: calc(100vh - 40px); margin-left: auto; padding: 14px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: auto; pointer-events: auto; }
         .image-zoom-modal .modal-header { padding: 0 0 10px; }
-        .image-zoom-modal img { display: block; width: 100%; height: auto; max-height: 82vh; object-fit: contain; border-radius: 8px; }
+        .image-zoom-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-bottom: 10px; }
+        .image-zoom-controls .btn { min-width: 42px; padding: 8px 10px; }
+        .image-zoom-modal img { display: block; width: 100%; min-width: 100%; height: auto; max-width: none; object-fit: contain; border-radius: 8px; transform-origin: top left; }
         .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
         .review-flags ul { margin: 6px 0 0 18px; list-style: disc; }
         @media (max-width: 760px) {
@@ -183,8 +185,14 @@
 
     <div class="modal-overlay image-zoom-modal" id="imageZoomModal" onclick="if(event.target===this) closeModal('imageZoomModal')">
         <div class="modal">
-            <div class="modal-header" style="justify-content:flex-end; border:0; padding:10px 0;">
+            <div class="modal-header" style="justify-content:flex-end; border:0; padding:0 0 10px;">
                 <button class="btn btn-ghost" onclick="closeModal('imageZoomModal')">✕ Close</button>
+            </div>
+            <div class="image-zoom-controls">
+                <button class="btn btn-ghost" type="button" onclick="changeImageZoom(-0.25)" title="Zoom out">−</button>
+                <button class="btn btn-ghost" type="button" onclick="resetImageZoom()" title="Reset zoom">Reset</button>
+                <button class="btn btn-ghost" type="button" onclick="changeImageZoom(0.25)" title="Zoom in">+</button>
+                <span id="imageZoomLevel" style="min-width:48px; text-align:center; font-size:.8rem; color:var(--text-muted);">100%</span>
             </div>
             <img id="zoomedReviewImage" src="" alt="Zoomed report card">
         </div>
@@ -598,10 +606,31 @@
             document.getElementById('reviewExtractionModal').classList.add('open');
         }
 
+        let imageZoomScale = 1;
+
+        function updateImageZoom() {
+            const image = document.getElementById('zoomedReviewImage');
+            const level = document.getElementById('imageZoomLevel');
+            if (!image) return;
+            image.style.width = `${imageZoomScale * 100}%`;
+            if (level) level.textContent = `${Math.round(imageZoomScale * 100)}%`;
+        }
+
+        function changeImageZoom(amount) {
+            imageZoomScale = Math.min(5, Math.max(0.5, imageZoomScale + amount));
+            updateImageZoom();
+        }
+
+        function resetImageZoom() {
+            imageZoomScale = 1;
+            updateImageZoom();
+        }
+
         function openImageZoom(src) {
             const image = document.getElementById('zoomedReviewImage');
             if (!image || !src) return;
             image.src = src;
+            resetImageZoom();
             document.getElementById('imageZoomModal').classList.add('open');
         }
 
