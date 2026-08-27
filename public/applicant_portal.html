@@ -509,7 +509,8 @@
                     </div>
                     <div id="rcSubjects" style="margin-bottom:8px;">
                         <div style="display:flex; gap:8px; margin-bottom:6px;">
-                            <input placeholder="Subject" class="rc-subject" style="flex:1; padding:8px;">
+                            <select class="rc-subject" onchange="toggleCustomSubject(this)" style="flex:1; padding:8px;"><option value="">Select subject</option></select>
+                            <input placeholder="Custom subject" class="rc-custom-subject" style="display:none; flex:1; padding:8px;">
                             <input placeholder="Grade" class="rc-grade" style="width:120px; padding:8px;">
                             <button class="btn btn-gold" onclick="removeSubjectRow(this)" style="padding:8px 10px;">−</button>
                         </div>
@@ -1251,6 +1252,99 @@ function logout() {
         window.location.href = 'index.html';
     }
 }
+
+const REPORT_CARD_SUBJECTS = [
+    'Filipino', 'English', 'Science & Health', 'Mathematics', 'Makabayan',
+    'Heograpiya / Kasaysayan / Sibika (HKS)',
+    'Edukasyong Pantahanan at Pangkabuhayan (EPP)',
+    'Musika, Sining at Edukasyong Pagpapakatao (MSEP)',
+    'Character Education', 'MAPEH', 'Other / Custom'
+];
+
+function subjectOptions(selected = '') {
+    return '<option value="">Select subject</option>' + REPORT_CARD_SUBJECTS.map(subject =>
+        `<option value="${escapeHtml(subject)}" ${subject === selected ? 'selected' : ''}>${escapeHtml(subject)}</option>`
+    ).join('');
+}
+
+function initializeReportCardSubjects() {
+    document.querySelectorAll('.rc-subject').forEach(select => {
+        if (select.tagName === 'SELECT') select.innerHTML = subjectOptions(select.value);
+    });
+}
+
+function addSubjectRow() {
+    const container = document.getElementById('rcSubjects');
+    if (!container) return;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:6px;';
+    row.innerHTML = `<select class="rc-subject" onchange="toggleCustomSubject(this)" style="flex:1; padding:8px;">${subjectOptions()}</select>
+        <input placeholder="Custom subject" class="rc-custom-subject" style="display:none; flex:1; padding:8px;">
+        <input placeholder="Grade" class="rc-grade" style="width:120px; padding:8px;">
+        <button class="btn btn-gold" onclick="removeSubjectRow(this)" style="padding:8px 10px;">−</button>`;
+    container.appendChild(row);
+}
+
+function removeSubjectRow(button) {
+    const container = document.getElementById('rcSubjects');
+    const rows = container ? container.querySelectorAll(':scope > div') : [];
+    if (rows.length <= 1) {
+        const row = button?.closest('div');
+        if (row) {
+            row.querySelector('.rc-subject').value = '';
+            row.querySelector('.rc-custom-subject').value = '';
+            row.querySelector('.rc-custom-subject').style.display = 'none';
+            row.querySelector('.rc-grade').value = '';
+        }
+        return;
+    }
+    button?.closest('div')?.remove();
+}
+
+function toggleCustomSubject(select) {
+    const custom = select?.closest('div')?.querySelector('.rc-custom-subject');
+    if (!custom) return;
+    const isCustom = select.value === 'Other / Custom';
+    custom.style.display = isCustom ? 'block' : 'none';
+    if (!isCustom) custom.value = '';
+}
+
+async function submitReportCardQuarter() {
+    const schoolYear = document.getElementById('rcSchoolYear')?.value.trim();
+    const quarter = document.getElementById('rcQuarter')?.value;
+    const rows = Array.from(document.querySelectorAll('#rcSubjects > div'));
+    const subjects = rows.map(row => ({
+        subject: row.querySelector('.rc-subject')?.value === 'Other / Custom'
+            ? row.querySelector('.rc-custom-subject')?.value.trim() || ''
+            : row.querySelector('.rc-subject')?.value || '',
+        grade_value: Number(row.querySelector('.rc-grade')?.value)
+    })).filter(row => row.subject);
+    const status = document.getElementById('rcStatus');
+    if (!schoolYear) { if (status) status.textContent = 'Enter the school year.'; return; }
+    if (!subjects.length) { if (status) status.textContent = 'Add at least one subject.'; return; }
+    if (subjects.some(row => !Number.isFinite(row.grade_value) || row.grade_value < 60 || row.grade_value > 100)) {
+        if (status) status.textContent = 'Grades must be between 60 and 100.';
+        return;
+    }
+    if (new Set(subjects.map(row => row.subject.toLowerCase())).size !== subjects.length) {
+        if (status) status.textContent = 'Each subject can appear only once.';
+        return;
+    }
+    try {
+        const result = await MefamAPI.submitQuarter(schoolYear, quarter, subjects);
+        if (!result?.ok) throw new Error(result?.error || 'Unable to submit the quarter.');
+        if (status) status.textContent = 'Quarter submitted for staff review.';
+        rows.forEach((row, index) => {
+            if (index === 0) { row.querySelector('.rc-subject').value = ''; row.querySelector('.rc-custom-subject').value = ''; row.querySelector('.rc-custom-subject').style.display = 'none'; row.querySelector('.rc-grade').value = ''; }
+            else row.remove();
+        });
+    } catch (error) {
+        console.error('Failed to submit report card quarter:', error);
+        if (status) status.textContent = error.message || 'Unable to submit the quarter.';
+    }
+}
+
+initializeReportCardSubjects();
 </script>
 <div class="image-modal" id="imageModal" onclick="if (event.target === this) closeImagePreview()">
     <div class="modal-card">
