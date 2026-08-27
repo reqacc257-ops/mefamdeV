@@ -83,9 +83,15 @@
         .image-zoom-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-bottom: 10px; }
         .image-zoom-controls .btn { min-width: 42px; padding: 8px 10px; }
         .image-zoom-modal img { display: block; width: 100%; min-width: 100%; height: auto; max-width: none; object-fit: contain; border-radius: 8px; transform-origin: top left; }
+        #reviewExtractionModal { justify-content: flex-start; }
+        #reviewExtractionModal > .modal { margin-left: 2vw; margin-right: 32vw; width: min(66vw, 900px); }
+        .image-zoom-modal { backdrop-filter: none; }
+        .image-zoom-modal .modal { margin-right: 0; }
         .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
         .review-flags ul { margin: 6px 0 0 18px; list-style: disc; }
         @media (max-width: 760px) {
+            #reviewExtractionModal { justify-content: center; }
+            #reviewExtractionModal > .modal { margin: 0; width: 100%; }
             .review-source { grid-template-columns: 1fr; }
             .review-source > .review-image-column,
             .review-source > .review-grade-column { grid-column: 1; grid-row: auto; }
