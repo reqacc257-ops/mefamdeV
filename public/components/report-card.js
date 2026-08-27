@@ -137,7 +137,7 @@ function buildReportCardHTML(scholarData, gradesData) {
       <td>${genAvgQ2 > 0 ? genAvgQ2 : '-'}</td>
       <td>${genAvgQ3 > 0 ? genAvgQ3 : '-'}</td>
       <td>${genAvgQ4 > 0 ? genAvgQ4 : '-'}</td>
-      <td class="rc-final" style="background:transparent; color:#fff;">${overallFinalGrade > 0 ? overallFinalGrade : '-'}</td>
+      <td class="rc-final" style="background:var(--navy); color:#fff;">${overallFinalGrade > 0 ? overallFinalGrade : '-'}</td>
       <td class="rc-remark" style="color:#8be3ae;">${overallGenAvg >= 75 ? 'Passed' : overallGenAvg > 0 ? 'Did Not Meet' : '-'}</td>
     </tr>
   `;
