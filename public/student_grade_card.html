@@ -78,7 +78,7 @@
         .review-photo { min-height: 240px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
         .review-photo img { display: block; width: 100%; max-height: 520px; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
         .image-zoom-modal { background: transparent; z-index: 100; pointer-events: none; align-items: center; justify-content: flex-end; padding: 20px; }
-        .image-zoom-modal .modal { width: min(46vw, 600px); max-height: calc(100vh - 40px); margin-left: auto; padding: 14px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: auto; pointer-events: auto; }
+        .image-zoom-modal .modal { width: min(78vw, 1100px); max-height: calc(100vh - 40px); margin-left: auto; padding: 14px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: auto; pointer-events: auto; }
         .image-zoom-modal .modal-header { padding: 0 0 10px; }
         .image-zoom-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-bottom: 10px; }
         .image-zoom-controls .btn { min-width: 42px; padding: 8px 10px; }
@@ -100,7 +100,7 @@
             .review-source > .review-image-column,
             .review-source > .review-grade-column { grid-column: 1; grid-row: auto; }
             .image-zoom-modal { padding: 10px; }
-            .image-zoom-modal .modal { width: min(92vw, 600px); max-height: calc(100vh - 20px); }
+            .image-zoom-modal .modal { width: min(92vw, 900px); max-height: calc(100vh - 20px); }
         }
 
         /* Grouped/stacked pending-review rows: one header per student with a
@@ -592,7 +592,7 @@
             const flags = Array.isArray(extraction.flags) ? extraction.flags : [];
             const uncertainFields = Array.isArray(extracted.uncertainFields) ? extracted.uncertainFields : [];
             const normalizedUncertainFields = uncertainFields.map(field => String(field).trim().toLowerCase());
-            const lowConfidence = Number(extracted.confidence) < 0.7;
+            const lowConfidence = Number(extracted.confidence) < 0.95;
             const isUncertain = (subjectName, field) => {
                 const label = `${subjectName} ${field.toUpperCase()}`.toLowerCase();
                 return normalizedUncertainFields.some(uncertain => uncertain === label || uncertain.includes(label) || label.includes(uncertain));
