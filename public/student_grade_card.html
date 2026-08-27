@@ -93,6 +93,7 @@
         .review-item-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-left: auto; }
         .review-item-row:last-child { border-bottom: none; }
         .review-item-meta { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
+        .review-item-date { display: block; margin-top: 3px; font-size: .88rem; color: var(--navy); font-weight: 600; }
         .review-item-type { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #5f6d7a; background: #eef1f5; padding: 2px 7px; border-radius: 6px; margin-right: 6px; }
         @media (max-width: 640px) {
             .main { padding: 12px 10px 32px; }
@@ -261,7 +262,6 @@
                 const studentId = extraction.appId != null ? Number(extraction.appId) : null;
                 const scholar = (acceptedScholars || []).find(app => Number(app.id) === studentId);
                 const schoolYear = extraction?.extracted?.schoolYear || 'Pending school year';
-                const fileName = extraction?.fileName || 'report-card.jpg';
                 const uploadedAt = extraction?.uploadedAt ? new Date(extraction.uploadedAt) : null;
                 items.push({
                     studentId,
@@ -269,7 +269,8 @@
                     mekong: Boolean(scholar?.mekong),
                     sortTime: uploadedAt ? uploadedAt.getTime() : 0,
                     typeLabel: 'Upload',
-                    meta: `${fileName} · ${schoolYear} · ${uploadedAt ? uploadedAt.toLocaleString() : 'Recently uploaded'}`,
+                    meta: schoolYear,
+                    dateLabel: uploadedAt ? uploadedAt.toLocaleString() : 'Recently uploaded',
                     actionsHtml: `<button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(extraction.id) || 0})">Review / Finalize</button>`,
                 });
             });
@@ -327,6 +328,7 @@
                         <div>
                             <span class="review-item-type">${escapeHtml(item.typeLabel)}</span>
                             <span class="review-item-meta">${escapeHtml(item.meta)}</span>
+                            ${item.dateLabel ? `<span class="review-item-date">${escapeHtml(item.dateLabel)}</span>` : ''}
                         </div>
                         <div class="review-item-actions">${item.actionsHtml}</div>
                     </div>`).join('');
