@@ -43,11 +43,16 @@ router.post('/:appId/upload', async (req, res) => {
     return res.json({ ok: true, extraction: normalizeExtraction(saved) });
   } catch (error) {
     const extracted = { schoolYear: null, gradeLevel: null, subjects: [], generalAverage: null, confidence: null, uncertainFields: [] };
-    const flags = [error.message || 'Extraction failed'];
+    const flags = [error.code === 'GEMINI_RATE_LIMITED'
+      ? 'Gemini is temporarily rate-limited. Please enter the grades manually from the uploaded image.'
+      : 'Automatic grade reading failed. Please enter the grades manually from the uploaded image.'];
+    const reviewNote = error.code === 'GEMINI_RATE_LIMITED'
+      ? 'Gemini rate limit reached; staff review required.'
+      : `Automatic extraction failed; staff review required. ${error.message || ''}`.trim();
     const info = await db.prepare(`
       INSERT INTO grade_extraction (app_id, status, file_name, file_type, file_data, extracted, flags, uploaded_at, review_notes)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(appId, 'pending', fileName, fileType || '', fileData, JSON.stringify(extracted), JSON.stringify(flags), new Date().toISOString(), 'Extraction failed, staff review required');
+    `).run(appId, 'pending', fileName, fileType || '', fileData, JSON.stringify(extracted), JSON.stringify(flags), new Date().toISOString(), reviewNote);
     const saved = await db.prepare('SELECT * FROM grade_extraction WHERE id = ?').get(info.lastInsertRowid);
     return res.json({ ok: true, warning: 'Extraction failed; saved for manual review.', extraction: normalizeExtraction(saved) });
   }
