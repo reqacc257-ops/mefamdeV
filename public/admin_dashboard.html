@@ -257,6 +257,8 @@
         .profile-item:hover, .profile-item.selected { background: #f0f6ff; border-left: 3px solid var(--gold); padding-left: 11px; }
         .profile-item strong { font-size: .88rem; }
         .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
+        .mekong-application-row td { background: #f0fbf4; }
+        .mekong-application-row:hover td { background: #e8f7ed; }
         .profile-item small { color: var(--text-muted); font-size: .77rem; }
 
         /* Modal */
@@ -1992,7 +1994,7 @@ function renderFullAppsTable(apps) {
     const tbody = document.getElementById('appTableBody');
     if (!tbody) return;
     tbody.innerHTML = apps.map(a => `
-        <tr data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}">
+        <tr class="${a.mekong ? 'mekong-application-row' : ''}" data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}">
             <td class="table-actions">
                 <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.reference || a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
             </td>
