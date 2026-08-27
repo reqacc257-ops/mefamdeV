@@ -77,8 +77,8 @@
         .review-source > .review-grade-column { grid-column: 1; grid-row: 1; }
         .review-photo { min-height: 240px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
         .review-photo img { display: block; width: 100%; max-height: 520px; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
-        .image-zoom-modal { background: rgba(12,20,39,.9); z-index: 100; }
-        .image-zoom-modal .modal { width: min(94vw, 980px); max-height: 92vh; padding: 14px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: auto; }
+        .image-zoom-modal { background: transparent; z-index: 100; pointer-events: none; align-items: center; justify-content: flex-end; padding: 20px; }
+        .image-zoom-modal .modal { width: min(46vw, 600px); max-height: calc(100vh - 40px); margin-left: auto; padding: 14px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: auto; pointer-events: auto; }
         .image-zoom-modal .modal-header { padding: 0 0 10px; }
         .image-zoom-modal img { display: block; width: 100%; height: auto; max-height: 82vh; object-fit: contain; border-radius: 8px; }
         .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
@@ -87,6 +87,8 @@
             .review-source { grid-template-columns: 1fr; }
             .review-source > .review-image-column,
             .review-source > .review-grade-column { grid-column: 1; grid-row: auto; }
+            .image-zoom-modal { padding: 10px; }
+            .image-zoom-modal .modal { width: min(92vw, 600px); max-height: calc(100vh - 20px); }
         }
 
         /* Grouped/stacked pending-review rows: one header per student with a
