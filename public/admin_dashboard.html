@@ -1997,6 +1997,7 @@ function renderFullAppsTable(apps) {
         <tr class="${a.mekong ? 'mekong-application-row' : ''}" data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}">
             <td class="table-actions">
                 <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.reference || a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
+                ${a.mekong ? '<div style="margin-top:5px; color:#19733d; font-size:.72rem; font-weight:700;">Mekong</div>' : ''}
             </td>
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
             <td><strong>${a.name}</strong></td>
