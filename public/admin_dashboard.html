@@ -1291,6 +1291,14 @@
                     <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Close the current school year for every accepted applicant while retaining grades and history.</p>
                     <button class="btn btn-gold" type="button" onclick="endAllSchoolYears()">📚 End All Accepted School Years</button>
                 </div>
+                <div class="card" style="border-left:4px solid var(--purple);">
+                    <div class="card-title">Grade Retention</div>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Review retained grades for accepted applicants. Records are protected for seven years.</p>
+                    <label for="settingRetentionApplicant">Accepted applicant</label>
+                    <select id="settingRetentionApplicant" onchange="loadSettingsRetention()" style="margin-bottom:12px;"><option value="">Select an accepted applicant</option></select>
+                    <div id="settingRetentionStatus" style="font-size:.82rem; color:var(--text-muted); min-height:36px; margin-bottom:10px;">Select an applicant to view retention details.</div>
+                    <button class="btn btn-ghost btn-sm" id="settingDeleteRetainedGrades" type="button" style="color:var(--red);" onclick="deleteSelectedRetainedGrades()" disabled>🗑 Delete Retained Grades</button>
+                </div>
             </div>
         </div>
 
@@ -1758,6 +1766,7 @@ async function loadAllData() {
         renderGrades(scholars);
         renderReportCards();
         populatePendingSelect(appList);
+        populateRetentionApplicants(appList);
         updateCharts(appList);
         loadSavedRecords();
         renderEvents();
@@ -2494,9 +2503,6 @@ async function viewApp(id) {
 
     let footerHTML = `<button class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
     footerHTML += `<button class="btn btn-gold" onclick="openApplicationEdit(${a.id})">✎ Edit Application</button>`;
-    if (currentRole === 'director') {
-        footerHTML += `<button class="btn btn-ghost" style="color:var(--red);" onclick="deleteRetainedGrades(${a.id})">🗑️ Grade Retention</button>`;
-    }
     if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
     if (a.status !== 'Accepted') footerHTML += `<button class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
     if (!['Accepted', 'Year Ended', 'Rejected'].includes(a.status)) footerHTML += `<button class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
@@ -2552,6 +2558,48 @@ async function deleteRetainedGrades(appId) {
     } catch (error) {
         alert(error?.message || 'Unable to delete retained grade records.');
     }
+}
+
+function populateRetentionApplicants(apps) {
+    const select = document.getElementById('settingRetentionApplicant');
+    if (!select) return;
+    const previous = select.value;
+    const accepted = (Array.isArray(apps) ? apps : []).filter(app => app.status === 'Accepted');
+    select.innerHTML = '<option value="">Select an accepted applicant</option>' + accepted.map(app =>
+        `<option value="${Number(app.id)}">${escapeHtml(app.name || `Applicant #${app.id}`)}</option>`
+    ).join('');
+    if (accepted.some(app => String(app.id) === previous)) select.value = previous;
+    const button = document.getElementById('settingDeleteRetainedGrades');
+    if (button) button.disabled = !select.value;
+}
+
+async function loadSettingsRetention() {
+    const select = document.getElementById('settingRetentionApplicant');
+    const status = document.getElementById('settingRetentionStatus');
+    const button = document.getElementById('settingDeleteRetainedGrades');
+    const appId = Number(select?.value || 0);
+    if (!appId) {
+        if (status) status.textContent = 'Select an applicant to view retention details.';
+        if (button) button.disabled = true;
+        return;
+    }
+    try {
+        const retention = await MefamAPI.getGradeRetention(appId);
+        if (status) status.textContent = retention.recordCount
+            ? `${retention.recordCount} grade record(s). ${retention.eligible ? 'Eligible for deletion.' : `Protected until ${new Date(retention.eligibleAt).toLocaleDateString()}.`}`
+            : 'No retained grade records found.';
+        if (button) button.disabled = !retention.eligible || !retention.recordCount;
+    } catch (error) {
+        if (status) status.textContent = error.message || 'Unable to load retention details.';
+        if (button) button.disabled = true;
+    }
+}
+
+async function deleteSelectedRetainedGrades() {
+    const appId = Number(document.getElementById('settingRetentionApplicant')?.value || 0);
+    if (!appId) return;
+    await deleteRetainedGrades(appId);
+    await loadSettingsRetention();
 }
 
 function openApplicationEdit(id) {
