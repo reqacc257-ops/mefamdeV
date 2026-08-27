@@ -24,7 +24,8 @@ const MefamAPI = {
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');
     try {
-      const res = await this._post('/auth/login', { username, password }, false);
+      const deviceId = `browser:${navigator.userAgent || 'unknown-device'}`;
+      const res = await this._post('/auth/login', { username, password, deviceId }, false);
       if (res?.token) storeSession(res.user, res.token);
       return res;
     } catch (error) {

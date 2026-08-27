@@ -205,6 +205,26 @@
         }
         .btn-applicant:hover { background: #e09520; }
 
+        .auth-modal {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(10,20,40,.7); backdrop-filter: blur(4px);
+        }
+        .auth-modal-card {
+            width: min(420px, 100%); background: #fff; border: 1px solid #e3e8f0;
+            border-radius: 16px; padding: 26px; box-shadow: 0 20px 60px rgba(10,20,40,.25);
+            animation: authModalIn .22s ease-out;
+        }
+        @keyframes authModalIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+        .auth-modal-title { margin: 0 0 8px; color: var(--navy); font-family: 'DM Serif Display', serif; font-size: 1.35rem; }
+        .auth-modal-copy { margin: 0 0 16px; color: #5f6b7a; font-size: .92rem; line-height: 1.5; }
+        .auth-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+        .auth-modal .btn-secondary, .auth-modal .btn-primary { border: 0; border-radius: 8px; padding: 10px 15px; font-family: 'DM Sans', sans-serif; font-weight: 700; cursor: pointer; }
+        .auth-modal .btn-secondary { background: #eef2f7; color: var(--navy); }
+        .auth-modal .btn-primary { background: var(--navy); color: #fff; }
+        .auth-modal .btn-primary:hover { background: var(--navy2); }
+        .auth-modal .btn-secondary:hover { background: #e1e8f0; }
+
         /* Login error dialog */
         .error-banner { display: none; }
         .error-banner.show { display: flex; }
@@ -454,30 +474,30 @@
     <p class="footer-note">© 2026 MEFAMDEV-Life · Angat, Bulacan · Data Privacy Act RA 10173</p>
 </div>
 
-<div id="forgotPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(10,20,40,.65); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-    <div style="width:min(420px, 100%); background:#fff; border-radius:16px; padding:24px; box-shadow:0 18px 50px rgba(0,0,0,.2);">
-        <h3 style="margin:0 0 8px; color:var(--navy);">Reset your applicant password</h3>
-        <p style="margin:0 0 14px; color:#5f6b7a; font-size:.92rem;">Enter the email address used on your application.</p>
+<div id="forgotPasswordModal" class="auth-modal">
+    <div class="auth-modal-card">
+        <h3 class="auth-modal-title">Reset your applicant password</h3>
+        <p class="auth-modal-copy">Enter the email address used on your application.</p>
         <input type="email" id="forgotEmailInput" placeholder="you@example.com" style="width:100%; padding:10px 12px; border:1px solid #d7dde6; border-radius:8px; margin-bottom:10px;">
         <p id="forgotPasswordStatus" style="display:none; margin:10px 0 0; font-size:.9rem; color:#1b5e20; font-weight:700;"></p>
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <div class="auth-modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeForgotPasswordModal()">Cancel</button>
             <button type="button" class="btn btn-primary" onclick="submitForgotPassword()">Send Reset Link</button>
         </div>
     </div>
 </div>
 
-<div id="directorOtpModal" style="display:none; position:fixed; inset:0; background:rgba(10,20,40,.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-    <div style="width:min(420px, 100%); background:#fff; border-radius:16px; padding:24px; box-shadow:0 18px 50px rgba(0,0,0,.25);">
-        <h3 style="margin:0 0 8px; color:var(--navy);">Director Verification</h3>
-        <p id="directorOtpMessage" style="margin:0 0 14px; color:#5f6b7a; font-size:.92rem;">Enter the six-digit code sent to the Director email.</p>
+<div id="directorOtpModal" class="auth-modal">
+    <div class="auth-modal-card">
+        <h3 class="auth-modal-title">Director Verification</h3>
+        <p id="directorOtpMessage" class="auth-modal-copy">Enter the six-digit code sent to the Director email.</p>
         <input type="text" id="directorOtpInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="width:100%; padding:12px; border:1px solid #d7dde6; border-radius:8px; font-size:1.2rem; letter-spacing:.25em; text-align:center;">
         <label style="display:flex; align-items:center; gap:10px; margin-top:14px; font-size:.9rem; color:#374151;">
             <input type="checkbox" id="directorTrustDevice" checked>
             Trust this device for 24 hours (skip email verification for a day)
         </label>
         <p id="directorOtpStatus" style="display:none; margin:10px 0 0; font-size:.88rem; color:#c0392b; font-weight:700;"></p>
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <div class="auth-modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeDirectorOtpModal()">Cancel</button>
             <button type="button" class="btn btn-primary" onclick="verifyDirectorOtp()">Verify & Continue</button>
         </div>
