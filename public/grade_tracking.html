@@ -73,6 +73,30 @@
         .empty-state { background: #f8fbff; border: 1px solid #dfe8f3; color: #5f6d7a; padding: 24px; border-radius: 14px; text-align: center; }
         .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .page-header-row > div { min-width: 140px; }
+        .grade-controls { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto; gap: 10px; align-items: center; width: min(100%, 760px); }
+        @media (max-width: 900px) {
+            .grade-controls { grid-template-columns: 1fr 1fr; width: 100%; }
+            .grade-controls > .search-wrap { grid-column: 1 / -1; grid-row: 1; }
+            .grade-controls > .grade-semester-controls { grid-column: 1; grid-row: 2; }
+            .grade-controls > #gradeFilterSelect { grid-column: 2; grid-row: 2; width: 100% !important; min-width: 0 !important; }
+        }
+        @media (max-width: 560px) {
+            .main { padding: 12px 10px 32px; }
+            .topbar { height: auto; min-height: var(--header-h); padding: 10px 12px; gap: 10px; }
+            .topbar-right { width: 100%; }
+            .topbar-right .btn { width: 100%; }
+            .page-header-row { align-items: stretch; }
+            .grade-controls { grid-template-columns: 1fr; }
+            .grade-controls > .search-wrap,
+            .grade-controls > .grade-semester-controls,
+            .grade-controls > #gradeFilterSelect { grid-column: 1; grid-row: auto; }
+            .grade-controls > .grade-semester-controls { flex-direction: column; align-items: stretch !important; }
+            .grade-controls > .grade-semester-controls select,
+            .grade-controls > .grade-semester-controls button { width: 100% !important; }
+            .modal-body, .modal-header, .modal-footer { padding-left: 14px; padding-right: 14px; }
+            .modal-footer { flex-wrap: wrap; }
+            .modal-footer .btn { flex: 1 1 130px; }
+        }
     </style>
 </head>
 <body>
@@ -91,8 +115,8 @@
                         <div class="card-title">Grade Monitoring</div>
                         <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">Track scholar grades and update performance per semester.</p>
                     </div>
-                    <div style="display:grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr) auto; gap:10px; align-items:center;">
-                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <div class="grade-controls">
+                        <div class="grade-semester-controls" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                             <label style="font-size:.84rem; color:var(--text-muted); margin:0;">Semester:</label>
                             <select id="gradeSemSelect" style="width:auto; min-width:160px; border-radius:10px; padding:10px 12px;"></select>
                             <button class="btn btn-sm btn-ghost" type="button" onclick="addGradeSemester()">+ Add Semester</button>
