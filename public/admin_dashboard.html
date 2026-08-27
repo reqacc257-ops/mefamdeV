@@ -3878,10 +3878,9 @@ function renderFamilies() {
     list.innerHTML = families.map(f => {
         const linkedScholars = apps.filter(a => a.status === 'Accepted' && a.barangay && f.barangay && a.barangay.toLowerCase() === f.barangay.toLowerCase()).length;
         const cls = f.bracket === 'Below Min.' ? 'badge-red' : f.bracket === 'Near Min.' ? 'badge-orange' : 'badge-green';
-        return `<div class="profile-item" onclick="viewFamily(${f.id})" id="fi-${f.id}" style="position:relative; padding-right:84px;">
+        return `<div class="profile-item" onclick="viewFamily(${f.id})" id="fi-${f.id}">
             <strong>${f.surname} Family</strong> — <span style="font-size:.8rem;">${f.guardian}</span><br>
             <small>${f.barangay} &nbsp;|&nbsp; <span class="badge ${cls}" style="font-size:.68rem;">${f.bracket}</span></small>
-            <button class="btn btn-ghost btn-sm" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--red); padding:6px 8px;" onclick="event.stopPropagation(); deleteFamily(${f.id})" title="Delete family">Delete</button>
         </div>`;
     }).join('');
 }
