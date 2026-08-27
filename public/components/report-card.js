@@ -5,7 +5,7 @@
 
 // Default learning areas; will be merged with configured subjects or grades-derived subjects
 const DEFAULT_AREAS = [
-  'Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'
+  'Filipino','English','Mathematics','Science','Araling Panlipunan','MAPEH'
 ];
 
 function calculateFinalGrade(grades) {
@@ -42,8 +42,15 @@ function buildReportCardHTML(scholarData, gradesData) {
   
   // Organize grades by subject and quarter
   const gradesBySubject = {};
+  const componentNames = new Set(['music', 'arts', 'pe', 'physical education', 'health']);
+  const componentGrades = [];
   (gradesData || []).forEach(grade => {
     const rawSubject = grade.subject || grade.subject_name || grade.subjectName;
+    const normalizedRawSubject = String(rawSubject || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
+    if (componentNames.has(normalizedRawSubject)) {
+      componentGrades.push(grade);
+      return;
+    }
     const subj = canonicalSubjectName(rawSubject);
     if (!subj) return;
     if (!gradesBySubject[subj]) {
@@ -56,8 +63,6 @@ function buildReportCardHTML(scholarData, gradesData) {
     }
   });
 
-  const componentNames = new Set(['Music', 'Arts', 'PE', 'Physical Education', 'Health']);
-  const componentGrades = (gradesData || []).filter(grade => componentNames.has(grade.subject || grade.subject_name || grade.subjectName));
   if (!gradesBySubject.MAPEH && componentGrades.length) {
     gradesBySubject.MAPEH = { Q1: '', Q2: '', Q3: '', Q4: '' };
     ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
@@ -77,8 +82,9 @@ function buildReportCardHTML(scholarData, gradesData) {
 
   const subjectsFromGrades = Object.keys(gradesBySubject);
   const configuredSubjects = configured && Array.isArray(configured) && configured.length > 0 ? configured : DEFAULT_AREAS;
+  const excludedSubjects = new Set(['esp', 'edukasyon sa pagpapakatao', 'tle', 'technology and livelihood education', 'education (tle)']);
   const finalSubjectList = Array.from(new Set([...configuredSubjects, ...subjectsFromGrades].map(canonicalSubjectName)))
-    .filter(subject => subject && !componentNames.has(subject));
+    .filter(subject => subject && !excludedSubjects.has(String(subject).toLowerCase()) && subject !== 'Music' && subject !== 'Arts' && subject !== 'PE' && subject !== 'Health');
 
   const quarterlyAverages = { Q1: [], Q2: [], Q3: [], Q4: [] };
   let tableRows = '';
