@@ -882,7 +882,7 @@ function escapeHtml(value) {
 }
 
 async function uploadDocumentFromInput(input) {
-    const appId = input.dataset.appId;
+    const appId = currentAppId || input.dataset.appId;
     const docKey = input.dataset.docKey;
     const file = input.files && input.files[0];
     if (!appId || !docKey || !file) return;
@@ -948,7 +948,7 @@ function saveReportCardGallery(appId, docKey, arr) {
 }
 
 async function uploadReportCardPhoto(input) {
-    const appId = input.dataset.appId;
+    const appId = currentAppId || input.dataset.appId;
     const docKey = input.dataset.docKey;
     const file = input.files && input.files[0];
     if (!appId || !docKey || !file) return;
