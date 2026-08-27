@@ -1136,7 +1136,7 @@
                     </div>
                     <div class="table-wrap">
                         <table>
-                            <thead><tr><th>Scholar</th><th>Amount</th><th>Period</th><th>Date</th><th>Status</th></tr></thead>
+                            <thead><tr><th>Scholar</th><th>Amount</th><th>Period</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
                             <tbody id="disbTableBody">
                                 <tr><td colspan="5" class="empty-state">No disbursements yet.</td></tr>
                             </tbody>
@@ -1147,7 +1147,7 @@
                     <div class="card-title">Fund Contributions Log</div>
                     <div class="table-wrap">
                         <table>
-                            <thead><tr><th>Source</th><th>Amount</th><th>Date</th><th>Notes</th></tr></thead>
+                            <thead><tr><th>Source</th><th>Amount</th><th>Date</th><th>Notes</th><th>Action</th></tr></thead>
                             <tbody id="fundLogBody">
                                 <tr><td colspan="4" class="empty-state">No contributions yet.</td></tr>
                             </tbody>
@@ -1269,7 +1269,7 @@
                     <button class="btn btn-navy" onclick="openChangePasswordModal()">&#128272; Change Password</button>
                     <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
                         <div style="font-weight:700; font-size:.88rem; margin-bottom:5px;">Trusted device</div>
-                        <div id="trustedDeviceStatus" style="font-size:.82rem; color:var(--text-muted); margin-bottom:10px;">Trust is requested during Director email verification.</div>
+                        <div id="trustedDeviceStatus" style="font-size:.82rem; color:var(--text-muted); margin-bottom:10px;">Trust this device for 24 hours after Director verification.</div>
                         <button class="btn btn-ghost btn-sm" onclick="forgetTrustedDevice()">Forget this browser</button>
                     </div>
                 </div>
@@ -4039,8 +4039,9 @@ function renderFinancials() {
                 <td style="color:var(--teal); font-weight:700;">+₱${Number(f.amount).toLocaleString()}</td>
                 <td style="font-size:.82rem;">${f.date}</td>
                 <td style="font-size:.82rem; color:var(--text-muted);">${f.notes || '—'}</td>
+                <td><button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteFundEntry(${Number(f.id)})" title="Delete contribution">Delete</button></td>
               </tr>`).join('')
-            : '<tr><td colspan="4" class="empty-state">No contributions yet.</td></tr>';
+            : '<tr><td colspan="5" class="empty-state">No contributions yet.</td></tr>';
     }
 
     // Disbursement table
@@ -4053,8 +4054,9 @@ function renderFinancials() {
                 <td style="font-size:.82rem;">${d.period || '—'}</td>
                 <td style="font-size:.82rem;">${d.date}</td>
                 <td><span class="badge badge-green">Released</span></td>
+                <td><button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDisbursementEntry(${Number(d.id)})" title="Delete disbursement">Delete</button></td>
               </tr>`).join('')
-            : '<tr><td colspan="5" class="empty-state">No disbursements yet.</td></tr>';
+            : '<tr><td colspan="6" class="empty-state">No disbursements yet.</td></tr>';
     }
 }
 
@@ -4079,6 +4081,30 @@ async function addFunds() {
     } catch (error) {
         console.error('Failed to add funds:', error);
         alert('Unable to add the fund entry right now.');
+    }
+}
+
+async function deleteFundEntry(id) {
+    if (!id || !confirm('Delete this fund contribution? The available balance will be recalculated.')) return;
+    try {
+        const result = await MefamAPI.deleteFunds(id);
+        if (!result?.ok) throw new Error(result?.error || 'Unable to delete the contribution.');
+        await loadAllData();
+    } catch (error) {
+        console.error('Failed to delete fund contribution:', error);
+        alert(error.message || 'Unable to delete the contribution right now.');
+    }
+}
+
+async function deleteDisbursementEntry(id) {
+    if (!id || !confirm('Delete this stipend disbursement? The available balance will be recalculated.')) return;
+    try {
+        const result = await MefamAPI.deleteDisbursement(id);
+        if (!result?.ok) throw new Error(result?.error || 'Unable to delete the disbursement.');
+        await loadAllData();
+    } catch (error) {
+        console.error('Failed to delete stipend disbursement:', error);
+        alert(error.message || 'Unable to delete the disbursement right now.');
     }
 }
 

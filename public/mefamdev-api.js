@@ -179,10 +179,12 @@ const MefamAPI = {
   async addFunds(source, amount, date, notes) {
     return this._post('/financials/funds', { source, amount, date, notes });
   },
+  async deleteFunds(id) { return this._delete(`/financials/funds/${id}`); },
   async getDisbursements() { return this._get('/financials/disbursements'); },
   async disburseStipend(appId, amount, period) {
     return this._post('/financials/disbursements', { appId, amount, period });
   },
+  async deleteDisbursement(id) { return this._delete(`/financials/disbursements/${id}`); },
 
   // ── Records ───────────────────────────────────────────────────────────────
   async getIntakeSheets() { return this._get('/records/intake'); },

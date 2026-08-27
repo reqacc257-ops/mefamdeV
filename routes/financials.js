@@ -23,6 +23,10 @@ router.post('/funds', requireRole('director','finance'), async (req, res) => {
   const info = await db.prepare('INSERT INTO fund_log (source,amount,date,notes) VALUES (?,?,?,?)').run(source, amount, date, notes||'');
   res.json({ ok: true, id: info.lastInsertRowid });
 });
+router.delete('/funds/:id', requireRole('director','finance'), async (req, res) => {
+  await db.prepare('DELETE FROM fund_log WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
 
 // Disbursements
 router.get('/disbursements', async (req, res) => {
@@ -43,6 +47,10 @@ router.post('/disbursements', requireRole('director','finance'), async (req, res
     'INSERT INTO disbursements (app_id, scholar_name, amount, period, date) VALUES (?,?,?,?,?)'
   ).run(appId, scholar?.name || 'Unknown', amount, period || '', date);
   res.json({ ok: true, id: info.lastInsertRowid });
+});
+router.delete('/disbursements/:id', requireRole('director','finance'), async (req, res) => {
+  await db.prepare('DELETE FROM disbursements WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
 });
 
 module.exports = router;
