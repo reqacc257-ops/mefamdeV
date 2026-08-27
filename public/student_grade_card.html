@@ -595,8 +595,10 @@
             const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
             const extracted = extraction?.extracted || {};
             const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
-            const reviewSubjects = subjects.length
-                ? subjects
+            const mapehComponents = new Set(['music', 'arts', 'pe', 'physical education', 'health']);
+            const visibleSubjects = subjects.filter(subject => !mapehComponents.has(String(subject.name || '').trim().toLowerCase()));
+            const reviewSubjects = visibleSubjects.length
+                ? visibleSubjects
                 : DEFAULT_REVIEW_SUBJECTS.map(name => ({ name, q1: null, q2: null, q3: null, q4: null, final: null }));
             const content = document.getElementById('reviewExtractionContent');
             if (!content) return;
@@ -604,7 +606,6 @@
             const uncertainFields = Array.isArray(extracted.uncertainFields) ? extracted.uncertainFields : [];
             const normalizedUncertainFields = uncertainFields.map(field => String(field).trim().toLowerCase());
             const lowConfidence = Number(extracted.confidence) < 0.95;
-            const confidencePercent = Math.max(0, Math.min(100, Math.round(Number(extracted.confidence) * 100)));
             const isUncertain = (subjectName, field) => {
                 const label = `${subjectName} ${field.toUpperCase()}`.toLowerCase();
                 return normalizedUncertainFields.some(uncertain => uncertain === label || uncertain.includes(label) || label.includes(uncertain));
@@ -613,8 +614,8 @@
                 const value = subject[field];
                 const isBlank = value === null || value === undefined || value === '';
                 const warning = isBlank || lowConfidence || isUncertain(subject.name, field);
-                const warningLabel = isBlank ? 'Blank' : `${confidencePercent}% confidence`;
-                return `<div><input type="number" class="review-quarter-input${warning ? ' review-cell-warning' : ''}" data-quarter="${field}" value="${isBlank ? '' : escapeHtml(value)}" min="60" max="100" style="width:70px;"${warning ? ` aria-label="${escapeHtml(subject.name)} ${field.toUpperCase()} ${warningLabel}"` : ''}>${warning ? `<span class="review-cell-warning-label">${warningLabel}</span>` : ''}</div>`;
+                const warningLabel = isBlank ? 'Blank' : '';
+                return `<div><input type="number" class="review-quarter-input${warning ? ' review-cell-warning' : ''}" data-quarter="${field}" value="${isBlank ? '' : escapeHtml(value)}" min="60" max="100" style="width:70px;"${warning && warningLabel ? ` aria-label="${escapeHtml(subject.name)} ${field.toUpperCase()} ${warningLabel}"` : ''}>${warningLabel ? `<span class="review-cell-warning-label">${warningLabel}</span>` : ''}</div>`;
             };
             const photo = extraction.fileData
                 ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)">`
@@ -803,7 +804,7 @@
             const DEFAULT_REVIEW_SUBJECTS = [
                 'Filipino', 'English', 'Mathematics', 'Science',
                 'Araling Panlipunan', 'Technology and Livelihood Education',
-                'MAPEH', 'Music', 'Arts', 'Physical Education', 'Health',
+                'MAPEH',
                 'Edukasyon sa Pagpapakatao'
             ];
 
