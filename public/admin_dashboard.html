@@ -2529,6 +2529,7 @@ async function viewApp(id) {
     renderDocChecklist(a.id, 'appModalDocs');
 
     let footerHTML = `<button class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
+    footerHTML += `<label style="display:inline-flex; align-items:center; gap:6px; margin:0 8px 0 0; font-size:.82rem; color:var(--text-muted); cursor:pointer;"><input type="checkbox" ${a.mekong ? 'checked' : ''} onchange="toggleApplicationMekong(${a.id}, this.checked)"> Mark as Mekong</label>`;
     footerHTML += `<button class="btn btn-gold" onclick="openApplicationEdit(${a.id})">✎ Edit Application</button>`;
     if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
     if (a.status !== 'Accepted') footerHTML += `<button class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
@@ -2536,6 +2537,22 @@ async function viewApp(id) {
 
     document.getElementById('appModalFooter').innerHTML = footerHTML;
     document.getElementById('appModal').classList.add('open');
+}
+
+async function toggleApplicationMekong(id, mekong) {
+    try {
+        const result = await MefamAPI.updateApplication(id, { mekong });
+        if (!result?.ok) throw new Error(result?.error || 'Unable to save Mekong status');
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const app = apps.find(item => String(item.id) === String(id));
+        if (app) app.mekong = Boolean(mekong);
+        localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        await loadAllData();
+    } catch (error) {
+        console.error('Failed to update Mekong status:', error);
+        alert('Unable to save the Mekong status right now.');
+        viewApp(id);
+    }
 }
 
 async function endApplicationYear(id) {
