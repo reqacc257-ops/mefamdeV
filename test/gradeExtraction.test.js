@@ -17,6 +17,8 @@ test('normalizeExtractionResult merges MAPEH subcomponents and parses values', (
       { name: 'Music', q1: '86', q2: '87' },
       { name: 'Arts', q1: '85', q2: '86' },
       { name: 'PE', q1: '86', q2: '88' },
+      { name: 'Technology and Livelihood', q1: null, q2: '91' },
+      { name: 'Education (TLE)', q1: '90', q2: null },
       { name: 'Filipino', q1: '80', q2: '84' },
     ],
     generalAverage: '86.2',
@@ -39,4 +41,8 @@ test('normalizeExtractionResult merges MAPEH subcomponents and parses values', (
 
   const fil = norm.subjects.find(s => String(s.name).toLowerCase() === 'filipino');
   assert.ok(fil && fil.q1 === 80, 'Filipino q1 should be 80');
+  const tleRows = norm.subjects.filter(s => /technology|tle/i.test(s.name));
+  assert.strictEqual(tleRows.length, 1, 'TLE variants should merge into one row');
+  assert.strictEqual(tleRows[0].q1, 90);
+  assert.strictEqual(tleRows[0].q2, 91);
 });
