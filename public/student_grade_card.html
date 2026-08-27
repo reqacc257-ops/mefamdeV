@@ -562,7 +562,11 @@
 
         async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
             try {
-                const approvedSubjects = await MefamAPI.getApprovedGradeCard(appId, schoolYear) || [];
+                const response = await MefamAPI.getApprovedGradeCard(appId, schoolYear);
+                if (!Array.isArray(response)) {
+                    throw new Error(response?.error || 'The approved grades could not be loaded.');
+                }
+                const approvedSubjects = response;
                 const scholarGrades = approvedSubjects.flatMap(subject => Object.entries(subject.quarters || {}).map(([quarter, grade_value]) => ({
                     subject: subject.subject,
                     quarter: String(quarter).replace(/^Q/i, ''),
@@ -580,7 +584,7 @@
                 document.getElementById('reportCardModal').classList.add('open');
             } catch (error) {
                 console.error('Failed to view report card:', error);
-                alert('Unable to load the report card right now.');
+                alert(`Unable to load the report card: ${error.message || 'please try again.'}`);
             }
         }
 

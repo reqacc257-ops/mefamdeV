@@ -184,7 +184,11 @@
 
         async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
             try {
-                const allGrades = await MefamAPI.getGrades() || [];
+                const response = await MefamAPI.getGrades();
+                if (!Array.isArray(response)) {
+                    throw new Error(response?.error || 'The grades could not be loaded.');
+                }
+                const allGrades = response;
                 const scholarGrades = allGrades.filter(g => Number(g.app_id || g.appId) === Number(appId));
                 const scholarData = { name, gradeLevel, school, refNo: refNo || appId, schoolYear: schoolYear || 'N/A' };
                 const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades);
@@ -198,7 +202,7 @@
                 document.getElementById('reportCardModal').classList.add('open');
             } catch (error) {
                 console.error('Failed to view report card:', error);
-                alert('Unable to load the report card right now.');
+                alert(`Unable to load the report card: ${error.message || 'please try again.'}`);
             }
         }
 
