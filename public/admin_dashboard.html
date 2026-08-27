@@ -1009,7 +1009,10 @@
                     <h2 style="font-family:'DM Serif Display',serif; color:var(--navy);">Beneficiary Families</h2>
                     <p style="color:var(--text-muted); font-size:.87rem;">Manage linked families and their scholar connections.</p>
                 </div>
-                <button class="btn btn-gold" onclick="openAddFamilyModal()">➕ Add Family</button>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button class="btn btn-gold" onclick="openAddFamilyModal()">➕ Add Family</button>
+                    <button class="btn btn-ghost" id="deleteFamilyTopButton" style="color:var(--red);" onclick="deleteSelectedFamily()" disabled>🗑 Delete Family</button>
+                </div>
             </div>
 
             <div class="grid-2" style="align-items:start;">
@@ -3888,6 +3891,8 @@ function viewFamily(id) {
     if (!f) return;
     currentFamilyId = id;
     currentFamilyRecord = f;
+    const topDeleteButton = document.getElementById('deleteFamilyTopButton');
+    if (topDeleteButton) topDeleteButton.disabled = false;
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
     document.querySelectorAll('.profile-item').forEach(el => el.classList.remove('selected'));
     document.getElementById(`fi-${id}`)?.classList.add('selected');
@@ -3980,6 +3985,10 @@ async function deleteFamily(id) {
     if (!confirm('Remove this family?')) return;
     try {
         await MefamAPI.deleteFamily(id);
+        currentFamilyId = null;
+        currentFamilyRecord = null;
+        const topDeleteButton = document.getElementById('deleteFamilyTopButton');
+        if (topDeleteButton) topDeleteButton.disabled = true;
         document.getElementById('family-detail').style.display = 'none';
         document.getElementById('family-empty-state').style.display = 'flex';
         await loadAllData();
@@ -3987,6 +3996,10 @@ async function deleteFamily(id) {
         console.error('Failed to delete family:', error);
         alert('Unable to remove the family record right now.');
     }
+}
+
+function deleteSelectedFamily() {
+    if (currentFamilyId) deleteFamily(currentFamilyId);
 }
 
 /* ══════════════════════════════════════
