@@ -252,6 +252,7 @@ const REPORT_CARD_STYLES = `
   .remark-pending { color: var(--muted); }
   tr.rc-avg td, tr.rc-avg td.rc-area { background: var(--navy); color: #fff !important; font-weight: 700; font-size: .86rem; }
   tr.rc-avg td.rc-area { text-transform: uppercase; letter-spacing: .04em; font-size: .74rem; }
+  tr.rc-avg td.rc-remark { color: #8be3ae !important; }
 
   .rc-legend { padding: 6px 28px 20px; font-size: .72rem; color: var(--muted); }
 
