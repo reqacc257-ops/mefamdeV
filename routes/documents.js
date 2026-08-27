@@ -124,7 +124,8 @@ function saveDocumentUpload(appId, docKey, payload) {
 // ── GET checklist ─────────────────────────────────────────────────────────
 router.get('/:appId', async (req, res) => {
   const appId = parseInt(req.params.appId);
-  if (req.user.type === 'applicant' && req.user.appId !== appId) {
+  if (!appId) return res.status(400).json({ error: 'Invalid application ID' });
+  if (req.user.type === 'applicant' && String(req.user.appId) !== String(appId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   res.json(await buildChecklistAsync(appId));
@@ -169,7 +170,8 @@ router.put('/:appId/:docKey', async (req, res) => {
 
 router.post('/:appId/:docKey/upload', async (req, res) => {
   const { appId, docKey } = req.params;
-  if (req.user.type === 'applicant' && req.user.appId !== parseInt(appId)) {
+  if (!parseInt(appId)) return res.status(400).json({ error: 'Invalid application ID' });
+  if (req.user.type === 'applicant' && String(req.user.appId) !== String(parseInt(appId))) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

@@ -1030,7 +1030,8 @@ async function renderRequirements(appId) {
         items = null;
     }
     if (!Array.isArray(items)) {
-        el.innerHTML = '<p style="color:#aaa;font-size:.85rem;padding-top:12px;">Could not load your document checklist right now. Please refresh the page.</p>';
+        const message = items?.error || 'Could not load your document checklist right now. Please refresh the page.';
+        el.innerHTML = `<p style="color:#aaa;font-size:.85rem;padding-top:12px;">${escapeHtml(message)}</p>`;
         return;
     }
 
