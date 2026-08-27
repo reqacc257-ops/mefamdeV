@@ -28,6 +28,7 @@ function parseApp(row) {
     email: row.email || '',
     status: row.status || 'Pending Review',
     mekong: Boolean(Number(row.mekong || 0)),
+    profilePhoto: row.profile_photo || '',
     school: row.school || '',
     grade: row.grade || '',
     sy: row.sy || '',
@@ -140,7 +141,7 @@ router.patch('/:id', async (req, res) => {
   const allowed = [
     'status', 'sy', 'name', 'address', 'barangay', 'dob', 'gender', 'email',
     'school', 'grade', 'edu_level', 'contact', 'ambition', 'why_scholar',
-    'total_income', 'total_expense', 'mekong'
+    'total_income', 'total_expense', 'mekong', 'profile_photo'
   ];
   const updates = [];
   const values  = [];

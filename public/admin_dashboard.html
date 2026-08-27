@@ -256,6 +256,12 @@
         .profile-item { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: .15s; border-radius: 6px; }
         .profile-item:hover, .profile-item.selected { background: #f0f6ff; border-left: 3px solid var(--gold); padding-left: 11px; }
         .profile-item strong { font-size: .88rem; }
+        .profile-avatar { width: 70px; height: 70px; border-radius: 50%; background: var(--navy); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.6rem; font-family: 'DM Serif Display', serif; flex-shrink: 0; overflow: hidden; }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-header-info { min-width: 0; }
+        .profile-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+        .profile-mekong-toggle, .profile-photo-upload { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: .8rem; color: var(--text-muted); cursor: pointer; text-transform: none; letter-spacing: 0; }
+        .profile-photo-upload input { width: auto; max-width: 220px; font-size: .75rem; }
         .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
         .mekong-badge { display: inline-block; color: #176b38; background: #d9f2e2; border-radius: 10px; padding: 2px 8px; font-size: .68rem; font-weight: 700; line-height: 1.2; }
         .mekong-application-row td { background: #f0fbf4; }
@@ -765,16 +771,22 @@
                     <div class="card" id="profile-detail" style="display:none;">
                         <!-- Header -->
                         <div style="display:flex; gap:18px; align-items:center; margin-bottom:18px;">
-                            <div style="width:70px; height:70px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.6rem; font-family:'DM Serif Display',serif; flex-shrink:0;" id="pd-avatar"></div>
-                            <div>
+                            <div class="profile-avatar" id="pd-avatar"></div>
+                            <div class="profile-header-info">
                                 <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy);" id="pd-name"></h3>
                                 <span id="pd-mekong-badge" class="mekong-badge" style="display:none; margin-top:5px;">Mekong</span>
-                                <label style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:.8rem; color:var(--text-muted); cursor:pointer;">
+                                <div class="profile-meta-row">
+                                    <span id="pd-grade" style="font-size:.85rem; color:var(--text-muted);"></span>
+                                    <span class="badge badge-green">Active</span>
+                                </div>
+                                <label class="profile-mekong-toggle">
                                     <input type="checkbox" id="pd-mekong-toggle" onchange="saveMekongStatus()">
                                     <span>Mark as Mekong</span>
                                 </label>
-                                <span id="pd-grade" style="font-size:.85rem; color:var(--text-muted);"></span>
-                                <span class="badge badge-green" style="margin-left:8px;">Active</span>
+                                <label class="profile-photo-upload">
+                                    <span>Upload profile image</span>
+                                    <input type="file" id="pd-photo-input" accept="image/*" onchange="uploadProfilePhoto(event)">
+                                </label>
                             </div>
                         </div>
                         <hr style="border:0; border-top:1px solid var(--border); margin-bottom:14px;">
@@ -2087,7 +2099,10 @@ function viewProfile(id) {
     document.getElementById('profile-empty-state').style.display = 'none';
     const detail = document.getElementById('profile-detail');
     detail.style.display = 'block';
-    document.getElementById('pd-avatar').innerText = s.name.charAt(0);
+    const avatar = document.getElementById('pd-avatar');
+    avatar.innerHTML = s.profilePhoto
+        ? `<img src="${s.profilePhoto}" alt="${escapeHtml(s.name)} profile photo">`
+        : escapeHtml(s.name.charAt(0));
     document.getElementById('pd-name').innerText = s.name;
     document.getElementById('pd-name').classList.toggle('mekong-student-name', Boolean(s.mekong));
     document.getElementById('pd-mekong-badge').style.display = s.mekong ? 'inline-block' : 'none';
@@ -2122,6 +2137,52 @@ function viewProfile(id) {
     }
 
     renderDocChecklist(id, 'pd-documents');
+}
+
+function resizeProfileImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const image = new Image();
+            image.onload = () => {
+                const scale = Math.min(1, 400 / Math.max(image.width, image.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(image.width * scale));
+                canvas.height = Math.max(1, Math.round(image.height * scale));
+                canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.82));
+            };
+            image.onerror = reject;
+            image.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadProfilePhoto(event) {
+    const file = event.target.files?.[0];
+    if (!file || currentProfileId === null) return;
+    if (!file.type.startsWith('image/')) {
+        alert('Please choose an image file.');
+        event.target.value = '';
+        return;
+    }
+    try {
+        const profilePhoto = await resizeProfileImage(file);
+        const result = await MefamAPI.updateApplication(currentProfileId, { profile_photo: profilePhoto });
+        if (!result?.ok) throw new Error(result?.error || 'Unable to save profile photo');
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const app = apps.find(item => String(item.id) === String(currentProfileId));
+        if (app) app.profilePhoto = profilePhoto;
+        localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        const avatar = document.getElementById('pd-avatar');
+        avatar.innerHTML = `<img src="${profilePhoto}" alt="${escapeHtml(app?.name || 'Student')} profile photo">`;
+    } catch (error) {
+        console.error('Failed to upload profile photo:', error);
+        alert('Unable to save the profile image right now.');
+        event.target.value = '';
+    }
 }
 
 async function saveMekongStatus() {
