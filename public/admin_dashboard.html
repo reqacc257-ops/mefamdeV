@@ -93,6 +93,24 @@
         .nav-item.active .nav-badge { background: rgba(26,46,68,.3); color: var(--navy); }
         .nav-item-messenger { color: #ff5b91; }
         .nav-item-messenger:hover { color: #fff; background: rgba(255,91,145,.12); }
+        .messenger-shell { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid #d9dee7; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+        .messenger-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #10131a; color: #fff; }
+        .messenger-header-icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #168aff; font-size: 1rem; }
+        .messenger-header strong { font-size: .92rem; letter-spacing: .02em; }
+        .messenger-header small { display: block; color: #aab4c4; font-size: .72rem; margin-top: 2px; }
+        .messenger-body { min-height: 470px; max-height: 58vh; overflow-y: auto; padding: 22px 20px; background: #f5f7fa; }
+        .messenger-empty { display: grid; place-items: center; min-height: 390px; color: #8a95a5; text-align: center; }
+        .messenger-empty strong { display: block; color: #495568; margin-bottom: 5px; }
+        .messenger-message { max-width: 78%; margin: 0 0 16px auto; }
+        .messenger-message-bubble { padding: 11px 14px; background: #168aff; color: #fff; border-radius: 16px 16px 4px 16px; box-shadow: 0 2px 5px rgba(22,138,255,.18); }
+        .messenger-message-bubble strong { display: block; font-size: .84rem; margin-bottom: 4px; }
+        .messenger-message-bubble p { font-size: .86rem; line-height: 1.45; white-space: pre-wrap; }
+        .messenger-message-meta { margin-top: 5px; color: #8a95a5; font-size: .7rem; text-align: right; }
+        .messenger-composer { padding: 16px 18px; border-top: 1px solid #e1e6ee; background: #fff; }
+        .messenger-composer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .messenger-composer textarea { min-height: 74px; resize: vertical; grid-column: 1 / -1; }
+        .messenger-composer-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .messenger-composer-actions small { color: #8a95a5; }
 
         .sidebar-footer {
             margin-top: auto; padding: 14px 18px;
@@ -528,7 +546,7 @@
         <div class="nav-item" onclick="nav('comms',this)" data-roles="director,program">
             <span class="nav-icon">📢</span> Communications
         </div>
-        <div class="nav-item nav-item-messenger" onclick="openMessenger()" data-roles="director,program" title="Open Facebook Messenger">
+        <div class="nav-item nav-item-messenger" onclick="nav('comms',this)" data-roles="director,program" title="Open Messenger-style announcements">
             <span class="nav-icon">💬</span> Facebook Messenger
         </div>
         <div class="nav-item" onclick="nav('settings',this)" data-roles="director">
@@ -1192,36 +1210,41 @@
              COMMUNICATIONS
         ═══════════════════════════════════════════════ -->
         <div id="comms" class="page">
-            <div class="grid-2eq" style="align-items:start;">
-                <div class="card">
-                    <div class="card-title">Send Announcement Blast</div>
-                    <div style="margin-bottom:12px;">
-                        <label>Target Group</label>
-                        <select id="annTarget">
-                            <option value="All Scholars">All Scholars</option>
-                            <option value="All Families">All Families</option>
-                            <option value="Pending Applicants">Pending Applicants</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <label>Category / Tag</label>
-                        <select id="annTag">
-                            <option value="📅 Important">📅 Important</option>
-                            <option value="🎓 Academic">🎓 Academic</option>
-                            <option value="📋 Applications">📋 Applications</option>
-                            <option value="🕊️ Formation">🕊️ Formation</option>
-                            <option value="💰 Finance">💰 Finance</option>
-                            <option value="📢 General">📢 General</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom:12px;"><label>Subject / Title</label><input type="text" id="annSubject" placeholder="e.g. Reminder: Formation Seminar"></div>
-                    <div style="margin-bottom:14px;"><label>Message</label><textarea rows="5" id="annMessage" placeholder="Type your message here..."></textarea></div>
-                    <button class="btn btn-navy" style="width:100%;" onclick="sendAnnouncement()">📤 Post Announcement</button>
+            <div class="messenger-shell">
+                <div class="messenger-header">
+                    <div class="messenger-header-icon">💬</div>
+                    <div><strong>MEFAMDEV Messenger</strong><small>Staff announcements</small></div>
                 </div>
-                <div class="card">
-                    <div class="card-title">Recent Announcements Sent</div>
-                    <div id="annList">
-                        <div class="empty-state"><div class="empty-icon">📢</div><p>No announcements sent yet.</p></div>
+                <div class="messenger-body">
+                    <div id="annList"><div class="messenger-empty"><div><strong>No messages yet</strong><span>Your announcements will appear here.</span></div></div></div>
+                </div>
+                <div class="messenger-composer">
+                    <div class="messenger-composer-grid">
+                        <div>
+                            <label>To</label>
+                            <select id="annTarget">
+                                <option value="All Scholars">All Scholars</option>
+                                <option value="All Families">All Families</option>
+                                <option value="Pending Applicants">Pending Applicants</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Category / Tag</label>
+                            <select id="annTag">
+                                <option value="📅 Important">📅 Important</option>
+                                <option value="🎓 Academic">🎓 Academic</option>
+                                <option value="📋 Applications">📋 Applications</option>
+                                <option value="🕊️ Formation">🕊️ Formation</option>
+                                <option value="💰 Finance">💰 Finance</option>
+                                <option value="📢 General">📢 General</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1 / -1;"><label>Subject</label><input type="text" id="annSubject" placeholder="Announcement subject"></div>
+                        <textarea rows="3" id="annMessage" placeholder="Write a message..."></textarea>
+                    </div>
+                    <div class="messenger-composer-actions">
+                        <small>Visible on student portals</small>
+                        <button class="btn btn-navy" onclick="sendAnnouncement()">Send message</button>
                     </div>
                 </div>
             </div>
@@ -3147,19 +3170,16 @@ function renderAnnouncements() {
     if (!container) return;
     const anns = JSON.parse(localStorage.getItem('mefamdev_announcements') || '[]');
     if (anns.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📢</div><p>No announcements sent yet.</p></div>';
+        container.innerHTML = '<div class="messenger-empty"><div><strong>No messages yet</strong><span>Your announcements will appear here.</span></div></div>';
         return;
     }
     container.innerHTML = anns.map(a => `
-        <div class="ann-item">
-            <button class="ann-delete-btn" onclick="deleteAnnouncement(${a.id})" title="Delete">&#128465;</button>
-            <div class="ann-tag">${a.tag} &middot; ${a.target}</div>
-            <div class="ann-title">${a.subject}</div>
-            <div class="ann-body">${a.message}</div>
-            <div class="ann-meta">
-                <span>&#128197; Posted: ${a.date}</span>
-                <span>&#128100; By: ${a.postedBy}</span>
+        <div class="messenger-message">
+            <div class="messenger-message-bubble">
+                <strong>${a.subject}</strong>
+                <p>${a.message}</p>
             </div>
+            <div class="messenger-message-meta">${a.tag} · ${a.target} · ${a.date} · ${a.postedBy || 'Staff'} <button class="ann-delete-btn" onclick="deleteAnnouncement(${a.id})" title="Delete">&#128465;</button></div>
         </div>`).join('');
 }
 
