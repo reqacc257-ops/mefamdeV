@@ -91,6 +91,8 @@
             border-radius: 10px; min-width: 20px; text-align: center;
         }
         .nav-item.active .nav-badge { background: rgba(26,46,68,.3); color: var(--navy); }
+        .nav-item-messenger { color: #ff5b91; }
+        .nav-item-messenger:hover { color: #fff; background: rgba(255,91,145,.12); }
 
         .sidebar-footer {
             margin-top: auto; padding: 14px 18px;
@@ -231,6 +233,8 @@
             font-size: .88rem; color: var(--text); width: 100%;
             transition: border .2s; background: #fff;
         }
+        .disb-scholar-input { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: .88rem; color: var(--text); width: 100%; background: #fff; }
+        .disb-scholar-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,166,35,.2); }
         input:focus, select:focus, textarea:focus {
             outline: none; border-color: var(--gold);
             box-shadow: 0 0 0 3px rgba(245,166,35,.2);
@@ -523,6 +527,9 @@
         </div>
         <div class="nav-item" onclick="nav('comms',this)" data-roles="director,program">
             <span class="nav-icon">📢</span> Communications
+        </div>
+        <div class="nav-item nav-item-messenger" onclick="openMessenger()" data-roles="director,program" title="Open Facebook Messenger">
+            <span class="nav-icon">💬</span> Facebook Messenger
         </div>
         <div class="nav-item" onclick="nav('settings',this)" data-roles="director">
             <span class="nav-icon">⚙️</span> Settings
@@ -1140,7 +1147,7 @@
                 <div class="card" style="border-top:4px solid var(--gold);">
                     <div class="card-title">💸 Disburse Stipend</div>
                     <div style="margin-bottom:12px;"><label>Scholar</label>
-                        <input type="search" id="disbScholarSearch" list="disbScholarOptions" placeholder="Search scholar by name, school, or grade..." oninput="renderFinancials()" style="width:100%;">
+                        <input type="search" class="disb-scholar-input" id="disbScholarSearch" list="disbScholarOptions" placeholder="Search scholar by name, school, or grade..." oninput="renderFinancials()">
                         <datalist id="disbScholarOptions"></datalist>
                         <input type="hidden" id="disbScholar">
                         <div id="disbScholarSummary" style="min-height:18px; margin-top:7px; color:var(--text-muted); font-size:.8rem;"></div>
@@ -1587,6 +1594,14 @@ function nav(pageId, el) {
 function toggleRoleMenu(e) {
     e.stopPropagation();
     document.getElementById('roleMenu').classList.toggle('open');
+}
+
+function openMessenger() {
+    const width = Math.min(760, Math.max(420, Math.round(window.screen.width * 0.42)));
+    const height = Math.min(900, Math.max(620, Math.round(window.screen.height * 0.86)));
+    const left = Math.max(0, Math.round((window.screen.width - width) / 2));
+    const top = Math.max(0, Math.round((window.screen.height - height) / 2));
+    window.open('https://www.messenger.com/', 'mefamdev-messenger', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
 }
 
 function switchRole(role, name, roleTitle, initials) {
