@@ -1597,11 +1597,7 @@ function toggleRoleMenu(e) {
 }
 
 function openMessenger() {
-    const width = Math.min(760, Math.max(420, Math.round(window.screen.width * 0.42)));
-    const height = Math.min(900, Math.max(620, Math.round(window.screen.height * 0.86)));
-    const left = Math.max(0, Math.round((window.screen.width - width) / 2));
-    const top = Math.max(0, Math.round((window.screen.height - height) / 2));
-    window.open('https://www.messenger.com/', 'mefamdev-messenger', `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+    window.location.href = 'https://www.messenger.com/';
 }
 
 function switchRole(role, name, roleTitle, initials) {
