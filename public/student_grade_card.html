@@ -68,7 +68,10 @@
         .page-header-row > div { min-width: 140px; }
         .review-source { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(0, 1.5fr); gap: 18px; align-items: start; }
         .review-photo { min-height: 240px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
-        .review-photo img { display: block; width: 100%; max-height: 520px; object-fit: contain; border-radius: 6px; }
+        .review-photo img { display: block; width: 100%; max-height: 520px; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
+        .image-zoom-modal { background: rgba(12,20,39,.9); }
+        .image-zoom-modal .modal { width: min(96vw, 1200px); max-height: 94vh; background: transparent; box-shadow: none; overflow: auto; }
+        .image-zoom-modal img { display: block; width: 100%; height: auto; max-height: 84vh; object-fit: contain; border-radius: 8px; }
         .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
         .review-flags ul { margin: 6px 0 0 18px; list-style: disc; }
         @media (max-width: 760px) { .review-source { grid-template-columns: 1fr; } }
@@ -160,6 +163,15 @@
             <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
                 <div id="reportCardContent"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay image-zoom-modal" id="imageZoomModal" onclick="if(event.target===this) closeModal('imageZoomModal')">
+        <div class="modal">
+            <div class="modal-header" style="justify-content:flex-end; border:0; padding:10px 0;">
+                <button class="btn btn-ghost" onclick="closeModal('imageZoomModal')">✕ Close</button>
+            </div>
+            <img id="zoomedReviewImage" src="" alt="Zoomed report card">
         </div>
     </div>
 
@@ -543,7 +555,7 @@
             if (!content) return;
             const flags = Array.isArray(extraction.flags) ? extraction.flags : [];
             const photo = extraction.fileData
-                ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card">`
+                ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)">`
                 : '<div class="empty-state">Original image is unavailable.</div>';
             content.innerHTML = `
                 <div class="form-group"><label>Student</label><div style="font-weight:700;">${escapeHtml(scholar?.name || `Applicant #${extraction.appId || '—'}`)}</div></div>
@@ -566,6 +578,13 @@
                 <div class="form-group" style="margin-top:12px;"><label>Review Notes</label><textarea id="reviewNotes" rows="3" style="width:100%; border:1px solid var(--border); border-radius:10px; padding:10px;"></textarea></div>
             `;
             document.getElementById('reviewExtractionModal').classList.add('open');
+        }
+
+        function openImageZoom(src) {
+            const image = document.getElementById('zoomedReviewImage');
+            if (!image || !src) return;
+            image.src = src;
+            document.getElementById('imageZoomModal').classList.add('open');
         }
 
         function collectReviewSubjects() {
