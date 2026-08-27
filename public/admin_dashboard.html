@@ -290,6 +290,13 @@
         .tool-modal { width: min(1100px, 96vw); height: min(92vh, 900px); max-height: 92vh; overflow: hidden; }
         .tool-modal .modal-header { flex-shrink: 0; }
         .tool-modal-frame { display: block; width: 100%; height: calc(100% - 69px); border: 0; background: #f4f5f7; }
+        .delete-modal { width: min(440px, 92vw); overflow: hidden; }
+        .delete-modal .modal-header { background: #7f1d1d; }
+        .delete-icon { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 50%; background: #fef2f2; color: #b91c1c; font-size: 1.4rem; }
+        .delete-warning { margin-top: 14px; padding: 12px 14px; border-left: 3px solid #ef4444; background: #fff7f7; color: #7f1d1d; font-size: .86rem; line-height: 1.5; }
+        .delete-confirm-name { display: none; margin-top: 16px; }
+        .delete-confirm-name.visible { display: block; }
+        .delete-modal .modal-footer .btn-danger { background: #dc2626; color: #fff; }
         .director-only .user-pill { pointer-events: none; }
         .director-only .role-dropdown { display: none !important; }
 
@@ -1292,6 +1299,23 @@
         </div>
         <div class="modal-body" id="appModalContent"></div>
         <div class="modal-footer" id="appModalFooter"></div>
+    </div>
+</div>
+
+<!-- Floating delete confirmation -->
+<div class="modal-overlay" id="deleteConfirmModal" onclick="if(event.target===this) closeDeleteConfirm(false)">
+    <div class="modal delete-modal">
+        <div class="modal-header"><h2 id="deleteConfirmTitle">Delete application</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeDeleteConfirm(false)">✕</button></div>
+        <div class="modal-body">
+            <div class="delete-icon">🗑</div>
+            <p id="deleteConfirmMessage" style="font-size:1rem; font-weight:700; color:var(--navy);"></p>
+            <div id="deleteConfirmWarning" class="delete-warning"></div>
+            <div id="deleteConfirmNameWrap" class="delete-confirm-name">
+                <label for="deleteConfirmName">Type the applicant's full name to confirm</label>
+                <input id="deleteConfirmName" type="text" autocomplete="off" placeholder="Applicant full name">
+            </div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-ghost" onclick="closeDeleteConfirm(false)">Cancel</button><button class="btn btn-danger" onclick="closeDeleteConfirm(true)">Delete permanently</button></div>
     </div>
 </div>
 
@@ -2783,6 +2807,37 @@ async function changeStatus(id, status) {
     }
 }
 
+let deleteConfirmResolver = null;
+
+function closeDeleteConfirm(confirmed) {
+    const modal = document.getElementById('deleteConfirmModal');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
+    if (deleteConfirmResolver) {
+        const resolve = deleteConfirmResolver;
+        deleteConfirmResolver = null;
+        resolve(confirmed);
+    }
+}
+
+function showDeleteConfirm(app, acceptedFinal = false) {
+    const name = String(app.name || 'this application');
+    document.getElementById('deleteConfirmTitle').textContent = acceptedFinal ? 'Final deletion confirmation' : 'Delete application';
+    document.getElementById('deleteConfirmMessage').textContent = acceptedFinal
+        ? `You are about to permanently delete ${name}.`
+        : `Permanently delete ${name}?`;
+    document.getElementById('deleteConfirmWarning').textContent = acceptedFinal
+        ? 'This accepted applicant record may contain program history and grades. This action cannot be undone.'
+        : 'This action cannot be undone.';
+    const nameWrap = document.getElementById('deleteConfirmNameWrap');
+    nameWrap.classList.toggle('visible', acceptedFinal);
+    document.getElementById('deleteConfirmName').value = '';
+    document.getElementById('deleteConfirmModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    if (acceptedFinal) setTimeout(() => document.getElementById('deleteConfirmName').focus(), 0);
+    return new Promise(resolve => { deleteConfirmResolver = resolve; });
+}
+
 async function deleteApp(id) {
     let app;
     try {
@@ -2794,13 +2849,13 @@ async function deleteApp(id) {
     }
     if (!app) return;
 
-    if (!confirm(`Permanently delete ${app.name || 'this application'}? This cannot be undone.`)) return;
+    if (!await showDeleteConfirm(app)) return;
 
     let confirmation = {};
     if (app.status === 'Accepted') {
-        if (!confirm(`FINAL WARNING: ${app.name} is an accepted applicant. Deleting this record may remove access to their program history. Continue?`)) return;
-        const typedName = prompt(`Type the accepted applicant's full name to confirm deletion:\n\n${app.name}`);
-        if (typedName === null || typedName.trim().toLowerCase() !== String(app.name || '').trim().toLowerCase()) {
+        if (!await showDeleteConfirm(app, true)) return;
+        const typedName = document.getElementById('deleteConfirmName').value.trim();
+        if (typedName.toLowerCase() !== String(app.name || '').trim().toLowerCase()) {
             alert('Deletion cancelled. The name did not match exactly.');
             return;
         }
