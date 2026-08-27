@@ -347,10 +347,16 @@ const MefamAPI = {
   },
   async _parseJsonResponse(response) {
     const text = await response.text();
-    if (!text.trim()) return {};
+    if (!text.trim()) {
+      if (!response.ok) throw new Error(`Server returned an empty error response (${response.status}).`);
+      return {};
+    }
     try {
-      return JSON.parse(text);
+      const payload = JSON.parse(text);
+      if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);
+      return payload;
     } catch (error) {
+      if (error.message && !error.message.includes('Unexpected token')) throw error;
       throw new Error(`Server returned invalid JSON (${response.status}).`);
     }
   },
