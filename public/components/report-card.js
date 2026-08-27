@@ -5,7 +5,7 @@
 
 // Default learning areas; will be merged with configured subjects or grades-derived subjects
 const DEFAULT_AREAS = [
-  'Filipino','English','Mathematics','Science','Araling Panlipunan','MAPEH'
+  'Filipino','English','Mathematics','Science','Araling Panlipunan','MAPEH','Technology and Livelihood Education (TLE)','Edukasyon sa Pagpapakatao'
 ];
 
 function calculateFinalGrade(grades) {
@@ -26,8 +26,8 @@ function getRemarkFromGrade(grade) {
 function canonicalSubjectName(name) {
   const normalized = String(name || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
   if (['music', 'arts', 'pe', 'physical education', 'health', 'mapeh'].includes(normalized)) return 'MAPEH';
-  if (normalized === 'esp' || normalized === 'edukasyon sa pagpapakatao') return 'EsP';
-  if (normalized === 'tle' || normalized.includes('technology') && normalized.includes('livelihood') || normalized === 'education (tle)') return 'TLE';
+  if (normalized === 'esp' || normalized === 'edukasyon sa pagpapakatao') return 'Edukasyon sa Pagpapakatao';
+  if (normalized === 'tle' || normalized.includes('technology') && normalized.includes('livelihood') || normalized === 'education (tle)') return 'Technology and Livelihood Education (TLE)';
   return String(name || '').trim();
 }
 
@@ -82,7 +82,7 @@ function buildReportCardHTML(scholarData, gradesData) {
 
   const subjectsFromGrades = Object.keys(gradesBySubject);
   const configuredSubjects = configured && Array.isArray(configured) && configured.length > 0 ? configured : DEFAULT_AREAS;
-  const excludedSubjects = new Set(['esp', 'edukasyon sa pagpapakatao', 'tle', 'technology and livelihood education', 'education (tle)']);
+  const excludedSubjects = new Set();
   const finalSubjectList = Array.from(new Set([...configuredSubjects, ...subjectsFromGrades].map(canonicalSubjectName)))
     .filter(subject => subject && !excludedSubjects.has(String(subject).toLowerCase()) && subject !== 'Music' && subject !== 'Arts' && subject !== 'PE' && subject !== 'Health');
 
