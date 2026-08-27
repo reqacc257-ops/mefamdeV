@@ -128,6 +128,9 @@
         .review-group.open .review-group-items { display: block; }
         .review-item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #eef1f5; flex-wrap: wrap; }
         .review-item-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+        .action-stack { display: inline-flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 112px; }
+        .action-stack .btn { width: 100%; margin-left: 0 !important; text-align: center; }
+        .review-item-actions .btn { min-width: 112px; text-align: center; }
         .review-item-row:last-child { border-bottom: none; }
         .review-item-meta { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
         .review-item-date { display: block; margin-top: 3px; font-size: .88rem; color: var(--navy); font-weight: 600; }
@@ -553,8 +556,10 @@
                     <td>${escapeHtml(app.grade || '—')}</td>
                     <td>${escapeHtml(app.school || '—')}</td>
                     <td>
-                        <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
-                        <button class="btn btn-ghost btn-sm" style="margin-left:6px;" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                        <div class="action-stack">
+                            <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
+                            <button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                        </div>
                     </td>
                 </tr>`;
             }).join('');

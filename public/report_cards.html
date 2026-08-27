@@ -52,6 +52,8 @@
         th { background: #f8fafc; color: var(--navy); font-size: .85rem; font-weight: 700; }
         tbody tr:hover { background: #f9fbfd; }
         .app-id-badge { background: #eef4ff; color: #1d4ed8; padding: 4px 9px; border-radius: 999px; font-size: .78rem; }
+        .action-stack { display: inline-flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 112px; }
+        .action-stack .btn { width: 100%; margin-left: 0 !important; text-align: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(12,20,39,.65); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
         .modal-overlay.open { display: flex; }
         .modal { width: min(100%, 900px); background: #fff; border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
@@ -175,8 +177,10 @@
                     <td>${escapeHtml(app.grade || '—')}</td>
                     <td>${escapeHtml(app.school || '—')}</td>
                     <td>
-                        <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
-                        <button class="btn btn-ghost btn-sm" style="margin-left:6px;" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                        <div class="action-stack">
+                            <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
+                            <button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                        </div>
                     </td>
                 </tr>`;
             }).join('');
