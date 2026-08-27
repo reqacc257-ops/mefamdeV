@@ -2487,7 +2487,7 @@ async function viewApp(id) {
         <div class="grid-2eq" style="gap:20px;">
             <div>
                 <div class="modal-section">Personal Information</div>
-                <p><strong>Name:</strong> ${a.name}</p>
+                <p><strong>Name:</strong> ${a.name} ${a.mekong ? '<span class="badge badge-green" style="margin-left:6px;">Mekong</span>' : ''}</p>
                 <p><strong>Age / DOB:</strong> ${a.age} (${a.dob||'—'})</p>
                 <p><strong>Gender:</strong> ${a.gender}</p>
                 <p><strong>Contact:</strong> ${a.contact||'—'}</p>
