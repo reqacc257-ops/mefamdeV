@@ -453,13 +453,7 @@
     <!-- Hint box — switches content based on detected type -->
     <div class="demo-hint" style="margin-top:20px;">
         <div id="hintStaff">
-            <p>
-                <strong>Staff Demo Accounts:</strong><br>
-                👑 <code>director</code> / <code>uVP-OzXLaTSm7pga3hM6rUgrii-nzyy9</code> — Full Access<br>
-                🎓 <code>edu</code> / <code>upmD_tpQEXK128keN8x4rv2JVRmMbIm7</code> — Education Staff<br>
-                💰 <code>finance</code> / <code>Z_jJd9Qos26bQvFnYE_056OFo1ffvHdi</code> — Finance Officer<br>
-                📋 <code>program</code> / <code>kowUdbhQzT9RF4J5b3KOHtseMyg7FadB</code> — Program Coordinator
-            </p>
+            <p>Staff sign-in requires an authorized account and password.</p>
         </div>
         <div id="hintApplicant" style="display:none;">
             <p>
@@ -510,10 +504,10 @@
    STAFF ACCOUNTS
 ══════════════════════════════════════ */
 const STAFF_ACCOUNTS = [
-    { username: 'director', password: 'uVP-OzXLaTSm7pga3hM6rUgrii-nzyy9', role: 'director', name: 'Director',      title: 'Primary Social Worker',   initials: 'DR' },
-    { username: 'edu',      password: 'upmD_tpQEXK128keN8x4rv2JVRmMbIm7', role: 'edu',      name: 'Edu Staff',     title: 'Education Social Worker', initials: 'ED' },
-    { username: 'finance',  password: 'Z_jJd9Qos26bQvFnYE_056OFo1ffvHdi', role: 'finance',  name: 'Finance Staff', title: 'Finance Officer',         initials: 'FN' },
-    { username: 'program',  password: 'kowUdbhQzT9RF4J5b3KOHtseMyg7FadB', role: 'program',  name: 'Coordinator',   title: 'Program Coordinator',     initials: 'PC' },
+    { username: 'director', title: 'Primary Social Worker' },
+    { username: 'edu', title: 'Education Social Worker' },
+    { username: 'finance', title: 'Finance Officer' },
+    { username: 'program', title: 'Program Coordinator' },
 ];
 
 const STAFF_USERNAMES = STAFF_ACCOUNTS.map(a => a.username);
