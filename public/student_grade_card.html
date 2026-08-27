@@ -33,6 +33,7 @@
         .topbar { height: var(--header-h); background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; }
         .topbar-title { font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--navy); }
         .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
         .content-area { margin-top: 18px; }
         .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
         .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); }
@@ -81,22 +82,37 @@
         .review-group-header:hover { background: #f9fbfd; }
         .review-group-name { font-weight: 700; color: var(--navy); }
         .review-count-badge { background: var(--gold-light); color: #8a5a00; border: 1px solid #f0d9a8; font-weight: 700; font-size: .74rem; padding: 2px 9px; border-radius: 999px; letter-spacing: .2px; }
+        .review-count-badge { background: #fde8ea; color: #b41623; border-color: #f3b8bf; }
+        .review-mekong-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; background: #d9f2e2; color: #176b38; font-size: .72rem; font-weight: 700; white-space: nowrap; }
         .review-group-sub { font-size: .82rem; color: var(--text-muted); }
         .review-group-chevron { margin-left: auto; color: var(--text-muted); font-size: .8rem; transition: transform .18s ease; flex-shrink: 0; }
         .review-group.open .review-group-chevron { transform: rotate(180deg); }
         .review-group-items { display: none; margin: 0 4px 12px 14px; padding-left: 14px; border-left: 2px solid #eef1f5; }
         .review-group.open .review-group-items { display: block; }
         .review-item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #eef1f5; flex-wrap: wrap; }
+        .review-item-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-left: auto; }
         .review-item-row:last-child { border-bottom: none; }
         .review-item-meta { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
         .review-item-type { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #5f6d7a; background: #eef1f5; padding: 2px 7px; border-radius: 6px; margin-right: 6px; }
+        @media (max-width: 640px) {
+            .main { padding: 12px 10px 32px; }
+            .topbar { height: auto; min-height: var(--header-h); padding: 10px 12px; gap: 10px; }
+            .topbar, .topbar-right { flex-wrap: wrap; }
+            .topbar-right { width: 100%; }
+            .topbar-actions .btn { flex: 1 1 140px; }
+            .review-group-header { align-items: flex-start; flex-wrap: wrap; }
+            .review-group-sub { flex: 1 1 100%; order: 5; }
+            .review-group-chevron { margin-left: auto; }
+            .review-item-actions { width: 100%; margin-left: 0; justify-content: flex-start; }
+        }
     </style>
 </head>
 <body>
     <main class="main">
         <header class="topbar">
             <div style="display:flex; align-items:center; gap:12px;"><span class="topbar-title">Student Grade/Card</span></div>
-            <div class="topbar-right">
+            <div class="topbar-right topbar-actions">
+                <button class="btn btn-ghost" onclick="goBackToDashboard()">← Back</button>
                 <button class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
             </div>
         </header>
@@ -250,6 +266,7 @@
                 items.push({
                     studentId,
                     studentName: scholar?.name || `Applicant #${extraction.appId ?? '—'}`,
+                    mekong: Boolean(scholar?.mekong),
                     sortTime: uploadedAt ? uploadedAt.getTime() : 0,
                     typeLabel: 'Upload',
                     meta: `${fileName} · ${schoolYear} · ${uploadedAt ? uploadedAt.toLocaleString() : 'Recently uploaded'}`,
@@ -263,6 +280,7 @@
                 items.push({
                     studentId,
                     studentName: scholar?.name || `Applicant #${r.student_id ?? '—'}`,
+                    mekong: Boolean(scholar?.mekong),
                     sortTime: r.submitted_at ? new Date(r.submitted_at).getTime() : 0,
                     typeLabel: 'Quarter grade',
                     meta: `${r.school_year || ''} · ${r.subject || ''} · Q${String(r.quarter || '')} · ${r.grade_value ?? '—'}`,
@@ -291,7 +309,7 @@
             const groups = new Map();
             items.forEach(item => {
                 const key = item.studentId != null ? `id-${item.studentId}` : `name-${item.studentName}`;
-                if (!groups.has(key)) groups.set(key, { key, studentName: item.studentName, items: [] });
+                if (!groups.has(key)) groups.set(key, { key, studentName: item.studentName, mekong: item.mekong, items: [] });
                 groups.get(key).items.push(item);
             });
 
@@ -310,12 +328,13 @@
                             <span class="review-item-type">${escapeHtml(item.typeLabel)}</span>
                             <span class="review-item-meta">${escapeHtml(item.meta)}</span>
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center;">${item.actionsHtml}</div>
+                        <div class="review-item-actions">${item.actionsHtml}</div>
                     </div>`).join('');
 
                 return `<div class="review-group${isOpen ? ' open' : ''}" id="reviewGroup-${escapeHtml(group.key)}">
                     <div class="review-group-header" onclick="toggleReviewGroup('${group.key.replace(/'/g, "\\'")}', ${count})">
                         <span class="review-group-name">${escapeHtml(group.studentName)}</span>
+                        ${group.mekong ? '<span class="review-mekong-badge">Mekong</span>' : ''}
                         ${count > 1 ? `<span class="review-count-badge">×${count}</span>` : ''}
                         ${count === 1 ? `<span class="review-group-sub">${escapeHtml(latestMeta)}</span>` : ''}
                         <span class="review-group-chevron">▾</span>
@@ -339,6 +358,14 @@
                 expandedReviewGroups.add(key);
                 el.classList.add('open');
             }
+        }
+
+        function goBackToDashboard() {
+            if (window.parent !== window && !window.parent.closed) {
+                window.parent.location.href = 'admin_dashboard.html';
+                return;
+            }
+            window.location.href = 'admin_dashboard.html';
         }
 
         async function approveQuarter(id) {
