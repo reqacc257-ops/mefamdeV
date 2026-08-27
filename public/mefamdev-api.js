@@ -227,7 +227,23 @@ const MefamAPI = {
   },
   async getApprovedGradeCard(appId, schoolYear) {
     const query = schoolYear ? `?school_year=${encodeURIComponent(schoolYear)}` : '';
-    return this._get(`/grades/student/${encodeURIComponent(appId)}/grade-card${query}`);
+    try {
+      return await this._get(`/grades/student/${encodeURIComponent(appId)}/grade-card${query}`);
+    } catch (error) {
+      const legacy = await this._get(`/events/grades?appId=${encodeURIComponent(appId)}&schoolYear=${encodeURIComponent(schoolYear || '')}`);
+      if (!Array.isArray(legacy)) throw error;
+      const grouped = new Map();
+      legacy.forEach(row => {
+        if (!row.subject || !row.quarter) return;
+        if (!grouped.has(row.subject)) grouped.set(row.subject, { subject: row.subject, quarters: {}, average: null });
+        grouped.get(row.subject).quarters[row.quarter] = row.grade_val;
+      });
+      grouped.forEach(subject => {
+        const values = Object.values(subject.quarters).filter(value => value !== null && value !== undefined);
+        subject.average = values.length ? Math.round(values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length) : null;
+      });
+      return Array.from(grouped.values());
+    }
   },
 
   async pendingGrades() {
@@ -292,9 +308,12 @@ const MefamAPI = {
         if (token) headers.Authorization = 'Bearer ' + token;
       }
     }
-    const r = await fetch(`${API_BASE}${path}`, { headers, credentials: 'same-origin' });
-    if (r.status === 401) { this.logout(); return; }
-    return this._parseJsonResponse(r);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const r = await fetch(`${API_BASE}${path}`, { headers, credentials: 'same-origin' });
+      if (r.status === 401) { this.logout(); return; }
+      if (![429, 502, 503, 504].includes(r.status) || attempt === 2) return this._parseJsonResponse(r);
+      await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)));
+    }
   },
   async _post(path, body, auth = true) {
     const headers = { 'Content-Type': 'application/json' };

@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS grade_extraction (
 );
 CREATE TABLE IF NOT EXISTS quarterly_grades (
   id BIGSERIAL PRIMARY KEY,
-  student_id INTEGER NOT NULL,
+  student_id BIGINT NOT NULL,
   school_year TEXT NOT NULL,
   subject TEXT NOT NULL,
   quarter INTEGER NOT NULL,
