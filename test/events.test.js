@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const db = require('../memory-store');
 const eventsRouter = require('../routes/events');
 
@@ -17,7 +18,7 @@ test('active attendance codes prevent duplicate check-ins and expire cleanly', a
   const app = express();
   app.use(express.json());
   app.use((req, res, next) => {
-    req.user = { role: 'program', appId: 1 };
+    req.user = { type: 'staff', role: 'program', appId: 1 };
     next();
   });
   app.use('/api/events', eventsRouter);
@@ -27,10 +28,11 @@ test('active attendance codes prevent duplicate check-ins and expire cleanly', a
 
   try {
     const { port } = server.address();
+    const authHeader = { Authorization: `Bearer ${jwt.sign({ type: 'staff', role: 'program' }, 'local-development-only-jwt-secret')}` };
 
     const startRes = await fetch(`http://127.0.0.1:${port}/api/events/${eventId}/start`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({ expiresInMinutes: 5 })
     });
     const startBody = await startRes.json();
@@ -57,7 +59,7 @@ test('active attendance codes prevent duplicate check-ins and expire cleanly', a
     assert.equal(duplicateCheckin.status, 200);
     assert.equal(duplicateBody.duplicate, true);
 
-    const closeRes = await fetch(`http://127.0.0.1:${port}/api/events/${eventId}/end`, { method: 'POST' });
+    const closeRes = await fetch(`http://127.0.0.1:${port}/api/events/${eventId}/end`, { method: 'POST', headers: authHeader });
     const closeBody = await closeRes.json();
     assert.equal(closeRes.status, 200);
     assert.equal(closeBody.ok, true);

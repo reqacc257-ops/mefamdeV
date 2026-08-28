@@ -63,6 +63,8 @@
     .btn-green:hover { background: var(--teal-dark); }
     .btn-ghost { background:#fff; color:var(--text-muted); }
     .btn-danger-ghost { background:#fff; color:var(--red); border-color: rgba(192,57,43,.25); }
+    .btn-danger { background:var(--red); color:#fff; border-color:var(--red); }
+    .btn-danger:hover { background:#a53225; }
     .grid { display:grid; gap:20px; grid-template-columns: 1.3fr .7fr; align-items:start; }
     .card {
       background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
@@ -107,6 +109,7 @@
     .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
     .modal-header h3 { font-family:'DM Serif Display', Georgia, serif; color:var(--navy); font-size:1.2rem; }
     .modal-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+    .modal-body p { font-size:.9rem; line-height:1.55; color:var(--text); margin:0; }
     .evt-att-list { max-height:420px; overflow:auto; padding-right:4px; }
     .evt-att-list label {
       display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--border);
@@ -114,6 +117,8 @@
     }
     .evt-att-list label:hover { background: #f7f9fb; }
     .evt-att-list input[type=checkbox] { width:auto; accent-color: var(--teal); }
+
+    .field-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
 
     .attendance-panel { display:none; position:fixed; inset:0; background:rgba(15,23,42,.65); padding:20px; z-index:1000; overflow:auto; }
     .attendance-panel.open { display:flex; justify-content:center; align-items:flex-start; }
@@ -127,16 +132,36 @@
       border:1px solid rgba(102,192,244,.15); border-radius:22px; padding:24px; color:#e8f5ff;
       box-shadow:0 24px 50px rgba(0,0,0,.35); margin:0 auto;
     }
+    .ad-eyebrow { font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:#7ad9ff; margin-bottom:8px; display:flex; align-items:center; gap:7px; }
+    .ad-dot { width:8px; height:8px; border-radius:50%; background:#7ad9ff; display:inline-block; }
+    .ad-dot.live { background:#ff5b5b; box-shadow: 0 0 0 0 rgba(255,91,91,.6); animation: pulseDot 1.4s infinite; }
+    .ad-eventname { font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:4px; }
+    .ad-meta { font-size:.85rem; color:rgba(248,251,255,.65); margin-bottom:16px; }
+
+    .stopwatch-face {
+      text-align:center; margin:6px auto 4px; padding:18px 10px;
+      border:1px solid rgba(122,217,255,.18); border-radius:16px;
+      background: rgba(102,192,244,.05);
+    }
+    .stopwatch-time {
+      font-family:'DM Serif Display', Georgia, serif; font-variant-numeric: tabular-nums;
+      font-size:40px; letter-spacing:.04em; color:#f2fbff; line-height:1.1;
+    }
+    .stopwatch-label { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:#7ad9ff; margin-top:6px; }
+    .stopwatch-sub { font-size:.78rem; color:rgba(248,251,255,.6); margin-top:10px; }
+    .stopwatch-code { font-family:'DM Serif Display', Georgia, serif; font-size:1.5rem; letter-spacing:.24em; color:#d7f3ff; margin-top:2px; }
+
     .attendance-device .ad-code {
       font-family:'DM Serif Display', Georgia, serif; font-size:44px; font-weight:400; letter-spacing:.16em;
       text-align:center; margin:0 auto 6px; color:#d7f3ff;
     }
-    .attendance-device .ad-timer { text-align:center; font-size:.78rem; color:#7ad9ff; letter-spacing:.04em; margin-bottom:12px; }
     .attendance-device .ad-actions { display:flex; gap:10px; margin-top:14px; }
     .attendance-device .ad-actions .btn { flex:1; justify-content:center; }
-    .attendance-device .close-device {
-      position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%;
-      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; cursor:pointer;
+
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(255,91,91,.55); }
+      70% { box-shadow: 0 0 0 8px rgba(255,91,91,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,91,91,0); }
     }
 
     .toast-stack { position: fixed; top: 18px; right: 18px; z-index: 2000; display:flex; flex-direction:column; gap:8px; }
@@ -155,7 +180,7 @@
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
     }
-    @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } .field-row { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -234,6 +259,48 @@
     </div>
   </div>
 
+  <!-- Start-session modal (replaces window.prompt) -->
+  <div class="modal-overlay" id="sessionStartModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Start Attendance Session</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('sessionStartModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-row">
+          <div>
+            <label for="sessionDuration">Duration (minutes)</label>
+            <input type="number" id="sessionDuration" min="1" value="15">
+          </div>
+          <div>
+            <label for="sessionSpeed">Demo speed (×)</label>
+            <input type="number" id="sessionSpeed" min="0.1" step="0.1" value="1">
+          </div>
+        </div>
+        <p style="margin-top:10px; color:var(--text-muted); font-size:.8rem;">Demo speed only affects how fast the on-screen stopwatch appears to run — it doesn't change the real session length. Leave at 1 for normal use.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('sessionStartModal')">Cancel</button>
+        <button class="btn btn-gold" id="sessionModalStartBtn" onclick="confirmStartSessionFromModal()">▶ Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic confirm modal (replaces window.confirm) -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="width:min(420px,100%);">
+      <div class="modal-header">
+        <h3 id="confirmModalTitle">Please confirm</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeConfirmModal()">✕</button>
+      </div>
+      <div class="modal-body"><p id="confirmModalMessage">Are you sure?</p></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeConfirmModal()">Cancel</button>
+        <button class="btn btn-danger" id="confirmModalYesBtn" onclick="confirmModalYes()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="absenceModal">
     <div class="modal">
       <div class="modal-header">
@@ -273,6 +340,8 @@
     let currentEventId = null;
     let __attendanceTimerInterval = null;
     let __attendanceVisualSpeed = parseFloat(localStorage.getItem('attendance_speed') || '1') || 1;
+    let __sessionModalEvtId = null;
+    let __pendingConfirmAction = null;
 
     // ---------- helpers ----------
 
@@ -340,6 +409,30 @@
         btn.disabled = false;
         if (btn.dataset.originalLabel) btn.innerHTML = btn.dataset.originalLabel;
       }
+    }
+
+    // ---------- generic in-page confirm (replaces window.confirm, which can trigger blur-based logout) ----------
+
+    function showConfirm(message, onConfirm, opts) {
+      const options = opts || {};
+      document.getElementById('confirmModalTitle').textContent = options.title || 'Please confirm';
+      document.getElementById('confirmModalMessage').textContent = message;
+      const yesBtn = document.getElementById('confirmModalYesBtn');
+      yesBtn.textContent = options.confirmLabel || 'Confirm';
+      __pendingConfirmAction = onConfirm;
+      document.getElementById('confirmModal').classList.add('open');
+    }
+
+    function closeConfirmModal() {
+      __pendingConfirmAction = null;
+      closeModal('confirmModal');
+    }
+
+    function confirmModalYes() {
+      const action = __pendingConfirmAction;
+      closeModal('confirmModal');
+      __pendingConfirmAction = null;
+      if (typeof action === 'function') action();
     }
 
     // ---------- data ----------
@@ -429,23 +522,48 @@
         }).join('') + `</tbody></table>`;
     }
 
-    async function startEventSession(evtId) {
-      try {
-        const events = sortedEvents();
-        const ev = events.find(e => String(e.id) === String(evtId)) || null;
-        const active = ev?.activeAttendanceSession || null;
-        if (active) {
-          if (!confirm('There is already an active attendance session for this event. End it and start a new one?')) return;
-          await endEventSession(evtId);
-        }
-        let minutes = parseInt(prompt('Attendance duration in minutes (default 15):', localStorage.getItem(`attendance_last_duration_${evtId}`) || '15') || '15', 10);
-        if (isNaN(minutes) || minutes <= 0) minutes = 15;
-        let speed = parseFloat(prompt('Visual speed multiplier for the timer (1 = real time):', String(__attendanceVisualSpeed || 1)) || String(__attendanceVisualSpeed || 1));
-        if (isNaN(speed) || speed <= 0) speed = 1;
-        __attendanceVisualSpeed = speed;
-        localStorage.setItem('attendance_speed', String(speed));
-        try { localStorage.setItem(`attendance_last_duration_${evtId}`, String(minutes)); } catch (e) {}
+    // ---------- start / end session (no window.prompt / window.confirm — those cause focus-loss/blur, which can trip an inactivity-based logout) ----------
 
+    function startEventSession(evtId) {
+      const events = sortedEvents();
+      const ev = events.find(e => String(e.id) === String(evtId)) || null;
+      const active = ev?.activeAttendanceSession || null;
+      if (active) {
+        showConfirm(
+          'There is already an active attendance session for this event. End it and start a new one?',
+          () => { endEventSession(evtId, true, () => openSessionModal(evtId)); },
+          { title: 'Replace active session?', confirmLabel: 'End & start new' }
+        );
+        return;
+      }
+      openSessionModal(evtId);
+    }
+
+    function openSessionModal(evtId) {
+      __sessionModalEvtId = evtId;
+      const lastDuration = localStorage.getItem(`attendance_last_duration_${evtId}`) || '15';
+      document.getElementById('sessionDuration').value = lastDuration;
+      document.getElementById('sessionSpeed').value = String(__attendanceVisualSpeed || 1);
+      document.getElementById('sessionStartModal').classList.add('open');
+      document.getElementById('sessionDuration').focus();
+    }
+
+    async function confirmStartSessionFromModal() {
+      const evtId = __sessionModalEvtId;
+      if (!evtId) return;
+      let minutes = parseInt(document.getElementById('sessionDuration').value, 10);
+      if (isNaN(minutes) || minutes <= 0) minutes = 15;
+      let speed = parseFloat(document.getElementById('sessionSpeed').value);
+      if (isNaN(speed) || speed <= 0) speed = 1;
+
+      __attendanceVisualSpeed = speed;
+      localStorage.setItem('attendance_speed', String(speed));
+      try { localStorage.setItem(`attendance_last_duration_${evtId}`, String(minutes)); } catch (e) {}
+
+      closeModal('sessionStartModal');
+      const btn = document.getElementById('sessionModalStartBtn');
+      setBusy(btn, true, 'Starting…');
+      try {
         const res = await MefamAPI.startEventSession(evtId, minutes);
         if (res?.ok) {
           await refreshFormationData();
@@ -453,7 +571,6 @@
           showToast('Attendance session started.', 'success');
           return;
         }
-
         throw new Error(res?.error || 'Failed');
       } catch (e) {
         console.warn('Server attendance session start failed; falling back to local session.', e);
@@ -464,7 +581,7 @@
             id: rawEvent.id || rawEvent.eventId || rawEvent.event_id || evtId,
             code: generateAttendanceCode(),
             startedAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + (parseInt(localStorage.getItem(`attendance_last_duration_${evtId}`) || '15', 10) || 15) * 60000).toISOString(),
+            expiresAt: new Date(Date.now() + minutes * 60000).toISOString(),
             active: true,
           };
           localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
@@ -473,41 +590,53 @@
           showToast('Attendance session started locally.', 'success');
           return;
         }
-
         console.error('Unable to start local attendance session because the event was not found.', e);
         showToast('Unable to start attendance session.', 'error');
+      } finally {
+        setBusy(btn, false);
       }
     }
 
-    async function endEventSession(evtId) {
-      try {
-        if (!confirm('End the active attendance session for this event?')) return;
-        const res = await MefamAPI.endEventSession(evtId);
-        if (res?.ok) {
-          await refreshFormationData();
-          if (currentEventId === evtId) await openEventAttendance(evtId);
-          showToast('Attendance session ended.', 'success');
-          return;
-        }
-        throw new Error(res?.error || 'Failed');
-      } catch (e) {
-        console.warn('Server attendance session end failed; falling back to local session.', e);
-        const rawEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
-        const rawEvent = findEventById(rawEvents, evtId);
-        if (rawEvent) {
-          delete rawEvent.activeAttendanceSession;
-          delete rawEvent.expiresAt;
-          delete rawEvent.code;
-          rawEvent.activeAttendanceSession = null;
-          localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
-          await refreshFormationData();
-          if (currentEventId === evtId) await openEventAttendance(evtId);
-          showToast('Attendance session ended locally.', 'success');
-          return;
-        }
-        console.error('Unable to end local attendance session because the event was not found.', e);
-        showToast('Unable to end attendance session.', 'error');
+    function endEventSession(evtId, skipConfirm, afterEnd) {
+      if (!skipConfirm) {
+        showConfirm(
+          'End the active attendance session for this event?',
+          () => endEventSession(evtId, true, afterEnd),
+          { title: 'End session?', confirmLabel: 'End session' }
+        );
+        return;
       }
+      (async () => {
+        try {
+          const res = await MefamAPI.endEventSession(evtId);
+          if (res?.ok) {
+            await refreshFormationData();
+            if (currentEventId === evtId) await openEventAttendance(evtId);
+            showToast('Attendance session ended.', 'success');
+            if (typeof afterEnd === 'function') afterEnd();
+            return;
+          }
+          throw new Error(res?.error || 'Failed');
+        } catch (e) {
+          console.warn('Server attendance session end failed; falling back to local session.', e);
+          const rawEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
+          const rawEvent = findEventById(rawEvents, evtId);
+          if (rawEvent) {
+            delete rawEvent.activeAttendanceSession;
+            delete rawEvent.expiresAt;
+            delete rawEvent.code;
+            rawEvent.activeAttendanceSession = null;
+            localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
+            await refreshFormationData();
+            if (currentEventId === evtId) await openEventAttendance(evtId);
+            showToast('Attendance session ended locally.', 'success');
+            if (typeof afterEnd === 'function') afterEnd();
+            return;
+          }
+          console.error('Unable to end local attendance session because the event was not found.', e);
+          showToast('Unable to end attendance session.', 'error');
+        }
+      })();
     }
 
     async function addEvent() {
@@ -536,20 +665,25 @@
       }
     }
 
-    async function deleteEvent(id) {
-      if (!confirm('Delete this event? This cannot be undone.')) return;
-      try {
-        await MefamAPI.deleteEvent(id);
-        if (currentEventId === id) {
-          currentEventId = null;
-          closeEventAttendancePanel();
-        }
-        await refreshFormationData();
-        showToast('Event deleted.', 'success');
-      } catch (error) {
-        console.error('Failed to delete event:', error);
-        showToast('Unable to delete the event right now.', 'error');
-      }
+    function deleteEvent(id) {
+      showConfirm(
+        'Delete this event? This cannot be undone.',
+        async () => {
+          try {
+            await MefamAPI.deleteEvent(id);
+            if (currentEventId === id) {
+              currentEventId = null;
+              closeEventAttendancePanel();
+            }
+            await refreshFormationData();
+            showToast('Event deleted.', 'success');
+          } catch (error) {
+            console.error('Failed to delete event:', error);
+            showToast('Unable to delete the event right now.', 'error');
+          }
+        },
+        { title: 'Delete event?', confirmLabel: 'Delete' }
+      );
     }
 
     // ---------- attendance panel ----------
@@ -605,40 +739,84 @@
       }
     }
 
+    // ---------- stopwatch-style session display ----------
+
+    function formatStopwatch(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return h > 0
+        ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+        : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
     function renderAttendanceSessionControls(ev) {
       const container = document.getElementById('attendanceSessionControls');
       if (!container) return;
       container.innerHTML = '';
       if (__attendanceTimerInterval) { clearInterval(__attendanceTimerInterval); __attendanceTimerInterval = null; }
       const active = ev.activeAttendanceSession || null;
+
       if (!active) {
         const shell = document.createElement('div');
-        shell.innerHTML = `<div class="attendance-device"><div style="font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:#7ad9ff; margin-bottom:8px;">Session inactive</div><div style="font-size:1.15rem; font-weight:700; color:#fff; margin-bottom:8px;">${escapeHtml(ev.name || 'Event')}</div><div style="font-size:.88rem; color:rgba(248,251,255,.7); margin-bottom:10px;">${escapeHtml(ev.date || '')}${ev.venue ? ' · ' + escapeHtml(ev.venue) : ''}</div><div class="ad-code">– – – – –</div><div class="ad-actions"><button class="btn btn-gold" onclick="startEventSession(${ev.id})">Start session</button></div></div>`;
+        shell.innerHTML = `<div class="attendance-device">
+          <div class="ad-eyebrow"><span class="ad-dot"></span>Session inactive</div>
+          <div class="ad-eventname">${escapeHtml(ev.name || 'Event')}</div>
+          <div class="ad-meta">${escapeHtml(ev.date || '')}${ev.venue ? ' · ' + escapeHtml(ev.venue) : ''}</div>
+          <div class="stopwatch-face">
+            <div class="stopwatch-time">00:00</div>
+            <div class="stopwatch-label">Ready</div>
+          </div>
+          <div class="ad-actions"><button class="btn btn-gold" onclick="startEventSession(${ev.id})">Start session</button></div>
+        </div>`;
         container.appendChild(shell.firstElementChild);
         return;
       }
+
+      const startedAtMs = active.startedAt ? new Date(active.startedAt).getTime() : Date.now();
+      const expiresAtMs = active.expiresAt ? new Date(active.expiresAt).getTime() : null;
+
       const shell = document.createElement('div');
-      shell.innerHTML = `<div class="attendance-device"><div style="font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:#7ad9ff; margin-bottom:8px;">Session active</div><div style="font-size:1.15rem; font-weight:700; color:#fff; margin-bottom:8px;">${escapeHtml(ev.name || 'Event')}</div><div style="font-size:.88rem; color:rgba(248,251,255,.7); margin-bottom:12px;">${escapeHtml(ev.date || '')}${ev.venue ? ' · ' + escapeHtml(ev.venue) : ''}</div><div class="ad-code">${escapeHtml((active.code || '----').split('').join(' '))}</div><div class="ad-timer" id="adTimerLabel">—</div><div class="ad-actions"><button class="btn btn-ghost" onclick="endEventSession(${ev.id})">End session</button><button class="btn btn-gold" onclick="startEventSession(${ev.id})">New code</button></div></div>`;
+      shell.innerHTML = `<div class="attendance-device">
+        <div class="ad-eyebrow"><span class="ad-dot live"></span>Session active</div>
+        <div class="ad-eventname">${escapeHtml(ev.name || 'Event')}</div>
+        <div class="ad-meta">${escapeHtml(ev.date || '')}${ev.venue ? ' · ' + escapeHtml(ev.venue) : ''}</div>
+        <div class="stopwatch-face">
+          <div class="stopwatch-time" id="swElapsed">00:00</div>
+          <div class="stopwatch-label">Elapsed</div>
+          <div class="stopwatch-sub" id="swRemaining">—</div>
+          <div class="stopwatch-code">${escapeHtml((active.code || '-----').split('').join(' '))}</div>
+        </div>
+        <div class="ad-actions">
+          <button class="btn btn-ghost" onclick="endEventSession(${ev.id})">End session</button>
+          <button class="btn btn-gold" onclick="startEventSession(${ev.id})">New code</button>
+        </div>
+      </div>`;
       container.appendChild(shell.firstElementChild);
 
-      if (active.expiresAt) {
-        const timerLabel = document.getElementById('adTimerLabel');
-        const tick = () => {
-          const msLeft = new Date(active.expiresAt).getTime() - Date.now();
-          if (!timerLabel) return;
-          if (msLeft <= 0) {
-            timerLabel.textContent = 'Expired';
-            clearInterval(__attendanceTimerInterval);
-            return;
+      const elapsedEl = document.getElementById('swElapsed');
+      const remainingEl = document.getElementById('swRemaining');
+      const tick = () => {
+        const realElapsedMs = Date.now() - startedAtMs;
+        const displayElapsedMs = realElapsedMs * (__attendanceVisualSpeed || 1);
+        if (elapsedEl) elapsedEl.textContent = formatStopwatch(displayElapsedMs);
+        if (remainingEl) {
+          if (expiresAtMs == null) {
+            remainingEl.textContent = 'No expiry set';
+          } else {
+            const msLeft = expiresAtMs - Date.now();
+            if (msLeft <= 0) {
+              remainingEl.textContent = 'Expired';
+              clearInterval(__attendanceTimerInterval);
+            } else {
+              remainingEl.textContent = formatStopwatch(msLeft) + ' remaining';
+            }
           }
-          const totalSec = Math.floor(msLeft / 1000);
-          const m = Math.floor(totalSec / 60);
-          const s = totalSec % 60;
-          timerLabel.textContent = `${m}:${String(s).padStart(2, '0')} remaining`;
-        };
-        tick();
-        __attendanceTimerInterval = setInterval(tick, 1000);
-      }
+        }
+      };
+      tick();
+      __attendanceTimerInterval = setInterval(tick, 1000);
     }
 
     function closeEventAttendancePanel() {
@@ -707,9 +885,11 @@
         logBody.innerHTML = filtered.map(s => {
           const formCount = events.filter(ev => (attData[ev.id] || []).includes(s.id)).length;
           // Manual status override (set via "Edit") takes precedence over the computed rate;
-          // otherwise fall back to attendance-derived status.
+          // otherwise fall back to attendance-derived status. With zero events logged yet,
+          // default to "good" rather than flagging everyone yellow.
           const manual = absences[s.id]?.status || null;
-          const computed = formCount === events.length && events.length > 0 ? 'good'
+          const computed = events.length === 0 ? 'good'
+            : formCount === events.length ? 'good'
             : formCount >= Math.ceil(events.length * 0.75) ? 'yellow' : 'bad';
           const statusKey = manual || computed;
           const statusLabel = statusKey === 'good' ? 'Good' : statusKey === 'yellow' ? 'Yellow' : 'Bad';
@@ -778,10 +958,30 @@
       renderAttendance(getAcceptedScholars());
     });
 
+    // Click outside a modal's panel to dismiss it (keeps the confirm/session modals from feeling stuck)
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('mousedown', (e) => {
+        if (e.target === overlay) {
+          if (overlay.id === 'confirmModal') closeConfirmModal();
+          else closeModal(overlay.id);
+        }
+      });
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeModal('absenceModal');
+        closeModal('sessionStartModal');
+        closeConfirmModal();
         closeEventAttendancePanel();
+      }
+      // Enter submits the start-session modal when it's open and focus is inside it
+      if (e.key === 'Enter' && document.getElementById('sessionStartModal').classList.contains('open')) {
+        const active = document.activeElement;
+        if (active && (active.id === 'sessionDuration' || active.id === 'sessionSpeed')) {
+          e.preventDefault();
+          confirmStartSessionFromModal();
+        }
       }
     });
 

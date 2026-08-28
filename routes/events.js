@@ -115,7 +115,7 @@ router.post('/', requireAuth, requireRole('director','program','edu'), async (re
 });
 
 // Start an attendance session for an event
-router.post('/:id/start', requireRole('director','program','edu'), async (req, res) => {
+router.post('/:id/start', requireAuth, requireRole('director','program','edu'), async (req, res) => {
   const eventId = parseInt(req.params.id);
   const expiresInMinutes = Math.max(1, parseInt(req.body.expiresInMinutes || req.body.expiresIn || 15) || 15);
   const code = generateAttendanceCode();
