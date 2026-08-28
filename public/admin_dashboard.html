@@ -1875,7 +1875,9 @@ function cleanLegacyDemoData() {
 ══════════════════════════════════════ */
 async function loadAllData(showLoading = false) {
     const loading = document.getElementById('dashboardLoading');
-    if (showLoading) loading?.classList.add('visible');
+    const overview = document.getElementById('dashboard');
+    const shouldShowLoading = showLoading === true && overview?.classList.contains('active');
+    if (shouldShowLoading) loading?.classList.add('visible');
     try {
         const [apps, families, announcements, events, fundLog, disbLog, intakeSheets, assessments, absences, grades, monitoring] = await Promise.all([
             MefamAPI.getApplications(),
@@ -2030,7 +2032,7 @@ async function loadAllData(showLoading = false) {
     } catch (error) {
         console.error('Failed to load dashboard data:', error);
     } finally {
-        if (showLoading) loading?.classList.remove('visible');
+        if (shouldShowLoading) loading?.classList.remove('visible');
     }
 }
 
