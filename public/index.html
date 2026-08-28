@@ -471,8 +471,9 @@
 <div id="forgotPasswordModal" class="auth-modal">
     <div class="auth-modal-card">
         <h3 class="auth-modal-title">Reset your applicant password</h3>
-        <p class="auth-modal-copy">Enter the email address used on your application.</p>
+        <p class="auth-modal-copy">Enter the email and reference number used on your application.</p>
         <input type="email" id="forgotEmailInput" placeholder="you@example.com" style="width:100%; padding:10px 12px; border:1px solid #d7dde6; border-radius:8px; margin-bottom:10px;">
+        <input type="text" id="forgotReferenceInput" placeholder="Reference number, e.g. 20260827093428" autocomplete="off" style="width:100%; padding:10px 12px; border:1px solid #d7dde6; border-radius:8px; margin-bottom:10px;">
         <p id="forgotPasswordStatus" style="display:none; margin:10px 0 0; font-size:.9rem; color:#1b5e20; font-weight:700;"></p>
         <div class="auth-modal-actions">
             <button type="button" class="btn btn-secondary" onclick="closeForgotPasswordModal()">Cancel</button>
@@ -780,9 +781,11 @@ function toggleUnifiedAppPassword() {
 function openForgotPasswordModal() {
     const modal = document.getElementById('forgotPasswordModal');
     const input = document.getElementById('forgotEmailInput');
+    const referenceInput = document.getElementById('forgotReferenceInput');
     const status = document.getElementById('forgotPasswordStatus');
     if (!modal || !input || !status) return;
     input.value = '';
+    if (referenceInput) referenceInput.value = '';
     status.textContent = '';
     status.style.display = 'none';
     modal.style.display = 'flex';
@@ -796,17 +799,26 @@ function closeForgotPasswordModal() {
 
 async function submitForgotPassword() {
     const input = document.getElementById('forgotEmailInput');
+    const referenceInput = document.getElementById('forgotReferenceInput');
     const status = document.getElementById('forgotPasswordStatus');
     if (!input || !status) return;
     const email = input.value.trim();
+    const referenceNumber = referenceInput?.value.trim() || '';
     if (!email) {
         status.textContent = 'Please enter an email address.';
         status.style.display = 'block';
         status.style.color = '#b3261e';
         return;
     }
+    if (!referenceNumber) {
+        status.textContent = 'Please enter your reference number.';
+        status.style.display = 'block';
+        status.style.color = '#b3261e';
+        referenceInput?.focus();
+        return;
+    }
     try {
-        const res = await MefamAPI.requestApplicantPasswordReset(email);
+        const res = await MefamAPI.requestApplicantPasswordReset(email, referenceNumber);
         status.textContent = res?.message || 'Check your email for a reset link.';
         status.style.display = 'block';
         status.style.color = '#1b5e20';

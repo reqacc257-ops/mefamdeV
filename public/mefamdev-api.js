@@ -52,8 +52,8 @@ const MefamAPI = {
     }
   },
 
-  async requestApplicantPasswordReset(email) {
-    return this._post('/auth/applicant/forgot-password', { email }, false);
+  async requestApplicantPasswordReset(email, referenceNumber) {
+    return this._post('/auth/applicant/forgot-password', { email, referenceNumber }, false);
   },
 
   async resetApplicantPassword(token, password) {

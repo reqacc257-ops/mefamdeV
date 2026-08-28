@@ -361,10 +361,20 @@ router.post('/lookup', async (req, res) => {
 
 async function handleForgotPassword(req, res) {
   const email = String(req.body?.email || req.query?.email || '').trim().toLowerCase();
+  const referenceNumber = String(req.body?.referenceNumber || req.body?.reference_number || req.query?.referenceNumber || req.query?.reference_number || '').trim();
   if (!email) return res.status(400).json({ error: 'Email required' });
+  if (!referenceNumber) return res.status(400).json({ error: 'Reference number required' });
 
   const apps = await db.prepare('SELECT * FROM applications').all();
-  const app = apps.find(row => String(row.email || '').trim().toLowerCase() === email);
+  const normalizeReference = value => String(value || '').trim().toLowerCase();
+  const compareDigits = value => normalizeReference(value).replace(/\D+/g, '');
+  const targetReference = normalizeReference(referenceNumber);
+  const targetDigits = compareDigits(referenceNumber);
+  const app = apps.find(row => {
+    if (String(row.email || '').trim().toLowerCase() !== email) return false;
+    const storedReference = normalizeReference(row.reference_number || row.referenceNumber || '');
+    return storedReference === targetReference || (targetDigits && compareDigits(storedReference) === targetDigits);
+  });
   if (!app) return res.status(404).json({ error: 'No application found for that email.' });
 
   const resetToken = crypto.randomBytes(16).toString('hex');

@@ -175,8 +175,8 @@ test('applicant auth accepts full applicant name for login', async () => {
 test('forgot-password creates a reset token for any applicant email', async () => {
   db.data.applications = [];
   db.prepare(
-    'INSERT INTO applications (name, email, status) VALUES (?, ?, ?)' 
-  ).run('Reset Test Applicant', 'applicant@example.com', 'Pending Review');
+    'INSERT INTO applications (name, email, reference_number, status) VALUES (?, ?, ?, ?)' 
+  ).run('Reset Test Applicant', 'applicant@example.com', '20260827093428', 'Pending Review');
 
   const app = express();
   app.use(express.json());
@@ -187,7 +187,7 @@ test('forgot-password creates a reset token for any applicant email', async () =
 
   try {
     const { port } = server.address();
-    const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant/forgot-password?email=applicant@example.com`);
+    const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant/forgot-password?email=applicant@example.com&referenceNumber=20260827093428`);
     const body = await res.json();
     const savedApp = db.prepare('SELECT * FROM applications WHERE id = ?').get(1);
 
@@ -203,8 +203,8 @@ test('forgot-password builds a reset link from the app origin instead of the log
   process.env.APP_BASE_URL = 'http://localhost:3000/index.html';
   db.data.applications = [];
   db.prepare(
-    'INSERT INTO applications (name, email, status) VALUES (?, ?, ?)' 
-  ).run('Path Fix Applicant', 'pathbug@example.com', 'Pending Review');
+    'INSERT INTO applications (name, email, reference_number, status) VALUES (?, ?, ?, ?)' 
+  ).run('Path Fix Applicant', 'pathbug@example.com', '20260827093428', 'Pending Review');
 
   const logs = [];
   const originalLog = console.log;
@@ -219,7 +219,7 @@ test('forgot-password builds a reset link from the app origin instead of the log
 
   try {
     const { port } = server.address();
-    const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant/forgot-password?email=pathbug@example.com`);
+    const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant/forgot-password?email=pathbug@example.com&referenceNumber=20260827093428`);
     const body = await res.json();
 
     assert.equal(res.status, 200);
