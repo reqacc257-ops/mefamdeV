@@ -209,7 +209,7 @@
 
       <div class="card">
         <div class="card-title">Add New Event</div>
-        <p class="card-sub">Create an event with a date, venue, and capacity. Once added, start attendance from the event list.</p>
+        <p class="card-sub">Create an event with a date, venue, and capacity. Open Attendance on an event to manage its session.</p>
         <div style="margin-bottom:12px;"><label for="evtName">Event name</label><input type="text" id="evtName" placeholder="e.g. Values Formation Seminar"></div>
         <div style="margin-bottom:12px;"><label for="evtDate">Date</label><input type="date" id="evtDate"></div>
         <div style="margin-bottom:12px;"><label for="evtVenue">Location / venue</label><input type="text" id="evtVenue" placeholder="e.g. MEFAMDEV Office, Angat"></div>
@@ -506,8 +506,8 @@
           const isPast = ev.date ? new Date(ev.date) < today : false;
           const active = ev.activeAttendanceSession || null;
           const sessionHtml = active
-            ? `<div style="font-size:.82rem; margin-bottom:6px;">Code: <strong>${escapeHtml(active.code)}</strong> <span style="color:var(--text-muted);">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div><button class="btn btn-ghost btn-sm" onclick="endEventSession(${ev.id})">⏹ End</button>`
-            : `<button class="btn btn-green btn-sm" onclick="startEventSession(${ev.id})">▶ Start</button>`;
+            ? `<div style="font-size:.82rem; margin-bottom:6px;">Code: <strong>${escapeHtml(active.code)}</strong> <span style="color:var(--text-muted);">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div>`
+            : '';
           return `<tr>
             <td><strong>${escapeHtml(ev.name)}</strong>${isPast ? ' <span class="badge badge-muted" style="margin-left:4px;">Past</span>' : ''}</td>
             <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
@@ -699,17 +699,27 @@
       document.getElementById('evtAttTitle').textContent = 'Attendance — ' + ev.name + ' (' + (ev.date || '') + ')';
       const list = document.getElementById('evtAttList');
       try { renderAttendanceSessionControls(ev); } catch (e) { console.error('session controls render failed', e); }
-      if (scholars.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-muted); font-size:.87rem;">No accepted scholars yet.</p>';
+      let checkins = [];
+      try { checkins = await MefamAPI.getEventCheckins(evtId) || []; } catch (e) { console.error('Failed to load event check-ins', e); }
+      const checkedInKeys = new Set(checkins.flatMap(checkin => [checkin.student_id, checkin.student_name].filter(Boolean).map(value => String(value).trim().toLowerCase())));
+      const isCheckedIn = scholar => {
+        const keys = [scholar.id, scholar.reference, scholar.referenceNumber, scholar.reference_number, scholar.name]
+          .filter(Boolean).map(value => String(value).trim().toLowerCase());
+        return attended.some(id => String(id) === String(scholar.id)) || keys.some(key => checkedInKeys.has(key));
+      };
+      const pendingScholars = scholars.filter(scholar => !isCheckedIn(scholar));
+      if (pendingScholars.length === 0) {
+        list.innerHTML = scholars.length === 0
+          ? '<p style="color:var(--text-muted); font-size:.87rem;">No accepted scholars yet.</p>'
+          : '<p style="color:var(--text-muted); font-size:.87rem;">All accepted scholars are already checked in.</p>';
       } else {
-        list.innerHTML = scholars.map(s => `
+        list.innerHTML = pendingScholars.map(s => `
           <label>
             <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} onchange="syncEventAttendance(${evtId}, ${s.id}, this.checked)">
-            <span><strong>${escapeHtml(s.name)}</strong> — ${escapeHtml(s.grade)}, ${escapeHtml(s.school)}</span>
+            <span><strong>${escapeHtml(s.name)}</strong> — ${escapeHtml(s.grade)}, ${escapeHtml(s.school)} <small style="color:var(--text-muted);">(${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)})</small></span>
           </label>`).join('');
       }
       try {
-        const checkins = await MefamAPI.getEventCheckins(evtId) || [];
         const recentCheckins = (checkins || []).filter(c => c && c.student_name && c.checked_in_at);
         const liveHtml = recentCheckins.length === 0
           ? '<div style="margin-top:12px;color:var(--text-muted);font-size:.86rem;">No check-ins yet.</div>'
@@ -843,7 +853,19 @@
               const max = Number(ev.max || 0) || 0;
               const pct = max > 0 ? Math.round(cnt / max * 100) : 0;
               const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
-              return `<tr><td><strong>${escapeHtml(ev.name)}</strong></td><td style="font-size:.82rem;">${escapeHtml(ev.date || '—')}</td><td><span class="badge ${cls}">${cnt}/${max}</span></td></tr>`;
+              const attendedIds = new Set((attData[ev.id] || []).map(id => String(id)));
+              const attendedScholars = apps.filter(s => attendedIds.has(String(s.id)));
+              const absentScholars = apps.filter(s => !attendedIds.has(String(s.id)));
+              const scholarRows = list => list.length
+                ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
+                : '<div style="color:var(--text-muted);">None</div>';
+              return `<tr><td colspan="3"><details>
+                <summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${cnt}/${max}</span></span></summary>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;">
+                  <div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div>
+                  <div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div>
+                </div>
+              </details></td></tr>`;
             }).join('') + `</tbody></table>`;
         }
       }

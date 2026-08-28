@@ -794,8 +794,9 @@ function renderPortal(app, session) {
             const attCodeInput = document.getElementById('attCodeInput');
             if (attCodeInput) attCodeInput.value = urlCode;
             const attStudentId = document.getElementById('attStudentId');
-            if (attStudentId) attStudentId.value = '';
-            if (sgIdInput) sgIdInput.value = '';
+            const studentId = appData.referenceNumber || appData.reference || appData.reference_number || `APP-${appData.id}`;
+            if (attStudentId) attStudentId.value = studentId;
+            if (sgIdInput) sgIdInput.value = studentId;
 
             // Countdown: if staff provided expires (via localStorage preview), show a basic countdown
             const expiresAtRaw = localStorage.getItem('preview_attendance_expires');
@@ -848,7 +849,7 @@ function renderPortal(app, session) {
 
 async function submitAttendanceCode() {
     const code = (document.getElementById('attCodeInput') || {}).value || '';
-    const studentId = (document.getElementById('attStudentId') || {}).value || '';
+    const studentId = (document.getElementById('attStudentId') || {}).value || appData?.referenceNumber || appData?.reference || appData?.reference_number || `APP-${appData?.id || ''}`;
     const statusEl = document.getElementById('attStatus');
     const heroStatusText = (document.getElementById('heroStatus') || {}).innerText || '';
     if (!heroStatusText.includes('Accepted')) { alert('Attendance is available only to accepted scholars.'); return; }

@@ -63,6 +63,9 @@ const MefamAPI = {
   async changeStaffPassword(oldPassword, newPassword) {
     return this._post('/auth/change-password', { oldPassword, newPassword });
   },
+  async updateStaffProfile(name) {
+    return this._put('/auth/profile', { name });
+  },
 
   async revokeTrustedDevice(deviceId) {
     return this._post('/auth/director/trusted-device/revoke', { deviceId });

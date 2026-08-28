@@ -450,6 +450,16 @@ router.post('/change-password', require('../middleware/auth').requireAuth, async
   res.json({ ok: true });
 });
 
+router.put('/profile', require('../middleware/auth').requireAuth, async (req, res) => {
+  if (req.user.type !== 'staff') return res.status(403).json({ error: 'Staff only' });
+  const name = String(req.body?.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  if (name.length > 80) return res.status(400).json({ error: 'Name must be 80 characters or fewer' });
+  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '??';
+  await db.prepare('UPDATE staff SET name = ?, initials = ? WHERE id = ?').run(name, initials, req.user.id);
+  res.json({ ok: true, user: { name, initials } });
+});
+
 router.post('/director/trusted-device/revoke', require('../middleware/auth').requireAuth, async (req, res) => {
   if (req.user.type !== 'staff' || req.user.role !== 'director') return res.status(403).json({ error: 'Director only' });
   const deviceId = normalizeDeviceId(req.body?.deviceId);

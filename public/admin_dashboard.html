@@ -1319,14 +1319,10 @@
                 </div>
                 <div class="card account-details">
                     <div class="card-title">Account Details</div>
-                    <div class="account-field"><span>Full name</span><strong id="profile-session-name">-</strong></div>
+                    <div class="account-field"><span>Full name</span><input id="profileDisplayName" type="text" maxlength="80" placeholder="Enter your full name"></div>
                     <div class="account-field"><span>Username</span><strong id="profile-session-username">-</strong></div>
                     <div class="account-field"><span>Access level</span><strong id="profile-session-role">-</strong></div>
-                    <div>
-                        <label for="profileDisplayName">Display name</label>
-                        <input id="profileDisplayName" type="text" maxlength="80" placeholder="Use your staff name">
-                        <small style="display:block; color:var(--text-muted); margin-top:6px;">This browser-only name controls how you appear in the dashboard.</small>
-                    </div>
+                    <small style="display:block; color:var(--text-muted);">Your name is saved for this browser and appears in the dashboard header.</small>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:4px;">
                         <button class="btn btn-navy" type="button" onclick="saveStaffProfile()">Save Profile</button>
                         <button class="btn btn-ghost" type="button" onclick="openChangePasswordModal()">&#128272; Change Password</button>
@@ -1683,18 +1679,25 @@ function loadStaffProfile(session = MefamAPI.getSession() || {}) {
             avatar.appendChild(document.createTextNode(initials));
         }
     });
-    document.getElementById('profile-session-name')?.replaceChildren(document.createTextNode(session.name || 'Not provided'));
     document.getElementById('profile-session-username')?.replaceChildren(document.createTextNode(session.username || 'Not provided'));
     document.getElementById('profile-session-role')?.replaceChildren(document.createTextNode(role));
     const displayName = document.getElementById('profileDisplayName');
     if (displayName) displayName.value = saved.displayName || session.name || '';
 }
 
-function saveStaffProfile() {
+async function saveStaffProfile() {
     const session = MefamAPI.getSession() || {};
     const displayName = document.getElementById('profileDisplayName')?.value.trim() || session.name || 'Staff';
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem('mefamdev_staff_profile') || '{}'); } catch (_) { saved = {}; }
+    try {
+        const result = await MefamAPI.updateStaffProfile(displayName);
+        if (!result?.ok) throw new Error(result?.error || 'Unable to update your name.');
+        const nextSession = { ...session, name: result.user?.name || displayName, initials: result.user?.initials || '' };
+        sessionStorage.setItem('mefamdev_session', JSON.stringify(nextSession));
+    } catch (error) {
+        console.warn('Could not save staff profile to the server; using local profile name.', error);
+    }
     localStorage.setItem('mefamdev_staff_profile', JSON.stringify({ ...saved, displayName }));
     document.getElementById('user-name').innerText = displayName;
     loadStaffProfile(session);
@@ -4058,7 +4061,14 @@ function renderAttendance(scholars) {
                     const cnt = (attData[ev.id] || []).length;
                     const pct = ev.max > 0 ? Math.round(cnt / ev.max * 100) : 0;
                     const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
-                    return `<tr><td><strong>${ev.name}</strong></td><td style="font-size:.82rem;">${ev.date||'—'}</td><td><span class="badge ${cls}">${cnt}/${ev.max}</span></td></tr>`;
+                    const acceptedScholars = apps.filter(s => s.status === 'Accepted');
+                    const attendedIds = new Set((attData[ev.id] || []).map(id => String(id)));
+                    const attendedScholars = acceptedScholars.filter(s => attendedIds.has(String(s.id)));
+                    const absentScholars = acceptedScholars.filter(s => !attendedIds.has(String(s.id)));
+                    const scholarRows = list => list.length
+                        ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
+                        : '<div style="color:var(--text-muted);">None</div>';
+                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${cnt}/${ev.max}</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
                 }).join('') + `</tbody></table>`;
             formSummaries.forEach(summary => { summary.innerHTML = summaryHtml; });
         }
