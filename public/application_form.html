@@ -582,6 +582,7 @@
                                 <th class="translatable" data-tl="Civil Status" data-en="Civil Status">Civil Status</th>
                                 <th class="translatable" data-tl="Edukasyon" data-en="Education">Edukasyon</th>
                                 <th class="translatable" data-tl="Hanapbuhay" data-en="Occupation">Hanapbuhay</th>
+                                <th class="translatable" data-tl="Contact No." data-en="Contact No.">Contact No.</th>
                                 <th class="translatable" data-tl="Kita/buwan" data-en="Income/mo.">Kita/buwan</th>
                                 <th></th>
                             </tr>
@@ -595,7 +596,12 @@
             </div>
 
             <div class="field-group" style="margin-top: 24px;">
-                <label class="field-label translatable" data-tl="B. Pagmamay-ari at Benepisyo" data-en="B. Properties and Benefits">B. Pagmamay-ari at Benepisyo</label>
+                <label class="field-label translatable" data-tl="B. Contact ng Pamilya" data-en="B. Family Contact">B. Contact ng Pamilya</label>
+                <p style="font-size:.8rem; color:#6b7280; margin-bottom:8px;">Provide at least one family contact number. It must be different from the scholar's contact number.</p>
+            </div>
+
+            <div class="field-group" style="margin-top: 24px;">
+                <label class="field-label translatable" data-tl="C. Pagmamay-ari at Benepisyo" data-en="C. Properties and Benefits">C. Pagmamay-ari at Benepisyo</label>
                 <div class="check-grid" id="propertiesContainer">
                     <label class="check-item"><input type="checkbox" value="Sariling Lupa"><span class="translatable" data-tl="Sariling Lupa" data-en="Owned Land">Sariling Lupa</span></label>
                     <label class="check-item"><input type="checkbox" value="Sariling Bahay"><span class="translatable" data-tl="Sariling Bahay" data-en="Owned House">Sariling Bahay</span></label>
@@ -912,9 +918,9 @@
 
         const familyRows = document.querySelectorAll('#familyTableBody tr');
         const familyData = [
-            { name: 'Maria Ubaldo', dob: '1985-01-10', sex: 'Babae', relation: 'Ina', civil: 'Kasal', educ: 'College Graduate', occup: 'Vendor', income: '15000' },
-            { name: 'Jose Ubaldo', dob: '1980-09-22', sex: 'Lalaki', relation: 'Ama', civil: 'Kasal', educ: 'High School Graduate', occup: 'Driver', income: '18000' },
-            { name: 'Ana Ubaldo', dob: '2009-08-02', sex: 'Babae', relation: 'Kapatid', civil: 'Single', educ: 'Grade 4', occup: 'Student', income: '0' }
+            { name: 'Maria Ubaldo', dob: '1985-01-10', sex: 'Babae', relation: 'Ina', civil: 'Kasal', educ: 'College Graduate', occup: 'Vendor', contact: '09181234567', income: '15000' },
+            { name: 'Jose Ubaldo', dob: '1980-09-22', sex: 'Lalaki', relation: 'Ama', civil: 'Kasal', educ: 'High School Graduate', occup: 'Driver', contact: '09191234567', income: '18000' },
+            { name: 'Ana Ubaldo', dob: '2009-08-02', sex: 'Babae', relation: 'Kapatid', civil: 'Single', educ: 'Grade 4', occup: 'Student', contact: '', income: '0' }
         ];
         familyRows.forEach((row, index) => {
             const cells = row.querySelectorAll('input, select');
@@ -927,7 +933,8 @@
             cells[5].value = data.civil;
             cells[6].value = data.educ;
             cells[7].value = data.occup;
-            cells[8].value = data.income;
+            cells[8].value = data.contact || '';
+            cells[9].value = data.income;
         });
 
         document.querySelectorAll('#propertiesContainer input[type="checkbox"]').forEach(cb => {
@@ -1002,6 +1009,20 @@
                 }
             }
         });
+        if (n === 1) {
+            const scholarContact = document.getElementById('contact').value.replace(/\D/g, '');
+            const familyContacts = Array.from(document.querySelectorAll('.fam-contact'))
+                .map(input => input.value.replace(/\D/g, ''))
+                .filter(Boolean);
+            const hasAlternateContact = familyContacts.some(value => value !== scholarContact);
+            if (!hasAlternateContact) {
+                ok = false;
+                missing.push(currentLang === 'tl' ? 'Contact No. ng Pamilya (iba sa contact ng scholar)' : 'Family Contact No. (different from scholar contact)');
+                const firstContact = document.querySelector('.fam-contact');
+                firstInvalid ||= firstContact;
+                firstContact?.style.setProperty('border-color', 'var(--red)');
+            }
+        }
         if (!ok) {
             showValidationNotice(missing);
             firstInvalid?.focus();
@@ -1127,6 +1148,7 @@
             <td><select style="min-width:90px;">${civilOpts}</select></td>
             <td><input type="text" style="min-width:90px;"></td>
             <td><input type="text" style="min-width:90px;"></td>
+            <td><input type="tel" class="fam-contact" placeholder="09xxxxxxxxx" style="min-width:120px;"></td>
             <td><input type="number" placeholder="₱" style="min-width:70px;" class="fam-income"></td>
             <td><button type="button" onclick="this.closest('tr').remove()" style="background:#ffeeee; color:#c0392b; border:none; border-radius:5px; padding:4px 8px; cursor:pointer; font-size:.8rem;">✕</button></td>
         `;
@@ -1520,7 +1542,7 @@
                 name, age: inputs[1].value, dob: inputs[2]?.value,
                 sex: inputs[3]?.value, relation: inputs[4]?.value,
                 civil: inputs[5]?.value, educ: inputs[6]?.value,
-                occup: inputs[7]?.value, income: inputs[8]?.value
+                occup: inputs[7]?.value, contact: inputs[8]?.value, income: inputs[9]?.value
             });
         });
 

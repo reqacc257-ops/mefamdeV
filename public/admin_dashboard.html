@@ -2208,7 +2208,7 @@ function renderMonitoring(monitoring) {
         alertsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No active risk alerts at the moment.</p></div>`;
     } else {
         alertsEl.innerHTML = alerts.map(alert => `
-            <div class="ann-item" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}">
+            <div class="ann-item" role="button" tabindex="0" onclick="viewApp(${Number(alert.appId) || 0})" onkeydown="if(event.key==='Enter' || event.key===' ') viewApp(${Number(alert.appId) || 0})" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}; cursor:pointer;">
                 <div class="ann-tag">${alert.type === 'academic' ? 'Academic' : 'Attendance'}</div>
                 <div class="ann-title">${alert.message}</div>
                 <div class="ann-meta"><span>${alert.severity === 'high' ? 'High priority' : 'Needs follow-up'}</span></div>
@@ -2819,8 +2819,8 @@ async function viewApp(id) {
 
     const famHTML = a.familyMembers?.length > 0
         ? `<table style="width:100%; font-size:.83rem; margin-top:8px;">
-            <thead style="background:#f4f6f9;"><tr><th>Name</th><th>Rel.</th><th>Age</th><th>Civil</th><th>Educ</th><th>Occupation</th><th>Income</th></tr></thead>
-            <tbody>${a.familyMembers.map(f=>`<tr><td>${f.name}</td><td>${f.relation}</td><td>${f.age}</td><td>${f.civil}</td><td>${f.educ}</td><td>${f.occup}</td><td>₱${f.income||0}</td></tr>`).join('')}</tbody>
+            <thead style="background:#f4f6f9;"><tr><th>Name</th><th>Rel.</th><th>Age</th><th>Civil</th><th>Educ</th><th>Occupation</th><th>Contact</th><th>Income</th></tr></thead>
+            <tbody>${a.familyMembers.map(f=>`<tr><td>${f.name}</td><td>${f.relation}</td><td>${f.age}</td><td>${f.civil}</td><td>${f.educ}</td><td>${f.occup}</td><td>${f.contact||'—'}</td><td>₱${f.income||0}</td></tr>`).join('')}</tbody>
            </table>`
         : '<p style="color:#aaa;font-size:.85rem;">No family data.</p>';
 
