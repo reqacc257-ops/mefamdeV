@@ -99,6 +99,13 @@
       color:var(--text-muted); text-align:center; font-size:.88rem; line-height:1.5;
     }
     .empty-state strong { display:block; color:var(--navy); font-size:.95rem; margin-bottom:4px; }
+    .formation-loading { position:fixed; inset:0; z-index:1200; display:none; padding:28px 20px; background:rgba(244,246,248,.96); }
+    .formation-loading.visible { display:block; }
+    .formation-skeleton { max-width:1200px; margin:0 auto; }
+    .formation-skeleton-line, .formation-skeleton-block { background:linear-gradient(90deg,#e1e6ed 25%,#f7f9fb 50%,#e1e6ed 75%); background-size:200% 100%; animation:formationShimmer 1.3s ease-in-out infinite; border-radius:9px; }
+    .formation-skeleton-line { width:32%; height:26px; margin-bottom:22px; }
+    .formation-skeleton-block { height:210px; margin-bottom:20px; }
+    @keyframes formationShimmer { from { background-position:200% 0; } to { background-position:-200% 0; } }
 
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); padding:20px; z-index:1000; }
     .modal-overlay.open { display:flex; align-items:center; justify-content:center; animation: fadeIn .15s ease; }
@@ -184,6 +191,13 @@
   </style>
 </head>
 <body>
+  <div class="formation-loading visible" id="formationLoading" aria-label="Loading formation data">
+    <div class="formation-skeleton">
+      <div class="formation-skeleton-line"></div>
+      <div class="formation-skeleton-block"></div>
+      <div class="formation-skeleton-block"></div>
+    </div>
+  </div>
   <div class="page">
     <div class="topbar">
       <div>
@@ -437,8 +451,10 @@
 
     // ---------- data ----------
 
-    async function refreshFormationData() {
+    async function refreshFormationData(showLoading = true) {
       const btn = document.getElementById('refreshBtn');
+      const loading = document.getElementById('formationLoading');
+      if (showLoading) loading?.classList.add('visible');
       setBusy(btn, true, '↻ Refreshing…');
       try {
         const [apps, events] = await Promise.all([MefamAPI.getApplications(), MefamAPI.getEvents()]);
@@ -450,9 +466,13 @@
         console.warn('Could not refresh from server; using local data.', e);
         showToast('Could not reach the server — showing local data.', 'error');
       }
-      renderEvents();
-      renderAttendance(getAcceptedScholars());
-      setBusy(btn, false);
+      try {
+        renderEvents();
+        renderAttendance(getAcceptedScholars());
+      } finally {
+        setBusy(btn, false);
+        if (showLoading) loading?.classList.remove('visible');
+      }
     }
 
     function getAcceptedScholars() {
@@ -655,7 +675,7 @@
         document.getElementById('evtDate').value = '';
         document.getElementById('evtVenue').value = '';
         document.getElementById('evtMax').value = '75';
-        await refreshFormationData();
+        await refreshFormationData(true);
         showToast('Event added.', 'success');
       } catch (error) {
         console.error('Failed to add event:', error);
