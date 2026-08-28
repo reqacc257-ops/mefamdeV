@@ -297,6 +297,20 @@
         .captcha-box .captcha-q { font-size: 1.1rem; font-weight: 700; color: #7a5a00; margin-bottom: 10px; }
         .captcha-box input { max-width: 140px; margin: 0 auto; display: block; text-align: center; font-size: 1rem; }
         .error-msg { color: var(--red); font-size: .82rem; margin-top: 6px; font-weight: 600; display: none; }
+        .validation-notice {
+            display: none; margin: 18px 36px 0; padding: 14px 16px;
+            border: 1.5px solid #e7b6ae; border-left: 4px solid var(--red);
+            border-radius: 8px; background: #fff7f5; color: var(--text);
+        }
+        .validation-notice.visible { display: flex; align-items: flex-start; gap: 12px; animation: fadeSlide .2s ease; }
+        .validation-notice-icon { color: var(--red); font-size: 1.2rem; line-height: 1.2; }
+        .validation-notice-content { flex: 1; min-width: 0; }
+        .validation-notice-title { color: var(--red); font-weight: 700; font-size: .9rem; margin-bottom: 4px; }
+        .validation-notice-list { margin: 0; padding-left: 18px; font-size: .82rem; color: #6d3d38; }
+        .validation-notice-close {
+            border: 0; background: transparent; color: var(--red); font: inherit;
+            font-size: 1.1rem; line-height: 1; padding: 2px 4px; cursor: pointer;
+        }
 
         /* Privacy box */
         .privacy-box {
@@ -370,6 +384,7 @@
             .grid-2, .grid-3, .grid-4, .check-grid { grid-template-columns: 1fr; }
             .lang-bar { padding: 10px 18px; }
             .form-nav .btn { padding: 10px 16px; font-size: .85rem; }
+            .validation-notice { margin-left: 18px; margin-right: 18px; }
         }
     </style>
 </head>
@@ -414,6 +429,14 @@
         </div>
 
         <form id="scholarForm" novalidate>
+        <div id="validationNotice" class="validation-notice" role="alert" aria-live="assertive">
+            <div class="validation-notice-icon">!</div>
+            <div class="validation-notice-content">
+                <div id="validationNoticeTitle" class="validation-notice-title">Pakikumpleto ang mga kinakailangang field.</div>
+                <ul id="validationNoticeList" class="validation-notice-list"></ul>
+            </div>
+            <button type="button" class="validation-notice-close" aria-label="Close validation message" onclick="hideValidationNotice()">×</button>
+        </div>
 
         <!-- PAGE 0: Personal Info -->
         <div class="form-page active" id="page-0">
@@ -849,6 +872,7 @@
         generateSchoolYears();
         initFamilyRows();
         initDegreeCombobox();
+        initValidationNotice();
         setLanguage('tl');
         generateCaptcha();
         const img = document.querySelector('.logo');
@@ -946,20 +970,56 @@
     function validatePage(n) {
         const page = document.getElementById('page-' + n);
         const required = page.querySelectorAll('[required]:not([disabled])');
+        const missing = [];
+        let firstInvalid = null;
         let ok = true;
         required.forEach(el => {
             el.style.borderColor = '';
             if (el.type === 'checkbox') {
-                if (!el.checked) { ok = false; el.closest('.check-item')?.style.setProperty('border-color', 'var(--red)'); }
+                if (!el.checked) {
+                    ok = false;
+                    firstInvalid ||= el;
+                    el.closest('.check-item')?.style.setProperty('border-color', 'var(--red)');
+                    missing.push(el.closest('.check-item')?.querySelector('span')?.innerText || 'Required confirmation');
+                }
             } else {
-                if (!el.value.trim()) { ok = false; el.style.borderColor = 'var(--red)'; el.focus(); }
+                if (!el.value.trim()) {
+                    ok = false;
+                    firstInvalid ||= el;
+                    el.style.borderColor = 'var(--red)';
+                    const label = el.closest('.field-group')?.querySelector('.field-label')?.innerText || el.getAttribute('aria-label') || el.id;
+                    missing.push(label);
+                }
             }
         });
         if (!ok) {
-            const msg = currentLang === 'tl' ? 'May mga larangang hindi pa napunan. Pakikumpleto.' : 'Some required fields are missing. Please complete them.';
-            alert(msg);
+            showValidationNotice(missing);
+            firstInvalid?.focus();
+        } else {
+            hideValidationNotice();
         }
         return ok;
+    }
+
+    function initValidationNotice() {
+        document.getElementById('scholarForm')?.addEventListener('input', hideValidationNotice);
+        document.getElementById('scholarForm')?.addEventListener('change', hideValidationNotice);
+    }
+
+    function showValidationNotice(fields) {
+        const notice = document.getElementById('validationNotice');
+        const title = document.getElementById('validationNoticeTitle');
+        const list = document.getElementById('validationNoticeList');
+        if (!notice || !title || !list) return;
+        title.innerText = currentLang === 'tl'
+            ? 'May mga larangang hindi pa napunan. Pakikumpleto.'
+            : 'Some required fields are missing. Please complete them.';
+        list.innerHTML = [...new Set(fields)].map(field => `<li>${field}</li>`).join('');
+        notice.classList.add('visible');
+    }
+
+    function hideValidationNotice() {
+        document.getElementById('validationNotice')?.classList.remove('visible');
     }
 
     /* ── Language ── */
