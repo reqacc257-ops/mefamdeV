@@ -130,7 +130,9 @@
             background: var(--navy); color: #fff;
             display: flex; align-items: center; justify-content: center;
             font-weight: 700; font-size: .85rem; flex-shrink: 0;
+            overflow: hidden;
         }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-info .user-name { font-size: .85rem; font-weight: 700; color: var(--text); line-height: 1.2; }
         .user-info .user-role { font-size: .72rem; color: var(--text-muted); }
         .dropdown-arrow { font-size: .7rem; color: #aaa; margin-left: 4px; }
@@ -279,6 +281,8 @@
         .account-field { padding-bottom: 12px; border-bottom: 1px solid var(--border); }
         .account-field:last-child { border-bottom: 0; padding-bottom: 0; }
         .account-field span { display: block; color: var(--text-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; margin-bottom: 4px; }
+        .account-photo-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+        .account-photo-actions input { max-width: 240px; font-size: .78rem; }
 
         /* Modal */
         .modal-overlay {
@@ -1293,6 +1297,11 @@
                 <div class="account-hero">
                     <div>
                         <div class="avatar" id="profile-account-avatar">??</div>
+                        <div class="account-photo-actions">
+                            <label class="btn btn-gold btn-sm" for="profilePhotoInput">Upload picture</label>
+                            <input id="profilePhotoInput" type="file" accept="image/*" onchange="uploadStaffProfilePhoto(event)" style="display:none;">
+                            <button class="btn btn-ghost btn-sm" type="button" onclick="removeStaffProfilePhoto()">Remove</button>
+                        </div>
                         <h2 id="profile-account-name">Staff member</h2>
                         <p id="profile-account-role">Staff account</p>
                     </div>
@@ -1644,7 +1653,18 @@ function loadStaffProfile(session = MefamAPI.getSession() || {}) {
     document.getElementById('profile-account-name')?.replaceChildren(document.createTextNode(name));
     document.getElementById('profile-account-role')?.replaceChildren(document.createTextNode(role));
     document.getElementById('profile-account-username')?.replaceChildren(document.createTextNode(`Signed in as ${session.username || 'staff account'}`));
-    document.getElementById('profile-account-avatar')?.replaceChildren(document.createTextNode(initials));
+    [document.getElementById('profile-account-avatar'), document.getElementById('user-avatar')].forEach(avatar => {
+        if (!avatar) return;
+        avatar.replaceChildren();
+        if (saved.photo) {
+            const image = document.createElement('img');
+            image.src = saved.photo;
+            image.alt = `${name} profile picture`;
+            avatar.appendChild(image);
+        } else {
+            avatar.appendChild(document.createTextNode(initials));
+        }
+    });
     document.getElementById('profile-session-name')?.replaceChildren(document.createTextNode(session.name || 'Not provided'));
     document.getElementById('profile-session-username')?.replaceChildren(document.createTextNode(session.username || 'Not provided'));
     document.getElementById('profile-session-role')?.replaceChildren(document.createTextNode(role));
@@ -1655,12 +1675,39 @@ function loadStaffProfile(session = MefamAPI.getSession() || {}) {
 function saveStaffProfile() {
     const session = MefamAPI.getSession() || {};
     const displayName = document.getElementById('profileDisplayName')?.value.trim() || session.name || 'Staff';
-    localStorage.setItem('mefamdev_staff_profile', JSON.stringify({ displayName }));
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_staff_profile') || '{}'); } catch (_) { saved = {}; }
+    localStorage.setItem('mefamdev_staff_profile', JSON.stringify({ ...saved, displayName }));
     document.getElementById('user-name').innerText = displayName;
-    document.getElementById('user-avatar').innerText = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '??';
     loadStaffProfile(session);
     const status = document.getElementById('profileSaveStatus');
     if (status) { status.textContent = 'Profile saved'; setTimeout(() => { status.textContent = ''; }, 2500); }
+}
+
+async function uploadStaffProfilePhoto(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        const photo = await resizeProfileImage(file);
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('mefamdev_staff_profile') || '{}'); } catch (_) { saved = {}; }
+        localStorage.setItem('mefamdev_staff_profile', JSON.stringify({ ...saved, photo }));
+        loadStaffProfile(MefamAPI.getSession() || {});
+    } catch (error) {
+        console.error('Failed to upload staff profile photo:', error);
+        alert('Unable to use that picture right now.');
+    } finally {
+        event.target.value = '';
+    }
+}
+
+function removeStaffProfilePhoto() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_staff_profile') || '{}'); } catch (_) { saved = {}; }
+    if (!saved.photo) return;
+    delete saved.photo;
+    localStorage.setItem('mefamdev_staff_profile', JSON.stringify(saved));
+    loadStaffProfile(MefamAPI.getSession() || {});
 }
 
 /* ══════════════════════════════════════
