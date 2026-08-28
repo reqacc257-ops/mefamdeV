@@ -4209,7 +4209,7 @@ function renderFamilies() {
 
 function viewFamily(id) {
     const families = JSON.parse(localStorage.getItem('mefamdev_families') || '[]');
-    const f = families.find(x => x.id === id);
+    const f = families.find(x => String(x.id) === String(id));
     if (!f) return;
     currentFamilyId = id;
     currentFamilyRecord = f;
