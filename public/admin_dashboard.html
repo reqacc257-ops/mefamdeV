@@ -1916,6 +1916,12 @@ async function loadAllData(showLoading = false) {
         const intakeList = Array.isArray(intakeSheets) && intakeSheets.length > 0 ? intakeSheets : existingIntake;
         const assessmentList = Array.isArray(assessments) && assessments.length > 0 ? assessments : existingAssessments;
 
+        const checkinEntries = await Promise.all((Array.isArray(eventList) ? eventList : []).map(async event => {
+            try { return [event.id, await MefamAPI.getEventCheckins(event.id) || []]; }
+            catch (error) { console.warn(`Could not load check-ins for event ${event.id}.`, error); return [event.id, []]; }
+        }));
+        window.liveEventCheckins = Object.fromEntries(checkinEntries);
+
         localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
         window.pipelineApps = appList;
         localStorage.setItem('mefamdev_families', JSON.stringify(familyList));
@@ -4146,6 +4152,26 @@ function printAttendanceQRCode(code) {
 function renderAttendance(scholars) {
     const apps = Array.isArray(scholars) ? scholars : [];
 
+    function getEventAttendanceIds(event, scholarList) {
+        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+        const ids = new Set((attData[event.id] || []).map(id => String(id)));
+        const scholarKeys = new Map();
+        (scholarList || []).forEach(scholar => {
+            [scholar.id, scholar.reference, scholar.referenceNumber, scholar.reference_number, scholar.name]
+                .filter(Boolean)
+                .forEach(value => scholarKeys.set(String(value).trim().toLowerCase(), String(scholar.id)));
+        });
+        (window.liveEventCheckins?.[event.id] || []).forEach(checkin => {
+            [checkin.student_id, checkin.student_name]
+                .filter(Boolean)
+                .forEach(value => {
+                    const scholarId = scholarKeys.get(String(value).trim().toLowerCase());
+                    if (scholarId) ids.add(scholarId);
+                });
+        });
+        return ids;
+    }
+
     // Formation summary
     const formSummaries = [document.getElementById('formationAttSummary'), document.getElementById('formationEventsSummary')].filter(Boolean);
     if (formSummaries.length) {
@@ -4156,11 +4182,13 @@ function renderAttendance(scholars) {
         } else {
             const summaryHtml = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
                 events.map(ev => {
-                    const cnt = (attData[ev.id] || []).length;
+                    const attendedIds = getEventAttendanceIds(ev, apps);
+                    const cnt = Number.isFinite(Number(ev.checkinCount))
+                        ? Math.max(Number(ev.checkinCount), attendedIds.size)
+                        : attendedIds.size;
                     const pct = ev.max > 0 ? Math.round(cnt / ev.max * 100) : 0;
                     const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
                     const acceptedScholars = apps.filter(s => s.status === 'Accepted');
-                    const attendedIds = new Set((attData[ev.id] || []).map(id => String(id)));
                     const attendedScholars = acceptedScholars.filter(s => attendedIds.has(String(s.id)));
                     const absentScholars = acceptedScholars.filter(s => !attendedIds.has(String(s.id)));
                     const scholarRows = list => list.length
@@ -4214,7 +4242,7 @@ function renderAttendance(scholars) {
         }
         logBody.innerHTML = apps.map(s => {
             const days = absences[s.id]?.days || 0;
-            const formCount = events.filter(ev => (attData[ev.id] || []).includes(s.id)).length;
+            const formCount = events.filter(ev => getEventAttendanceIds(ev, apps).has(String(s.id))).length;
             const statusLabel = formCount === events.length && events.length > 0 ? 'Good' : formCount >= Math.ceil(events.length * 0.75) ? 'Yellow' : 'Bad';
             const cls = statusLabel === 'Good' ? 'badge-green' : statusLabel === 'Yellow' ? 'badge-orange' : 'badge-red';
             return `<tr data-scholar="${s.name.toLowerCase()}">
