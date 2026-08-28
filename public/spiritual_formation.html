@@ -82,7 +82,8 @@
     input:focus, select:focus, textarea:focus {
       outline:none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(102,192,244,.18); background:#fff;
     }
-    .search-input { max-width: 220px; }
+    .search-input { width:100%; max-width:320px; padding:10px 14px; border:1px solid var(--border); border-radius:9px; background:#fbfcfe; }
+    .search-input:focus { background:#fff; border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,154,46,.16); }
     table { width:100%; border-collapse:collapse; font-size:.88rem; }
     th, td { padding:11px 8px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
     th { color:var(--text-muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.07em; font-weight:700; }
