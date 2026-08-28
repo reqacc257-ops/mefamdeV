@@ -14,8 +14,10 @@ function setTestDirectorPassword() {
 test('director login requires an OTP before issuing a dashboard token', async () => {
   const previousEmail = process.env.DIRECTOR_EMAIL;
   const previousNodeEnv = process.env.NODE_ENV;
+  const previousVerificationEnabled = process.env.DIRECTOR_VERIFICATION_ENABLED;
   process.env.DIRECTOR_EMAIL = 'director@example.com';
   delete process.env.NODE_ENV;
+  process.env.DIRECTOR_VERIFICATION_ENABLED = 'true';
   setTestDirectorPassword();
 
   const server = app.listen(0);
@@ -48,14 +50,18 @@ test('director login requires an OTP before issuing a dashboard token', async ()
     else process.env.DIRECTOR_EMAIL = previousEmail;
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;
+    if (previousVerificationEnabled === undefined) delete process.env.DIRECTOR_VERIFICATION_ENABLED;
+    else process.env.DIRECTOR_VERIFICATION_ENABLED = previousVerificationEnabled;
   }
 });
 
 test('director can trust a device for one day after email verification', async () => {
   const previousEmail = process.env.DIRECTOR_EMAIL;
   const previousNodeEnv = process.env.NODE_ENV;
+  const previousVerificationEnabled = process.env.DIRECTOR_VERIFICATION_ENABLED;
   process.env.DIRECTOR_EMAIL = 'director@example.com';
   delete process.env.NODE_ENV;
+  process.env.DIRECTOR_VERIFICATION_ENABLED = 'true';
   setTestDirectorPassword();
 
   const server = app.listen(0);
@@ -96,5 +102,7 @@ test('director can trust a device for one day after email verification', async (
     else process.env.DIRECTOR_EMAIL = previousEmail;
     if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
     else process.env.NODE_ENV = previousNodeEnv;
+    if (previousVerificationEnabled === undefined) delete process.env.DIRECTOR_VERIFICATION_ENABLED;
+    else process.env.DIRECTOR_VERIFICATION_ENABLED = previousVerificationEnabled;
   }
 });

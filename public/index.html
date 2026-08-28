@@ -347,7 +347,7 @@
         <p id="loginSubtitle">Enter your username or APP reference number</p>
     </div>
 
-    <!-- Detected role pill (shown once username is recognised) -->
+    <!-- Detected applicant reference (shown once an applicant identifier is recognised) -->
     <div id="detectedRole" style="display:none; margin-bottom:18px;">
         <div id="detectedRolePill" style="
             display:inline-flex; align-items:center; gap:8px;
@@ -503,14 +503,7 @@
 /* ══════════════════════════════════════
    STAFF ACCOUNTS
 ══════════════════════════════════════ */
-const STAFF_ACCOUNTS = [
-    { username: 'director', title: 'Primary Social Worker' },
-    { username: 'edu', title: 'Education Social Worker' },
-    { username: 'finance', title: 'Finance Officer' },
-    { username: 'program', title: 'Program Coordinator' },
-];
-
-const STAFF_USERNAMES = STAFF_ACCOUNTS.map(a => a.username);
+const STAFF_USERNAMES = ['director', 'edu', 'finance', 'program'];
 let directorOtpChallengeId = '';
 
 /* ══════════════════════════════════════
@@ -544,8 +537,6 @@ function onUsernameInput(input) {
 
     if (isStaff) {
         detectedType = 'staff';
-        const acc = STAFF_ACCOUNTS.find(a => a.username === v);
-        showDetected('🏛 Staff — ' + acc.title, '#e3f0ff', '#1a3a6e', '#90b8f8');
         document.getElementById('staffPasswordField').style.display = 'block';
         document.getElementById('applicantNameField').style.display = 'none';
         document.getElementById('applicantPasswordField').style.display = 'none';
