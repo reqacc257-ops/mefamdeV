@@ -67,7 +67,14 @@
         ul { list-style: none; padding: 0; margin: 0; }
         .empty-state { background: #f8fbff; border: 1px solid #dfe8f3; color: #5f6d7a; padding: 24px; border-radius: 14px; text-align: center; }
         .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .page-header-row > div { min-width: 140px; }
+        .page-header-row > div { min-width: 0; }
+        .page-header-row > div:last-child { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; width: min(100%, 690px); min-width: 0; gap: 10px; align-items: center; flex: 1 1 600px; }
+        .page-header-row .search-wrap { min-width: 0; max-width: none; }
+        .page-header-row .btn { white-space: nowrap; }
+        @media (max-width: 640px) {
+            .page-header-row > div:last-child { grid-template-columns: 1fr; width: 100%; }
+            .page-header-row > div:last-child .btn { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -86,7 +93,7 @@
                         <div class="card-title">Student Grade/Cards</div>
                         <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">View student grade cards and print academic progress.</p>
                     </div>
-                    <div style="display:grid; gap:10px; grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) auto; align-items:center;">
+                    <div class="grade-card-filters">
                         <div class="search-wrap"><span class="search-icon"></span><input type="text" id="rcSearchInput" class="search-input" placeholder="Search student, school, grade..." oninput="filterReportCards()"></div>
                         <div class="search-wrap" style="min-width:240px; max-width:320px;"><span class="search-icon"></span><input type="text" id="rcSchoolYearFilter" class="search-input" placeholder="Filter by school year" oninput="filterReportCards()"></div>
                         <button class="btn btn-gold btn-sm" type="button" onclick="filterReportCards()">🔍 Filter</button>
