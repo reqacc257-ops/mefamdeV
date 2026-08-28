@@ -1093,6 +1093,10 @@
                             <strong style="font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);">Benefits / Programs</strong>
                             <div id="fd-benefits" style="margin-top:6px;"></div>
                         </div>
+                        <div style="margin-bottom:12px;">
+                            <strong style="font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);">Family Composition</strong>
+                            <div id="fd-composition" class="table-wrap" style="margin-top:6px;"></div>
+                        </div>
                         <div>
                             <strong style="font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted);">Linked Scholars</strong>
                             <div id="fd-scholars" style="margin-top:6px;"></div>
@@ -4236,6 +4240,24 @@ function viewFamily(id) {
     document.getElementById('fd-benefits').innerHTML = benefits.length
         ? benefits.map(b => `<span class="badge badge-blue" style="margin:2px;">${b.trim()}</span>`).join(' ')
         : '<span style="color:#bbb; font-size:.84rem;">None listed.</span>';
+
+    const composition = Array.isArray(f.familyMembers) && f.familyMembers.length
+        ? f.familyMembers
+        : (Array.isArray(linkedScholar?.familyMembers) ? linkedScholar.familyMembers : []);
+    document.getElementById('fd-composition').innerHTML = composition.length
+        ? `<table style="min-width:680px; font-size:.8rem;">
+            <thead><tr><th>Name</th><th>Rel.</th><th>Age</th><th>Civil</th><th>Educ</th><th>Occupation</th><th>Income</th></tr></thead>
+            <tbody>${composition.map(member => `<tr>
+                <td>${escapeHtml(member.name || '—')}</td>
+                <td>${escapeHtml(member.relation || '—')}</td>
+                <td>${escapeHtml(member.age || '—')}</td>
+                <td>${escapeHtml(member.civil || '—')}</td>
+                <td>${escapeHtml(member.educ || '—')}</td>
+                <td>${escapeHtml(member.occup || '—')}</td>
+                <td>₱${escapeHtml(member.income || '0')}</td>
+            </tr>`).join('')}</tbody>
+           </table>`
+        : '<span style="color:#bbb; font-size:.84rem;">No family composition data available.</span>';
 
     // Linked scholars from apps (match by barangay as heuristic)
     const linked = apps.filter(a => a.status === 'Accepted' && a.barangay && f.barangay && a.barangay.toLowerCase() === f.barangay.toLowerCase());
