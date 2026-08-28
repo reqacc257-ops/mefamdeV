@@ -724,7 +724,7 @@
                 <div style="display:flex; gap:10px;">
                     <div class="search-wrap">
                         <span class="search-icon"></span>
-                        <input type="text" class="search-input" placeholder="Search by name, barangay..." id="appSearch" oninput="filterAppsTable()">
+                        <input type="text" class="search-input" placeholder="Search by Ref. ID, name, barangay..." id="appSearch" oninput="filterAppsTable()">
                     </div>
                     <button class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
                 </div>
@@ -2274,7 +2274,7 @@ function renderFullAppsTable(apps) {
     const tbody = document.getElementById('appTableBody');
     if (!tbody) return;
     tbody.innerHTML = apps.map(a => `
-        <tr class="${a.mekong ? 'mekong-application-row' : ''}" data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}">
+        <tr class="${a.mekong ? 'mekong-application-row' : ''}" data-name="${a.name.toLowerCase()}" data-brgy="${(a.barangay||'').toLowerCase()}" data-ref="${String(a.reference || a.referenceNumber || a.reference_number || a.id || '').toLowerCase()}">
             <td class="table-actions">
                 <span class="app-id-badge" onclick="openApplicantPortal(${a.id})" title="Open applicant's portal view">${a.reference || a.referenceNumber || a.reference_number || 'APP-' + a.id}</span>
                 ${a.mekong ? `<div style="margin-top:5px;">${mekongBadge(a)}</div>` : ''}
@@ -2296,7 +2296,8 @@ function filterAppsTable() {
     document.querySelectorAll('#appTableBody tr').forEach(tr => {
         const name = tr.dataset.name || '';
         const brgy = tr.dataset.brgy || '';
-        tr.style.display = (name.includes(q) || brgy.includes(q)) ? '' : 'none';
+        const ref = tr.dataset.ref || '';
+        tr.style.display = (ref.includes(q) || name.includes(q) || brgy.includes(q)) ? '' : 'none';
     });
 }
 
