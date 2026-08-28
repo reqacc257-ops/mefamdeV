@@ -1695,7 +1695,7 @@ function nav(pageId, el) {
     if (el) el.classList.add('active');
     const title = el ? el.innerText.replace(/[^\x00-\x7F]/g,'').replace(/\d+/g,'').trim() : pageId;
     document.getElementById('page-title').innerText = title;
-    loadAllData(true);
+    loadAllData();
     document.getElementById('roleMenu').classList.remove('open');
     if (window.innerWidth <= 900) closeSidebar();
 }
