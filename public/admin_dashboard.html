@@ -266,7 +266,11 @@
         .profile-header-info { min-width: 0; }
         .profile-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
         .profile-mekong-toggle, .profile-photo-upload { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: .8rem; color: var(--text-muted); cursor: pointer; text-transform: none; letter-spacing: 0; }
-        .profile-photo-upload input { width: auto; max-width: 220px; font-size: .75rem; }
+        .profile-photo-upload { gap: 8px; flex-wrap: wrap; }
+        .profile-photo-upload .photo-upload-button { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 6px; background: #f0f2f5; color: var(--text); font-size: .78rem; font-weight: 700; cursor: pointer; }
+        .profile-photo-upload .photo-upload-button:hover { background: #e2e5ea; }
+        .profile-photo-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .profile-photo-name { color: var(--text-muted); font-size: .75rem; }
         .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
         .mekong-badge { display: inline-block; color: #176b38; background: #d9f2e2; border-radius: 10px; padding: 2px 8px; font-size: .68rem; font-weight: 700; line-height: 1.2; }
         .mekong-application-row td { background: #f0fbf4; }
@@ -802,8 +806,10 @@
                                     <input type="checkbox" id="pd-mekong-toggle" onchange="saveMekongStatus()">
                                     <span>Mark as Mekong</span>
                                 </label>
-                                <label class="profile-photo-upload">
-                                    <span>Upload profile image</span>
+                                <label class="profile-photo-upload" for="pd-photo-input">
+                                    <span>Profile picture</span>
+                                    <span class="photo-upload-button">📷 Choose picture</span>
+                                    <span class="profile-photo-name" id="pd-photo-name">No picture selected</span>
                                     <input type="file" id="pd-photo-input" accept="image/*" onchange="uploadProfilePhoto(event)">
                                 </label>
                             </div>
@@ -842,7 +848,6 @@
 
                         <!-- Quick actions -->
                         <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
-                            <button class="btn btn-gold btn-sm" onclick="viewApp(currentProfileId)">📋 View Full Application</button>
                             <button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(currentProfileId)">🔗 Open Portal View</button>
                         </div>
                     </div>
@@ -2249,6 +2254,7 @@ function viewProfile(id) {
     document.getElementById('pd-mekong-badge').style.display = s.mekong ? 'inline-block' : 'none';
     document.getElementById('pd-mekong-toggle').checked = Boolean(s.mekong);
     document.getElementById('pd-grade').innerText = s.grade;
+    document.getElementById('pd-photo-name').innerText = s.profilePhoto ? 'Picture uploaded' : 'No picture selected';
     document.getElementById('pd-school').innerText = s.school;
     document.getElementById('pd-brgy').innerText = s.barangay || 'N/A';
     document.getElementById('pd-ambition').innerText = s.ambition || 'Not stated';
@@ -2319,6 +2325,7 @@ async function uploadProfilePhoto(event) {
         localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
         const avatar = document.getElementById('pd-avatar');
         avatar.innerHTML = `<img src="${profilePhoto}" alt="${escapeHtml(app?.name || 'Student')} profile photo">`;
+        document.getElementById('pd-photo-name').innerText = file.name || 'Picture uploaded';
     } catch (error) {
         console.error('Failed to upload profile photo:', error);
         alert('Unable to save the profile image right now.');
