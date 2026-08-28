@@ -2522,8 +2522,20 @@ async function renderDocChecklist(appId, containerId) {
         return;
     }
 
-    const badgeFor = s => s === 'Received' ? 'badge-green' : s === 'Missing' ? 'badge-red' : s === 'badge-orange';
+    const badgeFor = s => s === 'Received' ? 'badge-green' : s === 'Missing' ? 'badge-red' : 'badge-orange';
     const submittedCount = items.filter(d => d.status === 'Received').length;
+    const documentRows = items.map(d => {
+        const isReportCard = d.key === 'reportCard';
+        const hasFile = Boolean(d.fileData);
+        const encodedFile = hasFile ? encodeURIComponent(d.fileData) : '';
+        const safeLabel = String(d.label || '').replace(/'/g, "\\'");
+        const actions = isReportCard
+            ? `<button class="btn btn-ghost btn-sm" onclick="openStudentGradeCard(${appId})">📄 Open Grade Card</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="openDocumentPreview('${encodedFile}','${safeLabel}')" ${hasFile ? '' : 'disabled'}>View</button>
+               <button class="btn btn-green btn-sm" onclick="approveDoc(${appId},'${d.key}','${containerId}')" ${d.status === 'Received' ? 'disabled' : ''}>✓ Approve</button>
+               <button class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${d.key}','${containerId}')">Reject</button>`;
+        return `<tr><td>${d.label}</td><td><span class="badge ${badgeFor(d.status)}">${d.status}</span></td><td style="font-size:.78rem; color:#c0392b; max-width:200px;">${d.note ? d.note : '—'}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
+    }).join('');
 
     el.innerHTML = `
         <div style="font-size:.78rem; color:var(--text-muted); margin-bottom:8px;">
@@ -2538,24 +2550,7 @@ async function renderDocChecklist(appId, containerId) {
                     <td>—</td>
                     <td><button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(${appId})">View Portal</button></td>
                 </tr>
-                ${items.map(d => {
-                    const isReportCard = d.key === 'reportCard';
-                    const hasFile = Boolean(d.fileData);
-                    const encodedFile = hasFile ? encodeURIComponent(d.fileData) : '';
-                    const safeLabel = String(d.label || '').replace(/'/g, "\\'");
-                    return `
-                <tr>
-                    <td>${d.label}</td>
-                    <td><span class="badge ${badgeFor(d.status)}">${d.status}</span></td>
-                    <td style="font-size:.78rem; color:#c0392b; max-width:200px;">${d.note ? d.note : '—'}</td>
-                    <td style="white-space:nowrap;">
-                        ${isReportCard
-                            ? `<button class="btn btn-ghost btn-sm" onclick="openStudentGradeCard(${appId})">📄 Open Grade Card</button>`
-                            : `<button class="btn btn-ghost btn-sm" onclick="openDocumentPreview('${encodedFile}','${safeLabel}')" ${hasFile ? '' : 'disabled'}>View</button>
-                               <button class="btn btn-green btn-sm" onclick="approveDoc(${appId},'${d.key}','${containerId}')" ${d.status === 'Received' ? 'disabled' : ''}>✓ Approve</button>
-                               <button class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${d.key}','${containerId}')">Reject</button>`}
-                    </td>
-                </tr>`).join('')}
+                ${documentRows}
             </tbody>
         </table>`;
 }
@@ -4233,10 +4228,11 @@ function renderAttendance(scholars) {
                     const acceptedScholars = apps.filter(s => s.status === 'Accepted');
                     const attendedScholars = acceptedScholars.filter(s => attendedIds.has(String(s.id)));
                     const absentScholars = acceptedScholars.filter(s => !attendedIds.has(String(s.id)));
+                    const coverage = `${attendedScholars.length}/${acceptedScholars.length} scholars`;
                     const scholarRows = list => list.length
                         ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
                         : '<div style="color:var(--text-muted);">None</div>';
-                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${cnt}/${ev.max}</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
+                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${coverage}</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
                 }).join('') + `</tbody></table>`;
             formSummaries.forEach(summary => { summary.innerHTML = summaryHtml; });
         }
