@@ -1214,8 +1214,8 @@
                             <option value="All Families">All Families</option>
                             <option value="Pending Applicants">Pending Applicants</option>
                             <option value="Education Levels: Elementary">Elementary</option>
-                            <option value="Education Levels: HS">Highschool</option>
-                            <option value="Education Levels: SHS">Senior high School</option>
+                            <option value="Education Levels: HS">Junior High School</option>
+                            <option value="Education Levels: SHS">Senior High School</option>
                             <option value="Education Levels: College">College</option>
                         </select>
                     </div>
@@ -1371,7 +1371,15 @@
                 <div class="card" style="border-left:4px solid var(--gold);">
                     <div class="card-title">School Year Management</div>
                     <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Close the current school year for every accepted applicant while retaining grades and history.</p>
-                    <button class="btn btn-gold" type="button" onclick="endAllSchoolYears()">📚 End All Accepted School Years</button>
+                    <label for="schoolYearGradeFilter">Grade level</label>
+                    <select id="schoolYearGradeFilter" style="margin-bottom:12px;">
+                        <option value="all">All Grade Levels</option>
+                        <option value="elementary">Elementary</option>
+                        <option value="junior-high">Junior High School</option>
+                        <option value="senior-high">Senior High School</option>
+                        <option value="college">College</option>
+                    </select>
+                    <button class="btn btn-gold" type="button" onclick="endAllSchoolYears()">📚 End Selected School Years</button>
                 </div>
                 <div class="card" style="border-left:4px solid var(--purple);">
                     <div class="card-title">Grade Retention</div>
@@ -2771,22 +2779,45 @@ async function endApplicationYear(id) {
 }
 
 async function endAllSchoolYears() {
-    const accepted = (window.pipelineApps || []).filter(app => app.status === 'Accepted');
+    const allAccepted = (window.pipelineApps || []).filter(app => app.status === 'Accepted');
+    const selectedLevel = document.getElementById('schoolYearGradeFilter')?.value || 'all';
+    const accepted = selectedLevel === 'all' ? allAccepted : allAccepted.filter(app => getSchoolYearGradeGroup(app) === selectedLevel);
     if (!accepted.length) {
-        alert('There are no accepted applicants to update.');
+        alert(selectedLevel === 'all' ? 'There are no accepted applicants to update.' : 'There are no accepted applicants in that grade level.');
         return;
     }
-    if (!confirm(`End the school year for all ${accepted.length} accepted applicant${accepted.length === 1 ? '' : 's'}? Their grades and history will be retained.`)) return;
-    if (!confirm('FINAL CONFIRMATION: Move every accepted applicant to Year Ended? They can reapply for a new school year later.')) return;
+    const levelLabel = selectedLevel === 'all' ? 'all grade levels' : document.getElementById('schoolYearGradeFilter')?.selectedOptions[0]?.textContent;
+    if (!confirm(`End the school year for ${accepted.length} accepted applicant${accepted.length === 1 ? '' : 's'} in ${levelLabel}? Their grades and history will be retained.`)) return;
+    if (!confirm(`FINAL CONFIRMATION: Move these ${accepted.length} applicant${accepted.length === 1 ? '' : 's'} to Year Ended? They can reapply for a new school year later.`)) return;
     try {
-        const result = await MefamAPI.endAllApplicationYears();
-        if (!result?.ok) throw new Error(result?.error || 'Unable to end all school years.');
+        let updated = 0;
+        if (selectedLevel === 'all') {
+            const result = await MefamAPI.endAllApplicationYears();
+            if (!result?.ok) throw new Error(result?.error || 'Unable to end all school years.');
+            updated = result.updated || accepted.length;
+        } else {
+            for (const app of accepted) {
+                const result = await MefamAPI.endApplicationYear(app.id);
+                if (result?.ok) updated += 1;
+            }
+        }
         await loadAllData();
-        alert(`${result.updated || accepted.length} school-year cycle${result.updated === 1 ? '' : 's'} ended. Grades and history were retained.`);
+        alert(`${updated} school-year cycle${updated === 1 ? '' : 's'} ended. Grades and history were retained.`);
     } catch (error) {
         console.error('Failed to end all school years:', error);
         alert(error.message || 'Unable to end all school years right now.');
     }
+}
+
+function getSchoolYearGradeGroup(app) {
+    const level = String(app.eduLevel || app.educationLevel || app.education_level || '').toLowerCase();
+    const gradeText = String(app.grade || '').toLowerCase();
+    const gradeNumber = Number.parseInt(gradeText.match(/\d+/)?.[0] || '', 10);
+    if (level.includes('college') || level.includes('tertiary') || level.includes('university') || gradeText.includes('college')) return 'college';
+    if (level.includes('senior') || level.includes('shs') || gradeNumber === 11 || gradeNumber === 12) return 'senior-high';
+    if (level.includes('junior') || level.includes('high') || level.includes('hs') || (gradeNumber >= 7 && gradeNumber <= 10)) return 'junior-high';
+    if (level.includes('elementary') || (gradeNumber >= 1 && gradeNumber <= 6)) return 'elementary';
+    return '';
 }
 
 async function deleteRetainedGrades(appId) {
