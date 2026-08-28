@@ -1983,7 +1983,7 @@ function renderSavedIntakeSheets(sheets) {
             <td style="font-size:.85rem; color:#64748b;">${s.school || s.schoolName || s.school_name || '—'}</td>
             <td style="color:var(--text-muted); font-size:.8rem;">${s.savedAt || s.caseDate || s.created_at || '—'}</td>
             <td>
-                <button class="btn btn-gold btn-sm" onclick="openIntakeSheet(${s.id})">Open</button>
+                <button class="btn btn-gold btn-sm" onclick="openIntakeSheet(${s.id})">View</button>
                 <button class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_intake_sheets',${s.id})">✕</button>
             </td>
         </tr>`).join('') + `</tbody></table>`;
@@ -2047,7 +2047,7 @@ function filterSavedRecords() {
 
 function openIntakeSheet(recordId) {
     const id = recordId === null || recordId === undefined || recordId === 'null' || recordId === 'undefined' ? null : recordId;
-    const url = id ? `intake_sheet.html?id=${encodeURIComponent(id)}` : 'intake_sheet.html';
+    const url = id ? `intake_sheet.html?record=${encodeURIComponent(id)}&view=1` : 'intake_sheet.html';
     openToolModal(url, '📝 Intake Sheet');
 }
 function openAssessment(appId) {
@@ -2439,7 +2439,8 @@ async function setDocStatus(appId, docKey, status, containerId, note) {
         await MefamAPI.setDocumentStatus(appId, docKey, status, note || '');
         renderDocChecklist(appId, containerId);
     } catch (e) {
-        alert('Could not update that document\'s status right now.');
+        console.error('Failed to update document status:', e);
+        alert(e.message || 'Could not update that document\'s status right now.');
     }
 }
 

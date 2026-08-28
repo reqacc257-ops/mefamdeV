@@ -101,7 +101,7 @@ function saveDocumentUpload(appId, docKey, payload) {
     throw new Error('Only image uploads are accepted');
   }
 
-  const existing = db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get([appId, docKey]);
+  const existing = db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
   // If an applicant uploads a document, leave it in review state rather than marking it as received automatically.
   const status = payload.status || (payload.fileData ? 'Pending' : 'Required');
   const note = payload.note || (existing?.note || '');
@@ -150,7 +150,7 @@ router.put('/:appId/:docKey', async (req, res) => {
   }
   const note = req.body.note || '';
 
-  const existing = await db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get([appId, docKey]);
+  const existing = await db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
   const fileName = existing?.file_name || '';
   const fileType = existing?.file_type || '';
   const fileData = existing?.file_data || '';

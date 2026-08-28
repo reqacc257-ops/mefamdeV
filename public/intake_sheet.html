@@ -371,6 +371,7 @@ window.onload = function () {
     const recordId = params.get('record');
     const incomingId = params.get('id');
     if (recordId) {
+        document.body.classList.add('saved-record-view');
         loadSavedIntakeRecord(recordId);
     } else if (incomingId) {
         const saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
@@ -742,7 +743,13 @@ function loadSavedIntakeRecord(recordId) {
     if (record.clientSignature) setSigFromDataUrl('clientSig', record.clientSignature);
     if (record.staffSignature) setSigFromDataUrl('staffSig', record.staffSignature);
 
-    if (linkedAppId) selectPrefillApplicant(linkedAppId);
+    if (linkedAppId) {
+        selectPrefillApplicant(linkedAppId);
+        const search = document.getElementById('prefillSearch');
+        const results = document.getElementById('prefillResults');
+        if (search) search.style.display = 'none';
+        if (results) results.style.display = 'none';
+    }
 }
 
 function collectData() {
