@@ -112,6 +112,9 @@ const MefamAPI = {
   async deleteApplication(id, confirmation = {}) {
     return this._delete(`/applications/${id}`, confirmation);
   },
+  async deleteDummyApplications() {
+    return this._post('/applications/delete-dummy', {});
+  },
 
   /** Public (no auth): submit the application form */
   async submitApplication(data) {

@@ -134,6 +134,39 @@ router.get('/:id', async (req, res) => {
   res.json(parseApp(row));
 });
 
+// One-time cleanup for the generated user1-user50 test accounts.
+router.post('/delete-dummy', requireAuth, requireRole('director'), async (req, res) => {
+  const rows = await db.prepare('SELECT id, portal_username, reference_number FROM applications').all();
+  const dummyRows = rows.filter(row => /^user(?:[1-9]|[1-4][0-9]|50)$/.test(String(row.portal_username || '')));
+  const ids = dummyRows.map(row => Number(row.id)).filter(Number.isFinite);
+
+  if (db.isPostgres) {
+    for (const id of ids) {
+      await db.prepare('DELETE FROM event_checkins WHERE student_id = ? OR student_id = ?').run(String(id), String(dummyRows.find(row => Number(row.id) === id)?.reference_number || ''));
+      await db.prepare('DELETE FROM event_attendance WHERE app_id = ?').run(id);
+      await db.prepare('DELETE FROM absences WHERE app_id = ?').run(id);
+      await db.prepare('DELETE FROM grades WHERE app_id = ?').run(id);
+      await db.prepare('DELETE FROM disbursements WHERE app_id = ?').run(id);
+      await db.prepare('DELETE FROM intake_sheets WHERE linked_app_id = ?').run(id);
+      await db.prepare('DELETE FROM assessments WHERE linked_app_id = ?').run(id);
+      await db.prepare('DELETE FROM document_status WHERE app_id = ?').run(id);
+      await db.prepare('DELETE FROM grade_extraction WHERE app_id = ?').run(id);
+      await db.prepare('DELETE FROM quarterly_grades WHERE student_id = ?').run(id);
+      await db.prepare('DELETE FROM applications WHERE id = ?').run(id);
+    }
+  } else {
+    const dummyIds = new Set(ids.map(id => String(id)));
+    ['event_checkins', 'event_attendance', 'absences', 'grades', 'disbursements', 'intake_sheets', 'assessments', 'document_status', 'grade_extraction', 'quarterly_grades'].forEach(key => {
+      if (!Array.isArray(db.data[key])) return;
+      db.data[key] = db.data[key].filter(row => !dummyIds.has(String(row.app_id ?? row.linked_app_id ?? row.student_id)) && !dummyIds.has(String(row.student_id)));
+    });
+    db.data.applications = db.data.applications.filter(row => !dummyIds.has(String(row.id)));
+    if (typeof db.save === 'function') db.save();
+  }
+
+  res.json({ ok: true, deleted: ids.length });
+});
+
 // ── PATCH status / fields ─────────────────────────────────────────────────────
 router.patch('/:id', async (req, res) => {
   if (req.user.type === 'applicant') return res.status(403).json({ error: 'Forbidden' });
