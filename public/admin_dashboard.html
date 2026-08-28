@@ -499,7 +499,7 @@
     </style>
 </head>
 <body class="auth-pending">
-<div class="dashboard-loading visible" id="dashboardLoading" aria-label="Loading dashboard" aria-live="polite">
+<div class="dashboard-loading" id="dashboardLoading" aria-label="Loading dashboard" aria-live="polite">
     <div class="skeleton-shell">
         <div class="skeleton-line wide"></div>
         <div class="skeleton-line short"></div>
@@ -1610,7 +1610,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         renderGrades(apps.filter(a => a.status === 'Accepted'));
     });
-    loadAllData(true);
+    loadAllData();
     setInterval(() => { loadAllData(); }, 5000);
 
     // Close role dropdown on outside click
