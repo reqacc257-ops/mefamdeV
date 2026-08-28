@@ -3599,7 +3599,9 @@ function renderEvents() {
     }
     container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Action</th></tr></thead><tbody>` +
         events.map(ev => {
-            const attended = (attData[ev.id] || []).length;
+            const attended = Number.isFinite(Number(ev.checkinCount))
+                ? Number(ev.checkinCount)
+                : (attData[ev.id] || []).length;
             const pct = ev.max > 0 ? Math.round(attended / ev.max * 100) : 0;
             const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
             const active = ev.activeAttendanceSession || null;

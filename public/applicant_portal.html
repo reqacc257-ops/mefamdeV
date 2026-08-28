@@ -688,6 +688,9 @@ function renderPortal(app, session) {
 
     // Hero
     document.getElementById('heroName').innerText = appData.name || 'Applicant';
+    const automaticReference = appData.referenceNumber || appData.reference || appData.reference_number || `APP-${appData.id}`;
+    const attendanceStudentId = document.getElementById('attStudentId');
+    if (attendanceStudentId && !attendanceStudentId.value) attendanceStudentId.value = automaticReference;
     document.getElementById('heroRef').innerText = `Reference: ${appData.referenceNumber || 'APP-' + appData.id}`;
     document.getElementById('heroSchool').innerText = `${appData.grade || '—'} · ${appData.school || '—'} · S.Y. ${appData.sy || '—'}`;
 
