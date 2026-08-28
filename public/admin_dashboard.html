@@ -1457,6 +1457,19 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="documentPreviewModal" onclick="if(event.target===this) closeDocumentPreview()">
+    <div class="modal" style="max-width:760px;">
+        <div class="modal-header">
+            <h2 id="documentPreviewTitle">Document Preview</h2>
+            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeDocumentPreview()">✕ Close</button>
+        </div>
+        <div class="modal-body" style="text-align:center; background:#f4f6f9;">
+            <img id="documentPreviewImage" alt="Document preview" style="display:block; max-width:100%; max-height:68vh; margin:0 auto; object-fit:contain;">
+            <p id="documentPreviewEmpty" style="display:none; color:var(--text-muted);">No uploaded file is available for this document.</p>
+        </div>
+    </div>
+</div>
+
 <!-- Floating delete confirmation -->
 <div class="modal-overlay" id="deleteConfirmModal" onclick="if(event.target===this) closeDeleteConfirm(false)">
     <div class="modal delete-modal">
