@@ -961,6 +961,20 @@
                 </div>
             </div>
         </div>
+        <div class="modal-overlay" id="profileSaveModal">
+            <div class="modal" style="max-width:440px;">
+                <div class="modal-header"><h2>Confirm Profile Changes</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('profileSaveModal')">✕</button></div>
+                <div class="modal-body">
+                    <p style="font-size:.88rem; color:var(--text-muted); margin-bottom:14px;">Enter your current password to update your name or username.</p>
+                    <label for="profileCurrentPassword">Current password</label>
+                    <input type="password" id="profileCurrentPassword" placeholder="Enter current password" autocomplete="current-password">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" onclick="closeModal('profileSaveModal')">Cancel</button>
+                    <button class="btn btn-navy" onclick="confirmSaveStaffProfile()">Confirm &amp; Save</button>
+                </div>
+            </div>
+        </div>
         <div id="attendance" class="page">
             <div class="grid-2eq" style="align-items:start; margin-bottom:20px;">
                 <!-- School absence alerts -->
@@ -1322,14 +1336,14 @@
                     <div class="account-field"><span>Full name</span><input id="profileDisplayName" type="text" maxlength="80" placeholder="Enter your full name"></div>
                     <div class="account-field"><span>Username</span><input id="profileUsername" type="text" maxlength="40" placeholder="Enter your username" autocomplete="username"></div>
                     <div class="account-field"><span>Access level</span><strong id="profile-session-role">-</strong></div>
-                    <div class="account-field"><span>Current password</span><input id="profileCurrentPassword" type="password" placeholder="Required to save account changes" autocomplete="current-password"></div>
                     <small style="display:block; color:var(--text-muted);">Your current password is required before changing your name or username.</small>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:4px;">
-                        <button class="btn btn-navy" type="button" onclick="saveStaffProfile()">Save Profile</button>
+                        <button class="btn btn-navy" type="button" onclick="openProfileSaveModal()">Save Profile</button>
                     </div>
                     <span id="profileSaveStatus" style="font-size:.82rem; color:#27734d; font-weight:700;"></span>
                     <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:2px;">
                         <div class="card-title">Change Password</div>
+                        <input id="profilePasswordCurrent" type="password" placeholder="Current password" autocomplete="current-password" style="margin-bottom:8px;">
                         <input id="profileNewPassword" type="password" placeholder="New password (8+ characters)" autocomplete="new-password" style="margin-bottom:8px;">
                         <input id="profileConfirmPassword" type="password" placeholder="Confirm new password" autocomplete="new-password">
                         <button class="btn btn-ghost" type="button" onclick="submitInlinePasswordChange()" style="margin-top:10px;">Update Password</button>
@@ -1693,7 +1707,15 @@ function loadStaffProfile(session = MefamAPI.getSession() || {}) {
     if (username) username.value = session.username || '';
 }
 
-async function saveStaffProfile() {
+function openProfileSaveModal() {
+    const modal = document.getElementById('profileSaveModal');
+    const password = document.getElementById('profileCurrentPassword');
+    if (password) password.value = '';
+    modal?.classList.add('open');
+    password?.focus();
+}
+
+async function confirmSaveStaffProfile() {
     const session = MefamAPI.getSession() || {};
     const displayName = document.getElementById('profileDisplayName')?.value.trim() || session.name || 'Staff';
     const username = document.getElementById('profileUsername')?.value.trim().toLowerCase() || session.username || '';
@@ -1707,6 +1729,7 @@ async function saveStaffProfile() {
         const nextSession = { ...session, username: result.user?.username || username, name: result.user?.name || displayName, initials: result.user?.initials || '' };
         sessionStorage.setItem('mefamdev_session', JSON.stringify(nextSession));
         document.getElementById('profileCurrentPassword').value = '';
+        closeModal('profileSaveModal');
     } catch (error) {
         alert(error.message || 'Unable to save your profile right now.');
         return;
@@ -1719,7 +1742,7 @@ async function saveStaffProfile() {
 }
 
 async function submitInlinePasswordChange() {
-    const currentPassword = document.getElementById('profileCurrentPassword')?.value || '';
+    const currentPassword = document.getElementById('profilePasswordCurrent')?.value || '';
     const newPassword = document.getElementById('profileNewPassword')?.value || '';
     const confirmPassword = document.getElementById('profileConfirmPassword')?.value || '';
     if (!currentPassword || !newPassword || !confirmPassword) { alert('Fill in the current, new, and confirmation passwords.'); return; }
@@ -1728,7 +1751,7 @@ async function submitInlinePasswordChange() {
     try {
         const result = await MefamAPI.changeStaffPassword(currentPassword, newPassword);
         if (!result || result.error) throw new Error(result?.error || 'Unable to update your password.');
-        document.getElementById('profileCurrentPassword').value = '';
+        document.getElementById('profilePasswordCurrent').value = '';
         document.getElementById('profileNewPassword').value = '';
         document.getElementById('profileConfirmPassword').value = '';
         alert('Password updated successfully.');
