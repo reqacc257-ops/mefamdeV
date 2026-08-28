@@ -1320,14 +1320,20 @@
                 <div class="card account-details">
                     <div class="card-title">Account Details</div>
                     <div class="account-field"><span>Full name</span><input id="profileDisplayName" type="text" maxlength="80" placeholder="Enter your full name"></div>
-                    <div class="account-field"><span>Username</span><strong id="profile-session-username">-</strong></div>
+                    <div class="account-field"><span>Username</span><input id="profileUsername" type="text" maxlength="40" placeholder="Enter your username" autocomplete="username"></div>
                     <div class="account-field"><span>Access level</span><strong id="profile-session-role">-</strong></div>
-                    <small style="display:block; color:var(--text-muted);">Your name is saved for this browser and appears in the dashboard header.</small>
+                    <div class="account-field"><span>Current password</span><input id="profileCurrentPassword" type="password" placeholder="Required to save account changes" autocomplete="current-password"></div>
+                    <small style="display:block; color:var(--text-muted);">Your current password is required before changing your name or username.</small>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:4px;">
                         <button class="btn btn-navy" type="button" onclick="saveStaffProfile()">Save Profile</button>
-                        <button class="btn btn-ghost" type="button" onclick="openChangePasswordModal()">&#128272; Change Password</button>
                     </div>
                     <span id="profileSaveStatus" style="font-size:.82rem; color:#27734d; font-weight:700;"></span>
+                    <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:2px;">
+                        <div class="card-title">Change Password</div>
+                        <input id="profileNewPassword" type="password" placeholder="New password (8+ characters)" autocomplete="new-password" style="margin-bottom:8px;">
+                        <input id="profileConfirmPassword" type="password" placeholder="Confirm new password" autocomplete="new-password">
+                        <button class="btn btn-ghost" type="button" onclick="submitInlinePasswordChange()" style="margin-top:10px;">Update Password</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1683,26 +1689,52 @@ function loadStaffProfile(session = MefamAPI.getSession() || {}) {
     document.getElementById('profile-session-role')?.replaceChildren(document.createTextNode(role));
     const displayName = document.getElementById('profileDisplayName');
     if (displayName) displayName.value = saved.displayName || session.name || '';
+    const username = document.getElementById('profileUsername');
+    if (username) username.value = session.username || '';
 }
 
 async function saveStaffProfile() {
     const session = MefamAPI.getSession() || {};
     const displayName = document.getElementById('profileDisplayName')?.value.trim() || session.name || 'Staff';
+    const username = document.getElementById('profileUsername')?.value.trim().toLowerCase() || session.username || '';
+    const currentPassword = document.getElementById('profileCurrentPassword')?.value || '';
+    if (!currentPassword) { alert('Enter your current password before saving account changes.'); return; }
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem('mefamdev_staff_profile') || '{}'); } catch (_) { saved = {}; }
     try {
-        const result = await MefamAPI.updateStaffProfile(displayName);
+        const result = await MefamAPI.updateStaffProfile(displayName, username, currentPassword);
         if (!result?.ok) throw new Error(result?.error || 'Unable to update your name.');
-        const nextSession = { ...session, name: result.user?.name || displayName, initials: result.user?.initials || '' };
+        const nextSession = { ...session, username: result.user?.username || username, name: result.user?.name || displayName, initials: result.user?.initials || '' };
         sessionStorage.setItem('mefamdev_session', JSON.stringify(nextSession));
+        document.getElementById('profileCurrentPassword').value = '';
     } catch (error) {
-        console.warn('Could not save staff profile to the server; using local profile name.', error);
+        alert(error.message || 'Unable to save your profile right now.');
+        return;
     }
     localStorage.setItem('mefamdev_staff_profile', JSON.stringify({ ...saved, displayName }));
     document.getElementById('user-name').innerText = displayName;
     loadStaffProfile(session);
     const status = document.getElementById('profileSaveStatus');
     if (status) { status.textContent = 'Profile saved'; setTimeout(() => { status.textContent = ''; }, 2500); }
+}
+
+async function submitInlinePasswordChange() {
+    const currentPassword = document.getElementById('profileCurrentPassword')?.value || '';
+    const newPassword = document.getElementById('profileNewPassword')?.value || '';
+    const confirmPassword = document.getElementById('profileConfirmPassword')?.value || '';
+    if (!currentPassword || !newPassword || !confirmPassword) { alert('Fill in the current, new, and confirmation passwords.'); return; }
+    if (newPassword.length < 8) { alert('New password must be at least 8 characters long.'); return; }
+    if (newPassword !== confirmPassword) { alert('New passwords do not match.'); return; }
+    try {
+        const result = await MefamAPI.changeStaffPassword(currentPassword, newPassword);
+        if (!result || result.error) throw new Error(result?.error || 'Unable to update your password.');
+        document.getElementById('profileCurrentPassword').value = '';
+        document.getElementById('profileNewPassword').value = '';
+        document.getElementById('profileConfirmPassword').value = '';
+        alert('Password updated successfully.');
+    } catch (error) {
+        alert(error.message || 'Unable to update your password right now.');
+    }
 }
 
 async function uploadStaffProfilePhoto(event) {

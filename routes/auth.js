@@ -453,11 +453,20 @@ router.post('/change-password', require('../middleware/auth').requireAuth, async
 router.put('/profile', require('../middleware/auth').requireAuth, async (req, res) => {
   if (req.user.type !== 'staff') return res.status(403).json({ error: 'Staff only' });
   const name = String(req.body?.name || '').trim();
+  const username = String(req.body?.username || '').trim().toLowerCase();
+  const currentPassword = String(req.body?.currentPassword || '');
   if (!name) return res.status(400).json({ error: 'Name is required' });
+  if (!username) return res.status(400).json({ error: 'Username is required' });
   if (name.length > 80) return res.status(400).json({ error: 'Name must be 80 characters or fewer' });
+  if (!/^[a-z0-9._-]{3,40}$/.test(username)) return res.status(400).json({ error: 'Username must be 3-40 characters and use letters, numbers, dot, underscore, or hyphen' });
+  if (!currentPassword) return res.status(400).json({ error: 'Current password is required' });
+  const staff = await db.prepare('SELECT * FROM staff WHERE id = ?').get(req.user.id);
+  if (!staff || staff.password !== hashPassword(currentPassword)) return res.status(401).json({ error: 'Current password is incorrect' });
+  const existing = await db.prepare('SELECT id FROM staff WHERE username = ? AND id <> ?').get(username, req.user.id);
+  if (existing) return res.status(409).json({ error: 'That username is already in use' });
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '??';
-  await db.prepare('UPDATE staff SET name = ?, initials = ? WHERE id = ?').run(name, initials, req.user.id);
-  res.json({ ok: true, user: { name, initials } });
+  await db.prepare('UPDATE staff SET username = ?, name = ?, initials = ? WHERE id = ?').run(username, name, initials, req.user.id);
+  res.json({ ok: true, user: { username, name, initials } });
 });
 
 router.post('/director/trusted-device/revoke', require('../middleware/auth').requireAuth, async (req, res) => {
