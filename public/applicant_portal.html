@@ -458,7 +458,7 @@
                         </div>
                         <div style="flex:1;">
                             <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Name</label><div id="sgName" style="font-size:1.1rem; font-weight:700; margin-top:6px;">—</div></div>
-                            <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Student ID (optional)</label><input type="text" id="sgStudentId" autocomplete="off" style="width:260px; padding:10px; margin-top:6px;"></div>
+                            <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Student ID</label><input type="text" id="sgStudentId" autocomplete="off" readonly aria-readonly="true" style="width:260px; padding:10px; margin-top:6px;"></div>
                             <div style="display:flex; gap:8px; align-items:center; margin-top:6px;"><button class="btn btn-navy" id="sgCheckinBtn">Check In</button><label style="font-size:.85rem; color:var(--muted);"><input type="checkbox" id="sgAutoSubmit" style="margin-right:8px;"> Auto submit</label></div>
                             <div id="sgStatus" style="margin-top:8px; color:var(--muted);"></div>
                         </div>
@@ -469,7 +469,7 @@
                 <div id="defaultCheckin">
                     <div style="display:flex; gap:8px; align-items:center;">
                         <input type="text" id="attCodeInput" placeholder="Enter code" autocomplete="off" style="flex:1; padding:10px;">
-                        <input type="text" id="attStudentId" placeholder="Student ID (optional)" autocomplete="off" style="width:160px; padding:10px;">
+                        <input type="text" id="attStudentId" placeholder="Student ID" autocomplete="off" readonly aria-readonly="true" style="width:160px; padding:10px;">
                         <button class="btn btn-navy" onclick="submitAttendanceCode()">Check In</button>
                     </div>
                     <div id="attStatus" style="margin-top:8px; color:var(--muted);"></div>

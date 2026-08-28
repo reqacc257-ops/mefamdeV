@@ -461,6 +461,11 @@
         const [apps, events] = await Promise.all([MefamAPI.getApplications(), MefamAPI.getEvents()]);
         const appList = Array.isArray(apps) ? apps : [];
         const eventList = Array.isArray(events) ? events : [];
+          const checkinEntries = await Promise.all(eventList.map(async event => {
+            try { return [event.id, await MefamAPI.getEventCheckins(event.id) || []]; }
+            catch (error) { console.warn(`Could not load check-ins for event ${event.id}.`, error); return [event.id, []]; }
+          }));
+          window.liveEventCheckins = Object.fromEntries(checkinEntries);
         localStorage.setItem('mefamdev_apps', JSON.stringify(appList));
         localStorage.setItem('mefamdev_events', JSON.stringify(eventList));
       } catch (e) {
@@ -479,6 +484,27 @@
     function getAcceptedScholars() {
       const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
       return (Array.isArray(apps) ? apps : []).filter(a => a.status === 'Accepted');
+    }
+
+    function getEventAttendanceIds(event, scholars) {
+      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+      const ids = new Set((attData[event.id] || []).map(id => String(id)));
+      const checkins = window.liveEventCheckins?.[event.id] || [];
+      const scholarKeys = new Map();
+      (scholars || []).forEach(scholar => {
+        [scholar.id, scholar.reference, scholar.referenceNumber, scholar.reference_number, scholar.name]
+          .filter(Boolean)
+          .forEach(value => scholarKeys.set(String(value).trim().toLowerCase(), String(scholar.id)));
+      });
+      checkins.forEach(checkin => {
+        [checkin.student_id, checkin.student_name]
+          .filter(Boolean)
+          .forEach(value => {
+            const scholarId = scholarKeys.get(String(value).trim().toLowerCase());
+            if (scholarId) ids.add(scholarId);
+          });
+      });
+      return ids;
     }
 
     function sortedEvents() {
@@ -520,7 +546,7 @@
       const today = new Date(); today.setHours(0,0,0,0);
       container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Action</th></tr></thead><tbody>` +
         events.map(ev => {
-          const attended = (attData[ev.id] || []).length;
+          const attended = getEventAttendanceIds(ev, getAcceptedScholars()).size;
           const max = Number(ev.max || 0) || 0;
           const pct = max > 0 ? Math.round(attended / max * 100) : 0;
           const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
@@ -722,6 +748,8 @@
       try { renderAttendanceSessionControls(ev); } catch (e) { console.error('session controls render failed', e); }
       let checkins = [];
       try { checkins = await MefamAPI.getEventCheckins(evtId) || []; } catch (e) { console.error('Failed to load event check-ins', e); }
+      window.liveEventCheckins = window.liveEventCheckins || {};
+      window.liveEventCheckins[evtId] = checkins;
       const checkedInKeys = new Set(checkins.flatMap(checkin => [checkin.student_id, checkin.student_name].filter(Boolean).map(value => String(value).trim().toLowerCase())));
       const isCheckedIn = scholar => {
         const keys = [scholar.id, scholar.reference, scholar.referenceNumber, scholar.reference_number, scholar.name]
@@ -870,11 +898,11 @@
         } else {
           formSummary.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
             events.map(ev => {
-              const cnt = (attData[ev.id] || []).length;
+              const attendedIds = getEventAttendanceIds(ev, apps);
+              const cnt = attendedIds.size;
               const max = Number(ev.max || 0) || 0;
               const pct = max > 0 ? Math.round(cnt / max * 100) : 0;
               const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
-              const attendedIds = new Set((attData[ev.id] || []).map(id => String(id)));
               const attendedScholars = apps.filter(s => attendedIds.has(String(s.id)));
               const absentScholars = apps.filter(s => !attendedIds.has(String(s.id)));
               const scholarRows = list => list.length
@@ -926,7 +954,7 @@
           return;
         }
         logBody.innerHTML = filtered.map(s => {
-          const formCount = events.filter(ev => (attData[ev.id] || []).includes(s.id)).length;
+          const formCount = events.filter(ev => getEventAttendanceIds(ev, apps).has(String(s.id))).length;
           // Manual status override (set via "Edit") takes precedence over the computed rate;
           // otherwise fall back to attendance-derived status. With zero events logged yet,
           // default to "good" rather than flagging everyone yellow.
