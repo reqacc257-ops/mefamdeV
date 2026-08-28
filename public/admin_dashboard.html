@@ -1041,7 +1041,8 @@
                 <button class="btn btn-navy" onclick="window.location.href='spiritual_formation.html'">Open Formation Page</button>
             </div>
             <div class="card" style="padding:24px;">
-                <div class="empty-state" style="padding:28px;"><div class="empty-icon">🕊️</div><p>The full formation workspace now opens in a separate page with the same event and attendance tools.</p></div>
+                <div class="card-title">Formation Summary</div>
+                <div id="formationEventsSummary"></div>
             </div>
         </div>
 
@@ -4045,20 +4046,21 @@ function renderAttendance(scholars) {
     const apps = Array.isArray(scholars) ? scholars : [];
 
     // Formation summary
-    const formSummary = document.getElementById('formationAttSummary');
-    if (formSummary) {
+    const formSummaries = [document.getElementById('formationAttSummary'), document.getElementById('formationEventsSummary')].filter(Boolean);
+    if (formSummaries.length) {
         const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
         const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
         if (events.length === 0) {
-            formSummary.innerHTML = '<div class="empty-state"><div class="empty-icon">🕊️</div><p>No formation events yet.</p></div>';
+            formSummaries.forEach(summary => { summary.innerHTML = '<div class="empty-state"><div class="empty-icon">🕊️</div><p>No formation events yet.</p></div>'; });
         } else {
-            formSummary.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
+            const summaryHtml = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
                 events.map(ev => {
                     const cnt = (attData[ev.id] || []).length;
                     const pct = ev.max > 0 ? Math.round(cnt / ev.max * 100) : 0;
                     const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
                     return `<tr><td><strong>${ev.name}</strong></td><td style="font-size:.82rem;">${ev.date||'—'}</td><td><span class="badge ${cls}">${cnt}/${ev.max}</span></td></tr>`;
                 }).join('') + `</tbody></table>`;
+            formSummaries.forEach(summary => { summary.innerHTML = summaryHtml; });
         }
     }
 
