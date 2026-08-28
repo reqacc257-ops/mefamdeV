@@ -225,6 +225,7 @@
 
         /* Form controls */
         input[type="text"], input[type="date"], input[type="number"],
+        input[type="email"], input[type="password"],
         select, textarea {
             padding: 9px 12px; border: 1.5px solid var(--border);
             border-radius: 7px; font-family: 'DM Sans', sans-serif;
@@ -269,6 +270,15 @@
         .mekong-application-row td { background: #f0fbf4; }
         .mekong-application-row:hover td { background: #e8f7ed; }
         .profile-item small { color: var(--text-muted); font-size: .77rem; }
+        .account-profile { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+        .account-hero { background: var(--navy); color: #fff; border-radius: var(--radius); padding: 26px; min-height: 250px; display: flex; flex-direction: column; justify-content: space-between; }
+        .account-hero .avatar { width: 72px; height: 72px; font-size: 1.35rem; background: var(--gold); color: var(--navy); margin-bottom: 22px; }
+        .account-hero h2 { color: #fff; margin-bottom: 5px; }
+        .account-hero p { color: rgba(255,255,255,.68); font-size: .88rem; }
+        .account-details { display: grid; gap: 14px; }
+        .account-field { padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .account-field:last-child { border-bottom: 0; padding-bottom: 0; }
+        .account-field span { display: block; color: var(--text-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; margin-bottom: 4px; }
 
         /* Modal */
         .modal-overlay {
@@ -406,7 +416,7 @@
             .user-pill .user-info { display: none; }
             .topbar-right > button:last-child { display: none; }
             .content-area { padding: 16px; }
-            .stats-grid, .grid-2, .grid-2eq, .charts-grid, .intake-grid, .intake-grid-3, .intake-grid-4 { grid-template-columns: 1fr; }
+            .stats-grid, .grid-2, .grid-2eq, .charts-grid, .intake-grid, .intake-grid-3, .intake-grid-4, .account-profile { grid-template-columns: 1fr; }
             .kanban { flex-direction: column; }
             .kanban-col { min-width: 0; }
             .modal { width: calc(100vw - 24px); max-width: none; }
@@ -528,6 +538,9 @@
         </div>
         <div class="nav-item" onclick="nav('settings',this)" data-roles="director">
             <span class="nav-icon">⚙️</span> Settings
+        </div>
+        <div class="nav-item" onclick="nav('my-profile',this)" data-roles="director,edu,finance,program">
+            <span class="nav-icon">👤</span> My Profile
         </div>
     </div>
  
@@ -1271,6 +1284,39 @@
         <!-- ══════════════════════════════════════════════
              SETTINGS
         ═══════════════════════════════════════════════ -->
+        <div id="my-profile" class="page">
+            <div style="margin-bottom:20px;">
+                <h2 style="margin:0 0 5px;">My Profile</h2>
+                <p style="margin:0; color:var(--text-muted); font-size:.9rem;">Your staff identity and dashboard preferences.</p>
+            </div>
+            <div class="account-profile">
+                <div class="account-hero">
+                    <div>
+                        <div class="avatar" id="profile-account-avatar">??</div>
+                        <h2 id="profile-account-name">Staff member</h2>
+                        <p id="profile-account-role">Staff account</p>
+                    </div>
+                    <p id="profile-account-username">Signed-in account</p>
+                </div>
+                <div class="card account-details">
+                    <div class="card-title">Account Details</div>
+                    <div class="account-field"><span>Full name</span><strong id="profile-session-name">-</strong></div>
+                    <div class="account-field"><span>Username</span><strong id="profile-session-username">-</strong></div>
+                    <div class="account-field"><span>Access level</span><strong id="profile-session-role">-</strong></div>
+                    <div>
+                        <label for="profileDisplayName">Display name</label>
+                        <input id="profileDisplayName" type="text" maxlength="80" placeholder="Use your staff name">
+                        <small style="display:block; color:var(--text-muted); margin-top:6px;">This browser-only name controls how you appear in the dashboard.</small>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:4px;">
+                        <button class="btn btn-navy" type="button" onclick="saveStaffProfile()">Save Profile</button>
+                        <button class="btn btn-ghost" type="button" onclick="openChangePasswordModal()">&#128272; Change Password</button>
+                    </div>
+                    <span id="profileSaveStatus" style="font-size:.82rem; color:#27734d; font-weight:700;"></span>
+                </div>
+            </div>
+        </div>
+
         <div id="settings" class="page">
             <div style="display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:20px;">
                 <div>
@@ -1281,7 +1327,7 @@
             </div>
             <div class="grid-2eq" style="align-items:start;">
                 <div class="card">
-                    <div class="card-title">Organization</div>
+                    <div class="card-title">Organization Identity</div>
                     <div style="margin-bottom:12px;"><label for="settingOrgName">Organization Name</label><input id="settingOrgName" type="text" value="MEFAMDEV-Life"></div>
                     <div style="margin-bottom:12px;"><label for="settingChapter">Chapter / Location</label><input id="settingChapter" type="text" value="Angat, Bulacan"></div>
                     <div style="margin-bottom:12px;"><label for="settingContactEmail">Primary Contact Email</label><input id="settingContactEmail" type="email" value="reqacc257@gmail.com"></div>
@@ -1480,6 +1526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user-name').innerText = session.name || 'Staff';
     document.getElementById('user-role').innerText = session.title || '';
     document.getElementById('user-avatar').innerText = session.initials || '??';
+    loadStaffProfile(session);
 
     // Highlight correct role option
     document.querySelectorAll('.role-option').forEach(o => {
@@ -1585,6 +1632,35 @@ function nav(pageId, el) {
     loadAllData();
     document.getElementById('roleMenu').classList.remove('open');
     if (window.innerWidth <= 900) closeSidebar();
+}
+
+function loadStaffProfile(session = MefamAPI.getSession() || {}) {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_staff_profile') || '{}'); } catch (_) { saved = {}; }
+    const name = saved.displayName || session.name || 'Staff';
+    const roleNames = { director: 'Director', edu: 'Education Social Worker', finance: 'Finance Officer', program: 'Program Coordinator' };
+    const role = roleNames[session.role] || session.role || 'Staff account';
+    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '??';
+    document.getElementById('profile-account-name')?.replaceChildren(document.createTextNode(name));
+    document.getElementById('profile-account-role')?.replaceChildren(document.createTextNode(role));
+    document.getElementById('profile-account-username')?.replaceChildren(document.createTextNode(`Signed in as ${session.username || 'staff account'}`));
+    document.getElementById('profile-account-avatar')?.replaceChildren(document.createTextNode(initials));
+    document.getElementById('profile-session-name')?.replaceChildren(document.createTextNode(session.name || 'Not provided'));
+    document.getElementById('profile-session-username')?.replaceChildren(document.createTextNode(session.username || 'Not provided'));
+    document.getElementById('profile-session-role')?.replaceChildren(document.createTextNode(role));
+    const displayName = document.getElementById('profileDisplayName');
+    if (displayName) displayName.value = saved.displayName || session.name || '';
+}
+
+function saveStaffProfile() {
+    const session = MefamAPI.getSession() || {};
+    const displayName = document.getElementById('profileDisplayName')?.value.trim() || session.name || 'Staff';
+    localStorage.setItem('mefamdev_staff_profile', JSON.stringify({ displayName }));
+    document.getElementById('user-name').innerText = displayName;
+    document.getElementById('user-avatar').innerText = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '??';
+    loadStaffProfile(session);
+    const status = document.getElementById('profileSaveStatus');
+    if (status) { status.textContent = 'Profile saved'; setTimeout(() => { status.textContent = ''; }, 2500); }
 }
 
 /* ══════════════════════════════════════
