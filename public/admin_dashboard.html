@@ -1523,6 +1523,7 @@
                 <div><label>School</label><input id="editAppSchool" type="text"></div>
                 <div><label>Grade / Year Level</label><input id="editAppGrade" type="text"></div>
                 <div><label>Education Level</label><input id="editAppEduLevel" type="text"></div>
+                <div><label>Track / Course</label><input id="editAppDegree" type="text"></div>
                 <div><label>Contact</label><input id="editAppContact" type="text"></div>
                 <div><label>Email</label><input id="editAppEmail" type="email"></div>
                 <div><label>Barangay</label><input id="editAppBarangay" type="text"></div>
@@ -2220,6 +2221,14 @@ function formatAppDate(app) {
     return String(value);
 }
 
+function formatAcademicDisplay(app) {
+    const grade = app.grade || '—';
+    const detail = app.degree || '';
+    const level = String(app.eduLevel || app.edu_level || '').toLowerCase();
+    const detailLabel = level.includes('college') ? 'Course' : 'Track';
+    return `${grade}${detail ? `<br><small style="color:var(--text-muted);">${detailLabel}: ${detail}</small>` : ''}`;
+}
+
 function mekongBadge(app) {
     return app?.mekong ? '<span class="mekong-badge">Mekong</span>' : '';
 }
@@ -2236,7 +2245,7 @@ function renderRecentApps(apps) {
             </td>
             <td><strong>${a.name}</strong> ${mekongBadge(a)}</td>
             <td>${a.barangay || '—'}</td>
-            <td>${a.grade} <span style="color:var(--text-muted); font-size:.78rem;">${a.school}</span></td>
+            <td>${formatAcademicDisplay(a)} <span style="color:var(--text-muted); font-size:.78rem;">${a.school}</span></td>
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
             <td>${statusBadge(a.status)}</td>
             <td class="table-actions"><button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button></td>
@@ -2256,7 +2265,7 @@ function renderFullAppsTable(apps) {
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
             <td><strong>${a.name}</strong> ${mekongBadge(a)}</td>
             <td>${a.barangay||'—'}</td>
-            <td>${a.grade}<br><small style="color:var(--text-muted);">${a.school}</small></td>
+            <td>${formatAcademicDisplay(a)}<br><small style="color:var(--text-muted);">${a.school}</small></td>
             <td>${statusBadge(a.status)}</td>
             <td class="table-actions">
                 <button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button>
@@ -2296,7 +2305,7 @@ function renderPipeline(apps) {
         col.innerHTML += `
             <div class="kanban-card" style="border-color:${colors[status]||'#ccc'}">
                 <strong>${app.name} ${mekongBadge(app)}</strong>
-                <small>${app.grade} · ${app.school}</small>
+                <small>${formatAcademicDisplay(app)} · ${app.school}</small>
                 <div class="card-actions">${actions}</div>
             </div>`;
     });
@@ -2993,6 +3002,7 @@ function openApplicationEdit(id) {
         editAppSchool: app.school,
         editAppGrade: app.grade,
         editAppEduLevel: app.eduLevel || app.edu_level,
+        editAppDegree: app.degree,
         editAppContact: app.contact,
         editAppEmail: app.email,
         editAppBarangay: app.barangay,
@@ -3020,6 +3030,7 @@ async function saveApplicationEdit() {
         school: document.getElementById('editAppSchool').value.trim(),
         grade: document.getElementById('editAppGrade').value.trim(),
         edu_level: document.getElementById('editAppEduLevel').value.trim(),
+        degree: document.getElementById('editAppDegree').value.trim(),
         contact: document.getElementById('editAppContact').value.trim(),
         email: document.getElementById('editAppEmail').value.trim(),
         barangay: document.getElementById('editAppBarangay').value.trim(),
