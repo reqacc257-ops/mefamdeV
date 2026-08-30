@@ -544,18 +544,6 @@
       getCapacitySelection();
     }
 
-    function stepCapacityLevel(id, delta) {
-      const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
-      if (!row || row.dataset.enabled !== 'true') return;
-      const input = row.querySelector('.capacity-stepper-input');
-      if (!input) return;
-      const current = Number.parseInt(input.value || '0', 10);
-      const next = Math.max(0, Number.isFinite(current) ? current + delta : 0);
-      input.value = String(next);
-      input.dataset.baseValue = String(next);
-      getCapacitySelection();
-    }
-
     function renderCapacityControls() {
       const counts = getApplicantLevelCounts();
       const container = document.getElementById('capacityByLevel');
@@ -572,10 +560,8 @@
                 <span style="position:absolute; top:3px; left:${enabled ? '18px' : '3px'}; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(15,23,42,.15); transition:all .2s ease;"></span>
               </span>
             </button>
-            <div style="display:flex; align-items:center; border:1px solid ${enabled ? '#dfe4ee' : '#edf2f7'}; background:${enabled ? '#fff' : '#f8fafc'}; border-radius:10px; overflow:hidden; min-width:118px;">
-              <button type="button" class="capacity-stepper-button" data-id="${level.id}" data-delta="-1" aria-label="Decrease ${level.label}" ${enabled ? '' : 'disabled'} style="width:28px; height:32px; border:none; background:transparent; color:${enabled ? '#64748b' : '#cbd5e1'}; cursor:${enabled ? 'pointer' : 'not-allowed'}; font-size:16px;">−</button>
-              <input type="number" min="0" max="9999" class="capacity-stepper-input" data-id="${level.id}" value="${counts[level.id] || 0}" ${enabled ? '' : 'disabled'} style="width:42px; border:none; background:transparent; color:${enabled ? '#1e2a47' : '#94a3b8'}; font-size:.9rem; font-weight:700; text-align:center; outline:none; -moz-appearance:textfield; appearance:textfield;" />
-              <button type="button" class="capacity-stepper-button" data-id="${level.id}" data-delta="1" aria-label="Increase ${level.label}" ${enabled ? '' : 'disabled'} style="width:28px; height:32px; border:none; background:transparent; color:${enabled ? '#64748b' : '#cbd5e1'}; cursor:${enabled ? 'pointer' : 'not-allowed'}; font-size:16px;">+</button>
+            <div style="display:flex; align-items:center; justify-content:center; min-width:64px; border:1px solid ${enabled ? '#dfe4ee' : '#edf2f7'}; background:${enabled ? '#fff' : '#f8fafc'}; border-radius:10px; min-height:36px; padding:0 10px;">
+              <span class="capacity-stepper-input" data-id="${level.id}" style="display:block; min-width:24px; text-align:center; color:${enabled ? '#1e2a47' : '#94a3b8'}; font-size:.9rem; font-weight:700;">${counts[level.id] || 0}</span>
             </div>
           </div>
         `;
@@ -587,19 +573,6 @@
         button.addEventListener('click', () => toggleCapacityLevel(button.dataset.id));
       });
 
-      container.querySelectorAll('.capacity-stepper-button').forEach(button => {
-        button.addEventListener('click', () => stepCapacityLevel(button.dataset.id, Number.parseInt(button.dataset.delta || '0', 10)));
-      });
-
-      container.querySelectorAll('.capacity-stepper-input').forEach(input => {
-        input.addEventListener('input', (event) => {
-          const id = event.target.dataset.id;
-          const next = Math.max(0, Math.min(9999, Number.parseInt(event.target.value || '0', 10) || 0));
-          event.target.value = String(next);
-          const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
-          if (row && row.dataset.enabled === 'true') getCapacitySelection();
-        });
-      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
