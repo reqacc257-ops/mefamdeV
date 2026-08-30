@@ -380,7 +380,7 @@
     <!-- ── STEP 1: Username / Reference ── -->
     <div id="step1">
         <div class="form-group">
-            <label id="usernameLabel">Staff Username / Ref ID</label>
+            <label id="usernameLabel">Staff Username / Reference ID</label>
             <div class="input-wrap">
                 <span class="input-icon" id="usernameIcon">👤</span>
                 <input type="text" id="unifiedUsername"
@@ -412,10 +412,11 @@
             </div>
         </div>
 
-        <!-- Step 2b: Applicant verification (shown for applicant portal access) -->
-        <div id="applicantNameField">
+        <!-- Step 2b: Applicant verification (shown once a Reference ID has been entered) -->
+        <div id="applicantNameField" style="display:none;">
             <div class="form-group">
                 <label>User Name</label>
+                <p style="font-size:.72rem; color:#999; margin:-2px 0 6px;">The username you set at the end of your application form.</p>
                 <div class="input-wrap">
                     <input type="text" id="unifiedName2"
                         placeholder="Sample: jaycee"
@@ -427,6 +428,7 @@
             <div id="applicantPasswordField">
                 <div class="form-group">
                     <label>User Password</label>
+                    <p style="font-size:.72rem; color:#999; margin:-2px 0 6px;">The password you set at the end of your application form.</p>
                     <div class="input-wrap">
                         <span class="input-icon">🔒</span>
                             <input type="password" id="unifiedAppPassword" placeholder="Sample: marco" onkeydown="if(event.key==='Enter') proceedLogin()">
@@ -458,7 +460,7 @@
         <div id="hintApplicant" style="display:none;">
             <p>
                 <strong>Applicant access:</strong><br>
-                Use your reference ID, username, and application password.<br>
+                Enter your Reference ID exactly as given after you submitted your application, then the username and password you created at the end of the form.<br>
                 Example: ref ID = <code>20260830171806</code> · username = <code>jaycee</code> · password = <code>marco</code>
             </p>
         </div>
@@ -508,101 +510,90 @@ let directorOtpChallengeId = '';
 
 /* ══════════════════════════════════════
    SMART USERNAME DETECTION
+   Field 1 is either:
+   - a staff username (director/edu/finance/program), or
+   - an applicant's Reference ID (nothing else — no name, no password here)
 ══════════════════════════════════════ */
 let detectedType = null; // 'staff' | 'applicant' | null
+
+function isValidRefIdFormat(value) {
+    const cleanRef = String(value || '').trim().replace(/^app-/i, '');
+    return /^\d{14}$/.test(cleanRef) || /^\d{4}\/\d{2}\/\d{2}\/\d{6}$/.test(cleanRef) || /^\d+$/.test(cleanRef);
+}
+function cleanRefId(value) {
+    return String(value || '').trim().replace(/^app-/i, '');
+}
 
 function onUsernameInput(input) {
     if (!input) return;
     const rawValue = String(input.value || '');
-    const v = input.value.trim().toLowerCase();
+    const v = rawValue.trim().toLowerCase();
     hideError();
 
-    // Reset
-    document.getElementById('staffPasswordField').style.display  = 'none';
-    document.getElementById('detectedRole').style.display        = 'none';
-    document.getElementById('hintStaff').style.display           = 'block';
-    document.getElementById('hintApplicant').style.display       = 'none';
-    document.getElementById('loginBtn').textContent              = 'Continue →';
-    document.getElementById('loginBtn').style.background         = 'var(--navy)';
+    // Reset to base state
+    document.getElementById('staffPasswordField').style.display = 'none';
+    document.getElementById('applicantNameField').style.display = 'none';
+    document.getElementById('applicantPasswordField').style.display = 'none';
+    document.getElementById('detectedRole').style.display = 'none';
+    document.getElementById('hintStaff').style.display = 'block';
+    document.getElementById('hintApplicant').style.display = 'none';
+    document.getElementById('loginBtn').textContent = 'Continue →';
+    document.getElementById('loginBtn').style.background = 'var(--navy)';
+    document.getElementById('usernameLabel').textContent = 'Staff Username / Reference ID';
+    document.getElementById('usernameHint').style.color = '#aaa';
+    document.getElementById('usernameHint').textContent = 'Sample staff: Director + password of director';
     detectedType = null;
 
     if (!v) return;
 
-    // ── Detect applicant: starts with "app-", is a timestamp-style reference, or is numeric
-    const isDateRef = /^\d{4}\/\d{2}\/\d{2}\/\d{6}$/.test(rawValue.trim()) || /^\d{14}$/.test(rawValue.trim());
-    const isAppRef = /^app-/i.test(rawValue.trim()) || isDateRef || /^\d+$/.test(v);
-
-    // ── Detect staff: exact username match
     const isStaff = STAFF_USERNAMES.includes(v);
 
     if (isStaff) {
         detectedType = 'staff';
         document.getElementById('staffPasswordField').style.display = 'block';
-        document.getElementById('applicantNameField').style.display = 'none';
-        document.getElementById('applicantPasswordField').style.display = 'none';
-        document.getElementById('usernameLabel').textContent = 'Staff Username or Reference ID';
-        document.getElementById('loginBtn').textContent  = 'Sign In to Admin Dashboard →';
+        document.getElementById('usernameLabel').textContent = 'Staff Username';
+        document.getElementById('loginBtn').textContent = 'Sign In to Admin Dashboard →';
         document.getElementById('loginBtn').style.background = 'var(--navy)';
         document.getElementById('hintStaff').style.display = 'block';
         document.getElementById('hintApplicant').style.display = 'none';
+        showDetected('👤 Staff Account', '#e8f5e9', '#1b5e20', '#81c784');
+        return;
+    }
 
-    } else if (isAppRef) {
-        detectedType = 'applicant';
-        document.getElementById('usernameLabel').textContent = 'Applicant Username (Your Name)';
-        const cleanId = rawValue.trim().replace(/^app-/i, '');
-        const normalizedInput = rawValue.trim().toLowerCase();
+    // Anything that isn't a staff username is treated as the applicant's Reference ID.
+    detectedType = 'applicant';
+    document.getElementById('usernameLabel').textContent = 'Reference ID';
+    document.getElementById('applicantNameField').style.display = 'block';
+    document.getElementById('applicantPasswordField').style.display = 'block';
+    document.getElementById('loginBtn').textContent = 'Track My Application →';
+    document.getElementById('loginBtn').style.background = 'var(--teal)';
+    document.getElementById('hintStaff').style.display = 'none';
+    document.getElementById('hintApplicant').style.display = 'block';
+
+    if (isValidRefIdFormat(rawValue)) {
+        const cleanRef = cleanRefId(rawValue);
+        const inputDigits = cleanRef.replace(/\D+/g, '');
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         const found = apps.find(a => {
             const reference = String(a.referenceNumber || '').trim();
-            const normalizedReference = reference.toLowerCase();
-            const normalizedReferenceDigits = normalizedReference.replace(/\D+/g, '');
-            const inputDigits = normalizedInput.replace(/\D+/g, '');
-            return String(a.id) === cleanId
-                || normalizedReference === normalizedInput
-                || (inputDigits && normalizedReferenceDigits === inputDigits);
+            const referenceDigits = reference.replace(/\D+/g, '');
+            return String(a.id) === cleanRef
+                || reference.toLowerCase() === cleanRef.toLowerCase()
+                || (inputDigits && referenceDigits === inputDigits);
         });
         if (found) {
-            showDetected('⛔ Reference ID Detected — Use Your Username Instead', '#ffebee', '#c62828', '#ef5350');
-            document.getElementById('usernameHint').textContent = '⚠️ Applicants cannot log in with reference numbers. Use your username (name as submitted).';
-            document.getElementById('usernameHint').style.color = '#c62828';
+            showDetected('📋 Reference ID Recognized', '#e8f5e9', '#1b5e20', '#81c784');
+            document.getElementById('usernameHint').textContent = 'Now enter the username and password you set at the end of your application.';
+            document.getElementById('usernameHint').style.color = '#666';
         } else {
-            showDetected('⛔ Reference ID Not Recognized', '#fff3e0', '#e65100', '#ff9800');
-            document.getElementById('usernameHint').textContent = '⚠️ Applicants cannot log in with reference numbers. Use your username instead.';
+            showDetected('⚠️ Reference ID Not Found', '#fff3e0', '#e65100', '#ff9800');
+            document.getElementById('usernameHint').textContent = "We couldn't find this reference ID. Double-check the number from your application confirmation.";
             document.getElementById('usernameHint').style.color = '#e65100';
         }
-        document.getElementById('applicantNameField').style.display = 'block';
-        document.getElementById('applicantPasswordField').style.display = 'block';
-        document.getElementById('loginBtn').textContent  = 'Track My Application →';
-        document.getElementById('loginBtn').style.background = 'var(--teal)';
-        document.getElementById('hintStaff').style.display = 'none';
-        document.getElementById('hintApplicant').style.display = 'block';
     } else {
-        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-        const found = apps.find(a => (a.username || '').toLowerCase() === v);
-        if (found) {
-            detectedType = 'applicant';
-            document.getElementById('usernameLabel').textContent = 'Applicant Username (Your Name)';
-            showDetected('📋 Applicant — APP-' + found.id, '#e8f5e9', '#1b5e20', '#81c784');
-            document.getElementById('usernameHint').textContent = '';
-            document.getElementById('applicantNameField').style.display = 'block';
-            document.getElementById('applicantPasswordField').style.display = 'block';
-            document.getElementById('loginBtn').textContent  = 'Track My Application →';
-            document.getElementById('loginBtn').style.background = 'var(--teal)';
-            document.getElementById('hintStaff').style.display = 'none';
-            document.getElementById('hintApplicant').style.display = 'block';
-        } else {
-            detectedType = 'applicant';
-            document.getElementById('usernameLabel').textContent = 'Applicant Username (Your Name)';
-            showDetected('📋 Applicant Portal', '#fff8e1', '#6d4c00', '#ffd54f');
-            document.getElementById('usernameHint').textContent = '👉 Enter your username (the name you used in your application). Staff use reference numbers only.';
-            document.getElementById('usernameHint').style.color = '#d84315';
-            document.getElementById('applicantNameField').style.display = 'block';
-            document.getElementById('applicantPasswordField').style.display = 'block';
-            document.getElementById('loginBtn').textContent  = 'Track My Application →';
-            document.getElementById('loginBtn').style.background = 'var(--teal)';
-            document.getElementById('hintStaff').style.display = 'none';
-            document.getElementById('hintApplicant').style.display = 'block';
-        }
+        showDetected('📋 Applicant Portal', '#fff8e1', '#6d4c00', '#ffd54f');
+        document.getElementById('usernameHint').textContent = 'Enter your Reference ID exactly as given when you submitted your application — nothing else goes in this field.';
+        document.getElementById('usernameHint').style.color = '#d84315';
     }
 }
 
@@ -623,7 +614,7 @@ function proceedLogin() {
     hideError();
 
     if (!raw) {
-        showError('Please enter your username (applicants) or staff ID/username (staff).');
+        showError('Please enter your staff username or your applicant Reference ID.');
         return;
     }
 
@@ -632,7 +623,6 @@ function proceedLogin() {
     } else if (detectedType === 'applicant') {
         doApplicantLogin(raw);
     } else {
-        // Final fallback: check if it's a staff username or app ref
         const v = raw.toLowerCase();
         if (STAFF_USERNAMES.includes(v)) {
             detectedType = 'staff';
@@ -714,30 +704,40 @@ async function verifyDirectorOtp() {
     showLoading('Opening Director Dashboard…', () => window.location.assign('/admin_dashboard.html?director=1'));
 }
 
+/* ══════════════════════════════════════
+   APPLICANT LOGIN
+   Requires all three: Reference ID (field 1) + Username + Password
+══════════════════════════════════════ */
 async function doApplicantLogin(ref) {
     const nameInput = document.getElementById('unifiedName2').value.trim();
     const pwInput = (document.getElementById('unifiedAppPassword')?.value || '').trim();
-    const raw = ref.trim();
-    const cleanRef = raw.replace(/^app-/i, '').trim();
-    const isNumericId = /^\d+$/.test(cleanRef);
-    const isTimestampRef = /^\d{4}\/\d{2}\/\d{2}\/\d{6}$/.test(cleanRef) || /^\d{14}$/.test(cleanRef);
-    
-    // REJECT if applicant tries to use Ref ID - only staff can use that
-    if (isNumericId || isTimestampRef) {
-        showError('⛔ Applicants must log in with their username (name as submitted in application), not the reference number. Reference numbers are for staff only.');
+
+    if (!isValidRefIdFormat(ref)) {
+        showError('Please enter a valid Reference ID exactly as given when you submitted your application — no other text.');
+        document.getElementById('unifiedUsername').focus();
         return;
     }
-    
-    const username = raw;
+    if (!nameInput) {
+        showError('Please enter your username.');
+        document.getElementById('unifiedName2').focus();
+        return;
+    }
+    if (!pwInput) {
+        showError('Please enter your password.');
+        document.getElementById('unifiedAppPassword').focus();
+        return;
+    }
+
+    const cleanRef = cleanRefId(ref);
 
     try {
-        const res = await MefamAPI.loginApplicant(username, nameInput, pwInput, '');
+        const res = await MefamAPI.loginApplicant(cleanRef, nameInput, pwInput, '');
         if (res?.token) {
             showLoading('Welcome!', () => {
                 window.location.assign('/applicant_portal.html');
             });
         } else {
-            showError(res?.error || 'Wrong username or password.');
+            showError(res?.error || 'Wrong reference ID, username, or password.');
         }
     } catch (error) {
         console.error('Applicant login failed:', error);
