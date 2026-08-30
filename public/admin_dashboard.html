@@ -281,6 +281,47 @@
             z-index: 2000; font-size: .85rem;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
+        .custom-modal-overlay {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            background: rgba(10, 17, 30, 0.58); z-index: 2200; padding: 18px;
+        }
+        .custom-modal-overlay.open { display: flex; }
+        .custom-modal-card {
+            width: min(420px, 100%); background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(15,23,42,.22);
+            padding: 28px 22px 20px; text-align: center; border: 1px solid rgba(26,46,68,.08);
+        }
+        .custom-modal-icon {
+            width: 66px; height: 66px; border-radius: 18px; margin: 0 auto 14px;
+            background: linear-gradient(135deg, #1a2e44 0%, #2a4668 100%); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.7rem;
+        }
+        .custom-modal-eyebrow {
+            margin: 0; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+            color: var(--text-muted); font-weight: 700;
+        }
+        .custom-modal-title {
+            margin: 8px 0 18px; color: var(--navy); font-size: 1.02rem; font-weight: 800;
+        }
+        .custom-modal-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            width: 100%; background: #f8fafc; border: 1px solid #e8edf5; border-radius: 12px;
+            padding: 10px 12px; text-align: left;
+        }
+        .custom-modal-row-label {
+            margin: 0 0 2px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+            color: var(--text-muted); font-weight: 700;
+        }
+        .custom-modal-row-value {
+            margin: 0; color: var(--navy); font-weight: 700; font-size: 1rem; word-break: break-word;
+        }
+        .custom-modal-copy {
+            flex-shrink: 0; width: 36px; height: 36px; border: none; border-radius: 10px;
+            background: rgba(26,46,68,.08); color: var(--navy); font-size: 1rem; cursor: pointer;
+        }
+        .custom-modal-ok {
+            width: 100%; border: none; border-radius: 10px; margin-top: 16px; padding: 12px 16px;
+            background: var(--navy); color: #fff; font-weight: 800; cursor: pointer; font-size: .96rem;
+        }
         .alert-panel-header {
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
             padding: 10px 12px; margin: -2px -2px 12px; border-radius: 10px;
@@ -4416,6 +4457,28 @@ function renderAttendance(scholars) {
         toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2200);
     };
 
+    window.showContactModal = function(contact) {
+        const overlay = document.getElementById('contactCodeModal');
+        const value = document.getElementById('contactCodeValue');
+        const copyBtn = document.getElementById('contactCodeCopy');
+        const okBtn = document.getElementById('contactCodeOk');
+        if (!overlay || !value || !copyBtn || !okBtn) return;
+
+        value.textContent = contact || 'N/A';
+        overlay.classList.add('open');
+
+        copyBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(value.textContent);
+                showToast('Number copied');
+            } catch (error) {
+                showToast('Copy failed');
+            }
+        };
+
+        okBtn.onclick = () => overlay.classList.remove('open');
+    };
+
     // Formation alerts panel
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
@@ -4457,7 +4520,7 @@ function renderAttendance(scholars) {
                             </div>
                             <div class="comment-body">${escapeHtml(noteText)}</div>
                             <div class="comment-actions">
-                                <button class="mini-btn warn" onclick="showToast('Contact: ${escapeHtml(contact)}')">📞 Contact</button>
+                                <button class="mini-btn warn" onclick="showContactModal('${escapeHtml(contact)}')">📞 Contact</button>
                                 <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
                             </div>
                         </div>
