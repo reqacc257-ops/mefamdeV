@@ -229,34 +229,18 @@
         <div style="margin-bottom:12px;"><label for="evtDate">Date</label><input type="date" id="evtDate"></div>
         <div style="margin-bottom:12px;"><label for="evtVenue">Location / venue</label><input type="text" id="evtVenue" placeholder="e.g. MEFAMDEV Office, Angat"></div>
         <div style="margin-bottom:16px;">
-          <label>Capacity by school level</label>
-          <div style="display:grid; gap:10px; margin-top:8px;">
-            <div class="capacity-group">
-              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="elementary"> Elementary</span>
-                <input type="number" class="capacity-input" data-key="elementary" min="0" value="0" style="width:80px;" placeholder="0">
-              </label>
-            </div>
-            <div class="capacity-group">
-              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="junior_high"> Junior High</span>
-                <input type="number" class="capacity-input" data-key="junior_high" min="0" value="0" style="width:80px;" placeholder="0">
-              </label>
-            </div>
-            <div class="capacity-group">
-              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="senior_high"> Senior High</span>
-                <input type="number" class="capacity-input" data-key="senior_high" min="0" value="0" style="width:80px;" placeholder="0">
-              </label>
-            </div>
-            <div class="capacity-group">
-              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="college"> College</span>
-                <input type="number" class="capacity-input" data-key="college" min="0" value="0" style="width:80px;" placeholder="0">
-              </label>
-            </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">Capacity by school level</div>
+            <div style="font-size: .72rem; color: var(--text-muted);">Turn on the levels this event applies to, then set their capacity.</div>
           </div>
-          <small id="capacityTotalDisplay" style="display:block; margin-top:8px; color:var(--text-muted);">Total capacity: 0</small>
+          <div id="capacityByLevel" style="display:grid; gap:0; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff;"></div>
+          <div style="margin-top:12px; background: rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.22); border-radius:12px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div>
+              <div style="font-size: .72rem; font-weight:700; color:#b45309; letter-spacing: .04em; text-transform: uppercase;">Total capacity</div>
+              <div id="capacitySummaryText" style="font-size: .72rem; color: rgba(180,83,9,0.7);">No levels selected yet</div>
+            </div>
+            <div id="capacityTotalDisplay" style="font-size: 2rem; line-height:1; font-weight: 800; color:#b45309; letter-spacing: -0.04em;">0</div>
+          </div>
         </div>
         <button class="btn btn-navy" type="button" id="addEventBtn" style="width:100%; justify-content:center;" onclick="addEvent()">➕ Add event</button>
       </div>
@@ -443,33 +427,163 @@
       document.getElementById(id)?.classList.remove('open');
     }
 
+    const CAPACITY_LEVELS = [
+      { id: 'elementary', label: 'Elementary', short: 'E' },
+      { id: 'junior_high', label: 'Junior High', short: 'J' },
+      { id: 'senior_high', label: 'Senior High', short: 'S' },
+      { id: 'college', label: 'College', short: 'C' },
+    ];
+
+    function normalizeEducationLevel(value) {
+      const raw = String(value || '').trim().toLowerCase();
+      if (!raw) return null;
+      if (raw.includes('elementary') || raw.includes('elem')) return 'elementary';
+      if (raw.includes('junior') || raw.includes('jhs') || raw.includes('junior high')) return 'junior_high';
+      if (raw.includes('senior') || raw.includes('shs') || raw.includes('senior high')) return 'senior_high';
+      if (raw.includes('college') || raw.includes('tertiary') || raw.includes('university')) return 'college';
+      if (raw.includes('hs')) return 'senior_high';
+      return null;
+    }
+
+    function getApplicantLevelCounts() {
+      const allApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+      const counts = { elementary: 0, junior_high: 0, senior_high: 0, college: 0 };
+
+      (Array.isArray(allApps) ? allApps : []).forEach(app => {
+        const level = normalizeEducationLevel(app.eduLevel || app.edu_level || app.educationLevel || app.education_level || app.gradeLevel || app.grade_level || '');
+        if (level && counts[level] !== undefined) counts[level] += 1;
+      });
+
+      return counts;
+    }
+
     function getCapacitySelection() {
-      const levelKeys = ['elementary', 'junior_high', 'senior_high', 'college'];
+      const rows = document.querySelectorAll('.capacity-level-row');
       const levels = {};
       let total = 0;
 
-      levelKeys.forEach(key => {
-        const checkbox = document.querySelector(`.capacity-check[data-key="${key}"]`);
-        const input = document.querySelector(`.capacity-input[data-key="${key}"]`);
-        const checked = Boolean(checkbox && checkbox.checked);
-        const count = Number.parseInt(input?.value || '0', 10);
-        const validCount = Number.isFinite(count) && count > 0 ? count : 0;
-        if (checked && validCount > 0) {
-          levels[key] = validCount;
-          total += validCount;
+      rows.forEach(row => {
+        const id = row.dataset.id;
+        const enabled = row.dataset.enabled === 'true';
+        const input = row.querySelector('.capacity-stepper-input');
+        const value = Number.parseInt(input?.value || '0', 10);
+        const count = Number.isFinite(value) ? Math.max(0, value) : 0;
+
+        if (enabled && count > 0) {
+          levels[id] = count;
+          total += count;
         }
       });
 
       const totalDisplay = document.getElementById('capacityTotalDisplay');
-      if (totalDisplay) totalDisplay.textContent = `Total capacity: ${total}`;
+      if (totalDisplay) totalDisplay.textContent = String(total);
+
+      const summaryText = document.getElementById('capacitySummaryText');
+      if (summaryText) {
+        const activeCount = Object.keys(levels).length;
+        summaryText.textContent = activeCount === 0 ? 'No levels selected yet' : `Across ${activeCount} level${activeCount > 1 ? 's' : ''}`;
+      }
 
       return { levels, total };
     }
 
-    document.addEventListener('change', (event) => {
-      if (event.target && (event.target.classList.contains('capacity-check') || event.target.classList.contains('capacity-input'))) {
-        getCapacitySelection();
+    function setCapacityLevelEnabled(id, enabled) {
+      const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
+      if (!row) return;
+      row.dataset.enabled = String(enabled);
+      const toggle = row.querySelector('.capacity-toggle');
+      const input = row.querySelector('.capacity-stepper-input');
+      const button = row.querySelector('.capacity-stepper-button');
+      const isEnabled = enabled && true;
+      row.classList.toggle('capacity-row-on', isEnabled);
+      if (toggle) toggle.setAttribute('aria-pressed', String(isEnabled));
+      if (input) {
+        input.disabled = !enabled;
+        input.value = enabled ? (input.dataset.baseValue || input.value || '0') : '0';
       }
+      if (button) button.disabled = !enabled;
+      getCapacitySelection();
+    }
+
+    function toggleCapacityLevel(id) {
+      const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
+      if (!row) return;
+      const enabled = row.dataset.enabled === 'true';
+      const nextEnabled = !enabled;
+      row.dataset.enabled = String(nextEnabled);
+      if (!nextEnabled) {
+        const input = row.querySelector('.capacity-stepper-input');
+        if (input) input.value = '0';
+      }
+      const input = row.querySelector('.capacity-stepper-input');
+      if (input) {
+        input.disabled = !nextEnabled;
+        input.dataset.baseValue = nextEnabled ? input.value || '0' : '0';
+      }
+      row.classList.toggle('capacity-row-on', nextEnabled);
+      getCapacitySelection();
+    }
+
+    function stepCapacityLevel(id, delta) {
+      const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
+      if (!row || row.dataset.enabled !== 'true') return;
+      const input = row.querySelector('.capacity-stepper-input');
+      if (!input) return;
+      const current = Number.parseInt(input.value || '0', 10);
+      const next = Math.max(0, Number.isFinite(current) ? current + delta : 0);
+      input.value = String(next);
+      input.dataset.baseValue = String(next);
+      getCapacitySelection();
+    }
+
+    function renderCapacityControls() {
+      const counts = getApplicantLevelCounts();
+      const container = document.getElementById('capacityByLevel');
+      if (!container) return;
+
+      container.innerHTML = CAPACITY_LEVELS.map((level, index) => {
+        const enabled = (counts[level.id] || 0) > 0;
+        return `
+          <div class="capacity-level-row ${enabled ? 'capacity-row-on' : ''}" data-id="${level.id}" data-enabled="${String(enabled)}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:${index === CAPACITY_LEVELS.length - 1 ? 'none' : '1px solid var(--border)'}; background:${enabled ? 'rgba(79,95,224,0.04)' : '#fff'};">
+            <div style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:${enabled ? '#4F5FE0' : '#f1f5f9'}; color:${enabled ? '#fff' : '#94a3b8'}; font-weight:800; font-size:.8rem;">${level.short}</div>
+            <button type="button" class="capacity-toggle" data-id="${level.id}" aria-pressed="${String(enabled)}" style="display:flex; align-items:center; justify-content:space-between; flex:1; background:none; border:none; padding:0; cursor:pointer; text-align:left;">
+              <span style="font-size:.9rem; font-weight:600; color:${enabled ? '#1e2a47' : '#94a3b8'};">${level.label}</span>
+              <span style="position:relative; display:inline-flex; width:38px; height:22px; border-radius:999px; background:${enabled ? '#4F5FE0' : '#dfe4ee'}; transition:all .2s ease;">
+                <span style="position:absolute; top:3px; left:${enabled ? '18px' : '3px'}; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(15,23,42,.15); transition:all .2s ease;"></span>
+              </span>
+            </button>
+            <div style="display:flex; align-items:center; border:1px solid ${enabled ? '#dfe4ee' : '#edf2f7'}; background:${enabled ? '#fff' : '#f8fafc'}; border-radius:10px; overflow:hidden; min-width:118px;">
+              <button type="button" class="capacity-stepper-button" data-id="${level.id}" data-delta="-1" aria-label="Decrease ${level.label}" ${enabled ? '' : 'disabled'} style="width:28px; height:32px; border:none; background:transparent; color:${enabled ? '#64748b' : '#cbd5e1'}; cursor:${enabled ? 'pointer' : 'not-allowed'}; font-size:16px;">−</button>
+              <input type="number" min="0" max="9999" class="capacity-stepper-input" data-id="${level.id}" value="${counts[level.id] || 0}" ${enabled ? '' : 'disabled'} style="width:42px; border:none; background:transparent; color:${enabled ? '#1e2a47' : '#94a3b8'}; font-size:.9rem; font-weight:700; text-align:center; outline:none; -moz-appearance:textfield; appearance:textfield;" />
+              <button type="button" class="capacity-stepper-button" data-id="${level.id}" data-delta="1" aria-label="Increase ${level.label}" ${enabled ? '' : 'disabled'} style="width:28px; height:32px; border:none; background:transparent; color:${enabled ? '#64748b' : '#cbd5e1'}; cursor:${enabled ? 'pointer' : 'not-allowed'}; font-size:16px;">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      getCapacitySelection();
+
+      container.querySelectorAll('.capacity-toggle').forEach(button => {
+        button.addEventListener('click', () => toggleCapacityLevel(button.dataset.id));
+      });
+
+      container.querySelectorAll('.capacity-stepper-button').forEach(button => {
+        button.addEventListener('click', () => stepCapacityLevel(button.dataset.id, Number.parseInt(button.dataset.delta || '0', 10)));
+      });
+
+      container.querySelectorAll('.capacity-stepper-input').forEach(input => {
+        input.addEventListener('input', (event) => {
+          const id = event.target.dataset.id;
+          const next = Math.max(0, Math.min(9999, Number.parseInt(event.target.value || '0', 10) || 0));
+          event.target.value = String(next);
+          const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
+          if (row && row.dataset.enabled === 'true') getCapacitySelection();
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCapacityControls();
     });
 
     function setBusy(btn, busy, busyLabel) {
@@ -753,9 +867,7 @@
         document.getElementById('evtName').value = '';
         document.getElementById('evtDate').value = '';
         document.getElementById('evtVenue').value = '';
-        document.querySelectorAll('.capacity-check').forEach(box => box.checked = false);
-        document.querySelectorAll('.capacity-input').forEach(input => input.value = '0');
-        getCapacitySelection();
+        renderCapacityControls();
         await refreshFormationData(true);
         showToast('Event added.', 'success');
       } catch (error) {
