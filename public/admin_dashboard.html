@@ -283,44 +283,48 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .custom-modal-overlay {
             position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-            background: rgba(10, 17, 30, 0.58); z-index: 2200; padding: 18px;
+            background: rgba(15, 17, 20, 0.68); z-index: 2200; padding: 18px;
         }
         .custom-modal-overlay.open { display: flex; }
         .custom-modal-card {
-            width: min(420px, 100%); background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(15,23,42,.22);
-            padding: 28px 22px 20px; text-align: center; border: 1px solid rgba(26,46,68,.08);
+            width: min(360px, 100%); background: rgba(44, 49, 56, 0.96); border-radius: 20px;
+            box-shadow: 0 22px 50px rgba(0,0,0,.26); border: 1px solid rgba(255,255,255,.08);
+            padding: 24px 18px 16px; text-align: center;
         }
         .custom-modal-icon {
-            width: 66px; height: 66px; border-radius: 18px; margin: 0 auto 14px;
-            background: linear-gradient(135deg, #1a2e44 0%, #2a4668 100%); color: #fff;
-            display: flex; align-items: center; justify-content: center; font-size: 1.7rem;
+            width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 16px;
+            background: linear-gradient(135deg, #1d9bf0 0%, #0d5ecb 100%); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+            box-shadow: 0 10px 18px rgba(13, 94, 203, 0.35);
         }
         .custom-modal-eyebrow {
-            margin: 0; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
-            color: var(--text-muted); font-weight: 700;
+            margin: 0; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+            color: rgba(255,255,255,.62); font-weight: 700;
         }
         .custom-modal-title {
-            margin: 8px 0 18px; color: var(--navy); font-size: 1.02rem; font-weight: 800;
+            margin: 10px 0 18px; color: #fff; font-size: 1.62rem; font-weight: 800; line-height: 1.2;
         }
         .custom-modal-row {
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
-            width: 100%; background: #f8fafc; border: 1px solid #e8edf5; border-radius: 12px;
-            padding: 10px 12px; text-align: left;
+            width: 100%; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+            border-radius: 12px; padding: 10px 12px; text-align: left;
+            color: #fff;
         }
         .custom-modal-row-label {
-            margin: 0 0 2px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
-            color: var(--text-muted); font-weight: 700;
+            margin: 0 0 4px; font-size: .68rem; letter-spacing: .04em; text-transform: none;
+            color: rgba(255,255,255,.64); font-weight: 700;
         }
         .custom-modal-row-value {
-            margin: 0; color: var(--navy); font-weight: 700; font-size: 1rem; word-break: break-word;
+            margin: 0; color: #fff; font-weight: 700; font-size: 1.08rem; word-break: break-word;
         }
         .custom-modal-copy {
-            flex-shrink: 0; width: 36px; height: 36px; border: none; border-radius: 10px;
-            background: rgba(26,46,68,.08); color: var(--navy); font-size: 1rem; cursor: pointer;
+            flex-shrink: 0; width: 42px; height: 42px; border: 1px solid rgba(255,255,255,.14);
+            border-radius: 10px; background: rgba(255,255,255,.06); color: #fff; font-size: 1.06rem; cursor: pointer;
         }
         .custom-modal-ok {
-            width: 100%; border: none; border-radius: 10px; margin-top: 16px; padding: 12px 16px;
-            background: var(--navy); color: #fff; font-weight: 800; cursor: pointer; font-size: .96rem;
+            width: 100%; border: none; border-radius: 12px; margin-top: 18px; padding: 13px 16px;
+            background: #f3f4f6; color: #1a1f2b; font-weight: 800; cursor: pointer; font-size: 1.02rem;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
         }
         .alert-panel-header {
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -4437,7 +4441,15 @@ function renderAttendance(scholars) {
         if (events.length === 0) {
             formSummaries.forEach(summary => { summary.innerHTML = '<div class="empty-state"><div class="empty-icon">🕊️</div><p>No formation events yet.</p></div>'; });
         } else {
-            const summaryHtml = `<table style="table-layout:fixed;"><thead><tr><th style="width:50%;">Event</th><th style="width:25%;">Date</th><th style="width:25%;">Attendance</th></tr></thead><tbody>` +
+            const toDaysSince = (dateValue) => {
+                if (!dateValue) return '—';
+                const date = new Date(dateValue);
+                if (Number.isNaN(date.getTime())) return '—';
+                const diffMs = Date.now() - date.getTime();
+                const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+                return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
+            };
+            const summaryHtml = `<table style="table-layout:fixed;"><thead><tr><th style="width:50%;">Event</th><th style="width:25%;">Date</th><th style="width:25%;">Last alert</th></tr></thead><tbody>` +
                 events.map(ev => {
                     const attendedIds = getEventAttendanceIds(ev, apps);
                     const cnt = Number.isFinite(Number(ev.checkinCount))
@@ -4448,11 +4460,11 @@ function renderAttendance(scholars) {
                     const acceptedScholars = apps.filter(s => s.status === 'Accepted');
                     const attendedScholars = acceptedScholars.filter(s => attendedIds.has(String(s.id)));
                     const absentScholars = acceptedScholars.filter(s => !attendedIds.has(String(s.id)));
-                    const coverage = `${attendedScholars.length}/${acceptedScholars.length} scholars`;
+                    const daysSince = toDaysSince(ev.date);
                     const scholarRows = list => list.length
                         ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
                         : '<div style="color:var(--text-muted);">None</div>';
-                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; align-items:center;"><strong style="min-width:0;">${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')}</span><span style="font-size:.82rem; color:var(--text-muted);"><span class="badge ${cls}">${coverage}</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
+                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; align-items:center;"><strong style="min-width:0;">${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')}</span><span style="font-size:.82rem; color:var(--text-muted);"><span class="badge ${cls}">${daysSince} since last alert</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
                 }).join('') + `</tbody></table>`;
             formSummaries.forEach(summary => { summary.innerHTML = summaryHtml; });
         }
@@ -4539,7 +4551,7 @@ function renderAttendance(scholars) {
                             </div>
                             <div class="comment-body">${escapeHtml(noteText)}</div>
                             <div class="comment-actions">
-                                <button class="mini-btn warn" onclick="showContactModal(${JSON.stringify(contact || '')})">📞 Contact</button>
+                                <button class="mini-btn warn" onclick="showContactModal('" + String(contact || '').replace(/'/g, "\\'").replace(/\"/g, '&quot;') + "')">📞 Contact</button>
                                 <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
                             </div>
                         </div>
