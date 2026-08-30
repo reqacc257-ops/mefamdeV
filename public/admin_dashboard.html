@@ -2335,7 +2335,7 @@ function renderPipeline(apps) {
         let actions = '';
         if (status === 'Pending Review') actions = `<button class="btn btn-orange btn-sm" onclick="changeStatus(${app.id},'Interviewing')">Move to Interview</button>`;
         else if (status === 'Interviewing') actions = `<button class="btn btn-green btn-sm" onclick="changeStatus(${app.id},'Accepted')">✓ Accept</button><button class="btn btn-ghost btn-sm" onclick="changeStatus(${app.id},'Pending Review')">← Back</button>`;
-        else if (status === 'Rejected') actions = `<button class="btn btn-red btn-lg" onclick="deleteApp(${app.id})">🗑 Delete</button>`;
+        else if (status === 'Rejected') actions = `<button class="btn btn-red btn-lg" onclick="deleteApp(${app.id})">Delete</button>`;
         else actions = `<button class="btn btn-gold btn-sm" onclick="viewApp(${app.id})">View Profile</button>`;
 
         col.innerHTML += `
