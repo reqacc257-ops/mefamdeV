@@ -190,6 +190,10 @@ router.patch('/:id', async (req, res) => {
   const app = await db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
   if (!app) return res.status(404).json({ error: 'Not found' });
 
+  if (String(app.status || '').trim() === 'Rejected' && newStatus && ['Interviewing', 'Accepted'].includes(String(newStatus).trim())) {
+    return res.status(400).json({ error: 'Rejected applications cannot be moved to Interviewing or Accepted.' });
+  }
+
   if (newStatus && newStatus.toLowerCase() === 'accepted') {
     const familyMembers = parseJsonArray(app.family_members);
     const applicantName = app.name || '';

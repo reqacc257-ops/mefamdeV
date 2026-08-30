@@ -3321,6 +3321,12 @@ async function forgetTrustedDevice() {
 ══════════════════════════════════════ */
 async function changeStatus(id, status) {
     try {
+        const app = (window.pipelineApps || []).find(item => String(item.id) === String(id));
+        if (app && String(app.status || '').trim() === 'Rejected' && ['Interviewing', 'Accepted'].includes(String(status || '').trim())) {
+            alert('Rejected applications cannot be moved to Interviewing or Accepted.');
+            return;
+        }
+
         const result = await MefamAPI.updateApplication(id, { status });
         if (!result?.ok) throw new Error(result?.error || 'Unable to update the application status.');
         await loadAllData();
