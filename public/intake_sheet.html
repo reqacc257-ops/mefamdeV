@@ -530,15 +530,20 @@ function renderPrefillSearchList(apps) {
         console.error('prefillResults element not found!');
         return;
     }
-    const html = apps.length === 0
+    
+    // Show only accepted scholars by default
+    const acceptedOnly = apps.filter(a => a.status === 'Accepted');
+    const displayApps = acceptedOnly.length > 0 ? acceptedOnly : apps;
+    
+    const html = displayApps.length === 0
         ? '<div style="padding:10px;color:#666;">No applicants found. Make sure applications exist in the system.</div>'
-        : apps.map(a => `
-            <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})">
-                <div class="search-result-title">${a.name || 'Unknown Applicant'}</div>
-                <div class="search-result-meta">${formatApplicantGrade(a)} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
+        : displayApps.map(a => `
+            <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})" style="display:block; width:100%; text-align:left; padding:8px; margin-bottom:4px; background:#f5f5f5; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
+                <div class="search-result-title" style="font-weight:bold;">${a.name || 'Unknown Applicant'}</div>
+                <div class="search-result-meta" style="font-size:0.85rem; color:#666;">${formatApplicantGrade(a)} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
             </button>
         `).join('');
-    console.log('Setting prefillResults HTML:', html);
+    console.log('Setting prefillResults HTML with', displayApps.length, 'apps');
     results.innerHTML = html;
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
