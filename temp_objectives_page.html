@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Objectives</title>
+  <style>
+    :root {
+      --paper: #f2f2f2;
+      --line: #2d2d2d;
+      --ink: #111111;
+      --muted: #444;
+      --light: #fafafa;
+      --table: #f4f4f4;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #dfe3e8;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      padding: 20px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--paper);
+      border: 2px solid var(--line);
+      min-height: 1100px;
+      padding: 0;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+    }
+
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .header-table td {
+      border: 2px solid var(--line);
+      padding: 8px 10px;
+      vertical-align: top;
+      background: #f6f6f6;
+    }
+
+    .header-table tr td:first-child {
+      width: 52%;
+      font-weight: 700;
+    }
+
+    .header-table tr td:nth-child(2) {
+      width: 30%;
+    }
+
+    .header-table tr td:nth-child(3) {
+      width: 18%;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin: 0;
+    }
+
+    .main-title {
+      margin: 18px 20px 18px 20px;
+      font-size: 22px;
+      font-weight: 700;
+      padding: 10px 12px;
+      border: 2px solid var(--line);
+      background: #f9f9f9;
+      width: calc(100% - 40px);
+      display: block;
+    }
+
+    .section {
+      margin: 0 20px 18px 20px;
+      border: 2px solid var(--line);
+      background: #f7f7f7;
+      padding: 18px 18px 10px 18px;
+    }
+
+    .objective {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .code-box {
+      margin-top: 10px;
+      background: #ffffff;
+      border: 1.5px solid #2d2d2d;
+      padding: 10px 12px;
+      font-size: 11px;
+      line-height: 1.5;
+      font-family: Consolas, "Courier New", monospace;
+      color: #1a1a1a;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border: 1px solid var(--line);
+      background: #f0f0f0;
+      margin-bottom: 7px;
+    }
+
+    .objective:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .num {
+      min-width: 34px;
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .obj-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--ink);
+      text-align: justify;
+    }
+
+    .obj-text strong {
+      font-size: 15px;
+    }
+
+    .small-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        min-height: auto;
+      }
+
+      .header-table td {
+        display: block;
+        width: 100% !important;
+      }
+
+      .objective {
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .num {
+        min-width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <table class="header-table" aria-label="document header">
+      <tr>
+        <td>
+          <div class="header-title">Project Name:</div>
+          <div style="margin-top: 6px; font-size: 15px; font-weight: 700;">A Digital Scholarship Monitoring System</div>
+        </td>
+        <td>
+          <div class="small-label">System Code:</div>
+          <div style="margin-top: 6px; font-size: 16px; font-weight: 700;">TTS</div>
+        </td>
+        <td>
+          <div class="small-label">Authors:</div>
+          <div style="margin-top: 6px; line-height: 1.7; font-size: 13px;">Socrates C. Ariola<br />Paulo I. Guillermo<br />Paul John S. Solomon</div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="small-label">Sub-System:</div>
+          <div style="margin-top: 6px; font-size: 14px;">Monitoring and Reporting Module</div>
+        </td>
+        <td>
+          <div class="small-label">Date:</div>
+          <div style="margin-top: 6px; font-size: 14px;">September 2014</div>
+        </td>
+        <td>
+          <div class="small-label">Page:</div>
+          <div style="margin-top: 6px; font-size: 14px;">1 of 1</div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="main-title">Objectives of the Study</div>
+
+    <div class="section">
+      <div class="objective">
+        <div class="num">1.</div>
+        <div class="obj-text">
+          To develop a centralized web portal that digitizes and consolidates the socio-economic profiles of beneficiary families and the academic records of Basic Education recipients from Elementary to Senior High School level, ensuring that authorized staff members can securely access and manage records in real time from any internet-enabled device.
+          <div class="code-box"><div class="tag">Exact Code</div>
+const router = require('express').Router();
+const db = require('../db');
+const { requireRole } = require('../middleware/auth');
+
+router.get('/',      async (req, res) => res.json(await db.prepare('SELECT * FROM families ORDER BY surname').all()));
+router.post('/',     async (req, res) => {
+  const b = req.body;
+  if (!b.surname) return res.status(400).json({ error: 'Surname required' });
+  const result = await db.prepare('INSERT INTO families (surname,guardian,barangay,contact,income,bracket,benefits) VALUES (?,?,?,?,?,?,?)').run(b.surname, b.guardian||'', b.barangay||'', b.contact||'', b.income||'', b.bracket||'', b.benefits||'');
+  res.json({ ok: true, id: result.lastInsertRowid });
+});
+router.put('/:id', requireRole('director','finance'), async (req, res) => {
+  const b = req.body;
+  if (!b.surname) return res.status(400).json({ error: 'Surname required' });
+  await db.prepare(
+    'UPDATE families SET surname = ?, guardian = ?, barangay = ?, contact = ?, income = ?, bracket = ?, benefits = ? WHERE id = ?'
+  ).run(b.surname, b.guardian||'', b.barangay||'', b.contact||'', b.income||'', b.bracket||'', b.benefits||'', req.params.id);
+  res.json({ ok: true });
+});</div>
+        </div>
+      </div>
+
+      <div class="objective">
+        <div class="num">2.</div>
+        <div class="obj-text">
+          To implement an automated monitoring module that tracks the quarterly academic grades and monthly spiritual formation attendance of all active recipients, featuring configurable digital triggers that automatically flag recipients who fall below defined performance or attendance thresholds, and a year-over-year academic growth tracking module that consolidates each recipient's grade records across multiple school years into a unified longitudinal profile for timely and data-driven intervention.
+          <div class="code-box"><div class="tag">Exact Code</div>
+function buildMonitoringAlerts(applications = [], grades = [], absences = []) {
+  const alerts = [];
+  const appMap = new Map((applications || []).map(app => [String(app.id), app]));
+  const gradeMap = getLatestGradesByApp(grades);
+  const absenceMap = new Map((absences || []).map(a => [String(a.app_id || a.appId), a]));
+
+  for (const [appId, app] of appMap.entries()) {
+    const grade = Number(gradeMap.get(appId)?.grade_val || gradeMap.get(appId)?.grade || 0);
+    const absence = Number(absenceMap.get(appId)?.days || 0);
+    if (app?.status === 'Accepted' || app?.status === 'Interviewing' || app?.status === 'Pending Review') {
+      if (grade && grade < 80) {
+        alerts.push({ id: `${appId}-academic`, appId, type: 'academic', severity: 'high', message: `${app.name || 'Scholar'} has a low grade of ${grade}.` });
+      }
+      if (absence >= 1) {
+        alerts.push({ id: `${appId}-attendance`, appId, type: 'attendance', severity: 'medium', message: `${app.name || 'Scholar'} has ${absence} missed day${absence === 1 ? '' : 's'}.` });
+      }
+    }
+  }
+
+  return alerts;
+}</div>
+        </div>
+      </div>
+
+      <div class="objective">
+        <div class="num">3.</div>
+        <div class="obj-text">
+          To develop a report generation module that enables authorized staff to produce summaries of recipient academic performance and program outcomes, providing data-driven insights for internal program assessment and external stakeholder reporting.
+          <div class="code-box"><div class="tag">Exact Code</div>
+function buildReportCardHTML(scholarData, gradesData) {
+  const { name, gradeLevel, school, refNo, schoolYear } = scholarData;
+  const gradesBySubject = {};
+  const componentNames = new Set(['music', 'arts', 'pe', 'physical education', 'health']);
+  const componentGrades = [];
+  (gradesData || []).forEach(grade => {
+    const rawSubject = grade.subject || grade.subject_name || grade.subjectName;
+    const normalizedRawSubject = String(rawSubject || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
+    if (componentNames.has(normalizedRawSubject)) {
+      componentGrades.push(grade);
+      return;
+    }
+    const subj = canonicalSubjectName(rawSubject);
+    if (!subj) return;
+    if (!gradesBySubject[subj]) {
+      gradesBySubject[subj] = { Q1: '', Q2: '', Q3: '', Q4: '' };
+    }
+    if (grade.quarter) {
+      const q = `Q${grade.quarter}`;
+      const value = grade.grade_val ?? grade.grade_value;
+      if (value !== null && value !== undefined && value !== '') gradesBySubject[subj][q] = value;
+    }
+  });
+
+  const quarterlyAverages = { Q1: [], Q2: [], Q3: [], Q4: [] };
+  const subjectFinalGrades = [];
+  let tableRows = '';
+
+  for (const subj of finalSubjectList) {
+    const subjectGrades = gradesBySubject[subj] || {};
+    const q1 = subjectGrades.Q1 || '';
+    const q2 = subjectGrades.Q2 || '';
+    const q3 = subjectGrades.Q3 || '';
+    const q4 = subjectGrades.Q4 || '';
+    const finalGrade = calculateFinalGrade([q1, q2, q3, q4].filter(g => g !== ''));
+    const remark = getRemarkFromGrade(finalGrade);
+    if (finalGrade > 0) subjectFinalGrades.push(finalGrade);
+
+    if (q1) quarterlyAverages.Q1.push(Number(q1));
+    if (q2) quarterlyAverages.Q2.push(Number(q2));
+    if (q3) quarterlyAverages.Q3.push(Number(q3));
+    if (q4) quarterlyAverages.Q4.push(Number(q4));
+
+    tableRows += `
+      <tr>
+        <td class="rc-area">${subj}</td>
+        <td class="rc-grade">${q1 || '-'}</td>
+        <td class="rc-grade">${q2 || '-'}</td>
+        <td class="rc-grade">${q3 || '-'}</td>
+        <td class="rc-grade">${q4 || '-'}</td>
+        <td class="rc-final">${finalGrade > 0 ? finalGrade : '-'}</td>
+        <td class="rc-remark ${remark === 'Passed' ? 'remark-pass' : 'remark-pending'}">${finalGrade > 0 ? remark : '-'}</td>
+      </tr>
+    `;
+  }
+
+  return `
+    <div class="rc-card">
+      <div class="rc-head">
+        <div class="rc-org">MEFAMDEV-Life · Angat, Bulacan</div>
+        <div class="rc-title">Report on Learning Progress and Achievement</div>
+        <div class="rc-sub">School Year ${schoolYear || 'N/A'} · Quarter 1–4</div>
+      </div>
+  `;
+}</div>
+        </div>
+      </div>
+
+      <div class="objective">
+        <div class="num">4.</div>
+        <div class="obj-text">
+          To provide recipients with a secure, self-service portal through which they can independently view their own academic records, spiritual formation attendance history, and current alert status, promoting transparency and personal accountability in their scholarship standing.
+          <div class="code-box"><div class="tag">Exact Code</div>
+async function submitAttendanceCode() {
+    const code = (document.getElementById('attCodeInput') || {}).value || '';
+    const studentId = (document.getElementById('attStudentId') || {}).value || appData?.referenceNumber || appData?.reference || appData?.reference_number || `APP-${appData?.id || ''}`;
+    const statusEl = document.getElementById('attStatus');
+    const heroStatusText = (document.getElementById('heroStatus') || {}).innerText || '';
+    if (!heroStatusText.includes('Accepted')) { alert('Attendance is available only to accepted scholars.'); return; }
+    if (!code || !String(code).trim()) { alert('Please enter the attendance code.'); return; }
+    const sess = JSON.parse(sessionStorage.getItem('mefamdev_session') || '{}');
+    const name = sess?.name || document.getElementById('heroName')?.innerText || 'Student';
+    try {
+        if (statusEl) statusEl.innerText = 'Submitting…';
+        const res = await MefamAPI.checkinByCode(code.trim(), name, studentId.trim());
+        if (!res) { if (statusEl) statusEl.innerText = 'Unable to reach server.'; return; }
+        if (res.ok) {
+            if (res.duplicate) {
+                if (statusEl) statusEl.innerText = 'You have already checked in for this session.';
+            } else {
+                if (statusEl) statusEl.innerText = 'Check-in successful — thank you!';
+            }
+        } else {
+            if (statusEl) statusEl.innerText = res.error || 'Check-in failed.';
+        }
+    } catch (e) {
+        console.error('Checkin failed', e);
+        if (statusEl) statusEl.innerText = 'Unable to check in right now.';
+    }
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
