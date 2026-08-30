@@ -9,8 +9,8 @@ test('applicant auth accepts a portal username and password', async () => {
   db.data.applications = [];
   const passwordHash = crypto.createHash('sha256').update('secret123').digest('hex');
   db.prepare(
-    'INSERT INTO applications (name, portal_username, password_hash, status) VALUES (?, ?, ?, ?)'
-  ).run('Sample Applicant', 'portaluser', passwordHash, 'Pending Review');
+    'INSERT INTO applications (name, portal_username, password_hash, reference_number, status) VALUES (?, ?, ?, ?, ?)'
+  ).run('Sample Applicant', 'portaluser', passwordHash, '20260830171806', 'Pending Review');
 
   const app = express();
   app.use(express.json());
@@ -24,13 +24,43 @@ test('applicant auth accepts a portal username and password', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'portaluser', password: 'secret123' })
+      body: JSON.stringify({ refNo: '20260830171806', username: 'portaluser', password: 'secret123' })
     });
     const body = await res.json();
 
     assert.equal(res.status, 200);
     assert.equal(body.user?.type, 'applicant');
     assert.equal(body.user?.appId, 1);
+  } finally {
+    server.close();
+  }
+});
+
+test('applicant auth rejects a name-only login and requires ref ID + username + password', async () => {
+  db.data.applications = [];
+  const passwordHash = crypto.createHash('sha256').update('secret123').digest('hex');
+  db.prepare(
+    'INSERT INTO applications (name, portal_username, password_hash, reference_number, status) VALUES (?, ?, ?, ?, ?)'
+  ).run('Jaycee Cruz', 'jaycee', passwordHash, '20260830171806', 'Pending Review');
+
+  const app = express();
+  app.use(express.json());
+  app.use('/api/auth', authRouter);
+
+  const server = app.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+
+  try {
+    const { port } = server.address();
+    const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Jaycee Cruz', password: 'secret123' })
+    });
+    const body = await res.json();
+
+    assert.equal(res.status, 400);
+    assert.match(body.error || '', /reference number|ref id/i);
   } finally {
     server.close();
   }
@@ -97,7 +127,7 @@ test('applicant auth accepts a timestamp-style reference number and password', a
     const loginRes = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refNo: referenceNumber, password: 'secret123' })
+      body: JSON.stringify({ refNo: referenceNumber, username: 'portaluser', password: 'secret123' })
     });
     const loginBody = await loginRes.json();
 
@@ -129,7 +159,7 @@ test('applicant auth accepts a compact reference number without slashes', async 
     const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refNo: referenceNumber, password: 'secret123' })
+      body: JSON.stringify({ refNo: referenceNumber, username: 'slashless', password: 'secret123' })
     });
     const body = await res.json();
 
@@ -141,12 +171,12 @@ test('applicant auth accepts a compact reference number without slashes', async 
   }
 });
 
-test('applicant auth accepts full applicant name for login', async () => {
+test('applicant auth rejects full applicant name as the login identifier', async () => {
   db.data.applications = [];
   const passwordHash = crypto.createHash('sha256').update('secret123').digest('hex');
   db.prepare(
-    'INSERT INTO applications (name, portal_username, password_hash, status) VALUES (?, ?, ?, ?)' 
-  ).run('Maria Lopez', 'portaluser', passwordHash, 'Pending Review');
+    'INSERT INTO applications (name, portal_username, password_hash, reference_number, status) VALUES (?, ?, ?, ?, ?)' 
+  ).run('Maria Lopez', 'portaluser', passwordHash, '20260901010101', 'Pending Review');
 
   const app = express();
   app.use(express.json());
@@ -160,13 +190,12 @@ test('applicant auth accepts full applicant name for login', async () => {
     const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'Maria Lopez', password: 'secret123' })
+      body: JSON.stringify({ name: 'Maria Lopez', username: 'portaluser', password: 'secret123' })
     });
     const body = await res.json();
 
-    assert.equal(res.status, 200);
-    assert.equal(body.user?.type, 'applicant');
-    assert.equal(body.user?.appId, 1);
+    assert.equal(res.status, 400);
+    assert.match(body.error || '', /reference number|reference id/i);
   } finally {
     server.close();
   }
