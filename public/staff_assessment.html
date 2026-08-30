@@ -355,10 +355,17 @@ let linkedAppId = null;
 let currentIntakeId = null;
 
 window.onload = function () {
+    console.log('🔍 Staff Assessment page loaded');
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     initFamTable();
     initActionTable();
-    populatePrefill();
+    
+    // Call populatePrefill first and ensure it completes
+    console.log('Calling populatePrefill()');
+    setTimeout(() => {
+        populatePrefill();
+    }, 100);
+    
     initSigPad('clientSig');
     initSigPad('staffSig');
 
@@ -515,8 +522,10 @@ function renderPrefillSearchList(apps) {
 }
 }
 function filterPrefillApplicants() {
+    console.log('Filtering prefill applicants');
     const query = document.getElementById('prefillSearch')?.value.toLowerCase().trim() || '';
     const apps = window.prefillApplicantsCache || [];
+    console.log('Query:', query, 'Available apps:', apps.length);
     const filtered = query === '' ? apps : apps.filter(a => {
         const name = (a.name || '').toLowerCase();
         const school = (a.school || '').toLowerCase();
@@ -525,6 +534,7 @@ function filterPrefillApplicants() {
         const grade = (a.grade || '').toLowerCase();
         return name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
     });
+    console.log('Filtered results:', filtered.length);
     renderPrefillSearchList(filtered);
 }
 function selectPrefillApplicant(appId) {
