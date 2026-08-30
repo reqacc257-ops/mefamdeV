@@ -602,11 +602,11 @@
                 <div class="grid-2">
                     <div class="field-group">
                         <label class="field-label translatable" data-tl="Contact No. 1" data-en="Contact No. 1">Contact No. 1</label>
-                        <input type="tel" class="fam-contact" placeholder="09XXXXXXXXX" style="width:100%;">
+                        <input type="tel" class="fam-contact" placeholder="09xxxxxxxxx" style="min-width:120px;">
                     </div>
                     <div class="field-group">
                         <label class="field-label translatable" data-tl="Contact No. 2 (Optional)" data-en="Contact No. 2 (Optional)">Contact No. 2 (Optional)</label>
-                        <input type="tel" class="fam-contact" placeholder="09XXXXXXXXX" style="width:100%;">
+                        <input type="tel" class="fam-contact" placeholder="09xxxxxxxxx" style="min-width:120px;">
                     </div>
                 </div>
             </div>
@@ -964,7 +964,6 @@
         updateAcademicFields();
         document.getElementById('nextSchool').value = 'Bulacan State University (Main/Malolos)';
         document.getElementById('nextGrade').value = '11';
-        document.getElementById('degree').value = 'STEM';
         document.getElementById('whyScholar').value = 'I want to finish my studies and help my family become stable.';
 
         document.querySelectorAll('#page-4 input[type="checkbox"]').forEach(cb => cb.checked = true);
