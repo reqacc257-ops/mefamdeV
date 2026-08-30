@@ -680,6 +680,17 @@ function saveIntake() {
     console.log('💾 Save button clicked');
     try {
         const data = collectData();
+        const caseNo = String(data.caseNo || '').trim();
+        if (!caseNo) {
+            const el = document.getElementById('caseNo');
+            if (el) {
+                el.focus();
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            alert('Please enter a case number before saving.');
+            return;
+        }
+        data.caseNo = caseNo;
         console.log('Collected data:', data);
         
         let saved = [];
