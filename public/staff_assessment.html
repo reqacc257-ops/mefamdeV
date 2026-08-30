@@ -354,6 +354,16 @@
 let linkedAppId = null;
 let currentIntakeId = null;
 
+// Listen for applicants data from parent window (admin dashboard)
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'prefill-applicants') {
+        console.log('Received applicants from parent:', event.data.applicants);
+        window.prefillApplicantsCache = event.data.applicants;
+        localStorage.setItem('mefamdev_apps', JSON.stringify(event.data.applicants));
+        renderPrefillSearchList(event.data.applicants);
+    }
+});
+
 window.onload = function () {
     console.log('🔍 Staff Assessment page loaded');
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];

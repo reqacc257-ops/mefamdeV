@@ -2196,6 +2196,18 @@ function openToolModal(url, title) {
     frame.src = url;
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+    
+    // Pass applicants data to iframe after it loads
+    if (url.includes('staff_assessment.html') || url.includes('intake_sheet.html')) {
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        frame.onload = function() {
+            console.log('Iframe loaded, sending', apps.length, 'applicants');
+            frame.contentWindow.postMessage({ 
+                type: 'prefill-applicants', 
+                applicants: apps 
+            }, '*');
+        };
+    }
 }
 function closeToolModal() {
     const modal = document.getElementById('toolModal');
