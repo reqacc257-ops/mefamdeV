@@ -126,6 +126,24 @@
     .evt-att-list label:hover { background: #f7f9fb; }
     .evt-att-list input[type=checkbox] { width:auto; accent-color: var(--teal); }
 
+    .capacity-level-row {
+      width:100%; min-width:0; max-width:100%;
+      display:flex; align-items:center; gap:12px; min-height:56px;
+      flex-wrap:nowrap;
+    }
+    .capacity-toggle {
+      min-width:0; flex:1 1 auto; overflow:hidden;
+    }
+    .capacity-toggle span:first-child {
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .capacity-stepper-input {
+      min-width:0; max-width:42px; flex:0 0 auto;
+    }
+    .capacity-stepper-button {
+      flex:0 0 auto;
+    }
+
     .field-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
 
     .attendance-panel { display:none; position:fixed; inset:0; background:rgba(15,23,42,.65); padding:20px; z-index:1000; overflow:auto; }
@@ -233,8 +251,8 @@
             <div style="font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">Capacity by school level</div>
             <div style="font-size: .72rem; color: var(--text-muted);">Turn on the levels this event applies to, then set their capacity.</div>
           </div>
-          <div id="capacityByLevel" style="display:grid; gap:0; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff;"></div>
-          <div style="margin-top:12px; background: rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.22); border-radius:12px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div id="capacityByLevel" style="display:grid; gap:0; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; width:100%; max-width:100%;"></div>
+          <div style="margin-top:12px; background: rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.22); border-radius:12px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
             <div>
               <div style="font-size: .72rem; font-weight:700; color:#b45309; letter-spacing: .04em; text-transform: uppercase;">Total capacity</div>
               <div id="capacitySummaryText" style="font-size: .72rem; color: rgba(180,83,9,0.7);">No levels selected yet</div>
@@ -449,10 +467,12 @@
       const allApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
       const counts = { elementary: 0, junior_high: 0, senior_high: 0, college: 0 };
 
-      (Array.isArray(allApps) ? allApps : []).forEach(app => {
-        const level = normalizeEducationLevel(app.eduLevel || app.edu_level || app.educationLevel || app.education_level || app.gradeLevel || app.grade_level || '');
-        if (level && counts[level] !== undefined) counts[level] += 1;
-      });
+      (Array.isArray(allApps) ? allApps : [])
+        .filter(app => String(app?.status || '').trim().toLowerCase() === 'accepted')
+        .forEach(app => {
+          const level = normalizeEducationLevel(app.eduLevel || app.edu_level || app.educationLevel || app.education_level || app.gradeLevel || app.grade_level || '');
+          if (level && counts[level] !== undefined) counts[level] += 1;
+        });
 
       return counts;
     }
