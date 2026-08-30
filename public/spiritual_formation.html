@@ -485,8 +485,9 @@
       rows.forEach(row => {
         const id = row.dataset.id;
         const enabled = row.dataset.enabled === 'true';
-        const input = row.querySelector('.capacity-stepper-input');
-        const value = Number.parseInt(input?.value || '0', 10);
+        const countEl = row.querySelector('.capacity-stepper-input');
+        const rawValue = countEl?.textContent ?? countEl?.dataset.count ?? row.dataset.count ?? '0';
+        const value = Number.parseInt(String(rawValue).replace(/[^\d.-]/g, ''), 10);
         const count = Number.isFinite(value) ? Math.max(0, value) : 0;
 
         if (enabled && count > 0) {
@@ -507,21 +508,38 @@
       return { levels, total };
     }
 
+    function readCapacityState() {
+      try {
+        return JSON.parse(localStorage.getItem('mefamdev_capacity_state') || '{}');
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function writeCapacityState(state) {
+      localStorage.setItem('mefamdev_capacity_state', JSON.stringify(state));
+    }
+
     function setCapacityLevelEnabled(id, enabled) {
       const row = document.querySelector(`.capacity-level-row[data-id="${id}"]`);
       if (!row) return;
-      row.dataset.enabled = String(enabled);
-      const toggle = row.querySelector('.capacity-toggle');
       const input = row.querySelector('.capacity-stepper-input');
-      const button = row.querySelector('.capacity-stepper-button');
-      const isEnabled = enabled && true;
+      const savedState = readCapacityState();
+      savedState[id] = Boolean(enabled);
+      writeCapacityState(savedState);
+      row.dataset.enabled = String(Boolean(enabled));
+      const toggle = row.querySelector('.capacity-toggle');
+      const isEnabled = Boolean(enabled);
+      const counts = getApplicantLevelCounts();
+      const countValue = isEnabled ? (counts[id] || 0) : 0;
+      row.dataset.count = String(countValue);
+      if (input) {
+        input.dataset.count = String(countValue);
+        input.textContent = String(countValue);
+        input.style.color = isEnabled ? '#1e2a47' : '#94a3b8';
+      }
       row.classList.toggle('capacity-row-on', isEnabled);
       if (toggle) toggle.setAttribute('aria-pressed', String(isEnabled));
-      if (input) {
-        input.disabled = !enabled;
-        input.value = enabled ? (input.dataset.baseValue || input.value || '0') : '0';
-      }
-      if (button) button.disabled = !enabled;
       getCapacitySelection();
     }
 
@@ -530,29 +548,38 @@
       if (!row) return;
       const enabled = row.dataset.enabled === 'true';
       const nextEnabled = !enabled;
+      const counts = getApplicantLevelCounts();
+      const baseCount = counts[id] || 0;
+      const savedState = readCapacityState();
+      savedState[id] = nextEnabled;
+      writeCapacityState(savedState);
       row.dataset.enabled = String(nextEnabled);
-      if (!nextEnabled) {
-        const input = row.querySelector('.capacity-stepper-input');
-        if (input) input.value = '0';
-      }
+      row.dataset.count = String(nextEnabled ? baseCount : 0);
       const input = row.querySelector('.capacity-stepper-input');
       if (input) {
-        input.disabled = !nextEnabled;
-        input.dataset.baseValue = nextEnabled ? input.value || '0' : '0';
+        input.dataset.count = String(nextEnabled ? baseCount : 0);
+        input.textContent = String(nextEnabled ? baseCount : 0);
+        input.style.color = nextEnabled ? '#1e2a47' : '#94a3b8';
       }
       row.classList.toggle('capacity-row-on', nextEnabled);
+      const toggle = row.querySelector('.capacity-toggle');
+      if (toggle) toggle.setAttribute('aria-pressed', String(nextEnabled));
       getCapacitySelection();
     }
 
     function renderCapacityControls() {
       const counts = getApplicantLevelCounts();
+      const savedState = readCapacityState();
       const container = document.getElementById('capacityByLevel');
       if (!container) return;
 
       container.innerHTML = CAPACITY_LEVELS.map((level, index) => {
-        const enabled = (counts[level.id] || 0) > 0;
+        const savedEnabled = savedState[level.id];
+        const hasAcceptedCount = (counts[level.id] || 0) > 0;
+        const enabled = savedEnabled === undefined ? hasAcceptedCount : Boolean(savedEnabled);
+        const countValue = enabled ? (counts[level.id] || 0) : 0;
         return `
-          <div class="capacity-level-row ${enabled ? 'capacity-row-on' : ''}" data-id="${level.id}" data-enabled="${String(enabled)}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:${index === CAPACITY_LEVELS.length - 1 ? 'none' : '1px solid var(--border)'}; background:${enabled ? 'rgba(79,95,224,0.04)' : '#fff'};">
+          <div class="capacity-level-row ${enabled ? 'capacity-row-on' : ''}" data-id="${level.id}" data-enabled="${String(enabled)}" data-count="${countValue}" style="display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:${index === CAPACITY_LEVELS.length - 1 ? 'none' : '1px solid var(--border)'}; background:${enabled ? 'rgba(79,95,224,0.04)' : '#fff'};">
             <div style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:${enabled ? '#4F5FE0' : '#f1f5f9'}; color:${enabled ? '#fff' : '#94a3b8'}; font-weight:800; font-size:.8rem;">${level.short}</div>
             <button type="button" class="capacity-toggle" data-id="${level.id}" aria-pressed="${String(enabled)}" style="display:flex; align-items:center; justify-content:space-between; flex:1; background:none; border:none; padding:0; cursor:pointer; text-align:left;">
               <span style="font-size:.9rem; font-weight:600; color:${enabled ? '#1e2a47' : '#94a3b8'};">${level.label}</span>
@@ -561,7 +588,7 @@
               </span>
             </button>
             <div style="display:flex; align-items:center; justify-content:center; min-width:64px; border:1px solid ${enabled ? '#dfe4ee' : '#edf2f7'}; background:${enabled ? '#fff' : '#f8fafc'}; border-radius:10px; min-height:36px; padding:0 10px;">
-              <span class="capacity-stepper-input" data-id="${level.id}" style="display:block; min-width:24px; text-align:center; color:${enabled ? '#1e2a47' : '#94a3b8'}; font-size:.9rem; font-weight:700;">${counts[level.id] || 0}</span>
+              <span class="capacity-stepper-input" data-id="${level.id}" data-count="${countValue}" style="display:block; min-width:24px; text-align:center; color:${enabled ? '#1e2a47' : '#94a3b8'}; font-size:.9rem; font-weight:700;">${countValue}</span>
             </div>
           </div>
         `;
@@ -1173,6 +1200,7 @@
     }
 
     window.addEventListener('storage', () => {
+      renderCapacityControls();
       renderEvents();
       renderAttendance(getAcceptedScholars());
     });
