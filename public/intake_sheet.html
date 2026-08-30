@@ -507,23 +507,32 @@ function formatApplicantGrade(app) {
 }
 
 function populatePrefill() {
+    console.log('Loading prefill applicants...');
     let apps = [];
     try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
+    console.log('Total apps found:', apps.length);
+    console.log('Apps:', apps);
     window.prefillApplicantsCache = apps;
     renderPrefillSearchList(apps);
 }
 function renderPrefillSearchList(apps) {
+    console.log('Rendering prefill list with apps:', apps);
     const results = document.getElementById('prefillResults');
     const detail = document.getElementById('prefillDetail');
-    if (!results) return;
-    results.innerHTML = apps.length === 0
-        ? '<div style="padding:10px;color:#666;">No applicants found.</div>'
+    if (!results) {
+        console.error('prefillResults element not found!');
+        return;
+    }
+    const html = apps.length === 0
+        ? '<div style="padding:10px;color:#666;">No applicants found. Make sure applications exist in the system.</div>'
         : apps.map(a => `
             <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})">
                 <div class="search-result-title">${a.name || 'Unknown Applicant'}</div>
                 <div class="search-result-meta">${formatApplicantGrade(a)} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
             </button>
         `).join('');
+    console.log('Setting prefillResults HTML:', html);
+    results.innerHTML = html;
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
 function filterPrefillApplicants() {
