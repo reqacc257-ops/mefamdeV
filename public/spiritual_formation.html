@@ -250,7 +250,7 @@
       </div>
       <div style="overflow:auto;">
         <table>
-          <thead><tr><th>Scholar</th><th>School</th><th>Formation</th><th>Status</th><th>Action</th></tr></thead>
+          <thead><tr><th>Scholar</th><th>School</th><th>Formation</th><th>Status</th></tr></thead>
           <tbody id="absenceLogBody"></tbody>
         </table>
       </div>
@@ -544,27 +544,18 @@
         return;
       }
       const today = new Date(); today.setHours(0,0,0,0);
-      container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Action</th></tr></thead><tbody>` +
+      container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th></tr></thead><tbody>` +
         events.map(ev => {
           const attended = getEventAttendanceIds(ev, getAcceptedScholars()).size;
           const max = Number(ev.max || 0) || 0;
           const pct = max > 0 ? Math.round(attended / max * 100) : 0;
           const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
           const isPast = ev.date ? new Date(ev.date) < today : false;
-          const active = ev.activeAttendanceSession || null;
-          const sessionHtml = active
-            ? `<div style="font-size:.82rem; margin-bottom:6px;">Code: <strong>${escapeHtml(active.code)}</strong> <span style="color:var(--text-muted);">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div>`
-            : '';
           return `<tr>
             <td><strong>${escapeHtml(ev.name)}</strong>${isPast ? ' <span class="badge badge-muted" style="margin-left:4px;">Past</span>' : ''}</td>
             <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
             <td style="font-size:.82rem;">${escapeHtml(ev.venue || '—')}</td>
             <td><span class="badge ${badgeCls}">${attended}/${max}</span></td>
-            <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              ${sessionHtml}
-              <button class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button>
-              <button class="btn btn-danger-ghost btn-sm" onclick="deleteEvent(${ev.id})">Delete</button>
-            </td>
           </tr>`;
         }).join('') + `</tbody></table>`;
     }
@@ -921,13 +912,12 @@
         if (alerts.length === 0) {
           alertsList.innerHTML = '<div class="empty-state"><strong>All clear</strong>No formation alerts — every scholar is in good standing.</div>';
         } else {
-          alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Status</th><th>Reason</th><th>Action</th></tr></thead><tbody>` +
+          alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Status</th><th>Reason</th></tr></thead><tbody>` +
             alerts.map(s => {
               const record = absences[s.id] || {};
               const status = record.status || 'yellow';
               const cls = status === 'bad' ? 'badge-red' : 'badge-orange';
-              const contact = escapeHtml(s.contact || 'N/A');
-              return `<tr><td><strong>${escapeHtml(s.name)}</strong></td><td><span class="badge ${cls}">${status === 'yellow' ? 'Yellow' : 'Bad'}</span></td><td style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(record.reason || '—')}</td><td><button class="btn btn-ghost btn-sm" onclick="showToast('Contact: ${contact}')">📞 Contact</button><button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="resetAbsence(${s.id})">✓ Resolved</button></td></tr>`;
+              return `<tr><td><strong>${escapeHtml(s.name)}</strong></td><td><span class="badge ${cls}">${status === 'yellow' ? 'Yellow' : 'Bad'}</span></td><td style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(record.reason || '—')}</td></tr>`;
             }).join('') + `</tbody></table>`;
         }
       }
@@ -948,22 +938,19 @@
         }
         logBody.innerHTML = filtered.map(s => {
           const formCount = events.filter(ev => getEventAttendanceIds(ev, apps).has(String(s.id))).length;
-          // Manual status override (set via "Edit") takes precedence over the computed rate;
-          // otherwise fall back to attendance-derived status. With zero events logged yet,
-          // default to "good" rather than flagging everyone yellow.
+          const totalEvents = events.length;
+          const attendancePct = totalEvents > 0 ? (formCount / totalEvents) * 100 : 100;
+          // Percentage-based formation status: 91%+ Good, 80-90% Warning, below 80% Bad.
           const manual = absences[s.id]?.status || null;
-          const computed = events.length === 0 ? 'good'
-            : formCount === events.length ? 'good'
-            : formCount >= Math.ceil(events.length * 0.75) ? 'yellow' : 'bad';
+          const computed = attendancePct >= 91 ? 'good' : attendancePct >= 80 ? 'yellow' : 'bad';
           const statusKey = manual || computed;
-          const statusLabel = statusKey === 'good' ? 'Good' : statusKey === 'yellow' ? 'Yellow' : 'Bad';
+          const statusLabel = statusKey === 'good' ? 'Good' : statusKey === 'yellow' ? 'Warning' : 'Bad';
           const cls = statusKey === 'good' ? 'badge-green' : statusKey === 'yellow' ? 'badge-orange' : 'badge-red';
           return `<tr>
             <td><strong>${escapeHtml(s.name)}</strong></td>
             <td style="font-size:.82rem;">${escapeHtml(s.school || '—')}</td>
             <td>${formCount} / ${events.length} events</td>
             <td><span class="badge ${cls}">${statusLabel}</span></td>
-            <td><button class="btn btn-ghost btn-sm" onclick="openAddAbsenceModalFor(${s.id})">Edit</button></td>
           </tr>`;
         }).join('');
       }
