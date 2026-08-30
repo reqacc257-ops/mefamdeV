@@ -491,6 +491,9 @@
             position: relative;
         }
         .ann-item:last-child { margin-bottom: 0; }
+        .monitoring-list {
+            max-height: 320px; overflow-y: auto; padding-right: 4px;
+        }
         .ann-tag { font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
         .ann-title { font-size: .92rem; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
         .ann-body { font-size: .84rem; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
@@ -2315,8 +2318,60 @@ function renderMonitoring(monitoring) {
     const summaryEl = document.getElementById('monitoringSummary');
     if (!alertsEl || !summaryEl) return;
 
+    alertsEl.classList.add('monitoring-list');
+
+    const storedApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    const storedGrades = JSON.parse(localStorage.getItem('mefamdev_grades') || '{}');
+    const storedAbsences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+
+    function buildLocalMonitoringSummary(apps, gradesObj, absencesObj) {
+        const alerts = [];
+        const activeScholars = (apps || []).filter(app => String(app?.status || '').trim() === 'Accepted').length;
+
+        (apps || []).forEach(app => {
+            if (String(app?.status || '').trim() !== 'Accepted') return;
+            const appId = String(app.id);
+            const grade = Number(gradesObj?.[appId]?.latest?.grade_val ?? app.latest_grade ?? 0);
+            const absenceDays = Number(absencesObj?.[appId]?.days || 0);
+
+            if (Number.isFinite(grade) && grade > 0 && grade < 80) {
+                alerts.push({
+                    appId,
+                    type: 'academic',
+                    severity: 'high',
+                    message: `${app.name || 'Scholar'} has a low grade of ${grade}.`
+                });
+            }
+            if (absenceDays >= 1) {
+                alerts.push({
+                    appId,
+                    type: 'attendance',
+                    severity: 'medium',
+                    message: `${app.name || 'Scholar'} has ${absenceDays} missed day${absenceDays === 1 ? '' : 's'}.`
+                });
+            }
+        });
+
+        return {
+            activeScholars,
+            atRisk: alerts.length,
+            alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
+            alerts
+        };
+    }
+
+    const localSummary = buildLocalMonitoringSummary(storedApps, storedGrades, storedAbsences);
     const summary = monitoring && typeof monitoring === 'object' ? monitoring : { activeScholars: 0, atRisk: 0, alertLevel: 'low', alerts: [] };
-    const alerts = Array.isArray(summary.alerts) ? summary.alerts : [];
+    const baselineAlerts = Array.isArray(summary.alerts) ? summary.alerts : [];
+    const alerts = baselineAlerts.length >= localSummary.alerts.length ? baselineAlerts : localSummary.alerts;
+    const finalSummary = {
+        ...localSummary,
+        ...summary,
+        activeScholars: Math.max(Number(summary.activeScholars || 0), Number(localSummary.activeScholars || 0)),
+        atRisk: alerts.length,
+        alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
+        alerts
+    };
 
     if (!alerts.length) {
         alertsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No active risk alerts at the moment.</p></div>`;
@@ -2343,9 +2398,9 @@ function renderMonitoring(monitoring) {
 
     summaryEl.innerHTML = `
         <div style="display:grid; gap:8px;">
-            <div><strong>Active scholars:</strong> ${summary.activeScholars || 0}</div>
-            <div><strong>At-risk cases:</strong> ${summary.atRisk || 0}</div>
-            <div><strong>Alert level:</strong> <span class="badge ${summary.alertLevel === 'high' ? 'badge-red' : summary.alertLevel === 'medium' ? 'badge-orange' : 'badge-green'}">${summary.alertLevel || 'low'}</span></div>
+            <div><strong>Active scholars:</strong> ${finalSummary.activeScholars || 0}</div>
+            <div><strong>At-risk cases:</strong> ${finalSummary.atRisk || 0}</div>
+            <div><strong>Alert level:</strong> <span class="badge ${finalSummary.alertLevel === 'high' ? 'badge-red' : finalSummary.alertLevel === 'medium' ? 'badge-orange' : 'badge-green'}">${finalSummary.alertLevel || 'low'}</span></div>
             <div style="margin-top:4px; color:var(--text);">This section highlights academic and attendance problems so staff can act earlier.</div>
         </div>`;
 }
