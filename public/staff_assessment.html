@@ -34,7 +34,7 @@
     .prefill-bar p{font-size:.8rem;color:#444;margin-bottom:8px;}
     .search-input{width:100%;max-width:420px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fbfcfe;font-size:.85rem;}
     .search-input:focus{outline:none;border-color:#c99a2e;box-shadow:0 0 0 3px rgba(201,154,46,.16);background:#fff;}
-    .search-results{display:grid;gap:6px;max-height:150px;overflow-y:auto;margin-top:8px;}
+    .search-results{display:grid;gap:6px;max-height:220px;overflow-y:auto;margin-top:8px;}
     .search-result-item{text-align:left;border:1px solid #ddd;border-radius:5px;background:#fff;padding:8px 10px;cursor:pointer;font-size:.82rem;width:100%;}
     .search-result-item:hover{border-color:var(--accent);}
     .search-result-title{font-weight:700;}
@@ -714,7 +714,6 @@ function saveIntake() {
         console.error('❌ Error saving intake:', e);
         alert('Error saving: ' + e.message);
     }
-}
 }
 
 function loadSavedIntakeRecord(recordId) {
