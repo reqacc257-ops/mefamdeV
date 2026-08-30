@@ -179,8 +179,7 @@
 
         <!-- Prefill (screen only) -->
         <div class="prefill-bar">
-            <p>Search for an accepted applicant to link to this intake sheet.</p>
-            <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()" onfocus="if(!window.prefillApplicantsCache || window.prefillApplicantsCache.length === 0) populatePrefill()">
+            <input type="text" id="prefillSearch" class="search-input" placeholder="Search accepted applicants..." oninput="filterPrefillApplicants()" onfocus="if(!window.prefillApplicantsCache || window.prefillApplicantsCache.length === 0) populatePrefill()">
             <div id="prefillResults" class="search-results"></div>
             <div id="prefillDetail" class="prefill-detail-card" style="display:none;"></div>
         </div>
@@ -564,7 +563,6 @@ function renderPrefillSearchList(apps) {
     console.log('Setting prefillResults HTML with', displayApps.length, 'apps');
     results.innerHTML = html;
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
-}
 }
 function filterPrefillApplicants() {
     console.log('Filtering prefill applicants');
