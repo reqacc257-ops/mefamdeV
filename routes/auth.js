@@ -407,48 +407,28 @@ router.post('/applicant/reset-password', async (req, res) => {
 // ── Applicant portal login ────────────────────────────────────────────────────
 router.post('/applicant', async (req, res) => {
   const { refNo, name, password, username } = req.body;
-  const refValue = String(refNo || '').trim();
-  const usernameValue = String(username || '').trim();
-  const nameValue = String(name || '').trim();
-  const passwordValue = String(password || '').trim();
+  const identifier = String(username || refNo || '').trim();
+  if (!identifier) return res.status(400).json({ error: 'Reference number or portal username required' });
 
-  const referenceLooksValid = /^(?:\d{14}|\d{4}\/\d{2}\/\d{2}\/\d{6}|\d+|app-\d+)$/i.test(refValue);
-
-  if (!refValue) {
-    return res.status(400).json({ error: 'Reference number required for applicant login' });
-  }
-  if (!referenceLooksValid) {
-    return res.status(400).json({ error: 'Applicant login requires the reference number, not the applicant name.' });
-  }
-  if (!usernameValue) {
-    return res.status(400).json({ error: 'Username required for applicant login' });
-  }
-  if (!passwordValue) {
-    return res.status(401).json({ error: 'Password required for applicant login' });
-  }
-
-  const app = await findApplicantByIdentifier(refValue, nameValue);
+  const app = await findApplicantByIdentifier(identifier, name);
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
-  const portalUsername = String(app.portal_username || app.username || '').trim().toLowerCase();
-  if (!portalUsername) return res.status(401).json({ error: 'Applicant username not set for this application' });
-  if (portalUsername !== usernameValue.trim().toLowerCase()) {
-    return res.status(401).json({ error: 'Reference number and username do not match this application' });
+  if (!app) return res.status(404).json({ error: 'Application not found' });
+
+  // Lenient name check (if provided)
+  if (name && name.trim().length > 2) {
+    const fn = (app.name || '').toLowerCase();
+    const parts = fn.split(/[\s,]+/);
+    const input = name.trim().toLowerCase();
+    const match = parts.some(p => p && input.includes(p)) || fn.includes(input);
+    if (!match) return res.status(401).json({ error: 'Name does not match application on file' });
   }
 
-  const providedName = nameValue.trim().toLowerCase();
-  if (providedName) {
-    const appName = String(app.name || '').trim().toLowerCase();
-    const nameMatch = appName === providedName || appName.includes(providedName) || providedName.includes(appName);
-    if (!nameMatch) {
-      return res.status(401).json({ error: 'Name does not match application on file' });
-    }
-  }
-
+  // If a password is set, require it; if none is set, reject an entered password
   if (app.password_hash) {
-    const hashed = crypto.createHash('sha256').update(passwordValue).digest('hex');
-    if (hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid password' });
-  } else if (passwordValue) {
+    const hashed = crypto.createHash('sha256').update(String(password || '')).digest('hex');
+    if (!password || hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid password' });
+  } else if (password) {
     return res.status(401).json({ error: 'No application password is set. Leave the password blank to continue.' });
   }
 
