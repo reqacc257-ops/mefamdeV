@@ -229,9 +229,15 @@
             display: flex; flex-direction: column; gap: 12px;
         }
         .comment-item {
-            background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
-            border: 1px solid #e6ebf2; border-radius: 12px;
-            padding: 14px 14px 12px; box-shadow: 0 1px 3px rgba(15,23,42,.03);
+            position: relative; background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+            border: 1px solid #e6ebf2; border-left: 4px solid var(--navy); border-radius: 14px;
+            padding: 14px 14px 12px; box-shadow: 0 8px 20px rgba(15,23,42,.04);
+        }
+        .comment-item.warning { border-left-color: #e8a130; }
+        .comment-item.danger { border-left-color: #d85a55; }
+        .comment-item::before {
+            content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, rgba(26,46,68,.08), transparent);
+            border-radius: 14px 14px 0 0;
         }
         .comment-head {
             display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -241,9 +247,9 @@
             display: flex; align-items: center; gap: 8px; min-width: 0;
         }
         .comment-avatar {
-            width: 28px; height: 28px; border-radius: 50%;
+            width: 30px; height: 30px; border-radius: 50%;
             background: linear-gradient(135deg, #1a2e44, #2f5a7a); color: #fff;
-            font-size: .75rem; font-weight: 700; display:flex; align-items:center; justify-content:center;
+            font-size: .73rem; font-weight: 700; display:flex; align-items:center; justify-content:center;
             flex-shrink: 0;
         }
         .comment-name { font-weight: 700; color: var(--navy); font-size: .9rem; }
@@ -253,19 +259,39 @@
         }
         .comment-body {
             font-size: .86rem; color: var(--text); line-height: 1.6;
-            background: #f8fafc; border: 1px solid #eef2f7; border-radius: 8px;
-            padding: 10px 12px; margin-bottom: 10px;
+            background: linear-gradient(180deg, #f9fbff 0%, #f4f8fb 100%);
+            border: 1px solid #eef2f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
         }
         .comment-actions {
             display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap;
         }
         .mini-btn {
             border: 1px solid #dfe6ee; background: #f5f7fa; color: var(--navy);
-            border-radius: 7px; padding: 6px 9px; font-size: .73rem; font-weight: 700; cursor: pointer;
+            border-radius: 8px; padding: 6px 10px; font-size: .73rem; font-weight: 700; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
         }
+        .mini-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(26,46,68,.08); }
         .mini-btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
         .mini-btn.warn { background: #fff7e8; color: #9a6700; border-color: #f1d39c; }
         .mini-btn.success { background: #ecfdf5; color: #146c43; border-color: #b9ebce; }
+        .toast {
+            position: fixed; right: 22px; bottom: 22px; min-width: 220px; max-width: 320px;
+            background: rgba(24, 37, 52, 0.96); color: #fff; border-radius: 12px;
+            padding: 12px 14px; box-shadow: 0 12px 32px rgba(0,0,0,.25);
+            opacity: 0; transform: translateY(12px); pointer-events: none; transition: .2s ease;
+            z-index: 2000; font-size: .85rem;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .alert-panel-header {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            padding: 10px 12px; margin: -2px -2px 12px; border-radius: 10px;
+            background: linear-gradient(135deg, #f7f9fc, #eef4fb);
+            border: 1px solid #e7edf5;
+        }
+        .alert-panel-header .pill {
+            display: inline-flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .06em; color: var(--navy);
+            background: rgba(32, 80, 122, 0.08); border-radius: 999px; padding: 5px 9px;
+        }
 
         /* Form controls */
         input[type="text"], input[type="date"], input[type="number"],
@@ -1058,9 +1084,9 @@
             <div class="grid-2eq" style="align-items:start; margin-bottom:20px;">
                 <!-- School absence alerts -->
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <div class="alert-panel-header">
                         <div class="card-title" style="margin:0;">Formation Alerts</div>
-                        
+                        <span class="pill">Recent</span>
                     </div>
                     <div id="absenceAlertsList">
                         <div class="empty-state"><div class="empty-icon">✅</div><p>No absence alerts. All scholars present.</p></div>
@@ -4373,6 +4399,21 @@ function renderAttendance(scholars) {
         }
     }
 
+    // Toast helper
+    window.showToast = function(message) {
+        let toast = document.getElementById('adminToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'adminToast';
+            toast.className = 'toast';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    };
+
     // Formation alerts panel
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
@@ -4392,11 +4433,13 @@ function renderAttendance(scholars) {
                     const record = absences[s.id] || {};
                     const status = record.status || 'yellow';
                     const cls = status === 'bad' ? 'badge-red' : status === 'yellow' ? 'badge-orange' : 'badge-green';
+                    const kindClass = status === 'bad' ? 'danger' : status === 'yellow' ? 'warning' : '';
                     const count = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
                     const initials = (s.name || 'S').split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
                     const noteText = String(record.reason || '').trim() || 'No detailed comment provided yet. Follow up with the scholar and update the attendance note.';
+                    const contact = s.contact || 'N/A';
                     return `
-                        <div class="comment-item">
+                        <div class="comment-item ${kindClass}">
                             <div class="comment-head">
                                 <div class="comment-person">
                                     <div class="comment-avatar">${escapeHtml(initials)}</div>
@@ -4412,7 +4455,7 @@ function renderAttendance(scholars) {
                             </div>
                             <div class="comment-body">${escapeHtml(noteText)}</div>
                             <div class="comment-actions">
-                                <button class="mini-btn warn" onclick="alert('Contact: ${escapeHtml(s.contact || 'N/A')}')">📞 Contact</button>
+                                <button class="mini-btn warn" onclick="showToast('Contact: ${escapeHtml(contact)}')">📞 Contact</button>
                                 <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
                             </div>
                         </div>
