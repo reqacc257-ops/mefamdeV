@@ -4318,7 +4318,8 @@ function renderAttendance(scholars) {
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        const alerts = apps.filter(s => {
+        const acceptedApps = apps.filter(s => s.status === 'Accepted');
+        const alerts = acceptedApps.filter(s => {
             const status = absences[s.id]?.status;
             return status === 'yellow' || status === 'bad';
         });
@@ -4350,11 +4351,12 @@ function renderAttendance(scholars) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
         const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
         const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
-        if (apps.length === 0) {
-            logBody.innerHTML = '<tr><td colspan="6" class="empty-state">No applicants or scholars available.</td></tr>';
+        const acceptedApps = apps.filter(s => s.status === 'Accepted');
+        if (acceptedApps.length === 0) {
+            logBody.innerHTML = '<tr><td colspan="6" class="empty-state">No accepted scholars available.</td></tr>';
             return;
         }
-        logBody.innerHTML = apps.map(s => {
+        logBody.innerHTML = acceptedApps.map(s => {
             const days = absences[s.id]?.days || 0;
             const formCount = events.filter(ev => getEventAttendanceIds(ev, apps).has(String(s.id))).length;
             const statusLabel = formCount === events.length && events.length > 0 ? 'Good' : formCount >= Math.ceil(events.length * 0.75) ? 'Yellow' : 'Bad';
@@ -4372,9 +4374,9 @@ function renderAttendance(scholars) {
 
 function openAddAbsenceModal() {
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null);
+    const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null && a.status === 'Accepted');
     const sel = document.getElementById('absenceScholar');
-    sel.innerHTML = '<option value="">— Select applicant/scholar —</option>' + scholars.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    sel.innerHTML = '<option value="">— Select scholar —</option>' + scholars.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
     document.getElementById('absenceDays').value = '0';
     document.getElementById('absenceReason').value = '';
     document.getElementById('absenceModal').classList.add('open');
