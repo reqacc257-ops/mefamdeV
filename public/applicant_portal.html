@@ -1135,6 +1135,27 @@ function buildTimeline(app) {
     return events;
 }
 
+function normalizeAnnouncementTag(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+    const withoutEmoji = raw.replace(/^[^\p{L}\p{N}]+/gu, '').trim();
+    const cleaned = withoutEmoji.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    return cleaned.toLowerCase();
+}
+
+function displayAnnouncementTag(value) {
+    const normalized = normalizeAnnouncementTag(value);
+    const map = {
+        important: '📅 Important',
+        academic: '🎓 Academic',
+        applications: '📋 Applications',
+        formation: '🕊️ Formation',
+        finance: '💰 Finance',
+        general: '📢 General'
+    };
+    return map[normalized] || String(value || '').trim() || '📢 General';
+}
+
 let lastSeenAnnouncementCount = parseInt(localStorage.getItem('mefamdev_ann_seen_count') || '0', 10);
 
 async function renderAnnouncements() {
@@ -1157,7 +1178,7 @@ async function renderAnnouncements() {
         }
         container.innerHTML = anns.map(a => `
             <div class="ann-item">
-                <div class="ann-tag">${escapeHtml(a.tag || '')}</div>
+                <div class="ann-tag">${escapeHtml(displayAnnouncementTag(a.tag))}</div>
                 <div class="ann-title">${escapeHtml(a.subject || '')}</div>
                 <div class="ann-body">${escapeHtml(a.message || '')}</div>
                 <div class="ann-date">Posted: ${escapeHtml(a.date || '')}</div>
@@ -1192,10 +1213,14 @@ function announcementVisibleToApplicant(announcement, level) {
 
 async function refreshAnnouncementsBadge() {
     try {
-        const anns = await MefamAPI.getAnnouncements();
+        const allAnnouncements = await MefamAPI.getAnnouncements();
+        const currentLevel = getApplicantEducationLevel();
+        const visible = Array.isArray(allAnnouncements)
+            ? allAnnouncements.filter(announcement => announcementVisibleToApplicant(announcement, currentLevel))
+            : [];
         const badge = document.getElementById('annBadge');
-        if (!badge || !Array.isArray(anns)) return;
-        const unseen = anns.length - lastSeenAnnouncementCount;
+        if (!badge || !Array.isArray(visible)) return;
+        const unseen = visible.length - lastSeenAnnouncementCount;
         if (unseen > 0) { badge.style.display = 'flex'; badge.innerText = unseen > 9 ? '9+' : unseen; }
         else badge.style.display = 'none';
     } catch (e) { /* ignore */ }
