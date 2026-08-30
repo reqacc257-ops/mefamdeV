@@ -180,7 +180,7 @@
         <!-- Prefill (screen only) -->
         <div class="prefill-bar">
             <p>Link this intake sheet to a submitted application (optional).</p>
-            <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()">
+            <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()" onfocus="if(!window.prefillApplicantsCache || window.prefillApplicantsCache.length === 0) populatePrefill()">
             <div id="prefillResults" class="search-results"></div>
             <div id="prefillDetail" class="prefill-detail-card" style="display:none;"></div>
         </div>
@@ -494,9 +494,30 @@ function addActionRow() {
 function populatePrefill() {
     console.log('Loading prefill applicants...');
     let apps = [];
-    try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
+    
+    // Try to get from localStorage
+    try { 
+        apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; 
+    } catch(e){ 
+        console.warn('Could not load from localStorage:', e);
+        apps = [];
+    }
+    
     console.log('Total apps found:', apps.length);
     console.log('Apps:', apps);
+    
+    // If no apps in localStorage, try to get from parent window (admin dashboard)
+    if (apps.length === 0 && window.parent && window.parent !== window) {
+        try {
+            const parentApps = window.parent.window.prefillApplicantsCache || 
+                              JSON.parse(window.parent.localStorage.getItem('mefamdev_apps') || '[]');
+            console.log('Got apps from parent window:', parentApps.length);
+            apps = parentApps;
+        } catch(e) {
+            console.warn('Could not access parent window:', e);
+        }
+    }
+    
     window.prefillApplicantsCache = apps;
     renderPrefillSearchList(apps);
 }
@@ -510,17 +531,26 @@ function renderPrefillSearchList(apps) {
     }
     
     // Show only accepted scholars by default
-    const acceptedOnly = apps.filter(a => a.status === 'Accepted');
-    const displayApps = acceptedOnly.length > 0 ? acceptedOnly : apps;
+    let displayApps = apps.filter(a => a.status === 'Accepted');
     
-    const html = displayApps.length === 0
-        ? '<div style="padding:10px;color:#666;">No applicants found. Make sure applications exist in the system.</div>'
-        : displayApps.map(a => `
-            <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})" style="display:block; width:100%; text-align:left; padding:8px; margin-bottom:4px; background:#f5f5f5; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
-                <div class="search-result-title" style="font-weight:bold;">${a.name || 'Unknown Applicant'}</div>
-                <div class="search-result-meta" style="font-size:0.85rem; color:#666;">${a.grade || 'No grade'} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
-            </button>
-        `).join('');
+    // If no accepted apps found, show all apps
+    if (displayApps.length === 0) {
+        displayApps = apps;
+    }
+    
+    // If still no apps, try to fetch from parent or show message
+    if (displayApps.length === 0) {
+        results.innerHTML = '<div style="padding:12px; color:#666; background:#fff9e6; border:1px solid #ffd700; border-radius:4px;">No accepted applicants found. Try searching or adding new applications.</div>';
+        return;
+    }
+    
+    const html = displayApps.map(a => `
+        <div type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})" style="display:block; width:100%; text-align:left; padding:10px 12px; margin-bottom:6px; background:#f5f5f5; border:2px solid #ddd; border-radius:6px; cursor:pointer; transition:all 0.2s;">
+            <div class="search-result-title" style="font-weight:bold; color:#333;">${a.name || 'Unknown Applicant'}</div>
+            <div class="search-result-meta" style="font-size:0.85rem; color:#666; margin-top:4px;">${a.grade || 'No grade'} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
+        </div>
+    `).join('');
+    
     console.log('Setting prefillResults HTML with', displayApps.length, 'apps');
     results.innerHTML = html;
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
