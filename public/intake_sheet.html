@@ -186,7 +186,7 @@
 
         <!-- Prefill (screen only) -->
         <div class="prefill-bar">
-            <p>Link this intake sheet to a submitted application (optional).</p>
+            <p>Search for a submitted application to link to this intake sheet.</p>
             <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()">
             <div id="prefillResults" class="search-results"></div>
             <div id="prefillDetail" class="prefill-detail-card" style="display:none;"></div>
@@ -376,13 +376,13 @@ window.onload = function () {
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     initFamTable();
     initActionTable();
-    
+
     // Call populatePrefill first and ensure it completes
     console.log('Calling populatePrefill()');
     setTimeout(() => {
         populatePrefill();
     }, 100);
-    
+
     initSigPad('clientSig');
     initSigPad('staffSig');
 
@@ -527,22 +527,22 @@ function formatApplicantGrade(app) {
 function populatePrefill() {
     console.log('Loading prefill applicants...');
     let apps = [];
-    
+
     // Try to get from localStorage
-    try { 
-        apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; 
-    } catch(e){ 
+    try {
+        apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
+    } catch(e){
         console.warn('Could not load from localStorage:', e);
         apps = [];
     }
-    
+
     console.log('Total apps found:', apps.length);
     console.log('Apps:', apps);
-    
+
     // If no apps in localStorage, try to get from parent window (admin dashboard)
     if (apps.length === 0 && window.parent && window.parent !== window) {
         try {
-            const parentApps = window.parent.window.prefillApplicantsCache || 
+            const parentApps = window.parent.window.prefillApplicantsCache ||
                               JSON.parse(window.parent.localStorage.getItem('mefamdev_apps') || '[]');
             console.log('Got apps from parent window:', parentApps.length);
             apps = parentApps;
@@ -550,7 +550,7 @@ function populatePrefill() {
             console.warn('Could not access parent window:', e);
         }
     }
-    
+
     window.prefillApplicantsCache = apps;
     renderPrefillSearchList(apps);
 }
@@ -562,28 +562,28 @@ function renderPrefillSearchList(apps) {
         console.error('prefillResults element not found!');
         return;
     }
-    
+
     // Show only accepted scholars by default
     let displayApps = apps.filter(a => a.status === 'Accepted');
-    
+
     // If no accepted apps found, show all apps
     if (displayApps.length === 0) {
         displayApps = apps;
     }
-    
+
     // If still no apps, try to fetch from parent or show message
     if (displayApps.length === 0) {
         results.innerHTML = '<div style="padding:12px; color:#666; background:#fff9e6; border:1px solid #ffd700; border-radius:4px;">No accepted applicants found. Try searching or adding new applications.</div>';
         return;
     }
-    
+
     const html = displayApps.map(a => `
         <div type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})" style="display:block; width:100%; text-align:left; padding:10px 12px; margin-bottom:6px; background:#f5f5f5; border:2px solid #ddd; border-radius:6px; cursor:pointer; transition:all 0.2s;">
             <div class="search-result-title" style="font-weight:bold; color:#333;">${a.name || 'Unknown Applicant'}</div>
             <div class="search-result-meta" style="font-size:0.85rem; color:#666; margin-top:4px;">${formatApplicantGrade(a)} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
         </div>
     `).join('');
-    
+
     console.log('Setting prefillResults HTML with', displayApps.length, 'apps');
     results.innerHTML = html;
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
@@ -701,7 +701,7 @@ function saveIntake() {
     try {
         const data = collectData();
         console.log('Collected data:', data);
-        
+
         let saved = [];
         try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
 
@@ -738,7 +738,6 @@ function saveIntake() {
         console.error('❌ Error saving intake:', e);
         alert('Error saving: ' + e.message);
     }
-}
 }
 
 function loadSavedIntakeRecord(recordId) {

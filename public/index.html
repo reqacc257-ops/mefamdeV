@@ -344,7 +344,7 @@
     <div class="login-header">
         <div class="welcome">Welcome Back</div>
         <h2>Sign in to your portal</h2>
-        <p id="loginSubtitle">Enter your username or APP reference number</p>
+        <p id="loginSubtitle">Staff: Username or Reference ID | Applicants: Username Only</p>
     </div>
 
     <!-- Detected applicant reference (shown once an applicant identifier is recognised) -->
@@ -380,11 +380,11 @@
     <!-- ── STEP 1: Username / Reference ── -->
     <div id="step1">
         <div class="form-group">
-            <label id="usernameLabel">Username or Reference Number</label>
+            <label id="usernameLabel">REF ID</label>
             <div class="input-wrap">
                 <span class="input-icon" id="usernameIcon">👤</span>
                 <input type="text" id="unifiedUsername"
-                    placeholder="e.g. Director or 20260724153022"
+                    placeholder="20260830171806"
                     autocomplete="username"
                     autocapitalize="none"
                     spellcheck="false"
@@ -415,10 +415,10 @@
         <!-- Step 2b: Applicant verification (shown for applicant portal access) -->
         <div id="applicantNameField">
             <div class="form-group">
-                <label>User Name (As submitted in your application)</label>
+                <label>USER NAME</label>
                 <div class="input-wrap">
                     <input type="text" id="unifiedName"
-                        placeholder="As submitted in your application"
+                        placeholder="jaycee"
                         autocapitalize="none"
                         spellcheck="false"
                         onkeydown="if(event.key==='Enter') proceedLogin()">
@@ -426,10 +426,10 @@
             </div>
             <div id="applicantPasswordField">
                 <div class="form-group">
-                    <label>Application Password</label>
+                    <label>PASS</label>
                     <div class="input-wrap">
                         <span class="input-icon">🔒</span>
-                            <input type="password" id="unifiedAppPassword" placeholder="Enter your application password" onkeydown="if(event.key==='Enter') proceedLogin()">
+                            <input type="password" id="unifiedAppPassword" placeholder="marco" onkeydown="if(event.key==='Enter') proceedLogin()">
                             <button type="button" onclick="toggleUnifiedAppPassword()" id="toggleUnifiedAppPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
                     </div>
                 </div>
@@ -541,6 +541,7 @@ function onUsernameInput(input) {
         document.getElementById('staffPasswordField').style.display = 'block';
         document.getElementById('applicantNameField').style.display = 'none';
         document.getElementById('applicantPasswordField').style.display = 'none';
+        document.getElementById('usernameLabel').textContent = 'Staff Username or Reference ID';
         document.getElementById('loginBtn').textContent  = 'Sign In to Admin Dashboard →';
         document.getElementById('loginBtn').style.background = 'var(--navy)';
         document.getElementById('hintStaff').style.display = 'block';
@@ -548,6 +549,7 @@ function onUsernameInput(input) {
 
     } else if (isAppRef) {
         detectedType = 'applicant';
+        document.getElementById('usernameLabel').textContent = 'Applicant Username (Your Name)';
         const cleanId = rawValue.trim().replace(/^app-/i, '');
         const normalizedInput = rawValue.trim().toLowerCase();
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
@@ -561,11 +563,13 @@ function onUsernameInput(input) {
                 || (inputDigits && normalizedReferenceDigits === inputDigits);
         });
         if (found) {
-            showDetected('📋 Applicant — ' + (found.referenceNumber || 'APP-' + found.id), '#e8f5e9', '#1b5e20', '#81c784');
-            document.getElementById('usernameHint').textContent = '';
+            showDetected('⛔ Reference ID Detected — Use Your Username Instead', '#ffebee', '#c62828', '#ef5350');
+            document.getElementById('usernameHint').textContent = '⚠️ Applicants cannot log in with reference numbers. Use your username (name as submitted).';
+            document.getElementById('usernameHint').style.color = '#c62828';
         } else {
-            showDetected('📋 Applicant Reference', '#fff8e1', '#6d4c00', '#ffd54f');
-            document.getElementById('usernameHint').textContent = '';
+            showDetected('⛔ Reference ID Not Recognized', '#fff3e0', '#e65100', '#ff9800');
+            document.getElementById('usernameHint').textContent = '⚠️ Applicants cannot log in with reference numbers. Use your username instead.';
+            document.getElementById('usernameHint').style.color = '#e65100';
         }
         document.getElementById('applicantNameField').style.display = 'block';
         document.getElementById('applicantPasswordField').style.display = 'block';
@@ -578,6 +582,7 @@ function onUsernameInput(input) {
         const found = apps.find(a => (a.username || '').toLowerCase() === v);
         if (found) {
             detectedType = 'applicant';
+            document.getElementById('usernameLabel').textContent = 'Applicant Username (Your Name)';
             showDetected('📋 Applicant — APP-' + found.id, '#e8f5e9', '#1b5e20', '#81c784');
             document.getElementById('usernameHint').textContent = '';
             document.getElementById('applicantNameField').style.display = 'block';
@@ -588,9 +593,10 @@ function onUsernameInput(input) {
             document.getElementById('hintApplicant').style.display = 'block';
         } else {
             detectedType = 'applicant';
+            document.getElementById('usernameLabel').textContent = 'Applicant Username (Your Name)';
             showDetected('📋 Applicant Portal', '#fff8e1', '#6d4c00', '#ffd54f');
-            document.getElementById('usernameHint').textContent = 'You can sign in with your portal username or APP reference number.';
-            document.getElementById('usernameHint').style.color = '#6d4c00';
+            document.getElementById('usernameHint').textContent = '👉 Enter your username (the name you used in your application). Staff use reference numbers only.';
+            document.getElementById('usernameHint').style.color = '#d84315';
             document.getElementById('applicantNameField').style.display = 'block';
             document.getElementById('applicantPasswordField').style.display = 'block';
             document.getElementById('loginBtn').textContent  = 'Track My Application →';
@@ -618,7 +624,7 @@ function proceedLogin() {
     hideError();
 
     if (!raw) {
-        showError('Please enter your username or APP reference number.');
+        showError('Please enter your username (applicants) or staff ID/username (staff).');
         return;
     }
 
@@ -716,11 +722,17 @@ async function doApplicantLogin(ref) {
     const cleanRef = raw.replace(/^app-/i, '').trim();
     const isNumericId = /^\d+$/.test(cleanRef);
     const isTimestampRef = /^\d{4}\/\d{2}\/\d{2}\/\d{6}$/.test(cleanRef) || /^\d{14}$/.test(cleanRef);
-    const identifier = isNumericId || isTimestampRef ? cleanRef : raw;
-    const username = isNumericId || isTimestampRef ? '' : raw;
+    
+    // REJECT if applicant tries to use Ref ID - only staff can use that
+    if (isNumericId || isTimestampRef) {
+        showError('⛔ Applicants must log in with their username (name as submitted in application), not the reference number. Reference numbers are for staff only.');
+        return;
+    }
+    
+    const username = raw;
 
     try {
-        const res = await MefamAPI.loginApplicant(identifier, nameInput, pwInput, username);
+        const res = await MefamAPI.loginApplicant(username, nameInput, pwInput, '');
         if (res?.token) {
             showLoading('Welcome!', () => {
                 window.location.assign('/applicant_portal.html');
