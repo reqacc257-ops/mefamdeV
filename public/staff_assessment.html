@@ -610,36 +610,48 @@ function toggleSpouseSection() {
 
 /* Save */
 function saveIntake() {
-    const data = collectData();
-    let saved = [];
-    try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
+    console.log('💾 Save button clicked');
+    try {
+        const data = collectData();
+        console.log('Collected data:', data);
+        
+        let saved = [];
+        try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
 
-    const recordId = data.id || window.currentIntakeId || Date.now();
-    data.id = recordId;
-    window.currentIntakeId = recordId;
-    data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        const recordId = data.id || window.currentIntakeId || Date.now();
+        data.id = recordId;
+        window.currentIntakeId = recordId;
+        data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
-    const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
-    if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
-    localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
-    localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
+        const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
+        if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
+        localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
+        localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
+        console.log('Saved to localStorage. Case No:', data.caseNo);
 
-    const hostWindow = window.parent !== window ? window.parent : window.opener;
-    if (hostWindow && !hostWindow.closed) {
-        hostWindow.postMessage({ type: 'intake-saved', record: data }, '*');
-    }
-
-    if (linkedAppId) {
-        let apps = [];
-        try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
-        const i = apps.findIndex(a => a.id == linkedAppId);
-        if (i > -1 && apps[i].status === 'Pending Review') {
-            apps[i].status = 'Interviewing';
-            apps[i].intakeSheetId = data.caseNo;
-            localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        const hostWindow = window.parent !== window ? window.parent : window.opener;
+        if (hostWindow && !hostWindow.closed) {
+            hostWindow.postMessage({ type: 'intake-saved', record: data }, '*');
         }
+
+        if (linkedAppId) {
+            let apps = [];
+            try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
+            const i = apps.findIndex(a => a.id == linkedAppId);
+            if (i > -1 && apps[i].status === 'Pending Review') {
+                apps[i].status = 'Interviewing';
+                apps[i].intakeSheetId = data.caseNo;
+                localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+            }
+        }
+        const message = `Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`;
+        console.log('✅', message);
+        alert(message);
+    } catch (e) {
+        console.error('❌ Error saving intake:', e);
+        alert('Error saving: ' + e.message);
     }
-    alert(`Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`);
+}
 }
 
 function loadSavedIntakeRecord(recordId) {
@@ -796,14 +808,24 @@ function clearForm() {
 }
 
 function printIntakeSheet() {
-    // hide fully empty family rows in print to save space
-    document.querySelectorAll('#famTableBody tr').forEach(tr => {
-        const inputs = tr.querySelectorAll('input, select');
-        const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
-        tr.classList.toggle('fam-row-empty-print', !hasData);
-    });
-    prepareSigImagesForPrint();
-    setTimeout(() => window.print(), 30);
+    console.log('🖨️ Print button clicked');
+    try {
+        // hide fully empty family rows in print to save space
+        document.querySelectorAll('#famTableBody tr').forEach(tr => {
+            const inputs = tr.querySelectorAll('input, select');
+            const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
+            tr.classList.toggle('fam-row-empty-print', !hasData);
+        });
+        prepareSigImagesForPrint();
+        console.log('About to call window.print()');
+        setTimeout(() => {
+            console.log('Executing window.print()');
+            window.print();
+        }, 30);
+    } catch (e) {
+        console.error('Error in printIntakeSheet:', e);
+        alert('Error printing: ' + e.message);
+    }
 }
 </script>
 <script src="global-actions.js"></script>
