@@ -4379,8 +4379,10 @@ function renderAttendance(scholars) {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
         const acceptedApps = apps.filter(s => s.status === 'Accepted');
         const alerts = acceptedApps.filter(s => {
-            const status = absences[s.id]?.status;
-            return status === 'yellow' || status === 'bad';
+            const record = absences[s.id] || {};
+            const status = record.status;
+            const hasReason = !!(record.reason && String(record.reason).trim());
+            return hasReason || status === 'yellow' || status === 'bad';
         });
         if (alerts.length === 0) {
             alertsList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No formation alerts. All scholars are in good standing.</p></div>';
@@ -4389,9 +4391,10 @@ function renderAttendance(scholars) {
                 alerts.map(s => {
                     const record = absences[s.id] || {};
                     const status = record.status || 'yellow';
-                    const cls = status === 'bad' ? 'badge-red' : 'badge-orange';
+                    const cls = status === 'bad' ? 'badge-red' : status === 'yellow' ? 'badge-orange' : 'badge-green';
                     const count = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
                     const initials = (s.name || 'S').split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
+                    const noteText = String(record.reason || '').trim() || 'No detailed comment provided yet. Follow up with the scholar and update the attendance note.';
                     return `
                         <div class="comment-item">
                             <div class="comment-head">
@@ -4400,14 +4403,14 @@ function renderAttendance(scholars) {
                                     <div>
                                         <div class="comment-name">${escapeHtml(s.name)}</div>
                                         <div class="comment-meta">
-                                            <span class="badge ${cls}">${status === 'yellow' ? 'Yellow' : 'Bad'} (${count}d)</span>
+                                            <span class="badge ${cls}">${status === 'good' ? 'Good' : status === 'yellow' ? 'Yellow' : 'Bad'} ${status === 'good' ? '' : `(${count}d)`}</span>
                                             <span>${escapeHtml(s.school || 'School not listed')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <span class="comment-meta">${new Date().toLocaleDateString()}</span>
                             </div>
-                            <div class="comment-body">${escapeHtml(record.reason || 'No detailed comment provided yet. Follow up with the scholar and update the attendance note.')}</div>
+                            <div class="comment-body">${escapeHtml(noteText)}</div>
                             <div class="comment-actions">
                                 <button class="mini-btn warn" onclick="alert('Contact: ${escapeHtml(s.contact || 'N/A')}')">📞 Contact</button>
                                 <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
