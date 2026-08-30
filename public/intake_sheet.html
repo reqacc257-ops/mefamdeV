@@ -386,9 +386,12 @@ function initSigPad(id) {
     if (!canvas) return;
     const ratio = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * ratio;
-    canvas.height = rect.height * ratio;
+    const width = Math.max(Math.round(rect.width || 300), 1);
+    const height = Math.max(Math.round(rect.height || 90), 1);
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     ctx.scale(ratio, ratio);
     ctx.lineWidth = 1.8;
     ctx.lineCap = 'round';
@@ -427,14 +430,15 @@ function clearSig(id) {
 }
 function isSigEmpty(id) {
     const pad = sigPads[id];
-    if (!pad) return true;
+    if (!pad || !pad.canvas || !pad.ctx) return true;
+    if (!pad.canvas.width || !pad.canvas.height) return true;
     const data = pad.ctx.getImageData(0, 0, pad.canvas.width, pad.canvas.height).data;
     for (let i = 3; i < data.length; i += 4) { if (data[i] !== 0) return false; }
     return true;
 }
 function getSigDataUrl(id) {
     const pad = sigPads[id];
-    if (!pad || isSigEmpty(id)) return '';
+    if (!pad || !pad.canvas || !pad.ctx || pad.canvas.width <= 0 || pad.canvas.height <= 0 || isSigEmpty(id)) return '';
     return pad.canvas.toDataURL('image/png');
 }
 function setSigFromDataUrl(id, dataUrl) {
