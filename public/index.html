@@ -415,16 +415,6 @@
         <!-- Step 2b: Applicant verification (shown for applicant portal access) -->
         <div id="applicantNameField">
             <div class="form-group">
-                <label>Applicant Ref ID</label>
-                <div class="input-wrap">
-                    <input type="text" id="unifiedName"
-                        placeholder="Sample: 20260830171806"
-                        autocapitalize="none"
-                        spellcheck="false"
-                        onkeydown="if(event.key==='Enter') proceedLogin()">
-                </div>
-            </div>
-            <div class="form-group">
                 <label>User Name</label>
                 <div class="input-wrap">
                     <input type="text" id="unifiedName2"
@@ -725,7 +715,7 @@ async function verifyDirectorOtp() {
 }
 
 async function doApplicantLogin(ref) {
-    const nameInput = document.getElementById('unifiedName').value.trim();
+    const nameInput = document.getElementById('unifiedName2').value.trim();
     const pwInput = (document.getElementById('unifiedAppPassword')?.value || '').trim();
     const raw = ref.trim();
     const cleanRef = raw.replace(/^app-/i, '').trim();
