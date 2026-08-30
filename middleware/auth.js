@@ -26,7 +26,12 @@ function requireAuth(req, res, next) {
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-    if (req.user.type !== 'staff' || !roles.includes(req.user.role)) {
+
+    const tokenType = req.user.type;
+    const role = req.user.role || (tokenType === 'staff' ? 'staff' : null);
+    const isStaff = tokenType === 'staff' || (tokenType !== 'applicant' && Boolean(role));
+
+    if (!isStaff || !roles.includes(role)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     next();
