@@ -1619,6 +1619,22 @@
     </div>
 </div>
 
+<div id="contactCodeModal" class="custom-modal-overlay" aria-hidden="true">
+    <div class="custom-modal-card" role="dialog" aria-modal="true" aria-labelledby="contactCodeTitle">
+        <div class="custom-modal-icon">☎</div>
+        <p class="custom-modal-eyebrow">Contact</p>
+        <p id="contactCodeTitle" class="custom-modal-title">Verified successfully</p>
+        <div class="custom-modal-row">
+            <div>
+                <p class="custom-modal-row-label">Contact</p>
+                <p class="custom-modal-row-value" id="contactCodeValue">0961 526 8436</p>
+            </div>
+            <button id="contactCodeCopy" class="custom-modal-copy" type="button" aria-label="Copy contact number">⧉</button>
+        </div>
+        <button id="contactCodeOk" class="custom-modal-ok" type="button">Ok</button>
+    </div>
+</div>
+
 <!-- Grade update modal -->
 <div class="modal-overlay" id="gradeModal">
     <div class="modal" style="max-width:480px;">
@@ -4466,6 +4482,9 @@ function renderAttendance(scholars) {
 
         value.textContent = contact || 'N/A';
         overlay.classList.add('open');
+        overlay.onclick = function(event) {
+            if (event.target === overlay) overlay.classList.remove('open');
+        };
 
         copyBtn.onclick = async () => {
             try {
@@ -4520,7 +4539,7 @@ function renderAttendance(scholars) {
                             </div>
                             <div class="comment-body">${escapeHtml(noteText)}</div>
                             <div class="comment-actions">
-                                <button class="mini-btn warn" onclick="showContactModal('${escapeHtml(contact)}')">📞 Contact</button>
+                                <button class="mini-btn warn" onclick="showContactModal(${JSON.stringify(contact || '')})">📞 Contact</button>
                                 <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
                             </div>
                         </div>
