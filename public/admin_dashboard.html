@@ -1,3 +1,4 @@
+@ -1,4980 +1,4980 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -491,9 +492,6 @@
             position: relative;
         }
         .ann-item:last-child { margin-bottom: 0; }
-        .monitoring-list {
-            max-height: 320px; overflow-y: auto; padding-right: 4px;
-        }
         .ann-tag { font-size: .72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
         .ann-title { font-size: .92rem; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
         .ann-body { font-size: .84rem; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
@@ -1133,8 +1131,10 @@
                         <input id="absenceScholar" type="hidden" value="">
                     </div>
                     <div style="margin-bottom:12px;">
+                        <label>Formation Status</label>
                         <label>Reason Severity</label>
                         <select id="absenceDays" style="width:100%;">
+                            <option value="0">Select status</option>
                             <option value="0">Select severity</option>
                             <option value="good">Good</option>
                             <option value="yellow">Yellow</option>
@@ -1534,19 +1534,6 @@
 
     </div><!-- /content-area -->
 </main>
-
-<div class="modal-overlay" id="monitoringAlertModal" onclick="if(event.target===this) closeMonitoringAlertModal()">
-    <div class="modal" style="max-width:520px;">
-        <div class="modal-header">
-            <h2 id="monitoringAlertTitle">Alert Details</h2>
-            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeMonitoringAlertModal()">✕ Close</button>
-        </div>
-        <div class="modal-body" id="monitoringAlertContent"></div>
-        <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeMonitoringAlertModal()">Close</button>
-        </div>
-    </div>
-</div>
 
 <!-- ══════════════════════════════════════════════
      APPLICATION DETAIL MODAL
@@ -2318,130 +2305,41 @@ function renderMonitoring(monitoring) {
     const summaryEl = document.getElementById('monitoringSummary');
     if (!alertsEl || !summaryEl) return;
 
-    alertsEl.classList.add('monitoring-list');
-
-    const storedApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    const storedGrades = JSON.parse(localStorage.getItem('mefamdev_grades') || '{}');
-    const storedAbsences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-
-    function buildLocalMonitoringSummary(apps, gradesObj, absencesObj) {
-        const alerts = [];
-        const activeScholars = (apps || []).filter(app => String(app?.status || '').trim() === 'Accepted').length;
-
-        (apps || []).forEach(app => {
-            if (String(app?.status || '').trim() !== 'Accepted') return;
-            const appId = String(app.id);
-            const grade = Number(gradesObj?.[appId]?.latest?.grade_val ?? app.latest_grade ?? 0);
-            const absenceDays = Number(absencesObj?.[appId]?.days || 0);
-
-            if (Number.isFinite(grade) && grade > 0 && grade < 80) {
-                alerts.push({
-                    appId,
-                    type: 'academic',
-                    severity: 'high',
-                    message: `${app.name || 'Scholar'} has a low grade of ${grade}.`
-                });
-            }
-            if (absenceDays >= 1) {
-                alerts.push({
-                    appId,
-                    type: 'attendance',
-                    severity: 'medium',
-                    message: `${app.name || 'Scholar'} has ${absenceDays} missed day${absenceDays === 1 ? '' : 's'}.`
-                });
-            }
-        });
-
-        return {
-            activeScholars,
-            atRisk: alerts.length,
-            alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
-            alerts
-        };
-    }
-
-    const localSummary = buildLocalMonitoringSummary(storedApps, storedGrades, storedAbsences);
     const summary = monitoring && typeof monitoring === 'object' ? monitoring : { activeScholars: 0, atRisk: 0, alertLevel: 'low', alerts: [] };
-    const baselineAlerts = Array.isArray(summary.alerts) ? summary.alerts : [];
-    const alerts = baselineAlerts.length >= localSummary.alerts.length ? baselineAlerts : localSummary.alerts;
-    const finalSummary = {
-        ...localSummary,
-        ...summary,
-        activeScholars: Math.max(Number(summary.activeScholars || 0), Number(localSummary.activeScholars || 0)),
-        atRisk: alerts.length,
-        alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
-        alerts
-    };
+    const alerts = Array.isArray(summary.alerts) ? summary.alerts : [];
 
     if (!alerts.length) {
         alertsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No active risk alerts at the moment.</p></div>`;
     } else {
-        alertsEl.innerHTML = alerts.map((alert, index) => `
-            <div class="ann-item" role="button" tabindex="0" data-alert-index="${index}" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}; cursor:pointer;">
+        alertsEl.innerHTML = alerts.map(alert => `
+            <div class="ann-item" role="button" tabindex="0" onclick="viewApp(${Number(alert.appId) || 0})" onkeydown="if(event.key==='Enter' || event.key===' ') viewApp(${Number(alert.appId) || 0})" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}; cursor:pointer;">
                 <div class="ann-tag">${alert.type === 'academic' ? 'Academic' : 'Attendance'}</div>
                 <div class="ann-title">${alert.message}</div>
                 <div class="ann-meta"><span>${alert.severity === 'high' ? 'High priority' : 'Needs follow-up'}</span></div>
             </div>`).join('');
-
-        alertsEl.querySelectorAll('.ann-item').forEach((item, index) => {
-            const alert = alerts[index];
-            const openAlert = () => openMonitoringAlertModal(alert);
-            item.addEventListener('click', openAlert);
-            item.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    openAlert();
-                }
-            });
-        });
     }
 
     summaryEl.innerHTML = `
         <div style="display:grid; gap:8px;">
-            <div><strong>Active scholars:</strong> ${finalSummary.activeScholars || 0}</div>
-            <div><strong>At-risk cases:</strong> ${finalSummary.atRisk || 0}</div>
-            <div><strong>Alert level:</strong> <span class="badge ${finalSummary.alertLevel === 'high' ? 'badge-red' : finalSummary.alertLevel === 'medium' ? 'badge-orange' : 'badge-green'}">${finalSummary.alertLevel || 'low'}</span></div>
+            <div><strong>Active scholars:</strong> ${summary.activeScholars || 0}</div>
+            <div><strong>At-risk cases:</strong> ${summary.atRisk || 0}</div>
+            <div><strong>Alert level:</strong> <span class="badge ${summary.alertLevel === 'high' ? 'badge-red' : summary.alertLevel === 'medium' ? 'badge-orange' : 'badge-green'}">${summary.alertLevel || 'low'}</span></div>
             <div style="margin-top:4px; color:var(--text);">This section highlights academic and attendance problems so staff can act earlier.</div>
         </div>`;
 }
 
-function openMonitoringAlertModal(alert) {
-    if (!alert) return;
-    const modal = document.getElementById('monitoringAlertModal');
-    const content = document.getElementById('monitoringAlertContent');
-    if (!modal || !content) return;
-
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    const app = apps.find(a => String(a.id) === String(alert.appId));
-    const title = alert.type === 'academic' ? 'Academic Risk Alert' : 'Attendance Risk Alert';
-    const severity = alert.severity === 'high' ? 'High priority' : 'Needs follow-up';
-    const scholarName = app?.name || 'Scholar';
-    const school = app?.school || 'School not listed';
-    const gradeLevel = app?.educationLevel || app?.gradeLevel || '—';
-
-    content.innerHTML = `
-        <div style="display:grid; gap:14px;">
-            <div><div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Alert type</div><div style="font-weight:700; font-size:1rem; color:var(--navy);">${alert.type === 'academic' ? 'Academic' : 'Attendance'}</div></div>
-            <div><div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Scholar</div><div style="font-weight:700; font-size:1.05rem; color:var(--navy);">${scholarName}</div><div style="color:var(--text-muted); font-size:.86rem; margin-top:4px;">${school} · ${gradeLevel}</div></div>
-            <div style="padding:14px 16px; border-radius:10px; background:#f8fafc; border:1px solid var(--border);">
-                <div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Message</div>
-                <div style="font-size:1rem; line-height:1.6; color:var(--text);">${alert.message}</div>
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
-                <div><div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Severity</div><span class="badge ${alert.severity === 'high' ? 'badge-red' : 'badge-orange'}">${severity}</span></div>
-                <button class="btn btn-navy btn-sm" onclick="viewApp(${Number(alert.appId) || 0})">Open full profile</button>
-            </div>
-        </div>
-    `;
-    document.getElementById('monitoringAlertTitle').textContent = title;
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeMonitoringAlertModal() {
-    const modal = document.getElementById('monitoringAlertModal');
-    if (modal) modal.classList.remove('open');
-    document.body.style.overflow = '';
+/* ── Recent apps (dashboard) ── */
+function formatAppDate(app) {
+    const value = app?.date || app?.date_label || app?.dateLabel || app?.submittedAt || app?.submitted_at || app?.createdAt || app?.created_at || '';
+    if (!value) return '—';
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return '—';
+        const parsed = new Date(trimmed);
+        if (!Number.isNaN(parsed.getTime()) && trimmed.includes('-')) return parsed.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+        return trimmed;
+    }
+    return String(value);
 }
 
 function formatAcademicDisplay(app) {
