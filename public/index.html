@@ -344,7 +344,7 @@
     <div class="login-header">
         <div class="welcome">Welcome Back</div>
         <h2>Sign in to your portal</h2>
-        <p id="loginSubtitle">Staff: Username or Reference ID | Applicants: Username Only</p>
+        <p id="loginSubtitle">Staff: username or reference ID | Applicants: username + password</p>
     </div>
 
     <!-- Detected applicant reference (shown once an applicant identifier is recognised) -->
@@ -380,18 +380,18 @@
     <!-- ── STEP 1: Username / Reference ── -->
     <div id="step1">
         <div class="form-group">
-            <label id="usernameLabel">REF ID</label>
+            <label id="usernameLabel">Reference Number / Username</label>
             <div class="input-wrap">
                 <span class="input-icon" id="usernameIcon">👤</span>
                 <input type="text" id="unifiedUsername"
-                    placeholder="20260830171806"
+                    placeholder="Director or 20260830171806"
                     autocomplete="username"
                     autocapitalize="none"
                     spellcheck="false"
                     oninput="onUsernameInput(this)"
                     onkeydown="if(event.key==='Enter') proceedLogin()">
             </div>
-            <p id="usernameHint" style="font-size:.74rem; color:#aaa; margin-top:5px;"></p>
+            <p id="usernameHint" style="font-size:.74rem; color:#aaa; margin-top:5px;">Sample staff login: Director / password of director</p>
         </div>
 
         <!-- Step 2a: Staff password (shown when staff username detected) -->
@@ -415,10 +415,10 @@
         <!-- Step 2b: Applicant verification (shown for applicant portal access) -->
         <div id="applicantNameField">
             <div class="form-group">
-                <label>USER NAME</label>
+                <label>User Name</label>
                 <div class="input-wrap">
                     <input type="text" id="unifiedName"
-                        placeholder="jaycee"
+                        placeholder="Sample: jaycee"
                         autocapitalize="none"
                         spellcheck="false"
                         onkeydown="if(event.key==='Enter') proceedLogin()">
@@ -426,10 +426,10 @@
             </div>
             <div id="applicantPasswordField">
                 <div class="form-group">
-                    <label>PASS</label>
+                    <label>Password</label>
                     <div class="input-wrap">
                         <span class="input-icon">🔒</span>
-                            <input type="password" id="unifiedAppPassword" placeholder="marco" onkeydown="if(event.key==='Enter') proceedLogin()">
+                            <input type="password" id="unifiedAppPassword" placeholder="Sample: marco" onkeydown="if(event.key==='Enter') proceedLogin()">
                             <button type="button" onclick="toggleUnifiedAppPassword()" id="toggleUnifiedAppPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
                     </div>
                 </div>
@@ -458,9 +458,9 @@
         <div id="hintApplicant" style="display:none;">
             <p>
                 <strong>Applicant access:</strong><br>
-                Your reference number is based on the submission timestamp.<br>
-                Example: <code>20260724153022</code><br>
-                <em>You will receive this after submitting your application.</em>
+                Use your username and application password.<br>
+                Example: username = <code>jaycee</code> · password = <code>marco</code><br>
+                Staff uses a reference number or staff username instead.
             </p>
         </div>
     </div>
