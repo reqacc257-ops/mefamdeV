@@ -225,6 +225,48 @@
         .btn-ghost { background: #f0f2f5; color: var(--text); }
         .btn-ghost:hover { background: #e2e5ea; }
 
+        .comment-stream {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .comment-item {
+            background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+            border: 1px solid #e6ebf2; border-radius: 12px;
+            padding: 14px 14px 12px; box-shadow: 0 1px 3px rgba(15,23,42,.03);
+        }
+        .comment-head {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            margin-bottom: 8px;
+        }
+        .comment-person {
+            display: flex; align-items: center; gap: 8px; min-width: 0;
+        }
+        .comment-avatar {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: linear-gradient(135deg, #1a2e44, #2f5a7a); color: #fff;
+            font-size: .75rem; font-weight: 700; display:flex; align-items:center; justify-content:center;
+            flex-shrink: 0;
+        }
+        .comment-name { font-weight: 700; color: var(--navy); font-size: .9rem; }
+        .comment-meta {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            font-size: .72rem; color: var(--text-muted);
+        }
+        .comment-body {
+            font-size: .86rem; color: var(--text); line-height: 1.6;
+            background: #f8fafc; border: 1px solid #eef2f7; border-radius: 8px;
+            padding: 10px 12px; margin-bottom: 10px;
+        }
+        .comment-actions {
+            display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap;
+        }
+        .mini-btn {
+            border: 1px solid #dfe6ee; background: #f5f7fa; color: var(--navy);
+            border-radius: 7px; padding: 6px 9px; font-size: .73rem; font-weight: 700; cursor: pointer;
+        }
+        .mini-btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+        .mini-btn.warn { background: #fff7e8; color: #9a6700; border-color: #f1d39c; }
+        .mini-btn.success { background: #ecfdf5; color: #146c43; border-color: #b9ebce; }
+
         /* Form controls */
         input[type="text"], input[type="date"], input[type="number"],
         input[type="email"], input[type="password"],
@@ -4343,22 +4385,36 @@ function renderAttendance(scholars) {
         if (alerts.length === 0) {
             alertsList.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>No formation alerts. All scholars are in good standing.</p></div>';
         } else {
-            alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Status</th><th>Reason</th><th>Action</th></tr></thead><tbody>` +
+            alertsList.innerHTML = `<div class="comment-stream">` +
                 alerts.map(s => {
                     const record = absences[s.id] || {};
                     const status = record.status || 'yellow';
                     const cls = status === 'bad' ? 'badge-red' : 'badge-orange';
                     const count = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
-                    return `<tr>
-                        <td><strong>${s.name}</strong> ${mekongBadge(s)}</td>
-                        <td><span class="badge ${cls}">${status === 'good' ? 'Good' : status === 'yellow' ? 'Yellow' : 'Bad'} (${count}d)</span></td>
-                        <td style="font-size:.82rem; color:var(--text-muted);">${record.reason || '—'}</td>
-                        <td>
-                            <button class="btn btn-ghost btn-sm" onclick="alert('Contact: ${s.contact || 'N/A'}')">📞 Contact</button>
-                            <button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="resetAbsence(${s.id})">✓ Resolved</button>
-                        </td>
-                    </tr>`;
-                }).join('') + `</tbody></table>`;
+                    const initials = (s.name || 'S').split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
+                    return `
+                        <div class="comment-item">
+                            <div class="comment-head">
+                                <div class="comment-person">
+                                    <div class="comment-avatar">${escapeHtml(initials)}</div>
+                                    <div>
+                                        <div class="comment-name">${escapeHtml(s.name)}</div>
+                                        <div class="comment-meta">
+                                            <span class="badge ${cls}">${status === 'yellow' ? 'Yellow' : 'Bad'} (${count}d)</span>
+                                            <span>${escapeHtml(s.school || 'School not listed')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="comment-meta">${new Date().toLocaleDateString()}</span>
+                            </div>
+                            <div class="comment-body">${escapeHtml(record.reason || 'No detailed comment provided yet. Follow up with the scholar and update the attendance note.')}</div>
+                            <div class="comment-actions">
+                                <button class="mini-btn warn" onclick="alert('Contact: ${escapeHtml(s.contact || 'N/A')}')">📞 Contact</button>
+                                <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('') + `</div>`;
         }
     }
 
