@@ -228,7 +228,36 @@
         <div style="margin-bottom:12px;"><label for="evtName">Event name</label><input type="text" id="evtName" placeholder="e.g. Values Formation Seminar"></div>
         <div style="margin-bottom:12px;"><label for="evtDate">Date</label><input type="date" id="evtDate"></div>
         <div style="margin-bottom:12px;"><label for="evtVenue">Location / venue</label><input type="text" id="evtVenue" placeholder="e.g. MEFAMDEV Office, Angat"></div>
-        <div style="margin-bottom:16px;"><label for="evtMax">Capacity</label><input type="number" id="evtMax" value="75" min="1"></div>
+        <div style="margin-bottom:16px;">
+          <label>Capacity by school level</label>
+          <div style="display:grid; gap:10px; margin-top:8px;">
+            <div class="capacity-group">
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="elementary"> Elementary</span>
+                <input type="number" class="capacity-input" data-key="elementary" min="0" value="0" style="width:80px;" placeholder="0">
+              </label>
+            </div>
+            <div class="capacity-group">
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="junior_high"> Junior High</span>
+                <input type="number" class="capacity-input" data-key="junior_high" min="0" value="0" style="width:80px;" placeholder="0">
+              </label>
+            </div>
+            <div class="capacity-group">
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="senior_high"> Senior High</span>
+                <input type="number" class="capacity-input" data-key="senior_high" min="0" value="0" style="width:80px;" placeholder="0">
+              </label>
+            </div>
+            <div class="capacity-group">
+              <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="capacity-check" data-key="college"> College</span>
+                <input type="number" class="capacity-input" data-key="college" min="0" value="0" style="width:80px;" placeholder="0">
+              </label>
+            </div>
+          </div>
+          <small id="capacityTotalDisplay" style="display:block; margin-top:8px; color:var(--text-muted);">Total capacity: 0</small>
+        </div>
         <button class="btn btn-navy" type="button" id="addEventBtn" style="width:100%; justify-content:center;" onclick="addEvent()">➕ Add event</button>
       </div>
     </div>
@@ -413,6 +442,35 @@
     function closeModal(id) {
       document.getElementById(id)?.classList.remove('open');
     }
+
+    function getCapacitySelection() {
+      const levelKeys = ['elementary', 'junior_high', 'senior_high', 'college'];
+      const levels = {};
+      let total = 0;
+
+      levelKeys.forEach(key => {
+        const checkbox = document.querySelector(`.capacity-check[data-key="${key}"]`);
+        const input = document.querySelector(`.capacity-input[data-key="${key}"]`);
+        const checked = Boolean(checkbox && checkbox.checked);
+        const count = Number.parseInt(input?.value || '0', 10);
+        const validCount = Number.isFinite(count) && count > 0 ? count : 0;
+        if (checked && validCount > 0) {
+          levels[key] = validCount;
+          total += validCount;
+        }
+      });
+
+      const totalDisplay = document.getElementById('capacityTotalDisplay');
+      if (totalDisplay) totalDisplay.textContent = `Total capacity: ${total}`;
+
+      return { levels, total };
+    }
+
+    document.addEventListener('change', (event) => {
+      if (event.target && (event.target.classList.contains('capacity-check') || event.target.classList.contains('capacity-input'))) {
+        getCapacitySelection();
+      }
+    });
 
     function setBusy(btn, busy, busyLabel) {
       if (!btn) return;
@@ -682,17 +740,22 @@
       const name = document.getElementById('evtName').value.trim();
       const date = document.getElementById('evtDate').value;
       const venue = document.getElementById('evtVenue').value.trim();
-      let max = parseInt(document.getElementById('evtMax').value, 10);
+      const { total, levels } = getCapacitySelection();
       if (!name) { showToast('Enter an event name.', 'error'); return; }
       if (!date) { showToast('Choose an event date.', 'error'); return; }
-      if (isNaN(max) || max < 1) max = 1;
+      if (!Object.keys(levels).length || total < 1) {
+        showToast('Select at least one school level and set a capacity count.', 'error');
+        return;
+      }
       setBusy(btn, true, 'Adding…');
       try {
-        await MefamAPI.addEvent({ name, date, venue, max });
+        await MefamAPI.addEvent({ name, date, venue, max: total });
         document.getElementById('evtName').value = '';
         document.getElementById('evtDate').value = '';
         document.getElementById('evtVenue').value = '';
-        document.getElementById('evtMax').value = '75';
+        document.querySelectorAll('.capacity-check').forEach(box => box.checked = false);
+        document.querySelectorAll('.capacity-input').forEach(input => input.value = '0');
+        getCapacitySelection();
         await refreshFormationData(true);
         showToast('Event added.', 'success');
       } catch (error) {
