@@ -903,18 +903,11 @@
               const max = Number(ev.max || 0) || 0;
               const pct = max > 0 ? Math.round(cnt / max * 100) : 0;
               const cls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
-              const attendedScholars = apps.filter(s => attendedIds.has(String(s.id)));
-              const absentScholars = apps.filter(s => !attendedIds.has(String(s.id)));
-              const scholarRows = list => list.length
-                ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
-                : '<div style="color:var(--text-muted);">None</div>';
-              return `<tr><td colspan="3"><details>
-                <summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;" onclick="window.location.href='spiritual_formation.html?eventId=${encodeURIComponent(ev.id)}'; return false;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${cnt}/${max}</span></span></summary>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;">
-                  <div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div>
-                  <div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div>
-                </div>
-              </details></td></tr>`;
+              return `<tr>
+                <td><strong>${escapeHtml(ev.name)}</strong></td>
+                <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
+                <td><span class="badge ${cls}">${cnt}/${max}</span></td>
+              </tr>`;
             }).join('') + `</tbody></table>`;
         }
       }
