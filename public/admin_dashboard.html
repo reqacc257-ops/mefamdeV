@@ -1532,6 +1532,19 @@
     </div><!-- /content-area -->
 </main>
 
+<div class="modal-overlay" id="monitoringAlertModal" onclick="if(event.target===this) closeMonitoringAlertModal()">
+    <div class="modal" style="max-width:520px;">
+        <div class="modal-header">
+            <h2 id="monitoringAlertTitle">Alert Details</h2>
+            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeMonitoringAlertModal()">✕ Close</button>
+        </div>
+        <div class="modal-body" id="monitoringAlertContent"></div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeMonitoringAlertModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- ══════════════════════════════════════════════
      APPLICATION DETAIL MODAL
 ═══════════════════════════════════════════════ -->
@@ -2308,12 +2321,24 @@ function renderMonitoring(monitoring) {
     if (!alerts.length) {
         alertsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No active risk alerts at the moment.</p></div>`;
     } else {
-        alertsEl.innerHTML = alerts.map(alert => `
-            <div class="ann-item" role="button" tabindex="0" onclick="viewApp(${Number(alert.appId) || 0})" onkeydown="if(event.key==='Enter' || event.key===' ') viewApp(${Number(alert.appId) || 0})" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}; cursor:pointer;">
+        alertsEl.innerHTML = alerts.map((alert, index) => `
+            <div class="ann-item" role="button" tabindex="0" data-alert-index="${index}" style="border-left-color:${alert.severity === 'high' ? 'var(--red)' : 'var(--orange)'}; cursor:pointer;">
                 <div class="ann-tag">${alert.type === 'academic' ? 'Academic' : 'Attendance'}</div>
                 <div class="ann-title">${alert.message}</div>
                 <div class="ann-meta"><span>${alert.severity === 'high' ? 'High priority' : 'Needs follow-up'}</span></div>
             </div>`).join('');
+
+        alertsEl.querySelectorAll('.ann-item').forEach((item, index) => {
+            const alert = alerts[index];
+            const openAlert = () => openMonitoringAlertModal(alert);
+            item.addEventListener('click', openAlert);
+            item.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openAlert();
+                }
+            });
+        });
     }
 
     summaryEl.innerHTML = `
@@ -2325,18 +2350,43 @@ function renderMonitoring(monitoring) {
         </div>`;
 }
 
-/* ── Recent apps (dashboard) ── */
-function formatAppDate(app) {
-    const value = app?.date || app?.date_label || app?.dateLabel || app?.submittedAt || app?.submitted_at || app?.createdAt || app?.created_at || '';
-    if (!value) return '—';
-    if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (!trimmed) return '—';
-        const parsed = new Date(trimmed);
-        if (!Number.isNaN(parsed.getTime()) && trimmed.includes('-')) return parsed.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
-        return trimmed;
-    }
-    return String(value);
+function openMonitoringAlertModal(alert) {
+    if (!alert) return;
+    const modal = document.getElementById('monitoringAlertModal');
+    const content = document.getElementById('monitoringAlertContent');
+    if (!modal || !content) return;
+
+    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+    const app = apps.find(a => String(a.id) === String(alert.appId));
+    const title = alert.type === 'academic' ? 'Academic Risk Alert' : 'Attendance Risk Alert';
+    const severity = alert.severity === 'high' ? 'High priority' : 'Needs follow-up';
+    const scholarName = app?.name || 'Scholar';
+    const school = app?.school || 'School not listed';
+    const gradeLevel = app?.educationLevel || app?.gradeLevel || '—';
+
+    content.innerHTML = `
+        <div style="display:grid; gap:14px;">
+            <div><div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Alert type</div><div style="font-weight:700; font-size:1rem; color:var(--navy);">${alert.type === 'academic' ? 'Academic' : 'Attendance'}</div></div>
+            <div><div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Scholar</div><div style="font-weight:700; font-size:1.05rem; color:var(--navy);">${scholarName}</div><div style="color:var(--text-muted); font-size:.86rem; margin-top:4px;">${school} · ${gradeLevel}</div></div>
+            <div style="padding:14px 16px; border-radius:10px; background:#f8fafc; border:1px solid var(--border);">
+                <div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Message</div>
+                <div style="font-size:1rem; line-height:1.6; color:var(--text);">${alert.message}</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
+                <div><div style="font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:6px;">Severity</div><span class="badge ${alert.severity === 'high' ? 'badge-red' : 'badge-orange'}">${severity}</span></div>
+                <button class="btn btn-navy btn-sm" onclick="viewApp(${Number(alert.appId) || 0})">Open full profile</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('monitoringAlertTitle').textContent = title;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMonitoringAlertModal() {
+    const modal = document.getElementById('monitoringAlertModal');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
 }
 
 function formatAcademicDisplay(app) {
