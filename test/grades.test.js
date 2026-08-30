@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const jwt = require('jsonwebtoken');
+const db = require('../db');
 const { run: runMigrations } = require('../scripts/run_migrations');
 const app = require('../server');
 
@@ -16,6 +17,12 @@ test('grades workflow: submit -> pending -> approve -> visible in grade-card', a
   const base = `http://127.0.0.1:${port}/api`;
 
   try {
+    const existingApp = await db.prepare('SELECT * FROM applications WHERE id = ?').get(9999);
+    if (!existingApp) {
+      await db.prepare('INSERT INTO applications (id, name, email, status, reference_number, submitted_at, status_updated_at, status_history) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(9999, 'Test Student', 'student@example.com', 'Pending Review', '9999', new Date().toISOString(), new Date().toISOString(), JSON.stringify([{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }]));
+    }
+
     // create applicant token
     const applicantPayload = { type: 'applicant', appId: 9999 };
     const applicantToken = jwt.sign(applicantPayload, JWT_SECRET);
@@ -37,7 +44,7 @@ test('grades workflow: submit -> pending -> approve -> visible in grade-card', a
     assert.equal(savedRow.subject, 'Mathematics');
 
     // admin lists pending rows
-    const adminToken = jwt.sign({ id: 'director', username: 'director', role: 'director' }, JWT_SECRET);
+    const adminToken = jwt.sign({ type: 'staff', id: 'director', username: 'director', role: 'director' }, JWT_SECRET);
     const pendingRes = await fetch(`${base}/grades/pending`, { headers: { Authorization: 'Bearer ' + adminToken } });
     const pendingJson = await pendingRes.json();
     assert.ok(Array.isArray(pendingJson) && pendingJson.length > 0, 'pending should list rows');
@@ -55,6 +62,23 @@ test('grades workflow: submit -> pending -> approve -> visible in grade-card', a
     assert.ok(Array.isArray(cardJson) && cardJson.length > 0, 'grade-card should return grouped subjects');
     const math = cardJson.find(s => s.subject === 'Mathematics');
     assert.ok(math && math.quarters[1] === 88, 'approved grade present in grade-card');
+
+    const appRes = await fetch(`${base}/applications/9999`, { headers: { Authorization: 'Bearer ' + adminToken } });
+    const app = await appRes.json();
+    assert.equal(app.status, 'Accepted', 'application should be marked accepted when its grade is approved');
+
+    // rejection path should also mirror the application status
+    const rejectRes = await fetch(`${base}/grades/${toApprove.id}/reject`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + adminToken },
+      body: JSON.stringify({ reason: 'Needs improvement' })
+    });
+    const rejectJson = await rejectRes.json();
+    assert.equal(rejectJson.ok, true, 'reject should succeed');
+
+    const rejectedAppRes = await fetch(`${base}/applications/9999`, { headers: { Authorization: 'Bearer ' + adminToken } });
+    const rejectedApp = await rejectedAppRes.json();
+    assert.equal(rejectedApp.status, 'Rejected', 'application should be marked rejected when its grade is rejected');
 
   } finally {
     srv.close();

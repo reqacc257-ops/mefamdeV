@@ -302,9 +302,25 @@ class QueryBuilder {
   buildInsertItem(table, values) {
     const columnsMatch = this.query.match(/insert(?:\s+or\s+ignore)?\s+into\s+[a-z_]+\s*\(([^)]+)\)/i);
     const columns = columnsMatch ? columnsMatch[1].split(',').map(col => col.trim()) : [];
-
     const item = { id: this.nextId(table) };
+    const rowValues = Array.isArray(values) ? values.slice() : [];
+    const valueMatch = this.query.match(/values\s*\((.*)\)/i);
+    const valueTokens = valueMatch ? this.splitValueList(valueMatch[1]) : [];
+
     if (Array.isArray(values)) {
+      if (valueTokens.length) {
+        valueTokens.forEach((token, index) => {
+          const column = columns[index];
+          if (!column) return;
+          if (token === '?') {
+            item[column] = rowValues.shift();
+          } else {
+            item[column] = this.parseLiteralValue(token);
+          }
+        });
+        return item;
+      }
+
       columns.forEach((column, index) => {
         item[column] = values[index];
       });
@@ -322,6 +338,48 @@ class QueryBuilder {
     }
 
     return item;
+  }
+
+  splitValueList(raw) {
+    const tokens = [];
+    let current = '';
+    let quote = null;
+    for (let i = 0; i < raw.length; i += 1) {
+      const ch = raw[i];
+      if (quote) {
+        current += ch;
+        if (ch === quote && raw[i - 1] !== '\\') quote = null;
+        continue;
+      }
+      if (ch === '\'' || ch === '"') {
+        quote = ch;
+        current += ch;
+        continue;
+      }
+      if (ch === ',') {
+        tokens.push(current.trim());
+        current = '';
+        continue;
+      }
+      current += ch;
+    }
+    if (current.trim()) tokens.push(current.trim());
+    return tokens.filter(Boolean);
+  }
+
+  parseLiteralValue(token) {
+    const trimmed = String(token).trim();
+    if (!trimmed) return '';
+    if (/^\d+$/u.test(trimmed)) return Number(trimmed);
+    if (/^\d+\.\d+$/u.test(trimmed)) return Number(trimmed);
+    if (/^'(.*)'$/u.test(trimmed) || /^"(.*)"$/u.test(trimmed)) {
+      const unquoted = trimmed.slice(1, -1).replace(/\\'/g, "'").replace(/\\"/g, '"');
+      return unquoted;
+    }
+    if (trimmed.toLowerCase() === 'null') return null;
+    if (trimmed.toLowerCase() === 'true') return true;
+    if (trimmed.toLowerCase() === 'false') return false;
+    return trimmed;
   }
 
   nextId(table) {

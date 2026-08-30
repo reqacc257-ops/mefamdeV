@@ -122,10 +122,39 @@ router.get('/pending', requireRole('director','edu'), async (req, res) => {
 });
 
 // Admin: approve a quarterly grade row
+async function syncApplicationStatusFromGradeRow(row) {
+  if (!row || !row.student_id) return;
+  const appId = Number(row.student_id);
+  const app = await db.prepare('SELECT id, status, status_history FROM applications WHERE id = ?').get(appId);
+  if (!app) return;
+
+  const now = new Date().toISOString();
+  const history = typeof app.status_history === 'string'
+    ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
+    : (app.status_history || []);
+
+  const nextStatus = row.status === 'approved' ? 'Accepted' : 'Rejected';
+  const hasStatusEntry = history.some(entry => entry && entry.status === nextStatus);
+  if (!hasStatusEntry) {
+    history.push({ status: nextStatus, changedAt: now, note: `Grade review marked as ${nextStatus.toLowerCase()}.` });
+  }
+
+  await db.prepare(`
+    UPDATE applications
+    SET status = ?, status_updated_at = ?, status_history = ?
+    WHERE id = ?
+  `).run(nextStatus, now, JSON.stringify(history), appId);
+}
+
 router.patch('/:id/approve', requireRole('director','edu'), async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const reviewer = req.user?.id || req.user?.username || 'staff';
+  const row = await db.prepare('SELECT * FROM quarterly_grades WHERE id = ?').get(id);
+
+  if (!row) return res.status(404).json({ error: 'Grade row not found' });
+
   await db.prepare('UPDATE quarterly_grades SET status = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?').run('approved', reviewer, new Date().toISOString(), id);
+  await syncApplicationStatusFromGradeRow({ ...row, status: 'approved' });
   logger.info('Quarter approved', { id, reviewer });
   res.json({ ok: true });
 });
@@ -135,7 +164,12 @@ router.patch('/:id/reject', requireRole('director','edu'), async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const reviewer = req.user?.id || req.user?.username || 'staff';
   const reason = String(req.body.reason || req.body.rejection_reason || '').trim();
+  const row = await db.prepare('SELECT * FROM quarterly_grades WHERE id = ?').get(id);
+
+  if (!row) return res.status(404).json({ error: 'Grade row not found' });
+
   await db.prepare('UPDATE quarterly_grades SET status = ?, reviewed_by = ?, reviewed_at = ?, rejection_reason = ? WHERE id = ?').run('rejected', reviewer, new Date().toISOString(), reason, id);
+  await syncApplicationStatusFromGradeRow({ ...row, status: 'rejected' });
   logger.info('Quarter rejected', { id, reviewer, reason });
   res.json({ ok: true });
 });

@@ -252,10 +252,21 @@
             box-shadow: var(--shadow-sm); margin-bottom: 10px;
             border-left: 4px solid #ccc; transition: transform .15s, box-shadow .15s;
         }
+        .kanban-card.rejected-card {
+            background: linear-gradient(180deg, #4a4f58, #30363d);
+            border-left-color: #1d2127;
+            color: #f4f7fa;
+            box-shadow: 0 8px 20px rgba(25, 28, 31, 0.22);
+        }
+        .kanban-card.rejected-card strong,
+        .kanban-card.rejected-card small { color: #f4f7fa; }
+        .kanban-card.rejected-card small { opacity: .84; }
+        .kanban-card.rejected-card .card-actions { margin-top: 12px; }
         .kanban-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
         .kanban-card strong { display: block; font-size: .88rem; margin-bottom: 2px; }
         .kanban-card small { color: var(--text-muted); font-size: .77rem; }
         .kanban-card .card-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-lg { padding: 10px 14px; font-size: .9rem; }
 
         /* Profile list */
         .profile-item { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: .15s; border-radius: 6px; }
@@ -2314,19 +2325,21 @@ function renderPipeline(apps) {
 
     apps.forEach(app => {
         const status = app.status || 'Pending Review';
-        const colId = cols[status] || cols['Pending Review'];
+        const effectiveStatus = status === 'Rejected' ? 'Rejected' : status;
+        const colId = effectiveStatus === 'Rejected' ? cols['Accepted'] : (cols[effectiveStatus] || cols['Pending Review']);
         const col = document.getElementById(colId);
         if (!col) return;
         counts[status] = (counts[status] || 0) + 1;
 
-        const colors = {'Pending Review':'var(--red)', 'Interviewing':'var(--orange)', 'Accepted':'var(--teal)'};
+        const colors = {'Pending Review':'var(--red)', 'Interviewing':'var(--orange)', 'Accepted':'var(--teal)', 'Rejected':'#30363d'};
         let actions = '';
         if (status === 'Pending Review') actions = `<button class="btn btn-orange btn-sm" onclick="changeStatus(${app.id},'Interviewing')">Move to Interview</button>`;
         else if (status === 'Interviewing') actions = `<button class="btn btn-green btn-sm" onclick="changeStatus(${app.id},'Accepted')">✓ Accept</button><button class="btn btn-ghost btn-sm" onclick="changeStatus(${app.id},'Pending Review')">← Back</button>`;
+        else if (status === 'Rejected') actions = `<button class="btn btn-red btn-lg" onclick="deleteApp(${app.id})">🗑 Delete</button>`;
         else actions = `<button class="btn btn-gold btn-sm" onclick="viewApp(${app.id})">View Profile</button>`;
 
         col.innerHTML += `
-            <div class="kanban-card" style="border-color:${colors[status]||'#ccc'}">
+            <div class="kanban-card${status === 'Rejected' ? ' rejected-card' : ''}" style="border-color:${colors[status]||'#ccc'}">
                 <strong>${app.name} ${mekongBadge(app)}</strong>
                 <small>${formatAcademicDisplay(app)} · ${app.school}</small>
                 <div class="card-actions">${actions}</div>
@@ -3533,7 +3546,44 @@ function autofillIntakeSheet(appId) {
 }
 
 function saveIntakeSheet() {
-    alert('Intake Sheet saved successfully! (In production, this would save to a database.)');
+    const frame = document.getElementById('toolModalFrame');
+    const targetWindow = frame && frame.contentWindow ? frame.contentWindow : null;
+
+    if (targetWindow && typeof targetWindow.saveIntake === 'function') {
+        targetWindow.saveIntake();
+        return;
+    }
+
+    const localSave = window.saveIntake;
+    if (typeof localSave === 'function') {
+        localSave.call(window);
+        return;
+    }
+
+    alert('No intake sheet is open to save. Open an intake form first.');
+}
+
+function printIntakeSheet() {
+    const frame = document.getElementById('toolModalFrame');
+    const targetWindow = frame && frame.contentWindow ? frame.contentWindow : null;
+
+    if (targetWindow && typeof targetWindow.printIntakeSheet === 'function') {
+        targetWindow.printIntakeSheet();
+        return;
+    }
+
+    const localPrint = window.printIntakeSheet;
+    if (typeof localPrint === 'function') {
+        localPrint.call(window);
+        return;
+    }
+
+    if (document.getElementById('intakeFormContainer')) {
+        window.print();
+        return;
+    }
+
+    alert('No intake sheet is open to print. Open an intake form first.');
 }
 
 /* ══════════════════════════════════════

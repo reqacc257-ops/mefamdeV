@@ -20,6 +20,28 @@ function normalizeExtraction(row) {
   };
 }
 
+async function syncApplicationStatusFromReview(appId, action, note) {
+  const appIdNum = Number(appId);
+  if (!appIdNum) return;
+
+  const app = await db.prepare('SELECT id, status, status_history FROM applications WHERE id = ?').get(appIdNum);
+  if (!app) return;
+
+  const now = new Date().toISOString();
+  const history = typeof app.status_history === 'string'
+    ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
+    : (app.status_history || []);
+
+  const nextStatus = action === 'approve' ? 'Accepted' : 'Rejected';
+  const entry = { status: nextStatus, changedAt: now, note: note || `Grade review marked as ${nextStatus.toLowerCase()}.` };
+  if (!history.some(item => item && item.status === nextStatus)) {
+    history.push(entry);
+  }
+
+  await db.prepare('UPDATE applications SET status = ?, status_updated_at = ?, status_history = ? WHERE id = ?')
+    .run(nextStatus, now, JSON.stringify(history), appIdNum);
+}
+
 router.post('/:appId/upload', async (req, res) => {
   const appId = parseInt(req.params.appId, 10);
   if (!appId) return res.status(400).json({ error: 'Invalid application ID' });
@@ -153,6 +175,8 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
     await db.prepare('UPDATE grade_extraction SET status = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
       .run(status, reviewNotes, reviewerId, reviewedAt, id);
   }
+
+  await syncApplicationStatusFromReview(row.app_id, action, reviewNotes || (action === 'approve' ? 'Grade review approved.' : 'Grade review rejected.'));
 
   const updated = await db.prepare('SELECT * FROM grade_extraction WHERE id = ?').get(id);
   res.json({ ok: true, extraction: normalizeExtraction(updated), rejectedCells });
