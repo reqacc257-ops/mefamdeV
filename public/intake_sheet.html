@@ -32,8 +32,7 @@
     /* Prefill */
     .prefill-bar{border:1px solid #ccc;border-radius:6px;padding:10px 12px;margin-bottom:16px;background:#fafafa;}
     .prefill-bar p{font-size:.8rem;color:#444;margin-bottom:8px;}
-    .search-input{width:100%;max-width:420px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fbfcfe;font-size:.85rem;}
-    .search-input:focus{outline:none;border-color:#c99a2e;box-shadow:0 0 0 3px rgba(201,154,46,.16);background:#fff;}
+    .search-input{width:100%;max-width:420px;padding:7px 10px;border:1px solid #ccc;border-radius:5px;font-size:.85rem;}
     .search-results{display:grid;gap:6px;max-height:150px;overflow-y:auto;margin-top:8px;}
     .search-result-item{text-align:left;border:1px solid #ddd;border-radius:5px;background:#fff;padding:8px 10px;cursor:pointer;font-size:.82rem;width:100%;}
     .search-result-item:hover{border-color:var(--accent);}
@@ -92,7 +91,6 @@
         border:1px solid #ddd;border-radius:5px;background:#fefefe;
         cursor:crosshair;touch-action:none;
     }
-    .sig-tools, .sig-hint, canvas.sig-canvas{display:none;}
     .sig-line{border-bottom:1px solid #000;position:absolute;left:0;right:0;bottom:14px;}
     .sig-tools{display:flex;justify-content:center;gap:8px;margin-bottom:6px;}
     .sig-tools .btn-add{font-size:.68rem;padding:3px 9px;}
@@ -186,7 +184,7 @@
 
         <!-- Prefill (screen only) -->
         <div class="prefill-bar">
-            <p>Search for an accepted applicant to link to this intake sheet.</p>
+            <p>Link this intake sheet to a submitted application (optional).</p>
             <input type="text" id="prefillSearch" class="search-input" placeholder="Search applicants by name, barangay, or grade..." oninput="filterPrefillApplicants()">
             <div id="prefillResults" class="search-results"></div>
             <div id="prefillDetail" class="prefill-detail-card" style="display:none;"></div>
@@ -361,28 +359,11 @@
 let linkedAppId = null;
 let currentIntakeId = null;
 
-// Listen for applicants data from parent window (admin dashboard)
-window.addEventListener('message', function(event) {
-    if (event.data.type === 'prefill-applicants') {
-        console.log('Received applicants from parent:', event.data.applicants);
-        window.prefillApplicantsCache = event.data.applicants;
-        localStorage.setItem('mefamdev_apps', JSON.stringify(event.data.applicants));
-        renderPrefillSearchList(event.data.applicants);
-    }
-});
-
 window.onload = function () {
-    console.log('🔍 Intake Sheet page loaded');
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     initFamTable();
     initActionTable();
-
-    // Call populatePrefill first and ensure it completes
-    console.log('Calling populatePrefill()');
-    setTimeout(() => {
-        populatePrefill();
-    }, 100);
-
+    populatePrefill();
     initSigPad('clientSig');
     initSigPad('staffSig');
 
@@ -390,7 +371,6 @@ window.onload = function () {
     const recordId = params.get('record');
     const incomingId = params.get('id');
     if (recordId) {
-        document.body.classList.add('saved-record-view');
         loadSavedIntakeRecord(recordId);
     } else if (incomingId) {
         const saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
@@ -523,76 +503,29 @@ function formatApplicantGrade(app) {
     return /^grade\s/i.test(grade) ? grade : `Grade ${grade}`;
 }
 
-/* Prefill */
 function populatePrefill() {
-    console.log('Loading prefill applicants...');
     let apps = [];
-
-    // Try to get from localStorage
-    try {
-        apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || [];
-    } catch(e){
-        console.warn('Could not load from localStorage:', e);
-        apps = [];
-    }
-
-    console.log('Total apps found:', apps.length);
-    console.log('Apps:', apps);
-
-    // If no apps in localStorage, try to get from parent window (admin dashboard)
-    if (apps.length === 0 && window.parent && window.parent !== window) {
-        try {
-            const parentApps = window.parent.window.prefillApplicantsCache ||
-                              JSON.parse(window.parent.localStorage.getItem('mefamdev_apps') || '[]');
-            console.log('Got apps from parent window:', parentApps.length);
-            apps = parentApps;
-        } catch(e) {
-            console.warn('Could not access parent window:', e);
-        }
-    }
-
+    try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
     window.prefillApplicantsCache = apps;
     renderPrefillSearchList(apps);
 }
 function renderPrefillSearchList(apps) {
-    console.log('Rendering prefill list with apps:', apps);
     const results = document.getElementById('prefillResults');
     const detail = document.getElementById('prefillDetail');
-    if (!results) {
-        console.error('prefillResults element not found!');
-        return;
-    }
-
-    // Show only accepted scholars by default
-    let displayApps = apps.filter(a => a.status === 'Accepted');
-
-    // If no accepted apps found, show all apps
-    if (displayApps.length === 0) {
-        displayApps = apps;
-    }
-
-    // If still no apps, try to fetch from parent or show message
-    if (displayApps.length === 0) {
-        results.innerHTML = '<div style="padding:12px; color:#666; background:#fff9e6; border:1px solid #ffd700; border-radius:4px;">No accepted applicants found. Try searching or adding new applications.</div>';
-        return;
-    }
-
-    const html = displayApps.map(a => `
-        <div type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})" style="display:block; width:100%; text-align:left; padding:10px 12px; margin-bottom:6px; background:#f5f5f5; border:2px solid #ddd; border-radius:6px; cursor:pointer; transition:all 0.2s;">
-            <div class="search-result-title" style="font-weight:bold; color:#333;">${a.name || 'Unknown Applicant'}</div>
-            <div class="search-result-meta" style="font-size:0.85rem; color:#666; margin-top:4px;">${formatApplicantGrade(a)} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
-        </div>
-    `).join('');
-
-    console.log('Setting prefillResults HTML with', displayApps.length, 'apps');
-    results.innerHTML = html;
+    if (!results) return;
+    results.innerHTML = apps.length === 0
+        ? '<div style="padding:10px;color:#666;">No applicants found.</div>'
+        : apps.map(a => `
+            <button type="button" class="search-result-item" onclick="selectPrefillApplicant(${a.id})">
+                <div class="search-result-title">${a.name || 'Unknown Applicant'}</div>
+                <div class="search-result-meta">${formatApplicantGrade(a)} · ${a.status || 'No status'}${a.barangay ? ' · ' + a.barangay : ''}</div>
+            </button>
+        `).join('');
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
 function filterPrefillApplicants() {
-    console.log('Filtering prefill applicants');
     const query = document.getElementById('prefillSearch')?.value.toLowerCase().trim() || '';
     const apps = window.prefillApplicantsCache || [];
-    console.log('Query:', query, 'Available apps:', apps.length);
     const filtered = query === '' ? apps : apps.filter(a => {
         const name = (a.name || '').toLowerCase();
         const school = (a.school || '').toLowerCase();
@@ -601,7 +534,6 @@ function filterPrefillApplicants() {
         const grade = (a.grade || '').toLowerCase();
         return name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
     });
-    console.log('Filtered results:', filtered.length);
     renderPrefillSearchList(filtered);
 }
 function selectPrefillApplicant(appId) {
@@ -697,47 +629,36 @@ function toggleSpouseSection() {
 
 /* Save */
 function saveIntake() {
-    console.log('💾 Save button clicked');
-    try {
-        const data = collectData();
-        console.log('Collected data:', data);
+    const data = collectData();
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
 
-        let saved = [];
-        try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
+    const recordId = data.id || window.currentIntakeId || Date.now();
+    data.id = recordId;
+    window.currentIntakeId = recordId;
+    data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
-        const recordId = data.id || window.currentIntakeId || Date.now();
-        data.id = recordId;
-        window.currentIntakeId = recordId;
-        data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
+    if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
+    localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
+    localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
 
-        const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
-        if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
-        localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
-        localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
-        console.log('Saved to localStorage. Case No:', data.caseNo);
-
-        const hostWindow = window.parent !== window ? window.parent : window.opener;
-        if (hostWindow && !hostWindow.closed) {
-            hostWindow.postMessage({ type: 'intake-saved', record: data }, '*');
-        }
-
-        if (linkedAppId) {
-            let apps = [];
-            try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
-            const i = apps.findIndex(a => a.id == linkedAppId);
-            if (i > -1 && apps[i].status === 'Pending Review') {
-                apps[i].status = 'Interviewing';
-                apps[i].intakeSheetId = data.caseNo;
-                localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
-            }
-        }
-        const message = `Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`;
-        console.log('✅', message);
-        alert(message);
-    } catch (e) {
-        console.error('❌ Error saving intake:', e);
-        alert('Error saving: ' + e.message);
+    const hostWindow = window.parent !== window ? window.parent : window.opener;
+    if (hostWindow && !hostWindow.closed) {
+        hostWindow.postMessage({ type: 'intake-saved', record: data }, '*');
     }
+
+    if (linkedAppId) {
+        let apps = [];
+        try { apps = JSON.parse(localStorage.getItem('mefamdev_apps')) || []; } catch(e){ apps = []; }
+        const i = apps.findIndex(a => a.id == linkedAppId);
+        if (i > -1 && apps[i].status === 'Pending Review') {
+            apps[i].status = 'Interviewing';
+            apps[i].intakeSheetId = data.caseNo;
+            localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        }
+    }
+    alert(`Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`);
 }
 
 function loadSavedIntakeRecord(recordId) {
@@ -821,13 +742,7 @@ function loadSavedIntakeRecord(recordId) {
     if (record.clientSignature) setSigFromDataUrl('clientSig', record.clientSignature);
     if (record.staffSignature) setSigFromDataUrl('staffSig', record.staffSignature);
 
-    if (linkedAppId) {
-        selectPrefillApplicant(linkedAppId);
-        const search = document.getElementById('prefillSearch');
-        const results = document.getElementById('prefillResults');
-        if (search) search.style.display = 'none';
-        if (results) results.style.display = 'none';
-    }
+    if (linkedAppId) selectPrefillApplicant(linkedAppId);
 }
 
 function collectData() {
@@ -916,24 +831,14 @@ function clearForm() {
 }
 
 function printIntakeSheet() {
-    console.log('🖨️ Print button clicked');
-    try {
-        // hide fully empty family rows in print to save space
-        document.querySelectorAll('#famTableBody tr').forEach(tr => {
-            const inputs = tr.querySelectorAll('input, select');
-            const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
-            tr.classList.toggle('fam-row-empty-print', !hasData);
-        });
-        prepareSigImagesForPrint();
-        console.log('About to call window.print()');
-        setTimeout(() => {
-            console.log('Executing window.print()');
-            window.print();
-        }, 30);
-    } catch (e) {
-        console.error('Error in printIntakeSheet:', e);
-        alert('Error printing: ' + e.message);
-    }
+    // hide fully empty family rows in print to save space
+    document.querySelectorAll('#famTableBody tr').forEach(tr => {
+        const inputs = tr.querySelectorAll('input, select');
+        const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
+        tr.classList.toggle('fam-row-empty-print', !hasData);
+    });
+    prepareSigImagesForPrint();
+    setTimeout(() => window.print(), 30);
 }
 </script>
 <script src="global-actions.js"></script>
