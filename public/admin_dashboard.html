@@ -337,6 +337,60 @@
             text-transform: uppercase; letter-spacing: .06em; color: var(--navy);
             background: rgba(32, 80, 122, 0.08); border-radius: 999px; padding: 5px 9px;
         }
+        .recent-btn {
+            border: 1px solid #e5e7eb; background: #f3f4f6; color: var(--navy);
+            border-radius: 999px; padding: 6px 12px; font-size: .72rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: inherit;
+        }
+        .recent-btn.is-open {
+            background: var(--navy); color: #fff; border-color: var(--navy);
+        }
+        .recent-btn svg { width: 12px; height: 12px; transition: transform .15s ease; }
+        .recent-btn.is-open svg { transform: rotate(180deg); }
+        .recent-history-overlay {
+            position: fixed; inset: 0; background: rgba(17, 24, 39, 0.44); display: none; align-items: center; justify-content: center; z-index: 2300; padding: 20px;
+        }
+        .recent-history-overlay.open { display: flex; }
+        .recent-history-card {
+            width: min(460px, 100%); background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; box-shadow: 0 24px 50px rgba(15,23,42,.18);
+        }
+        .recent-history-head {
+            display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px 12px;
+        }
+        .recent-history-title { margin: 0; font-size: 1rem; font-weight: 800; color: var(--navy); }
+        .recent-history-subtitle { margin: 4px 0 0; font-size: .72rem; color: var(--text-muted); }
+        .recent-history-close {
+            width: 30px; height: 30px; border: none; border-radius: 50%; background: #f3f4f6; color: var(--text-muted); cursor: pointer; font-size: 1rem;
+        }
+        .recent-history-body { padding: 0 20px 18px; }
+        .recent-history-filters { display: flex; gap: 8px; margin: 0 0 12px; flex-wrap: wrap; }
+        .recent-history-chip {
+            border: 1px solid #e5e7eb; background: #f3f4f6; color: #374151; border-radius: 999px; padding: 5px 12px; font-size: .72rem; font-weight: 700; cursor: pointer;
+        }
+        .recent-history-chip.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+        .recent-history-list {
+            display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; padding-right: 2px;
+        }
+        .recent-history-row {
+            display: flex; gap: 10px; align-items: flex-start; background: #f7f8fa; border-radius: 10px; padding: 10px 12px; border: 1px solid #eef1f5;
+        }
+        .recent-history-avatar {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 800; flex-shrink: 0;
+        }
+        .recent-history-avatar.muted { background: #cbd5e1; color: #475569; }
+        .recent-history-main { flex: 1; min-width: 0; }
+        .recent-history-headline {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 4px;
+        }
+        .recent-history-name { margin: 0; font-size: .82rem; font-weight: 800; color: var(--navy); }
+        .recent-history-badge {
+            display: inline-flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 800; padding: 4px 8px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
+        }
+        .recent-history-badge.active { background: #fff7e8; color: #9a6700; border-color: #f1d39c; }
+        .recent-history-badge.resolved { background: #ecfdf5; color: #146c43; border-color: #b9ebce; }
+        .recent-history-meta { margin: 0 0 5px; font-size: .68rem; color: var(--text-muted); }
+        .recent-history-reason { margin: 0; font-size: .76rem; color: var(--text); line-height: 1.45; }
+        .recent-empty { border: 1px dashed #dfe7ef; background: #f8fafc; border-radius: 10px; padding: 18px 12px; text-align: center; color: var(--text-muted); font-size: .8rem; }
 
         /* Form controls */
         input[type="text"], input[type="date"], input[type="number"],
@@ -1131,10 +1185,33 @@
                 <div class="card">
                     <div class="alert-panel-header">
                         <div class="card-title" style="margin:0;">Formation Alerts</div>
-                        <span class="pill">Recent</span>
+                        <button class="recent-btn" id="formationAlertsRecentBtn" type="button">
+                            Recent
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
                     </div>
                     <div id="absenceAlertsList">
                         <div class="empty-state"><div class="empty-icon">✅</div><p>No absence alerts. All scholars present.</p></div>
+                    </div>
+                </div>
+
+                <div class="recent-history-overlay" id="formationHistoryOverlay" aria-hidden="true">
+                    <div class="recent-history-card" role="dialog" aria-modal="true" aria-labelledby="formationHistoryTitle">
+                        <div class="recent-history-head">
+                            <div>
+                                <p class="recent-history-title" id="formationHistoryTitle">Alert history</p>
+                                <p class="recent-history-subtitle">All alert reasons, including resolved</p>
+                            </div>
+                            <button class="recent-history-close" type="button" id="formationHistoryCloseBtn" aria-label="Close">✕</button>
+                        </div>
+                        <div class="recent-history-body">
+                            <div class="recent-history-filters">
+                                <button class="recent-history-chip active" data-filter="all" type="button">All <span id="historyCountAll">0</span></button>
+                                <button class="recent-history-chip" data-filter="active" type="button">Active <span id="historyCountActive">0</span></button>
+                                <button class="recent-history-chip" data-filter="resolved" type="button">Resolved <span id="historyCountResolved">0</span></button>
+                            </div>
+                            <div class="recent-history-list" id="formationHistoryList"></div>
+                        </div>
                     </div>
                 </div>
                 <!-- Formation attendance summary -->
@@ -4510,6 +4587,104 @@ function renderAttendance(scholars) {
         okBtn.onclick = () => overlay.classList.remove('open');
     };
 
+    function getFormationAlertHistory() {
+        const history = JSON.parse(localStorage.getItem('mefamdev_absence_history') || '[]');
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        return history.map(item => {
+            const app = apps.find(a => String(a.id) === String(item.appId));
+            return {
+                appId: item.appId,
+                name: app?.name || item.name || 'Unknown scholar',
+                school: app?.school || item.school || 'School not listed',
+                reason: item.reason || 'No reason recorded.',
+                date: item.date || new Date().toISOString().slice(0, 10),
+                resolved: !!item.resolved,
+                initials: (app?.name || item.name || 'Unknown').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'NA'
+            };
+        });
+    }
+
+    function saveFormationHistoryEntry(appId, reason, resolved = false) {
+        const current = JSON.parse(localStorage.getItem('mefamdev_absence_history') || '[]');
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const app = apps.find(a => String(a.id) === String(appId));
+        current.push({
+            appId: String(appId),
+            name: app?.name || 'Unknown scholar',
+            school: app?.school || 'School not listed',
+            reason: reason || 'No reason recorded.',
+            date: new Date().toISOString().slice(0, 10),
+            resolved: !!resolved
+        });
+        localStorage.setItem('mefamdev_absence_history', JSON.stringify(current));
+    }
+
+    function renderFormationHistory(filter = 'all') {
+        const list = document.getElementById('formationHistoryList');
+        if (!list) return;
+        const history = getFormationAlertHistory();
+        const filtered = history.filter(item => filter === 'all' ? true : filter === 'active' ? !item.resolved : item.resolved);
+        document.getElementById('historyCountAll').textContent = history.length;
+        document.getElementById('historyCountActive').textContent = history.filter(item => !item.resolved).length;
+        document.getElementById('historyCountResolved').textContent = history.filter(item => item.resolved).length;
+
+        if (!filtered.length) {
+            list.innerHTML = '<div class="recent-empty">No alert records yet.</div>';
+            return;
+        }
+
+        list.innerHTML = filtered.map(item => `
+            <div class="recent-history-row">
+                <div class="recent-history-avatar ${item.resolved ? 'muted' : ''}">${escapeHtml(item.initials)}</div>
+                <div class="recent-history-main">
+                    <div class="recent-history-headline">
+                        <p class="recent-history-name">${escapeHtml(item.name)}</p>
+                        <span class="recent-history-badge ${item.resolved ? 'resolved' : 'active'}">${item.resolved ? 'Resolved' : 'Active'}</span>
+                    </div>
+                    <p class="recent-history-meta">${escapeHtml(item.school)} &middot; ${escapeHtml(item.date)}</p>
+                    <p class="recent-history-reason">${escapeHtml(item.reason)}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    const recentBtn = document.getElementById('formationAlertsRecentBtn');
+    const historyOverlay = document.getElementById('formationHistoryOverlay');
+    const historyCloseBtn = document.getElementById('formationHistoryCloseBtn');
+    if (recentBtn && historyOverlay) {
+        recentBtn.addEventListener('click', () => {
+            renderFormationHistory('all');
+            recentBtn.classList.toggle('is-open');
+            historyOverlay.classList.toggle('open');
+            historyOverlay.setAttribute('aria-hidden', historyOverlay.classList.contains('open') ? 'false' : 'true');
+        });
+        historyCloseBtn?.addEventListener('click', () => {
+            recentBtn.classList.remove('is-open');
+            historyOverlay.classList.remove('open');
+            historyOverlay.setAttribute('aria-hidden', 'true');
+        });
+        historyOverlay.addEventListener('click', (event) => {
+            if (event.target === historyOverlay) {
+                recentBtn.classList.remove('is-open');
+                historyOverlay.classList.remove('open');
+                historyOverlay.setAttribute('aria-hidden', 'true');
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && historyOverlay.classList.contains('open')) {
+                recentBtn.classList.remove('is-open');
+                historyOverlay.classList.remove('open');
+                historyOverlay.setAttribute('aria-hidden', 'true');
+            }
+        });
+        document.querySelectorAll('.recent-history-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.recent-history-chip').forEach(c => c.classList.toggle('active', c === chip));
+                renderFormationHistory(chip.dataset.filter || 'all');
+            });
+        });
+    }
+
     // Formation alerts panel
     const alertsList = document.getElementById('absenceAlertsList');
     if (alertsList) {
@@ -4632,7 +4807,11 @@ async function saveAbsence() {
         reason: reason || absences[id]?.reason || ''
     };
     localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
+    if (status !== 'good' && (reason || status === 'yellow' || status === 'bad')) {
+        saveFormationHistoryEntry(id, reason || 'Follow-up required.', false);
+    }
     closeModal('absenceModal');
+    showToast('Alert saved.', 'success');
     await loadAllData();
 }
 
@@ -4644,8 +4823,13 @@ async function resetAbsence(id) {
     }
 
     const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+    const record = absences[id] || {};
     delete absences[id];
     localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
+    if (record.reason || record.status) {
+        saveFormationHistoryEntry(id, record.reason || 'Resolved after follow-up.', true);
+    }
+    showToast('Alert resolved.', 'success');
     await loadAllData();
 }
 
