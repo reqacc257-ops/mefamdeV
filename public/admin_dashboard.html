@@ -1058,8 +1058,8 @@
                 <div class="modal-body">
                     <div style="margin-bottom:12px;">
                         <label>Scholar</label>
-                        <select id="absenceScholar" style="width:100%;"></select>
-                        <input id="absenceScholarDisplay" type="text" readonly style="display:none; width:100%; background:#f8fafc; color:var(--text); border:1.5px solid var(--border); border-radius:7px; padding:9px 12px; font-family:'DM Sans',sans-serif; font-size:.88rem;">
+                        <input id="absenceScholarDisplay" type="text" readonly value="Select scholar from the list first" style="width:100%; background:#f8fafc; color:var(--text); border:1.5px solid var(--border); border-radius:7px; padding:9px 12px; font-family:'DM Sans',sans-serif; font-size:.88rem;">
+                        <input id="absenceScholar" type="hidden" value="">
                     </div>
                     <div style="margin-bottom:12px;">
                         <label>Formation Status</label>
@@ -4390,36 +4390,29 @@ function renderAttendance(scholars) {
 }
 
 function openAddAbsenceModal() {
-    const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-    const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null && a.status === 'Accepted');
-    const sel = document.getElementById('absenceScholar');
     const disp = document.getElementById('absenceScholarDisplay');
-    sel.innerHTML = '<option value="">— Select scholar —</option>' + scholars.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    sel.style.display = 'block';
-    disp.style.display = 'none';
-    disp.value = '';
-    sel.value = '';
+    const hidden = document.getElementById('absenceScholar');
+    disp.value = 'Select scholar from the list first';
+    hidden.value = '';
     document.getElementById('absenceDays').value = '0';
     document.getElementById('absenceReason').value = '';
     document.getElementById('absenceModal').classList.add('open');
 }
 
 function openAddAbsenceModalFor(id) {
-    openAddAbsenceModal();
-    const sel = document.getElementById('absenceScholar');
     const disp = document.getElementById('absenceScholarDisplay');
+    const hidden = document.getElementById('absenceScholar');
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
     const scholar = (Array.isArray(apps) ? apps : []).find(a => Number(a.id) === Number(id));
-    sel.value = id;
-    sel.style.display = 'none';
+    hidden.value = id;
     disp.value = scholar ? scholar.name : 'Selected scholar';
-    disp.style.display = 'block';
+    document.getElementById('absenceDays').value = '0';
+    document.getElementById('absenceReason').value = '';
+    document.getElementById('absenceModal').classList.add('open');
 }
 
 async function saveAbsence() {
-    const sel = document.getElementById('absenceScholar');
-    const disp = document.getElementById('absenceScholarDisplay');
-    const id = parseInt((sel.style.display === 'none' ? sel.value : disp.value && sel.value) || sel.value || '0');
+    const id = parseInt(document.getElementById('absenceScholar').value || '0');
     const status = document.getElementById('absenceDays').value;
     const reason = document.getElementById('absenceReason').value.trim();
     if (!id || !Number.isFinite(id) || !['good','yellow','bad'].includes(status)) {
