@@ -437,6 +437,9 @@
             if (!confirm('Approve this quarter grade?')) return;
             try {
                 await MefamAPI.approveGrade(id);
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
+                }
                 await loadPendingGradeReviews();
                 await loadPendingQuarterSubmissions();
                 renderPendingReviewsPanel();
@@ -449,6 +452,9 @@
             const reason = prompt('Enter rejection reason (optional):', '');
             try {
                 await MefamAPI.rejectGrade(id, reason || '');
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
+                }
                 await loadPendingGradeReviews();
                 await loadPendingQuarterSubmissions();
                 renderPendingReviewsPanel();
@@ -519,6 +525,9 @@
                     await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
                 }
                 delete modalEl.dataset.gradeRowId;
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
+                }
                 closeModal('gradeModal');
                 await loadPendingGradeReviews();
                 await loadPendingQuarterSubmissions();
@@ -716,6 +725,9 @@
                 const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear);
                 if (response?.error) throw new Error(response.error);
                 closeModal('reviewExtractionModal');
+                if (window.parent !== window) {
+                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
+                }
                 await loadPendingGradeReviews();
                 await loadPendingQuarterSubmissions();
                 renderPendingReviewsPanel();

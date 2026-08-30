@@ -896,15 +896,7 @@
         if (events.length === 0) {
           formSummary.innerHTML = '<div class="empty-state"><strong>No formation events yet</strong>Add an event above to start tracking attendance.</div>';
         } else {
-          const toDaysSince = (dateValue) => {
-            if (!dateValue) return '—';
-            const date = new Date(dateValue);
-            if (Number.isNaN(date.getTime())) return '—';
-            const diffMs = Date.now() - date.getTime();
-            const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-            return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
-          };
-          formSummary.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Last alert</th></tr></thead><tbody>` +
+          formSummary.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Attendance</th></tr></thead><tbody>` +
             events.map(ev => {
               const attendedIds = getEventAttendanceIds(ev, apps);
               const cnt = attendedIds.size;
@@ -916,9 +908,8 @@
               const scholarRows = list => list.length
                 ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
                 : '<div style="color:var(--text-muted);">None</div>';
-              const daysSince = toDaysSince(ev.date);
               return `<tr><td colspan="3"><details>
-                <summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${daysSince} since last alert</span></span></summary>
+                <summary style="cursor:pointer; display:flex; justify-content:space-between; gap:12px; align-items:center;" onclick="window.location.href='spiritual_formation.html?eventId=${encodeURIComponent(ev.id)}'; return false;"><strong>${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')} · <span class="badge ${cls}">${cnt}/${max}</span></span></summary>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;">
                   <div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div>
                   <div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div>

@@ -2352,6 +2352,14 @@ function closeToolModal() {
     if (modal) modal.classList.remove('open');
     document.body.style.overflow = '';
 }
+
+window.addEventListener('message', (event) => {
+    const data = event && event.data ? event.data : {};
+    if (data.type === 'mefamdev:grade-updated') {
+        loadAllData(true);
+    }
+});
+
 function deleteRecord(key, id) {
     if (!confirm('Delete this record?')) return;
     let records = JSON.parse(localStorage.getItem(key)) || [];
@@ -4441,15 +4449,7 @@ function renderAttendance(scholars) {
         if (events.length === 0) {
             formSummaries.forEach(summary => { summary.innerHTML = '<div class="empty-state"><div class="empty-icon">🕊️</div><p>No formation events yet.</p></div>'; });
         } else {
-            const toDaysSince = (dateValue) => {
-                if (!dateValue) return '—';
-                const date = new Date(dateValue);
-                if (Number.isNaN(date.getTime())) return '—';
-                const diffMs = Date.now() - date.getTime();
-                const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-                return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
-            };
-            const summaryHtml = `<table style="table-layout:fixed;"><thead><tr><th style="width:50%;">Event</th><th style="width:25%;">Date</th><th style="width:25%;">Last alert</th></tr></thead><tbody>` +
+            const summaryHtml = `<table style="table-layout:fixed;"><thead><tr><th style="width:50%;">Event</th><th style="width:25%;">Date</th><th style="width:25%;">Attendance</th></tr></thead><tbody>` +
                 events.map(ev => {
                     const attendedIds = getEventAttendanceIds(ev, apps);
                     const cnt = Number.isFinite(Number(ev.checkinCount))
@@ -4460,11 +4460,11 @@ function renderAttendance(scholars) {
                     const acceptedScholars = apps.filter(s => s.status === 'Accepted');
                     const attendedScholars = acceptedScholars.filter(s => attendedIds.has(String(s.id)));
                     const absentScholars = acceptedScholars.filter(s => !attendedIds.has(String(s.id)));
-                    const daysSince = toDaysSince(ev.date);
+                    const coverage = `${attendedScholars.length}/${acceptedScholars.length} scholars`;
                     const scholarRows = list => list.length
                         ? list.map(s => `<div style="padding:5px 0; border-bottom:1px solid var(--border);"><strong>${escapeHtml(s.name)}</strong><span style="color:var(--text-muted);"> — ${escapeHtml(s.school || 'School not listed')} · ${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)}</span></div>`).join('')
                         : '<div style="color:var(--text-muted);">None</div>';
-                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; align-items:center;" onclick="window.location.href='spiritual_formation.html?eventId=${encodeURIComponent(ev.id)}'; return false;"><strong style="min-width:0;">${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')}</span><span style="font-size:.82rem; color:var(--text-muted);"><span class="badge ${cls}">${daysSince} since last alert</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
+                    return `<tr><td colspan="3"><details><summary style="cursor:pointer; display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px; align-items:center;" onclick="window.location.href='spiritual_formation.html?eventId=${encodeURIComponent(ev.id)}'; return false;"><strong style="min-width:0;">${escapeHtml(ev.name)}</strong><span style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(ev.date || '—')}</span><span style="font-size:.82rem; color:var(--text-muted);"><span class="badge ${cls}">${coverage}</span></span></summary><div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:12px 4px 4px; font-size:.82rem;"><div><strong style="color:#1a8a4a;">Attended (${attendedScholars.length})</strong><div style="margin-top:6px;">${scholarRows(attendedScholars)}</div></div><div><strong style="color:#c0392b;">Not attended (${absentScholars.length})</strong><div style="margin-top:6px;">${scholarRows(absentScholars)}</div></div></div></details></td></tr>`;
                 }).join('') + `</tbody></table>`;
             formSummaries.forEach(summary => { summary.innerHTML = summaryHtml; });
         }
