@@ -1681,14 +1681,61 @@
         </div>
         <div class="modal-body">
             <input type="hidden" id="editAppId">
+            <datalist id="editAppSyOptions">
+                <option value="2023-2024"></option>
+                <option value="2024-2025"></option>
+                <option value="2025-2026"></option>
+                <option value="2026-2027"></option>
+                <option value="2027-2028"></option>
+            </datalist>
+            <datalist id="editAppGradeOptions">
+                <option value="Grade 1"></option>
+                <option value="Grade 2"></option>
+                <option value="Grade 3"></option>
+                <option value="Grade 4"></option>
+                <option value="Grade 5"></option>
+                <option value="Grade 6"></option>
+                <option value="Grade 7"></option>
+                <option value="Grade 8"></option>
+                <option value="Grade 9"></option>
+                <option value="Grade 10"></option>
+                <option value="Grade 11"></option>
+                <option value="Grade 12"></option>
+                <option value="1st Year College"></option>
+                <option value="2nd Year College"></option>
+                <option value="3rd Year College"></option>
+                <option value="4th Year College"></option>
+                <option value="5th Year College"></option>
+            </datalist>
+            <datalist id="editAppEduLevelOptions">
+                <option value="Elementary"></option>
+                <option value="JuniorHigh"></option>
+                <option value="SeniorHigh"></option>
+                <option value="College"></option>
+            </datalist>
+            <datalist id="editAppDegreeOptions">
+                <option value="Academic Track"></option>
+                <option value="Academic Track - General Academic Strand"></option>
+                <option value="Academic Track - Humanities and Social Sciences"></option>
+                <option value="Academic Track - Science, Technology, Engineering, and Mathematics"></option>
+                <option value="Technical-Professional Track"></option>
+                <option value="Technical-Professional Track - ICT / Computer Systems Servicing"></option>
+                <option value="Technical-Professional Track - Home Economics / Cookery"></option>
+                <option value="Technical-Professional Track - Industrial Arts / Electrical Installation"></option>
+                <option value="Bachelor of Science in Information Technology (BSIT)"></option>
+                <option value="Bachelor of Secondary Education (BSED)"></option>
+                <option value="Bachelor of Science in Business Administration (BSBA)"></option>
+                <option value="Bachelor of Science in Nursing (BSN)"></option>
+                <option value="Bachelor of Elementary Education (BEED)"></option>
+            </datalist>
             <div class="grid-2eq" style="gap:12px;">
                 <div><label>Name</label><input id="editAppName" type="text"></div>
                 <div><label>Status</label><select id="editAppStatus"><option>Pending Review</option><option>Interviewing</option><option>Accepted</option><option>Rejected</option></select></div>
-                <div><label>School Year</label><input id="editAppSy" type="text"></div>
+                <div><label>School Year</label><input id="editAppSy" type="text" list="editAppSyOptions"></div>
                 <div><label>School</label><input id="editAppSchool" type="text"></div>
-                <div><label>Grade / Year Level</label><input id="editAppGrade" type="text"></div>
-                <div><label>Education Level</label><input id="editAppEduLevel" type="text"></div>
-                <div><label>Track / Course</label><input id="editAppDegree" type="text"></div>
+                <div><label>Grade / Year Level</label><input id="editAppGrade" type="text" list="editAppGradeOptions"></div>
+                <div><label>Education Level</label><input id="editAppEduLevel" type="text" list="editAppEduLevelOptions"></div>
+                <div><label>Track / Course</label><input id="editAppDegree" type="text" list="editAppDegreeOptions"></div>
                 <div><label>Contact</label><input id="editAppContact" type="text"></div>
                 <div><label>Email</label><input id="editAppEmail" type="email"></div>
                 <div><label>Barangay</label><input id="editAppBarangay" type="text"></div>
