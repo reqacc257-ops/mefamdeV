@@ -296,6 +296,53 @@ router.delete('/absences/:appId', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Student alerts / follow-up notes
+router.get('/alert-students', requireAuth, async (req, res) => {
+  const alerts = db.isPostgres ? await db.prepare('SELECT * FROM student_alerts ORDER BY created_at DESC').all() : (db.data.student_alerts || []);
+  res.json(alerts);
+});
+router.post('/alert-students', requireAuth, async (req, res) => {
+  const { appId, type = 'attendance', message = '' } = req.body || {};
+  const app_id = Number(appId);
+  if (!app_id || !message || !String(message).trim()) {
+    return res.status(400).json({ error: 'appId and message are required.' });
+  }
+
+  const createdAt = new Date().toISOString();
+  const alert = {
+    id: Date.now(),
+    appId: app_id,
+    app_id,
+    type,
+    message: String(message).trim(),
+    created_at: createdAt,
+    resolved: false,
+  };
+
+  if (db.isPostgres) {
+    const info = await db.prepare('INSERT INTO student_alerts (app_id, type, message, created_at, resolved) VALUES (?, ?, ?, ?, ?)').run(app_id, type, alert.message, createdAt, 0);
+    alert.id = info.lastInsertRowid;
+    return res.json({ ok: true, alert });
+  }
+
+  const alerts = Array.isArray(db.data.student_alerts) ? db.data.student_alerts : [];
+  alerts.unshift(alert);
+  db.data.student_alerts = alerts;
+  if (typeof db.save === 'function') db.save();
+  res.json({ ok: true, alert });
+});
+router.delete('/alert-students/:id', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (db.isPostgres) {
+    await db.prepare('DELETE FROM student_alerts WHERE id = ?').run(id);
+    return res.json({ ok: true, deletedId: id });
+  }
+  const alerts = Array.isArray(db.data.student_alerts) ? db.data.student_alerts : [];
+  db.data.student_alerts = alerts.filter(item => Number(item.id) !== id);
+  if (typeof db.save === 'function') db.save();
+  res.json({ ok: true, deletedId: id });
+});
+
 // Grades
 router.get('/grades', async (req, res) => {
   const semester = req.query.semester;

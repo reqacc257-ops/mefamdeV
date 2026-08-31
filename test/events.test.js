@@ -76,3 +76,54 @@ test('active attendance codes prevent duplicate check-ins and expire cleanly', a
     server.close();
   }
 });
+
+test('staff can trigger reapplication renewal and attendance alerts can be saved', async () => {
+  db.data.applications = [];
+  db.data.student_alerts = [];
+  db.data.events = [];
+  db.data.event_sessions = [];
+  db.data.event_attendance = [];
+  db.data.event_checkins = [];
+
+  const appId = db.prepare('INSERT INTO applications (name, status, sy, reference_number) VALUES (?, ?, ?, ?)')
+    .run('Student Renewal', 'Accepted', '2025-2026', 'REF-2025-001').lastInsertRowid;
+
+  const api = express();
+  api.use(express.json());
+  api.use((req, res, next) => {
+    req.user = { type: 'staff', role: 'program', appId: 99 };
+    next();
+  });
+  api.use('/api/events', eventsRouter);
+  api.use('/api/applications', require('../routes/applications'));
+
+  const server = api.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+
+  try {
+    const { port } = server.address();
+    const authHeader = { Authorization: `Bearer ${jwt.sign({ type: 'staff', role: 'program' }, 'local-development-only-jwt-secret')}` };
+
+    const renewalRes = await fetch(`http://127.0.0.1:${port}/api/applications/${appId}/reapply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ schoolYear: '2026-2027' })
+    });
+    const renewalBody = await renewalRes.json();
+    assert.equal(renewalRes.status, 200);
+    assert.equal(renewalBody.ok, true);
+    assert.equal(renewalBody.status, 'Pending Review');
+
+    const alertRes = await fetch(`http://127.0.0.1:${port}/api/events/alert-students`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ appId, type: 'attendance', message: 'Low attendance follow-up required.' })
+    });
+    const alertBody = await alertRes.json();
+    assert.equal(alertRes.status, 200);
+    assert.equal(alertBody.ok, true);
+    assert.equal(alertBody.alert?.appId, appId);
+  } finally {
+    server.close();
+  }
+});

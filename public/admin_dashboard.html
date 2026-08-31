@@ -952,6 +952,7 @@
                                     <span id="pd-grade" style="font-size:.85rem; color:var(--text-muted);"></span>
                                     <span class="badge badge-green">Active</span>
                                 </div>
+                                <div style="margin-top:8px; font-size:.8rem; color:var(--text-muted);">Student ID: <strong id="pd-student-id">—</strong></div>
                                 <label class="profile-mekong-toggle">
                                     <input type="checkbox" id="pd-mekong-toggle" onchange="saveMekongStatus()">
                                     <span>Mark as Mekong</span>
@@ -999,6 +1000,8 @@
                         <!-- Quick actions -->
                         <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
                             <button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(currentProfileId)">🔗 Open Portal View</button>
+                            <button class="btn btn-gold btn-sm" onclick="triggerScholarRenewal(currentProfileId)">🔄 Renewal</button>
+                            <button class="btn btn-orange btn-sm" onclick="alertStudentForAttendance(currentProfileId)">📣 Alert Student</button>
                         </div>
                     </div>
                 </div>
@@ -2565,11 +2568,15 @@ function renderProfiles(scholars) {
     const list = document.getElementById('profile-list');
     if (!list) return;
     if (scholars.length === 0) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎓</div><p>No accepted scholars yet.</p></div>'; return; }
-    list.innerHTML = scholars.map(s => `
+    list.innerHTML = scholars.map(s => {
+        const studentId = s.referenceNumber || s.reference || s.id;
+        return `
         <div class="profile-item" onclick="viewProfile(${s.id})" id="pi-${s.id}">
             <strong class="${s.mekong ? 'mekong-student-name' : ''}">${s.name} ${mekongBadge(s)}</strong><br>
-            <small>${s.grade} · ${s.school}</small>
-        </div>`).join('');
+            <small>${s.grade} · ${s.school}</small><br>
+            <small style="color:var(--text-muted);">Student ID: ${escapeHtml(String(studentId))}</small>
+        </div>`;
+    }).join('');
 }
 
 function viewProfile(id) {
@@ -2600,6 +2607,10 @@ function viewProfile(id) {
     document.getElementById('pd-gender').innerText = s.gender || '—';
     const profileIncome = parseCurrencyValue(s.totalIncome);
     document.getElementById('pd-income').innerText = profileIncome === null ? '—' : formatCurrency(profileIncome);
+
+    const studentId = s.referenceNumber || s.reference || s.id;
+    const scholarMeta = document.getElementById('pd-student-id');
+    if (scholarMeta) scholarMeta.innerText = String(studentId || '—');
 
     // Formation attendance
     const events = JSON.parse(localStorage.getItem('mefamdev_events') || '[]');
@@ -2692,10 +2703,49 @@ async function saveMekongStatus() {
 }
 
 function filterProfiles() {
-    const q = document.getElementById('profileSearch').value.toLowerCase();
+    const rawQuery = document.getElementById('profileSearch')?.value.trim() || '';
+    const q = rawQuery.toLowerCase();
     document.querySelectorAll('.profile-item').forEach(el => {
-        el.style.display = el.innerText.toLowerCase().includes(q) ? '' : 'none';
+        const text = el.innerText.toLowerCase();
+        const studentId = (el.innerText.match(/Student ID:\s*([^\n]+)/i)?.[1] || '').toLowerCase();
+        el.style.display = !q || text.includes(q) || studentId.includes(q) ? '' : 'none';
     });
+}
+
+async function triggerScholarRenewal(appId) {
+    if (!appId) return;
+    const schoolYear = prompt('Enter the school year for renewal (for example: 2026-2027):');
+    if (!schoolYear || !schoolYear.trim()) return;
+    try {
+        const result = await MefamAPI.reapplyApplication(appId, schoolYear.trim());
+        if (!result?.ok) throw new Error(result?.error || 'Unable to trigger renewal.');
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const app = apps.find(item => String(item.id) === String(appId));
+        if (app) {
+            app.status = 'Pending Review';
+            app.sy = schoolYear.trim();
+            localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+        }
+        alert('Scholar renewal has been triggered and the application is back in review.');
+        await loadAllData();
+    } catch (error) {
+        console.error('Failed to trigger renewal:', error);
+        alert(error.message || 'Unable to trigger renewal for this scholar right now.');
+    }
+}
+
+async function alertStudentForAttendance(appId) {
+    if (!appId) return;
+    const message = prompt('Enter the follow-up message for this student about attendance:');
+    if (!message || !message.trim()) return;
+    try {
+        const result = await MefamAPI.alertStudent(appId, 'attendance', message.trim());
+        if (!result?.ok) throw new Error(result?.error || 'Unable to alert the student.');
+        alert('Student alert saved successfully.');
+    } catch (error) {
+        console.error('Failed to save student alert:', error);
+        alert(error.message || 'Unable to save the student alert right now.');
+    }
 }
 
 function filterPipeline() {
@@ -2744,6 +2794,12 @@ async function renderDocChecklist(appId, containerId) {
         return;
     }
 
+    const statusLabel = s => {
+        if (s === 'Received') return 'Verified';
+        if (s === 'Missing') return 'Needs Attention';
+        if (s === 'Pending') return 'Pending';
+        return String(s || 'Unknown');
+    };
     const badgeFor = s => s === 'Received' ? 'badge-green' : s === 'Missing' ? 'badge-red' : 'badge-orange';
     const submittedCount = items.filter(d => d.status === 'Received').length;
     const documentRows = items.map(d => {
@@ -2757,12 +2813,12 @@ async function renderDocChecklist(appId, containerId) {
             : `<button class="btn btn-ghost btn-sm" onclick="openDocumentPreview('${encodedFile}','${escapeHtml(String(d.label || ''))}')" ${hasFile ? '' : 'disabled'}>View</button>
                <button class="btn btn-green btn-sm" onclick="approveDoc(${appId},'${escapeHtml(String(d.key || ''))}','${containerId}')" ${d.status === 'Received' ? 'disabled' : ''}>✓ Approve</button>
                <button class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${escapeHtml(String(d.key || ''))}','${containerId}')">Reject</button>`;
-        return `<tr><td>${safeLabel}</td><td><span class="badge ${badgeFor(d.status)}">${escapeHtml(d.status || 'Unknown')}</span></td><td style="font-size:.78rem; color:#c0392b; max-width:200px;">${noteText}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
+        return `<tr><td>${safeLabel}</td><td><span class="badge ${badgeFor(d.status)}">${escapeHtml(statusLabel(d.status))}</span></td><td style="font-size:.78rem; color:#c0392b; max-width:200px;">${noteText}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
     }).join('');
 
     el.innerHTML = `
         <div style="font-size:.78rem; color:var(--text-muted); margin-bottom:8px;">
-            ${submittedCount + 1} of ${items.length + 1} documents received
+            ${submittedCount + 1} of ${items.length + 1} documents verified
         </div>
         <table>
             <thead><tr><th>Document</th><th>Status</th><th>Note</th><th>Action</th></tr></thead>
@@ -4596,16 +4652,22 @@ function renderAttendance(scholars) {
                                     <div>
                                         <div class="comment-name">${escapeHtml(s.name)}</div>
                                         <div class="comment-meta">
-                                            <span class="badge ${cls}">${status === 'good' ? 'Good' : status === 'yellow' ? 'Yellow' : 'Bad'} ${status === 'good' ? '' : `(${count}d)`}</span>
-                                            <span>${escapeHtml(s.school || 'School not listed')}</span>
+                                            <span class="badge ${cls}">${status === 'good' ? 'Good' : status === 'yellow' ? 'Lacking' : 'Critical'} ${status === 'good' ? '' : `(${count}d)`}</span>
+                                            <span style="font-weight:700; color:var(--navy);">Attendance Alert</span>
                                         </div>
                                     </div>
                                 </div>
                                 <span class="comment-meta">${new Date().toLocaleDateString()}</span>
                             </div>
-                            <div class="comment-body">${escapeHtml(noteText)}</div>
+                            <div class="comment-body">
+                                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:8px; font-size:.74rem; color:var(--text-muted);">
+                                    <span>Student ID: <strong style="color:var(--navy);">${escapeHtml(String(s.referenceNumber || s.reference || s.id || '—'))}</strong></span>
+                                    <span>${escapeHtml(s.school || 'School not listed')}</span>
+                                </div>
+                                ${escapeHtml(noteText)}
+                            </div>
                             <div class="comment-actions">
-                                <button class="mini-btn warn" onclick="showContactModal('" + String(contact || '').replace(/'/g, "\\'").replace(/\"/g, '&quot;') + "')">📞 Contact</button>
+                                <button class="mini-btn warn" onclick="showContactModal('${String(contact || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">📞 Contact</button>
                                 <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
                             </div>
                         </div>

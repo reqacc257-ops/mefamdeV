@@ -162,6 +162,11 @@ const MefamAPI = {
   async checkinByCode(code, name, studentId) { return this._post('/events/checkin', { code, name, studentId }, false); },
   async getAbsences() { return this._get('/events/absences'); },
   async getMonitoring() { return this._get('/events/monitoring'); },
+  async getStudentAlerts() { return this._get('/events/alert-students'); },
+  async alertStudent(appId, type, message) {
+    return this._post('/events/alert-students', { appId, type, message });
+  },
+  async deleteStudentAlert(id) { return this._delete(`/events/alert-students/${id}`); },
   async logAbsence(appId, days, reason) {
     return this._post('/events/absences', { appId, days, reason });
   },

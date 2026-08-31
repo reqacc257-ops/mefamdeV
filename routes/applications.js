@@ -260,12 +260,20 @@ router.post('/end-year-all', requireRole('director'), async (req, res) => {
 // Let the applicant start a new cycle while retaining the previous record and grades.
 router.post('/:id/reapply', requireAuth, async (req, res) => {
   const id = req.params.id;
-  if (req.user?.type !== 'applicant' || String(req.user.appId) !== String(id)) {
+  const isStaff = req.user?.type === 'staff';
+  const isApplicant = req.user?.type === 'applicant';
+
+  if (isApplicant && String(req.user.appId) !== String(id)) {
     return res.status(403).json({ error: 'Applicants may only reapply for their own record.' });
   }
+  if (isStaff && !['director', 'program', 'edu'].includes(String(req.user.role || '').toLowerCase())) {
+    return res.status(403).json({ error: 'Staff role not allowed to trigger renewal.' });
+  }
+
   const app = await db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
   if (!app) return res.status(404).json({ error: 'Application not found' });
-  if (String(app.status) !== 'Year Ended') return res.status(400).json({ error: 'This application is not closed for reapplication.' });
+
+  if (!isStaff && String(app.status) !== 'Year Ended') return res.status(400).json({ error: 'This application is not closed for reapplication.' });
 
   const schoolYear = String(req.body?.schoolYear || '').trim();
   if (!schoolYear) return res.status(400).json({ error: 'School year is required.' });
@@ -273,7 +281,7 @@ router.post('/:id/reapply', requireAuth, async (req, res) => {
   const history = typeof app.status_history === 'string'
     ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
     : (app.status_history || []);
-  history.push({ status: 'Pending Review', changedAt: now, note: `Applicant reapplied for ${schoolYear}.` });
+  history.push({ status: 'Pending Review', changedAt: now, note: isStaff ? `Staff initiated renewal for ${schoolYear}.` : `Applicant reapplied for ${schoolYear}.` });
   await db.prepare(`
     UPDATE applications
     SET status = ?, sy = ?, status_updated_at = ?, status_history = ?, reapply_allowed = ?
