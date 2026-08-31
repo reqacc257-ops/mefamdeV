@@ -70,6 +70,36 @@ app.use('/api/grades', requireAuth, gradesRouter);
 const { submitPublicApplication } = require('./routes/applications');
 app.post('/api/public/apply', submitPublicApplication);
 
+app.get('/api/site-config', (req, res) => {
+  res.json({
+    hcaptchaSiteKey: process.env.HCAPTCHA_SITE_KEY || '',
+    hcaptchaEnabled: Boolean(process.env.HCAPTCHA_SITE_KEY && process.env.HCAPTCHA_SECRET_KEY)
+  });
+});
+
+app.get('/api/hcaptcha-debug', (req, res) => {
+  const token = String(req.query.token || '').trim();
+  const siteKey = process.env.HCAPTCHA_SITE_KEY || '';
+  const secretKeySet = Boolean(process.env.HCAPTCHA_SECRET_KEY);
+
+  if (!token) {
+    return res.json({
+      ok: false,
+      hasSiteKey: Boolean(siteKey),
+      hasSecretKey: secretKeySet,
+      message: 'Missing hCaptcha token in query string.'
+    });
+  }
+
+  res.json({
+    ok: true,
+    hasSiteKey: Boolean(siteKey),
+    hasSecretKey: secretKeySet,
+    tokenLength: token.length,
+    message: 'Token received. Use it in a POST to api.hcaptcha.com/siteverify to test verification.'
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 

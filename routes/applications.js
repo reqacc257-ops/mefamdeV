@@ -69,6 +69,25 @@ function parseJsonArray(value) {
   }
 }
 
+async function verifyToken(token, ip) {
+  const payload = {
+    secret: process.env.HCAPTCHA_SECRET_KEY || 'ES_ad1db99159a14101b4369c4c7e89f4e4',
+    response: token,
+    remoteip: ip,
+    sitekey: 'f41a910a-432a-4c04-97ec-9ce24de41162',
+  };
+
+  const params = new URLSearchParams(payload);
+  const res = await fetch('https://api.hcaptcha.com/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params,
+  });
+
+  const j = await res.json();
+  return j.success ? [true, []] : [false, j['error-codes'] || []];
+}
+
 // ── GET all (supports optional paging & filtering) ─────────────────────────────────
 router.get('/', async (req, res) => {
   const page = req.query.page ? Math.max(1, parseInt(req.query.page, 10) || 1) : null;
@@ -317,9 +336,27 @@ router.delete('/:id', requireRole('director'), async (req, res) => {
 // ── Public form submit (exported separately, mounted without auth) ─────────────
 async function submitPublicApplication(req, res) {
   const b = req.body;
+  const hcaptchaToken = b.hcaptchaToken || b['h-captcha-response'] || '';
   if (!b.name || !b.sy) return res.status(400).json({ error: 'Name and school year required' });
   if (!b.username) return res.status(400).json({ error: 'Portal username required' });
   if (!b.password) return res.status(400).json({ error: 'Portal password required' });
+
+  if (!hcaptchaToken) {
+    return res.status(400).json({ error: 'Please complete the security verification.' });
+  }
+
+  try {
+    const [ok, hcaptchaErrors] = await verifyToken(hcaptchaToken, req.ip || '');
+    if (!ok) {
+      return res.status(400).json({
+        error: 'Security verification failed. Please try again.',
+        hcaptchaErrors,
+      });
+    }
+  } catch (error) {
+    console.error('hCaptcha verification failed:', error);
+    return res.status(500).json({ error: 'Security verification is temporarily unavailable.' });
+  }
 
   // Server-side submission cooldown (minutes). Uses runtime value `submitCooldownMinutes` (0 = disabled).
   if (submitCooldownMinutes > 0 && b.contact) {

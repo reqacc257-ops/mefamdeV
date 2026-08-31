@@ -825,11 +825,8 @@
                 <div id="reviewContent" style="color:#444; line-height:1.9;"></div>
             </div>
 
-            <div class="captcha-box">
-                <div class="captcha-q" id="captchaLabel">—</div>
-                <input type="number" id="captchaInput" class="translatable-ph" data-tl-ph="Sagot (Answer)" data-en-ph="Your Answer" placeholder="Sagot" style="max-width:150px; margin:0 auto 8px; display:block; text-align:center;">
-                <div id="captchaError" class="error-msg translatable" data-tl="❌ Mali ang sagot. Subukan muli." data-en="❌ Wrong answer. Try again.">❌ Mali ang sagot.</div>
-            </div>
+            <div class="h-captcha" data-sitekey="f41a910a-432a-4c04-97ec-9ce24de41162" style="margin: 16px auto 0; display:flex; justify-content:center;"></div>
+            <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
             <div style="margin-top:12px;">
                 <label class="field-label translatable" data-tl="Gumawa ng username sa portal" data-en="Create your portal username">Gumawa ng username sa portal<span class="req-mark">*</span></label>
@@ -894,7 +891,6 @@
         initDegreeCombobox();
         initValidationNotice();
         setLanguage('tl');
-        generateCaptcha();
         const img = document.querySelector('.logo');
         if (img && (!img.complete || img.naturalWidth === 0)) img.style.display = 'none';
     };
@@ -1014,6 +1010,7 @@
         document.getElementById('consent').checked = true;
         document.getElementById('captchaInput').value = captchaAnswer;
         document.getElementById('captchaError').style.display = 'none';
+        loadHcaptchaSiteKey();
 
         const username = document.getElementById('appUsername');
         const password = document.getElementById('appPassword');
@@ -1581,13 +1578,6 @@
             : (currentLang === 'tl' ? '▾ Itago ang Privacy Statement' : '▾ Hide Privacy Statement');
     }
 
-    /* ── Captcha ── */
-    function generateCaptcha() { num1 = Math.floor(Math.random()*10)+1; num2 = Math.floor(Math.random()*10)+1; captchaAnswer = num1+num2; updateCaptchaText(); }
-    function updateCaptchaText() {
-        const lbl = document.getElementById('captchaLabel');
-        if (lbl) lbl.innerText = currentLang === 'tl' ? `Human Verification: Ano ang ${num1} + ${num2}?` : `Human Verification: What is ${num1} + ${num2}?`;
-    }
-
     function collectSubmittedFields() {
         const payload = {};
         document.querySelectorAll('#scholarForm input, #scholarForm select, #scholarForm textarea').forEach(el => {
@@ -1641,14 +1631,11 @@
             }
         }
 
-        const answer = parseInt(document.getElementById('captchaInput').value);
-        const errEl = document.getElementById('captchaError');
-        if (answer !== captchaAnswer) {
-            errEl.style.display = 'block';
-            document.getElementById('captchaInput').value = '';
-            generateCaptcha(); return;
+        const hcaptchaToken = document.querySelector('textarea[name="h-captcha-response"]')?.value || document.querySelector('input[name="h-captcha-response"]')?.value || '';
+        if (!hcaptchaToken) {
+            alert('Please complete the security verification before submitting.');
+            return;
         }
-        errEl.style.display = 'none';
 
         // Family members
         let familyMembers = [];
@@ -1685,6 +1672,7 @@
         const data = {
             id: Number(referenceNumber),
             referenceNumber,
+            hcaptchaToken,
             sy: document.getElementById('sySelect').value,
             firstName: document.getElementById('firstName').value.trim(),
             middleName: document.getElementById('middleName').value.trim(),
