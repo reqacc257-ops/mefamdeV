@@ -825,123 +825,15 @@
                 <div id="reviewContent" style="color:#444; line-height:1.9;"></div>
             </div>
 
-<form id="signup-form" method="POST" action="/signup">
-  <input type="email" name="email" required />
+<div style="margin: 18px 0 12px; display: flex; justify-content: center;">
   <div
-    id="hcaptcha"
     class="h-captcha"
     data-sitekey="12a47bb6-f1d0-4c60-9c1c-f94653d2b97e"
-    data-size="invisible"
-    data-callback="onHCaptchaDone"
+    data-theme="light"
+    data-size="normal"
+    style="display: inline-block;"
   ></div>
-  <button id="submit-btn" type="button">Continue</button>
-</form>
-<style>
-  .hcaptcha-overlay {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    width: 45px;
-    height: 45px;
-  }
-  .hcaptcha-overlay-badge {
-    cursor: pointer;
-    border: 0;
-    background: transparent;
-    padding: 0;
-  }
-  .hcaptcha-overlay-badge img {
-    width: 45px;
-    height: auto;
-    display: block;
-  }
-  .hcaptcha-overlay-popup {
-    position: absolute;
-    right: 53px;
-    bottom: 0;
-    width: 300px;
-    min-height: 45px;
-    box-sizing: border-box;
-    opacity: 0;
-    clip-path: inset(0 0 0 100%);
-    pointer-events: none;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 10px;
-    font-size: 12px;
-    line-height: 1.4;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    transform: translateX(8px);
-    transition:
-      clip-path 0.24s ease,
-      opacity 0.18s ease,
-      transform 0.24s ease;
-  }
-  .hcaptcha-overlay-popup.is-open {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-    pointer-events: auto;
-    transform: translateX(0);
-  }
-</style>
-<div class="hcaptcha-overlay" id="hcaptcha-overlay">
-  <button
-    id="hcaptcha-badge"
-    class="hcaptcha-overlay-badge"
-    type="button"
-    aria-label="hCaptcha disclosure"
-  >
-    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDIzLjAuMiwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCA0ODIuMyA0ODIuMyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDgyLjMgNDgyLjM7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7b3BhY2l0eTowLjU7ZmlsbDojMTA3NEJDO2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fQoJLnN0MXtvcGFjaXR5OjAuNztmaWxsOiMxMDc0QkM7ZW5hYmxlLWJhY2tncm91bmQ6bmV3ICAgIDt9Cgkuc3Qye29wYWNpdHk6MC43O2ZpbGw6IzBDODJCRjtlbmFibGUtYmFja2dyb3VuZDpuZXcgICAgO30KCS5zdDN7b3BhY2l0eTowLjg7ZmltbDojMEM4MkJGO2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fQoJLnN0NHtmaWxsOiMwQzgyQkY7fQoJLnN0NXtvcGFjaXR5OjAuNTtmaWxsOiMwNDhGQkY7ZW5hYmxlLWJhY2tncm91bmQ6bmV3ICAgIDt9Cgkuc3Q2e29wYWNpdHk6MC44O2ZpbGw6IzA0OEZCRjtlbmFibGUtYmFja2dyb3VuZDpuZXcgICAgO30KCS5zdDd7ZmltbDojMDQ4RkJGO30KCS5zdDh7b3BhY2l0eTowLjc7ZmltbDojMDE5RUMwO2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fQoJLnN0OXtmaWxsOiMwMTlFQzA7fQoJLnN0MTB7b3BhY2l0eTowLjc7ZmltbDojMDBBQkJGO2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fQoJLnN0MTF7ZmltbDojMDBBQkJGO30KCS5zdDEye29wYWNpdHk6MC41O2ZpbGw6IzAyQjhCRTtlbmFibGUtYmFja2dyb3VuZDpuZXcgICAgO30KCS5zdDEze29wYWNpdHk6MC44O2ZpbGw6IzAyQjhCRTtlbmFibGUtYmFja2dyb3VuZDpuZXcgICAgO30KCS5zdDE0e2ZpbGw6IzAyQjhCRTt9Cgkuc3QxNXtvcGFjaXR5OjAuNztmaWxsOiMzMUJEQkE7ZW5hYmxlLWJhY2tncm91bmQ6bmV3ICAgIDt9Cgkuc3QxNntvcGFjaXR5OjAuODtmaWxsOiMzMUJEQkE7ZW5hYmxlLWJhY2tncm91bmQ6bmV3ICAgIDt9Cgkuc3QxN3tmaWxsOiMzMUJEQkE7fQoJLnN0MTh7b3BhY2l0eTowLjU7ZmltbDojNDdDMEI0O2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fQoJLnN0MTl7b3BhY2l0eTowLjc7ZmltbDojNDdDMEI0O2VuYWJsZS1iYWNrZ3JvdW5kOm5ldyAgICA7fQoJLnN0MjB7ZmltbDojRkZGRkZGO30KPC9zdHlsZT4KPHJlY3QgeD0iMzAxLjUiIHk9IjQyMiIgY2xhc3M9InN0MCIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIyNDEuMiIgeT0iNDIyIiBjbGFzcz0ic3QxIiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjE4MC45IiB5PSI0MjIiIGNsYXNzPSJzdDEiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMTIwLjYiIHk9IjQyMiIgY2xhc3M9InN0MCIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIzNjEuOCIgeT0iMzYxLjgiIGNsYXNzPSJzdDIiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMzAxLjUiIHk9IjM2MS44IiBjbGFzcz0ic3QzIiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjI0MS4yIiB5PSIzNjEuOCIgY2xhc3M9InN0NCIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIxODAuOSIgeT0iMzYxLjgiIGNsYXNzPSJzdDQiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMTIwLjYiIHk9IjM2MS44IiBjbGFzcz0ic3QzIiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjYwLjMiIHk9IjM2MS44IiBjbGFzcz0ic3QyIiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjQyMiIgeT0iMzAxLjUiIGNsYXNzPSJzdDUiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMzYxLjgiIHk9IjMwMS41IiBjbGFzcz0ic3Q2IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjMwMS41IiB5PSIzMDEuNSIgY2xhc3M9InN0NyIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIyNDEuMiIgeT0iMzAxLjUiIGNsYXNzPSJzdDciIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMTgwLjkiIHk9IjMwMS41IiBjbGFzcz0ic3Q3IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjEyMC42IiB5PSIzMDEuNSIgY2xhc3M9InN0NyIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSI2MC4zIiB5PSIzMDEuNSIgY2xhc3M9InN0NiIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB5PSIzMDEuNSIgY2xhc3M9InN0NSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSI0MjIiIHk9IjI0MS4yIiBjbGFzcz0ic3Q4IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjM2MS44IiB5PSIyNDEuMiIgY2xhc3M9InN0OSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIzMDEuNSIgeT0iMjQxLjIiIGNsYXNzPSJzdDkiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMjQxLjIiIHk9IjI0MS4yIiBjbGFzcz0ic3Q5IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjE4MC45IiB5PSIyNDEuMiIgY2xhc3M9InN0OSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIxMjAuNiIgeT0iMjQxLjIiIGNsYXNzPSJzdDkiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iNjAuMyIgeT0iMjQxLjIiIGNsYXNzPSJzdDkiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeT0iMjQxLjIiIGNsYXNzPSJzdDgiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iNDIyIiB5PSIxODAuOSIgY2xhc3M9InN0MTAiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMzYxLjgiIHk9IjE4MC45IiBjbGFzcz0ic3QxMSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIzMDEuNSIgeT0iMTgwLjkiIGNsYXNzPSJzdDExIiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjI0MS4yIiB5PSIxODAuOSIgY2xhc3M9InN0MTEiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMTgwLjkiIHk9IjE4MC45IiBjbGFzcz0ic3QxMSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIxMjAuNiIgeT0iMTgwLjkiIGNsYXNzPSJzdDExIiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjYwLjMiIHk9IjE4MC45IiBjbGFzcz0ic3QxMSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB5PSIxODAuOSIgY2xhc3M9InN0MTAiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iNDIyIiB5PSIxMjAuNiIgY2xhc3M9InN0MTIiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMzYxLjgiIHk9IjEyMC42IiBjbGFzcz0ic3QxMyIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIzMDEuNSIgeT0iMTIwLjYiIGNsYXNzPSJzdDE0IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjI0MS4yIiB5PSIxMjAuNiIgY2xhc3M9InN0MTQiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMTgwLjkiIHk9IjEyMC42IiBjbGFzcz0ic3QxNCIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIxMjAuNiIgeT0iMTIwLjYiIGNsYXNzPSJzdDE0IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjYwLjMiIHk9IjEyMC42IiBjbGFzcz0ic3QxMyIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB5PSIxMjAuNiIgY2xhc3M9InN0MTIiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMzYxLjgiIHk9IjYwLjMiIGNsYXNzPSJzdDE1IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjMwMS41IiB5PSI2MC4zIiBjbGFzcz0ic3QxNiIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIyNDEuMiIgeT0iNjAuMyIgY2xhc3M9InN0MTciIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMTgwLjkiIHk9IjYwLjMiIGNsYXNzPSJzdDE3IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjEyMC42IiB5PSI2MC4zIiBjbGFzcz0ic3QxNiIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSI2MC4zIiB5PSI2MC4zIiBjbGFzcz0ic3QxNSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIzMDEuNSIgY2xhc3M9InN0MTgiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHJlY3QgeD0iMjQxLjIiIGNsYXNzPSJzdDE5IiB3aWR0aD0iNjAuMyIgaGVpZ2h0PSI2MC4zIi8+CjxyZWN0IHg9IjE4MC45IiBjbGFzcz0ic3QxOSIgd2lkdGg9IjYwLjMiIGhlaWdodD0iNjAuMyIvPgo8cmVjdCB4PSIxMjAuNiIgY2xhc3M9InN0MTgiIHdpZHRoPSI2MC4zIiBoZWlnaHQ9IjYwLjMiLz4KPHBhdGggY2xhc3M9InN0MjAiIGQ9Ik0xNTguOCwyMjIuMWwxNi44LTM3LjZjNi4xLTkuNiw1LjMtMjEuNC0xLjQtMjguMWMtMC45LTAuOS0xLjktMS43LTIuOS0yLjRjLTQuNy0yLjktMTAuMy0zLjUtMTUuNS0xLjgKCWMtNS44LDEuOC0xMC44LDUuNy0xNCwxMC44YzAsMC0yMyw1My43LTMxLjYsNzcuOFMxMDUsMzA5LjIsMTM4LDM0Mi4zYzM1LDM1LDg1LjcsNDMsMTE4LDE4LjdjMS40LTAuNywyLjYtMS41LDMuOC0yLjVsOTkuNi04My4yCgljNC44LTQsMTItMTIuMiw1LjYtMjEuNmMtNi4zLTkuMi0xOC4xLTIuOS0yMywwLjJsLTU3LjMsNDEuN2MtMS4xLDAuOS0yLjcsMC44LTMuNi0wLjNjMCwwLDAtMC4xLTAuMS0wLjFjLTEuNS0xLjgtMS43LTYuNSwwLjYtOC40CglsODcuOS03NC42YzcuNi02LjgsOC42LTE2LjgsMi41LTIzLjZjLTYtNi43LTE1LjUtNi41LTIzLjIsMC40bC03OS4xLDYxLjljLTEuNSwxLjItMy43LDEtNC45LTAuNWMwLTAuMS0wLjEtMC4xLTAuMS0wLjIKCWMtMS42LTEuOC0yLjItNC43LTAuNC02LjVsODkuNi04Ni45YzcuMS02LjYsNy41LTE3LjcsMC45LTI0LjdjLTMuMi0zLjMtNy42LTUuMi0xMi4yLTUuMmMtNC43LTAuMS05LjIsMS43LTEyLjYsNWwtOTEuNiw4NgoJYy0yLjIsMi4yLTYuNSwwLTctMi42Yy0wLjItMC45LDAuMS0xLjksMC44LTIuNmw3MC4xLTc5LjhjNy02LjUsNy40LTE3LjQsMC45LTI0LjRzLTE3LjQtNy40LTI0LjQtMC45Yy0wLjMsMC4zLTAuNiwwLjUtMC44LDAuOAoJTDE3MS41LDIyNS45Yy0zLjgsMy44LTkuNCw0LTEyLjEsMS44QzE1Ny43LDIyNi40LDE1Ny40LDIyMy45LDE1OC44LDIyMi4xeiIvPgo8L3N2Zz4K" alt="Protected by hCaptcha" />
-  </button>
-  <div class="hcaptcha-overlay-popup" id="hcaptcha-popup">
-    This site is protected by hCaptcha and its
-    <a href="https://www.hcaptcha.com/privacy">Privacy Policy</a> and
-    <a href="https://www.hcaptcha.com/terms">Terms of Service</a> apply.
-  </div>
 </div>
-<script>
-  function onHCaptchaDone() {
-    document.getElementById("signup-form").submit();
-  }
-  document.getElementById("submit-btn").onclick = function () {
-    hcaptcha.execute();
-  };
-  const overlay = document.getElementById("hcaptcha-overlay");
-  const badge = document.getElementById("hcaptcha-badge");
-  const popup = document.getElementById("hcaptcha-popup");
-  let timeoutId;
-  const openOverlay = () => {
-    clearTimeout(timeoutId);
-    popup.classList.add("is-open");
-  };
-  const closeOverlaySoon = () => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => popup.classList.remove("is-open"), 180);
-  };
-  overlay.addEventListener("mouseenter", openOverlay);
-  overlay.addEventListener("mouseleave", closeOverlaySoon);
-  popup.addEventListener("mouseenter", openOverlay);
-  popup.addEventListener("mouseleave", closeOverlaySoon);
-  badge.addEventListener(
-    "touchstart",
-    (event) => {
-      event.preventDefault();
-      popup.classList.toggle("is-open");
-    },
-    { passive: false },
-  );
-  popup.addEventListener("touchstart", openOverlay, { passive: true });
-  document.addEventListener(
-    "touchstart",
-    (event) => {
-      if (!overlay.contains(event.target)) {
-        popup.classList.remove("is-open");
-      }
-    },
-    { passive: true },
-  );
-</script>
 <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 
             <div style="margin-top:12px;">
