@@ -378,6 +378,7 @@
 
     <!-- ── STEP 1: Username / Reference ── -->
     <div id="step1">
+        <input type="text" id="botTrap" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
         <div class="form-group">
             <label id="usernameLabel">Staff Username / Reference ID</label>
             <div class="input-wrap">
@@ -506,7 +507,40 @@
    STAFF ACCOUNTS
 ══════════════════════════════════════ */
 const STAFF_USERNAMES = ['director', 'edu', 'finance', 'program'];
+const LOGIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 5;
 let directorOtpChallengeId = '';
+
+function getLoginAttemptLog() {
+    try {
+        return JSON.parse(localStorage.getItem('mefamdev_login_attempts') || '[]');
+    } catch (error) {
+        return [];
+    }
+}
+
+function saveLoginAttemptLog(items) {
+    localStorage.setItem('mefamdev_login_attempts', JSON.stringify(items));
+}
+
+function canProceedLogin() {
+    const now = Date.now();
+    const entries = getLoginAttemptLog().filter(ts => now - ts < LOGIN_RATE_LIMIT_WINDOW_MS);
+    if (entries.length >= LOGIN_MAX_ATTEMPTS) {
+        return { allowed: false, retryMs: LOGIN_RATE_LIMIT_WINDOW_MS - (now - entries[0]) };
+    }
+    return { allowed: true, retryMs: 0 };
+}
+
+function recordFailedLoginAttempt() {
+    const entries = getLoginAttemptLog();
+    entries.push(Date.now());
+    saveLoginAttemptLog(entries.slice(-LOGIN_MAX_ATTEMPTS));
+}
+
+function clearLoginAttempts() {
+    saveLoginAttemptLog([]);
+}
 
 /* ══════════════════════════════════════
    SMART USERNAME DETECTION
@@ -611,7 +645,20 @@ function showDetected(label, bg, color, border) {
 ══════════════════════════════════════ */
 function proceedLogin() {
     const raw = document.getElementById('unifiedUsername').value.trim();
+    const honeypot = document.getElementById('botTrap');
     hideError();
+
+    if (honeypot && honeypot.value.trim()) {
+        showError('Request rejected. Please try again later.');
+        return;
+    }
+
+    const rateLimit = canProceedLogin();
+    if (!rateLimit.allowed) {
+        const minutes = Math.max(1, Math.ceil(rateLimit.retryMs / 60000));
+        showError(`Too many login attempts. Please wait ${minutes} minute${minutes === 1 ? '' : 's'} before trying again.`);
+        return;
+    }
 
     if (!raw) {
         showError('Please enter your staff username or your applicant Reference ID.');
@@ -647,19 +694,23 @@ async function doStaffLogin(username) {
     try {
         const res = await MefamAPI.loginStaff(username, pass);
         if (res?.requiresOtp) {
+            clearLoginAttempts();
             directorOtpChallengeId = res.challengeId;
             openDirectorOtpModal(res);
         } else if (res?.token) {
+            clearLoginAttempts();
             showLoading('Signing in…', () => {
                 window.location.assign('/admin_dashboard.html');
             });
         } else {
+            recordFailedLoginAttempt();
             showError(res?.error || 'Wrong username or password.');
             document.getElementById('unifiedPassword').value = '';
             document.getElementById('unifiedPassword').focus();
         }
     } catch (error) {
         console.error('Staff login failed:', error);
+        recordFailedLoginAttempt();
         showError('Unable to sign in right now. Please try again.');
     }
 }
@@ -733,14 +784,17 @@ async function doApplicantLogin(ref) {
     try {
         const res = await MefamAPI.loginApplicant(cleanRef, nameInput, pwInput, '');
         if (res?.token) {
+            clearLoginAttempts();
             showLoading('Welcome!', () => {
                 window.location.assign('/applicant_portal.html');
             });
         } else {
+            recordFailedLoginAttempt();
             showError(res?.error || 'Wrong reference ID, username, or password.');
         }
     } catch (error) {
         console.error('Applicant login failed:', error);
+        recordFailedLoginAttempt();
         showError('Unable to look up your application right now.');
     }
 }
