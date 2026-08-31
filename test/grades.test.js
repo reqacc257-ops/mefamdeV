@@ -76,9 +76,12 @@ test('grades workflow: submit -> pending -> approve -> visible in grade-card', a
     const rejectJson = await rejectRes.json();
     assert.equal(rejectJson.ok, true, 'reject should succeed');
 
+    const rejectedGradeRow = await db.prepare('SELECT status FROM quarterly_grades WHERE id = ?').get(toApprove.id);
+    assert.equal(rejectedGradeRow.status, 'rejected', 'only the reviewed grade row should be rejected');
+
     const rejectedAppRes = await fetch(`${base}/applications/9999`, { headers: { Authorization: 'Bearer ' + adminToken } });
     const rejectedApp = await rejectedAppRes.json();
-    assert.equal(rejectedApp.status, 'Rejected', 'application should be marked rejected when its grade is rejected');
+    assert.notEqual(rejectedApp.status, 'Rejected', 'the whole applicant should not be rejected when only one grade file is rejected');
 
   } finally {
     srv.close();
