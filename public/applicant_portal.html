@@ -864,11 +864,26 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+/* Applicants may only upload/replace documents once their application has
+   been Accepted. While Pending Review / Interviewing / Rejected / Year Ended,
+   uploads are disabled (they bring physical copies to the interview instead).
+   This check backs up the disabled UI state below in case a request slips
+   through (e.g. a stale/re-enabled input). */
+function canUploadDocuments() {
+    return normalizeStatus(currentApplicant?.status) === 'Accepted';
+}
+
 async function uploadDocumentFromInput(input) {
     const appId = currentAppId || input.dataset.appId;
     const docKey = input.dataset.docKey;
     const file = input.files && input.files[0];
     if (!appId || !docKey || !file) return;
+
+    if (!canUploadDocuments()) {
+        alert('Document uploads open once your application is accepted. Please bring your documents to your scheduled interview for now.');
+        input.value = '';
+        return;
+    }
 
     const maxSize = 10 * 1024 * 1024; // 10 MB
     const row = input.closest('.doc-upload-row');
@@ -936,6 +951,12 @@ async function uploadReportCardPhoto(input) {
     const file = input.files && input.files[0];
     if (!appId || !docKey || !file) return;
 
+    if (!canUploadDocuments()) {
+        alert('Document uploads open once your application is accepted. Please bring your documents to your scheduled interview for now.');
+        input.value = '';
+        return;
+    }
+
     const maxSize = 10 * 1024 * 1024; // 10 MB
     const statusEl = document.getElementById('rcGalleryStatus');
 
@@ -993,6 +1014,10 @@ async function uploadReportCardPhoto(input) {
 }
 
 function removeReportCardPhoto(appId, docKey, index) {
+    if (!canUploadDocuments()) {
+        alert('Document uploads open once your application is accepted.');
+        return;
+    }
     const gallery = getReportCardGallery(appId, docKey);
     gallery.splice(index, 1);
     saveReportCardGallery(appId, docKey, gallery);
@@ -1025,8 +1050,17 @@ async function renderRequirements(appId) {
         'Required': { icon: '📋', cls: 'sbadge-pending',  label: 'Required' },
     };
 
+    // Uploads (new or replacement) are only allowed once the application has
+    // been Accepted. While Pending Review / Interviewing / Rejected / Year
+    // Ended, upload controls are shown but disabled, with a note explaining why.
+    const canUpload = canUploadDocuments();
+    const uploadsClosedBanner = !canUpload
+        ? `<p style="font-size:.8rem; color:#7a5a00; margin:10px 0; padding:10px 12px; background:#fff7db; border-radius:8px;">📌 Document uploads open once you're accepted as a scholar. For now, please prepare physical copies (original + photocopy) to bring to your interview/document check.</p>`
+        : '';
+
     const rows = [
         `<div class="req-item"><span class="req-icon">✅</span> Application Form (Online) <span class="req-status"><span class="sbadge sbadge-accepted">Submitted</span></span></div>`,
+        uploadsClosedBanner,
         ...items.map(d => {
             const c = cfg[d.status] || cfg['Required'];
             let noteHTML = d.status === 'Missing' && d.note
@@ -1038,38 +1072,42 @@ async function renderRequirements(appId) {
 
             if (isReportCardDoc(d)) {
                 // Report Card: multi-photo gallery — lets the applicant add another page/photo
-                // instead of replacing the previous one.
+                // instead of replacing the previous one. Only editable once Accepted.
                 const gallery = d.status === 'Missing' ? [] : getReportCardGallery(appId, d.key);
                 if (d.status === 'Missing') saveReportCardGallery(appId, d.key, []);
                 const galleryThumbs = gallery.map((g, i) => `
                     <div class="doc-gallery-item" data-image-src="${g.fileData}" data-image-label="${escapeHtml(d.label)} (${i + 1})" onclick="showImagePreview(this)">
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
-                        <button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>
+                        ${canUpload ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
                     </div>`).join('');
-                const allowUpload = d.status !== 'Received';
+                const allowUpload = canUpload;
                 const addTile = `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
                         <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)"${allowUpload ? '' : ' disabled'}>
                         ➕<br>Add Photo
                     </label>`;
-                const countLabel = gallery.length
-                    ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
-                    : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
+                const countLabel = !canUpload
+                    ? `<div class="doc-upload-status">Uploads open once your application is accepted.</div>`
+                    : gallery.length
+                        ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
+                        : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
                 return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}
                     <div class="doc-gallery">${galleryThumbs}${addTile}</div>
                     ${countLabel}
                     <div id="rcGalleryStatus" style="font-size:.75rem; color:var(--muted);"></div>`;
             }
 
-            const uploadLabel = d.fileName
-                ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
-                : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
+            const uploadLabel = !canUpload
+                ? `<div class="doc-upload-status">Uploads open once your application is accepted.</div>`
+                : d.fileName
+                    ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
+                    : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
             const previewLink = d.fileData
                 ? `<button type="button" class="doc-preview-link" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)">View image</button>`
                 : '';
             const previewImage = d.fileData
                 ? `<div class="doc-upload-thumbnail" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
                 : '';
-            const allowUpload = d.status !== 'Received';
+            const allowUpload = canUpload;
             return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)"${allowUpload ? '' : ' disabled'}>📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
     ];
@@ -1353,16 +1391,5 @@ async function viewMyReportCard() {
 }
 function closeReportCardModal() { document.getElementById('reportCardModal').classList.remove('open'); }
 </script>
-</body>
-    <div class="modal-card">
-        <div class="modal-header">
-            <div class="modal-title">Image preview</div>
-            <button class="modal-close" type="button" aria-label="Close preview" onclick="closeImagePreview()">×</button>
-        </div>
-        <div class="modal-body">
-            <img src="" alt="Uploaded image preview">
-        </div>
-    </div>
-</div>
 </body>
 </html>
