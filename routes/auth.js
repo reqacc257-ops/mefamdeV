@@ -423,24 +423,41 @@ router.post('/applicant/reset-password', async (req, res) => {
 // ── Applicant portal login ────────────────────────────────────────────────────
 router.post('/applicant', async (req, res) => {
   const { refNo, name, password, username } = req.body;
-  const identifier = String(username || refNo || '').trim();
-  if (!identifier) return res.status(400).json({ error: 'Reference number or portal username required' });
+  const rawIdentifier = String(username || refNo || '').trim();
+  const requestName = String(name || '').trim();
+  const requestUsername = String(username || '').trim();
 
-  const app = await findApplicantByIdentifier(identifier, name);
+  if (!rawIdentifier) return res.status(400).json({ error: 'Reference number or portal username required' });
+
+  const app = await findApplicantByIdentifier(rawIdentifier, requestName);
   if (!app) return res.status(404).json({ error: 'Application not found' });
 
-  if (!app) return res.status(404).json({ error: 'Application not found' });
+  // Accept the real applicant portal payload: reference ID + portal username + password.
+  // Also keep the legacy full-name login working for older flows.
+  const allowedUsername = String(app.portal_username || app.username || '').trim().toLowerCase();
+  const requestNameLower = requestName.toLowerCase();
+  const requestUsernameLower = requestUsername.toLowerCase();
 
-  // Lenient name check (if provided)
-  if (name && name.trim().length > 2) {
-    const fn = (app.name || '').toLowerCase();
-    const parts = fn.split(/[\s,]+/);
-    const input = name.trim().toLowerCase();
-    const match = parts.some(p => p && input.includes(p)) || fn.includes(input);
-    if (!match) return res.status(401).json({ error: 'Name does not match application on file' });
+  const isUsernameMatch = !!allowedUsername && (
+    allowedUsername === requestUsernameLower ||
+    allowedUsername === requestNameLower ||
+    requestUsernameLower === requestNameLower
+  );
+
+  if (requestUsername || requestName) {
+    if (!isUsernameMatch) {
+      const fullName = String(app.name || '').trim().toLowerCase();
+      const pieces = fullName.split(/[\s,]+/).filter(Boolean);
+      const inputName = requestNameLower || requestUsernameLower;
+      const nameMatch = !!inputName && (
+        fullName === inputName ||
+        pieces.some(p => p && inputName.includes(p)) ||
+        inputName.includes(fullName)
+      );
+      if (!nameMatch) return res.status(401).json({ error: 'Username or name does not match the application on file' });
+    }
   }
 
-  // If a password is set, require it; if none is set, reject an entered password
   if (app.password_hash) {
     const hashed = crypto.createHash('sha256').update(String(password || '')).digest('hex');
     if (!password || hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid password' });

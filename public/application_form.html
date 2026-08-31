@@ -841,9 +841,6 @@
                     <input type="password" id="appPassword" placeholder="Create a password to access your application" style="width:100%; margin-bottom:10px;" required minlength="6">
                     <button type="button" class="pw-toggle" id="toggleAppPw" onclick="toggleAppPassword()">Show</button>
                 </div>
-                <label class="field-label translatable" data-tl="Kumpirmahin ang password" data-en="Confirm password" style="margin-top:10px;">Kumpirmahin ang password<span class="req-mark">*</span></label>
-                <input type="password" id="appPasswordConfirm" placeholder="Re-enter your password" style="width:100%; margin-bottom:6px;" required minlength="6">
-                <div id="pwMismatchError" class="error-msg translatable" data-tl="❌ Hindi magkatugma ang password." data-en="❌ Passwords do not match.">❌ Hindi magkatugma ang password.</div>
                 <p style="font-size:.8rem; color:#666; margin-top:6px;" class="translatable" data-tl="Gagamitin mo ang username at password na ito para makapag-login sa beneficiary portal." data-en="You’ll use this username and password to log in to your beneficiary portal.">You’ll use this username and password to log in to your beneficiary portal.</p>
             </div>
 
@@ -1020,13 +1017,8 @@
 
         const username = document.getElementById('appUsername');
         const password = document.getElementById('appPassword');
-        const confirmPassword = document.getElementById('appPasswordConfirm');
         if (username) username.value = 'user1-40';
         if (password) password.value = 'pass1-40';
-        if (confirmPassword) confirmPassword.value = 'pass1-40';
-
-        const mismatchError = document.getElementById('pwMismatchError');
-        if (mismatchError) mismatchError.style.display = 'none';
 
         renderReviewSummary();
     }
@@ -1103,16 +1095,11 @@
         }
         if (n === 5) {
             const pw = document.getElementById('appPassword').value;
-            const pwConfirm = document.getElementById('appPasswordConfirm').value;
-            const mismatchEl = document.getElementById('pwMismatchError');
-            if (pw && pwConfirm && pw !== pwConfirm) {
+            if (!pw) {
                 ok = false;
-                missing.push(currentLang === 'tl' ? 'Magkatugmang Password' : 'Matching passwords');
-                mismatchEl.style.display = 'block';
-                firstInvalid ||= document.getElementById('appPasswordConfirm');
-                document.getElementById('appPasswordConfirm').style.borderColor = 'var(--red)';
-            } else {
-                mismatchEl.style.display = 'none';
+                missing.push(currentLang === 'tl' ? 'Password' : 'Password');
+                firstInvalid ||= document.getElementById('appPassword');
+                document.getElementById('appPassword').style.borderColor = 'var(--red)';
             }
         }
         if (!ok) {
