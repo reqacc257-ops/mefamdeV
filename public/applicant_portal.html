@@ -864,9 +864,22 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-/* Applicants can upload while their application is under review and before a
-   staff member locks a specific document as Received. A received document is
-   locked until a staff member re-opens it as Missing. */
+function documentUploadWindowOpen(item) {
+    if (!item || !item.updatedAt) return false;
+    const updated = new Date(item.updatedAt).getTime();
+    if (Number.isNaN(updated)) return false;
+    return Date.now() - updated <= 10 * 60 * 1000;
+}
+
+function isRecentReviewUploadWindow(item) {
+    if (!item) return false;
+    const status = String(item.status || '').trim();
+    if (!['Received', 'Missing'].includes(status)) return false;
+    return documentUploadWindowOpen(item);
+}
+
+/* Applicants can upload while their application is under review and can also
+   replace a recently approved/rejected document during the 10-minute grace window. */
 function canUploadDocuments() {
     const status = normalizeStatus(currentApplicant?.status);
     return ['Pending Review', 'Interviewing', 'Accepted'].includes(status);
@@ -957,8 +970,8 @@ async function uploadReportCardPhoto(input) {
     }
 
     const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
-    if (currentItem && String(currentItem.status || '').trim() === 'Received') {
-        alert('This document was already approved and is locked until staff marks it as Missing again.');
+    if (currentItem && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
+        alert('This document has already been reviewed. You may only replace it within 10 minutes of the latest approval/rejection update.');
         input.value = '';
         return;
     }
@@ -1025,8 +1038,8 @@ function removeReportCardPhoto(appId, docKey, index) {
         return;
     }
     const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
-    if (currentItem && String(currentItem.status || '').trim() === 'Received') {
-        alert('This document was already approved and is locked until staff marks it as Missing again.');
+    if (currentItem && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
+        alert('This document has already been reviewed. You may only replace it within 10 minutes of the latest approval/rejection update.');
         return;
     }
     const gallery = getReportCardGallery(appId, docKey);
@@ -1090,15 +1103,17 @@ async function renderRequirements(appId) {
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
                         ${canUpload && d.status !== 'Received' ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
                     </div>`).join('');
-                const allowUpload = canUpload && d.status !== 'Received';
-                const addTile = d.status === 'Received'
-                    ? ''
-                    : `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
+                const allowUpload = canUpload && (!['Received', 'Missing'].includes(String(d.status || '').trim()) || documentUploadWindowOpen(d));
+                const addTile = allowUpload
+                    ? `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
                         <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)"${allowUpload ? '' : ' disabled'}>
                         ➕<br>Add Photo
-                    </label>`;
-                const countLabel = d.status === 'Received'
-                    ? `<div class="doc-upload-status">Received and approved. No further upload is needed unless staff marks this document as missing again.</div>`
+                    </label>`
+                    : '';
+                const countLabel = ['Received', 'Missing'].includes(String(d.status || '').trim())
+                    ? documentUploadWindowOpen(d)
+                        ? `<div class="doc-upload-status">Reviewed recently. You can add a replacement image for the next 10 minutes.</div>`
+                        : `<div class="doc-upload-status">This document was already reviewed. No further upload is needed unless staff marks it as missing again.</div>`
                     : !canUpload
                         ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
                         : gallery.length
@@ -1110,8 +1125,10 @@ async function renderRequirements(appId) {
                     <div id="rcGalleryStatus" style="font-size:.75rem; color:var(--muted);"></div>`;
             }
 
-            const uploadLabel = d.status === 'Received'
-                ? `<div class="doc-upload-status">Received and approved. No further upload is needed unless staff marks this document as missing again.</div>`
+            const uploadLabel = ['Received', 'Missing'].includes(String(d.status || '').trim())
+                ? documentUploadWindowOpen(d)
+                    ? `<div class="doc-upload-status">Reviewed recently. You can add a replacement image for the next 10 minutes.</div>`
+                    : `<div class="doc-upload-status">This document was already reviewed. No further upload is needed unless staff marks it as missing again.</div>`
                 : !canUpload
                     ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
                     : d.fileName
@@ -1123,7 +1140,7 @@ async function renderRequirements(appId) {
             const previewImage = d.fileData
                 ? `<div class="doc-upload-thumbnail" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
                 : '';
-            const allowUpload = canUpload && d.status !== 'Received';
+            const allowUpload = canUpload && (!['Received', 'Missing'].includes(String(d.status || '').trim()) || documentUploadWindowOpen(d));
             return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)"${allowUpload ? '' : ' disabled'}>📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
     ];

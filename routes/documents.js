@@ -83,8 +83,12 @@ async function applicantCanUploadDocument(appId, user, docKey) {
   const status = String(app.status || '').trim();
   if (!['Pending Review', 'Interviewing', 'Accepted'].includes(status)) return false;
   if (!docKey) return true;
-  const row = await db.prepare('SELECT status FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
-  return !(row && String(row.status || '').trim() === 'Received');
+  const row = await db.prepare('SELECT status, updated_at FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
+  if (!row) return true;
+  const docStatus = String(row.status || '').trim();
+  if (!['Received', 'Missing'].includes(docStatus)) return true;
+  const updatedAt = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+  return Number.isFinite(updatedAt) && Date.now() - updatedAt <= 10 * 60 * 1000;
 }
 
 async function saveDocumentUploadAsync(appId, docKey, payload) {

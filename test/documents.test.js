@@ -42,14 +42,26 @@ test('applicant document uploads default to Pending status for review', () => {
   assert.equal(reportCard.status, 'Pending');
 });
 
-test('applicant uploads are blocked after a document is marked Received until staff reopens it', async () => {
+test('applicant uploads remain allowed for 10 minutes after a document is reviewed', async () => {
   const appId = 1001;
-  const app = { id: appId, status: 'Pending Review' };
   db.prepare('INSERT OR IGNORE INTO applications (id, name, status, sy, school_year, reference_number, contact, username, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(appId, 'Locked Applicant', 'Pending Review', '2026-2027', '2026-2027', `REF-${appId}`, '09170000004', `lock${appId}`, 'secret123');
+    .run(appId, 'Reviewed Applicant', 'Pending Review', '2026-2027', '2026-2027', `REF-${appId}`, '09170000004', `review${appId}`, 'secret123');
   db.prepare('DELETE FROM document_status WHERE app_id = ? AND doc_key = ?').run(appId, 'reportCard');
   db.prepare('INSERT INTO document_status (app_id, doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(appId, 'reportCard', 'Received', 'Approved', new Date().toISOString(), 'report-card.jpg', 'image/jpeg', 'data:image/jpeg;base64,abc123', 'upload');
+
+  const canUpload = await documentsRouter.__test.applicantCanUploadDocument(appId, { type: 'applicant', appId }, 'reportCard');
+  assert.equal(canUpload, true);
+});
+
+test('applicant uploads close after the 10-minute review grace period expires', async () => {
+  const appId = 1002;
+  db.prepare('INSERT OR IGNORE INTO applications (id, name, status, sy, school_year, reference_number, contact, username, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(appId, 'Expired Review Applicant', 'Pending Review', '2026-2027', '2026-2027', `REF-${appId}`, '09170000005', `expired${appId}`, 'secret123');
+  db.prepare('DELETE FROM document_status WHERE app_id = ? AND doc_key = ?').run(appId, 'reportCard');
+  const staleTime = new Date(Date.now() - 11 * 60 * 1000).toISOString();
+  db.prepare('INSERT INTO document_status (app_id, doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(appId, 'reportCard', 'Received', 'Approved long ago', staleTime, 'report-card.jpg', 'image/jpeg', 'data:image/jpeg;base64,abc123', 'upload');
 
   const canUpload = await documentsRouter.__test.applicantCanUploadDocument(appId, { type: 'applicant', appId }, 'reportCard');
   assert.equal(canUpload, false);
