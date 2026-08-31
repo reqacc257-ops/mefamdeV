@@ -42,6 +42,30 @@ async function syncApplicationStatusFromReview(appId, action, note) {
     .run(nextStatus, now, JSON.stringify(history), appIdNum);
 }
 
+async function markReportCardReceived(appId, note = 'Report card approved and marked as received.') {
+  const appIdNum = Number(appId);
+  if (!appIdNum) return false;
+
+  const reviewedAt = new Date().toISOString();
+  const applicantNote = String(note || '').trim() || 'Report card approved and marked as received.';
+  const existing = await db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get(appIdNum, 'reportCard');
+
+  if (existing) {
+    await db.prepare(`
+      UPDATE document_status
+      SET status = ?, note = ?, updated_at = ?, file_name = COALESCE(file_name, ''), file_type = COALESCE(file_type, ''), file_data = COALESCE(file_data, ''), upload_method = COALESCE(upload_method, '')
+      WHERE app_id = ? AND doc_key = ?
+    `).run('Received', applicantNote, reviewedAt, appIdNum, 'reportCard');
+  } else {
+    await db.prepare(`
+      INSERT INTO document_status (app_id, doc_key, status, note, updated_at, file_name, file_type, file_data, upload_method)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(appIdNum, 'reportCard', 'Received', applicantNote, reviewedAt, '', '', '', '');
+  }
+
+  return true;
+}
+
 router.post('/:appId/upload', async (req, res) => {
   const appId = parseInt(req.params.appId, 10);
   if (!appId) return res.status(400).json({ error: 'Invalid application ID' });
@@ -174,6 +198,7 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   } else {
     await db.prepare('UPDATE grade_extraction SET status = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
       .run(status, reviewNotes, reviewerId, reviewedAt, id);
+    await markReportCardReceived(row.app_id, reviewNotes || 'Report card approved and marked as received.');
   }
 
   await syncApplicationStatusFromReview(row.app_id, action, reviewNotes || (action === 'approve' ? 'Grade review approved.' : 'Grade review rejected.'));
@@ -182,4 +207,6 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   res.json({ ok: true, extraction: normalizeExtraction(updated), rejectedCells });
 });
 
+router.markReportCardReceived = markReportCardReceived;
+router.__test = { markReportCardReceived };
 module.exports = router;

@@ -437,6 +437,14 @@
             if (!confirm('Approve this quarter grade?')) return;
             try {
                 await MefamAPI.approveGrade(id);
+                const row = (pendingQuarterGrades || []).find(item => Number(item.id) === Number(id));
+                const appId = row?.student_id ? Number(row.student_id) : null;
+                if (appId) {
+                    const documentStatus = await MefamAPI.setDocumentStatus(appId, 'reportCard', 'Received', 'Quarterly grade approved by staff; report card marked as received.');
+                    if (documentStatus?.error) {
+                        console.warn('Unable to mark report card as received:', documentStatus.error);
+                    }
+                }
                 if (window.parent !== window) {
                     window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
                 }
@@ -724,6 +732,14 @@
                 const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim() || '';
                 const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear);
                 if (response?.error) throw new Error(response.error);
+                const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
+                const appId = extraction?.appId ? Number(extraction.appId) : null;
+                if (action === 'approve' && appId) {
+                    const documentStatus = await MefamAPI.setDocumentStatus(appId, 'reportCard', 'Received', reviewNotes || 'Report card approved by staff and marked as received.');
+                    if (documentStatus?.error) {
+                        console.warn('Unable to mark report card as received:', documentStatus.error);
+                    }
+                }
                 closeModal('reviewExtractionModal');
                 if (window.parent !== window) {
                     window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');
 const logger = require('../lib/logger');
+const gradeExtractionRouter = require('./gradeExtraction');
 
 const RETENTION_YEARS = 7;
 
@@ -155,6 +156,7 @@ router.patch('/:id/approve', requireRole('director','edu'), async (req, res) => 
 
   await db.prepare('UPDATE quarterly_grades SET status = ?, reviewed_by = ?, reviewed_at = ? WHERE id = ?').run('approved', reviewer, new Date().toISOString(), id);
   await syncApplicationStatusFromGradeRow({ ...row, status: 'approved' });
+  await gradeExtractionRouter.markReportCardReceived(row.student_id, 'Quarterly grade approved by staff; report card marked as received.');
   logger.info('Quarter approved', { id, reviewer });
   res.json({ ok: true });
 });
