@@ -129,22 +129,24 @@ async function syncApplicationStatusFromGradeRow(row) {
   const app = await db.prepare('SELECT id, status, status_history FROM applications WHERE id = ?').get(appId);
   if (!app) return;
 
-  const now = new Date().toISOString();
-  const history = typeof app.status_history === 'string'
-    ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
-    : (app.status_history || []);
+  if (row.status === 'approved') {
+    const now = new Date().toISOString();
+    const history = typeof app.status_history === 'string'
+      ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
+      : (app.status_history || []);
 
-  const nextStatus = row.status === 'approved' ? 'Accepted' : 'Rejected';
-  const hasStatusEntry = history.some(entry => entry && entry.status === nextStatus);
-  if (!hasStatusEntry) {
-    history.push({ status: nextStatus, changedAt: now, note: `Grade review marked as ${nextStatus.toLowerCase()}.` });
+    const nextStatus = 'Accepted';
+    const hasStatusEntry = history.some(entry => entry && entry.status === nextStatus);
+    if (!hasStatusEntry) {
+      history.push({ status: nextStatus, changedAt: now, note: 'Grade review marked as accepted.' });
+    }
+
+    await db.prepare(`
+      UPDATE applications
+      SET status = ?, status_updated_at = ?, status_history = ?
+      WHERE id = ?
+    `).run(nextStatus, now, JSON.stringify(history), appId);
   }
-
-  await db.prepare(`
-    UPDATE applications
-    SET status = ?, status_updated_at = ?, status_history = ?
-    WHERE id = ?
-  `).run(nextStatus, now, JSON.stringify(history), appId);
 }
 
 router.patch('/:id/approve', requireRole('director','edu'), async (req, res) => {
@@ -171,7 +173,6 @@ router.patch('/:id/reject', requireRole('director','edu'), async (req, res) => {
   if (!row) return res.status(404).json({ error: 'Grade row not found' });
 
   await db.prepare('UPDATE quarterly_grades SET status = ?, reviewed_by = ?, reviewed_at = ?, rejection_reason = ? WHERE id = ?').run('rejected', reviewer, new Date().toISOString(), reason, id);
-  await syncApplicationStatusFromGradeRow({ ...row, status: 'rejected' });
   logger.info('Quarter rejected', { id, reviewer, reason });
   res.json({ ok: true });
 });
