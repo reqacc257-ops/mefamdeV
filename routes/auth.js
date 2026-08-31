@@ -23,7 +23,9 @@ const trustedDevices = new Map();
 const TRUSTED_DEVICE_MS = 24 * 60 * 60 * 1000;
 
 function isDirectorVerificationEnabled() {
-  return String(process.env.DIRECTOR_VERIFICATION_ENABLED || 'false').toLowerCase() === 'true';
+  const value = process.env.DIRECTOR_VERIFICATION_ENABLED;
+  if (value === undefined) return true;
+  return String(value).toLowerCase() === 'true';
 }
 
 function hashPassword(pw) {

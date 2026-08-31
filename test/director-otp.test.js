@@ -11,6 +11,40 @@ function setTestDirectorPassword() {
   db.prepare('UPDATE staff SET password = ? WHERE username = ?').run(TEST_DIRECTOR_HASH, 'director');
 }
 
+test('director OTP is enabled by default when the env flag is omitted', async () => {
+  const previousEmail = process.env.DIRECTOR_EMAIL;
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousVerificationEnabled = process.env.DIRECTOR_VERIFICATION_ENABLED;
+  process.env.DIRECTOR_EMAIL = 'director@example.com';
+  delete process.env.NODE_ENV;
+  delete process.env.DIRECTOR_VERIFICATION_ENABLED;
+  setTestDirectorPassword();
+
+  const server = app.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}/api/auth`;
+
+  try {
+    const loginRes = await fetch(`${base}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'director', password: TEST_DIRECTOR_PASSWORD })
+    });
+    const challenge = await loginRes.json();
+    assert.equal(loginRes.status, 200);
+    assert.equal(challenge.requiresOtp, true);
+    assert.match(challenge.developmentOtp || '', /^\d{6}$/);
+  } finally {
+    server.close();
+    if (previousEmail === undefined) delete process.env.DIRECTOR_EMAIL;
+    else process.env.DIRECTOR_EMAIL = previousEmail;
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousVerificationEnabled === undefined) delete process.env.DIRECTOR_VERIFICATION_ENABLED;
+    else process.env.DIRECTOR_VERIFICATION_ENABLED = previousVerificationEnabled;
+  }
+});
+
 test('director login requires an OTP before issuing a dashboard token', async () => {
   const previousEmail = process.env.DIRECTOR_EMAIL;
   const previousNodeEnv = process.env.NODE_ENV;
