@@ -846,8 +846,15 @@
                     <input type="password" id="appPassword" placeholder="Create a password to access your application" style="width:100%; margin-bottom:10px;" required minlength="6">
                     <button type="button" class="pw-toggle" id="toggleAppPw" onclick="toggleAppPassword()">Show</button>
                 </div>
-                <p style="font-size:.8rem; color:#666; margin-top:6px;" class="translatable" data-tl="Gagamitin mo ang username at password na ito para makapag-login sa beneficiary portal." data-en="You’ll use this username and password to log in to your beneficiary portal.">You’ll use this username and password to log in to your beneficiary portal.</p>
             </div>
+            <div style="margin-top:12px;">
+                <label class="field-label translatable" data-tl="Kumpirmahin ang password sa portal" data-en="Confirm your portal password">Confirm your portal password<span class="req-mark">*</span></label>
+                <div class="pw-wrap">
+                    <input type="password" id="appPasswordConfirm" placeholder="Re-enter your password" style="width:100%; margin-bottom:10px;" required minlength="6">
+                    <button type="button" class="pw-toggle" id="toggleAppPwConfirm" onclick="toggleConfirmPassword()">Show</button>
+                </div>
+            </div>
+            <p style="font-size:.8rem; color:#666; margin-top:6px;" class="translatable" data-tl="Gagamitin mo ang username at password na ito para makapag-login sa beneficiary portal." data-en="You’ll use this username and password to log in to your beneficiary portal.">You’ll use this username and password to log in to your beneficiary portal.</p>
 
             <button type="submit" class="btn btn-submit" id="submitBtn">
                 <span class="translatable" data-tl="IPASA ANG APLIKASYON ✓" data-en="SUBMIT APPLICATION ✓">IPASA ANG APLIKASYON ✓</span>
@@ -1019,8 +1026,10 @@
 
         const username = document.getElementById('appUsername');
         const password = document.getElementById('appPassword');
+        const confirmPassword = document.getElementById('appPasswordConfirm');
         if (username) username.value = 'user1-40';
         if (password) password.value = 'pass1-40';
+        if (confirmPassword) confirmPassword.value = 'pass1-40';
 
         renderReviewSummary();
     }
@@ -1097,11 +1106,25 @@
         }
         if (n === 5) {
             const pw = document.getElementById('appPassword').value;
+            const confirmPw = document.getElementById('appPasswordConfirm').value;
             if (!pw) {
                 ok = false;
                 missing.push(currentLang === 'tl' ? 'Password' : 'Password');
                 firstInvalid ||= document.getElementById('appPassword');
                 document.getElementById('appPassword').style.borderColor = 'var(--red)';
+            }
+            if (!confirmPw) {
+                ok = false;
+                missing.push(currentLang === 'tl' ? 'Confirm Password' : 'Confirm Password');
+                firstInvalid ||= document.getElementById('appPasswordConfirm');
+                document.getElementById('appPasswordConfirm').style.borderColor = 'var(--red)';
+            }
+            if (pw && confirmPw && pw !== confirmPw) {
+                ok = false;
+                missing.push(currentLang === 'tl' ? 'Passwords do not match' : 'Passwords do not match');
+                firstInvalid ||= document.getElementById('appPasswordConfirm');
+                document.getElementById('appPassword').style.borderColor = 'var(--red)';
+                document.getElementById('appPasswordConfirm').style.borderColor = 'var(--red)';
             }
         }
         if (!ok) {
@@ -1585,7 +1608,7 @@
     function collectSubmittedFields() {
         const payload = {};
         document.querySelectorAll('#scholarForm input, #scholarForm select, #scholarForm textarea').forEach(el => {
-            if (!el.id || ['submit', 'button', 'captchaInput'].includes(el.id)) return;
+            if (!el.id || ['submit', 'button', 'captchaInput', 'appPasswordConfirm'].includes(el.id)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (el.checked) {
                     if (!payload[el.id]) payload[el.id] = [];
@@ -1605,6 +1628,14 @@
     function toggleAppPassword() {
         const el = document.getElementById('appPassword');
         const btn = document.getElementById('toggleAppPw');
+        if (!el) return;
+        if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
+        else { el.type = 'password'; btn.textContent = 'Show'; }
+    }
+
+    function toggleConfirmPassword() {
+        const el = document.getElementById('appPasswordConfirm');
+        const btn = document.getElementById('toggleAppPwConfirm');
         if (!el) return;
         if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
         else { el.type = 'password'; btn.textContent = 'Show'; }
