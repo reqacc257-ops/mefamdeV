@@ -943,12 +943,77 @@
     }
 
     function fillApplicantTestData() {
-        const email = document.getElementById('email');
+        const selectedName = 'Andrea Ubaldo';
+        const parts = selectedName.split(' ').filter(Boolean);
+
+        document.getElementById('lastName').value = parts[parts.length - 1] || '';
+        document.getElementById('firstName').value = parts[0] || '';
+        document.getElementById('middleName').value = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+        document.getElementById('address').value = '123 Sample Street, Purok 4';
+        document.getElementById('barangay').value = 'Banaban';
+        document.getElementById('dob').value = '2007-05-14';
+        document.getElementById('age').value = calculateAge('2007-05-14');
+        document.getElementById('gender').value = 'Babae';
+        document.getElementById('contact').value = '09171234567';
+        document.getElementById('email').value = 'reqacc257@gmail.com';
+        document.getElementById('religion').value = 'Roman Catholic';
+        document.getElementById('birthplace').value = 'Angat, Bulacan';
+        document.getElementById('livingWith').value = 'Parehong tatay at nanay';
+        document.getElementById('talents').value = 'Singing, Drawing';
+        document.getElementById('clubs').value = 'School Dance Club';
+        document.getElementById('ambition').value = 'To become a teacher and help my family.';
+
+        const familyRows = document.querySelectorAll('#familyTableBody tr');
+        const familyData = [
+            { name: 'Maria Ubaldo', dob: '1985-01-10', sex: 'Babae', relation: 'Ina', civil: 'Kasal', educ: 'College Graduate', occup: 'Vendor', contact: '09181234567', income: '15000' },
+            { name: 'Jose Ubaldo', dob: '1980-09-22', sex: 'Lalaki', relation: 'Ama', civil: 'Kasal', educ: 'High School Graduate', occup: 'Driver', contact: '09191234567', income: '18000' },
+            { name: 'Ana Ubaldo', dob: '2009-08-02', sex: 'Babae', relation: 'Kapatid', civil: 'Single', educ: 'Grade 4', occup: 'Student', contact: '', income: '0' }
+        ];
+        familyRows.forEach((row, index) => {
+            const cells = row.querySelectorAll('input, select');
+            const data = familyData[index] || familyData[0];
+            cells[0].value = data.name;
+            cells[1].value = calculateAge(data.dob);
+            cells[2].value = data.dob;
+            cells[3].value = data.sex;
+            cells[4].value = data.relation;
+            cells[5].value = data.civil;
+            cells[6].value = data.educ;
+            cells[7].value = data.occup;
+            cells[8].value = data.contact || '';
+            cells[9].value = data.income;
+        });
+
+        document.querySelectorAll('#propertiesContainer input[type="checkbox"]').forEach(cb => {
+            if (['Sariling Bahay', '4Ps Beneficiary'].includes(cb.value)) cb.checked = true;
+        });
+        document.getElementById('propVehicle').value = 'Motorcycle';
+        document.getElementById('propLivestock').value = 'Chicken';
+        document.getElementById('propOther').value = 'Rice Cooker';
+
+        const incomeInputs = document.querySelectorAll('.income-input');
+        const expenseInputs = document.querySelectorAll('.expense-input');
+        [18000, 3000, 0, 500].forEach((value, i) => { if (incomeInputs[i]) incomeInputs[i].value = value; });
+        [5000, 1200, 2500, 1800].forEach((value, i) => { if (expenseInputs[i]) expenseInputs[i].value = value; });
+        calcTotal();
+
+        document.getElementById('prevGrade').value = 'Grade 10';
+        document.getElementById('prevSchool').value = 'Angat National High School';
+        document.getElementById('eduLevel').value = 'SeniorHigh';
+        updateAcademicFields();
+        document.getElementById('nextSchool').value = 'Bulacan State University (Main/Malolos)';
+        document.getElementById('nextGrade').value = 'Grade 11';
+        document.getElementById('degree').value = 'Academic Track - Science, Technology, Engineering, and Mathematics';
+        document.getElementById('whyScholar').value = 'I want to finish my studies and help my family become stable.';
+
+        document.querySelectorAll('#page-4 input[type="checkbox"]').forEach(cb => cb.checked = true);
+        document.getElementById('consent').checked = true;
+        document.getElementById('captchaInput').value = captchaAnswer;
+        document.getElementById('captchaError').style.display = 'none';
+
         const username = document.getElementById('appUsername');
         const password = document.getElementById('appPassword');
         const confirmPassword = document.getElementById('appPasswordConfirm');
-
-        if (email) email.value = 'reqacc257@gmail.com';
         if (username) username.value = 'user1-40';
         if (password) password.value = 'pass1-40';
         if (confirmPassword) confirmPassword.value = 'pass1-40';
