@@ -104,6 +104,18 @@
             display: flex;
             justify-content: flex-end;
         }
+        .demo-bar {
+            background: var(--white);
+            padding: 12px 36px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .demo-btn {
+            width: 100%;
+            justify-content: center;
+            background: var(--gold);
+            color: var(--navy);
+        }
         .lang-toggle { display: flex; background: #eef0f3; border-radius: 20px; overflow: hidden; }
         .lang-btn {
             background: transparent; border: none; padding: 7px 16px;
@@ -414,7 +426,7 @@
     </div>
 
     <div class="demo-bar">
-        <button type="button" class="btn demo-btn" onclick="fillEducationDemoData()">🧪 Temporary Autofill</button>
+        <button type="button" class="btn demo-btn" onclick="fillApplicantTestData()">🧪 Temporary Autofill</button>
     </div>
 
     <!-- Body -->
@@ -926,6 +938,23 @@
             }
             closeDegreeOptions();
         }
+
+        renderReviewSummary();
+    }
+
+    function fillApplicantTestData() {
+        const email = document.getElementById('email');
+        const username = document.getElementById('appUsername');
+        const password = document.getElementById('appPassword');
+        const confirmPassword = document.getElementById('appPasswordConfirm');
+
+        if (email) email.value = 'reqacc257@gmail.com';
+        if (username) username.value = 'user1-40';
+        if (password) password.value = 'pass1-40';
+        if (confirmPassword) confirmPassword.value = 'pass1-40';
+
+        const mismatchError = document.getElementById('pwMismatchError');
+        if (mismatchError) mismatchError.style.display = 'none';
 
         renderReviewSummary();
     }
@@ -1651,6 +1680,24 @@
                 document.getElementById('refNumberDisplay').innerText = data.referenceNumber;
                 document.getElementById('refStatusDisplay').innerText = 'Pending Review';
                 document.getElementById('successMessage').style.display = 'flex';
+
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(data.referenceNumber);
+                    } else {
+                        const temp = document.createElement('textarea');
+                        temp.value = data.referenceNumber;
+                        temp.setAttribute('readonly', '');
+                        temp.style.position = 'fixed';
+                        temp.style.top = '-9999px';
+                        document.body.appendChild(temp);
+                        temp.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(temp);
+                    }
+                } catch (copyError) {
+                    console.warn('Copying reference number failed:', copyError);
+                }
             } else {
                 alert(res?.error || 'Unable to submit your application right now.');
                 submitBtn.disabled = false;
