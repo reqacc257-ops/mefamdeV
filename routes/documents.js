@@ -197,7 +197,7 @@ router.post('/:appId/:docKey/upload', async (req, res) => {
   if (req.user.type === 'applicant') {
     const canUpload = await applicantCanUploadDocument(appId, req.user, docKey);
     if (!canUpload) {
-      return res.status(403).json({ error: 'This document was already approved and is locked until staff marks it as Missing again.' });
+      return res.status(403).json({ error: 'This document has already been received and approved. It can only be reopened for upload if staff marks it as missing again.' });
     }
   }
 

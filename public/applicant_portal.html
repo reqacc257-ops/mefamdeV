@@ -1091,12 +1091,14 @@ async function renderRequirements(appId) {
                         ${canUpload && d.status !== 'Received' ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
                     </div>`).join('');
                 const allowUpload = canUpload && d.status !== 'Received';
-                const addTile = `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
+                const addTile = d.status === 'Received'
+                    ? ''
+                    : `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
                         <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)"${allowUpload ? '' : ' disabled'}>
                         ➕<br>Add Photo
                     </label>`;
                 const countLabel = d.status === 'Received'
-                    ? `<div class="doc-upload-status">This document was approved and is locked until staff marks it as Missing again.</div>`
+                    ? `<div class="doc-upload-status">Received and approved. No further upload is needed unless staff marks this document as missing again.</div>`
                     : !canUpload
                         ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
                         : gallery.length
@@ -1109,7 +1111,7 @@ async function renderRequirements(appId) {
             }
 
             const uploadLabel = d.status === 'Received'
-                ? `<div class="doc-upload-status">This document was approved and is locked until staff marks it as Missing again.</div>`
+                ? `<div class="doc-upload-status">Received and approved. No further upload is needed unless staff marks this document as missing again.</div>`
                 : !canUpload
                     ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
                     : d.fileName
