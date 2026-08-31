@@ -3116,7 +3116,6 @@ async function viewApp(id) {
 
     let footerHTML = `<button class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
     footerHTML += `<label style="display:inline-flex; align-items:center; gap:6px; margin:0 8px 0 0; font-size:.82rem; color:var(--text-muted); cursor:pointer;"><input type="checkbox" ${a.mekong ? 'checked' : ''} onchange="toggleApplicationMekong(${a.id}, this.checked)"> Mark as Mekong</label>`;
-    footerHTML += `<button class="btn btn-gold" onclick="openApplicationEdit(${a.id})">✎ Edit Application</button>`;
     if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
     if (a.status !== 'Accepted') footerHTML += `<button class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
     if (!['Accepted', 'Year Ended', 'Rejected'].includes(a.status)) footerHTML += `<button class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
