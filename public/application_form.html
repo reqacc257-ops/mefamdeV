@@ -943,12 +943,19 @@
     }
 
     function fillApplicantTestData() {
-        const selectedName = 'Andrea Ubaldo';
-        const parts = selectedName.split(' ').filter(Boolean);
+        const names = [
+            ['Andrea', 'Guevarra', 'Ubaldo'],
+            ['Angeline', 'Dela Cruz', 'Toribio'],
+            ['Jaycee', 'Ramos', 'Marco'],
+            ['Jerico', 'Santos', 'Bong'],
+            ['Reyjen', 'Mendoza', 'Cruz']
+        ];
+        const selected = names[Math.floor(Math.random() * names.length)];
+        const [first, middle, last] = selected;
 
-        document.getElementById('lastName').value = parts[parts.length - 1] || '';
-        document.getElementById('firstName').value = parts[0] || '';
-        document.getElementById('middleName').value = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+        document.getElementById('firstName').value = first || '';
+        document.getElementById('middleName').value = middle || '';
+        document.getElementById('lastName').value = last || '';
         document.getElementById('address').value = '123 Sample Street, Purok 4';
         document.getElementById('barangay').value = 'Banaban';
         document.getElementById('dob').value = '2007-05-14';
