@@ -390,7 +390,7 @@
                     oninput="onUsernameInput(this)"
                     onkeydown="if(event.key==='Enter') proceedLogin()">
             </div>
-            <p id="usernameHint" style="font-size:.74rem; color:#aaa; margin-top:5px;">Sample staff: Director + password of director</p>
+            <p id="usernameHint" style="font-size:.74rem; color:#aaa; margin-top:5px;">Use your staff username and password assigned to your account.</p>
             
         </div>
 
@@ -541,7 +541,7 @@ function onUsernameInput(input) {
     document.getElementById('loginBtn').style.background = 'var(--navy)';
     document.getElementById('usernameLabel').textContent = 'Staff Username / Reference ID';
     document.getElementById('usernameHint').style.color = '#aaa';
-    document.getElementById('usernameHint').textContent = 'Sample staff: Director + password of director';
+    document.getElementById('usernameHint').textContent = 'Use your staff username and password assigned to your account.';
     detectedType = null;
 
     if (!v) return;

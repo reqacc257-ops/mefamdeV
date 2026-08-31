@@ -870,7 +870,8 @@ function escapeHtml(value) {
    This check backs up the disabled UI state below in case a request slips
    through (e.g. a stale/re-enabled input). */
 function canUploadDocuments() {
-    return normalizeStatus(currentApplicant?.status) === 'Accepted';
+    const status = normalizeStatus(currentApplicant?.status);
+    return ['Pending Review', 'Interviewing', 'Accepted'].includes(status);
 }
 
 async function uploadDocumentFromInput(input) {
@@ -880,7 +881,7 @@ async function uploadDocumentFromInput(input) {
     if (!appId || !docKey || !file) return;
 
     if (!canUploadDocuments()) {
-        alert('Document uploads open once your application is accepted. Please bring your documents to your scheduled interview for now.');
+        alert('Uploads are available while your application is under review. Please keep required documents ready for staff review.');
         input.value = '';
         return;
     }
@@ -952,7 +953,7 @@ async function uploadReportCardPhoto(input) {
     if (!appId || !docKey || !file) return;
 
     if (!canUploadDocuments()) {
-        alert('Document uploads open once your application is accepted. Please bring your documents to your scheduled interview for now.');
+        alert('Uploads are available while your application is under review. Please keep required documents ready for staff review.');
         input.value = '';
         return;
     }
@@ -1015,7 +1016,7 @@ async function uploadReportCardPhoto(input) {
 
 function removeReportCardPhoto(appId, docKey, index) {
     if (!canUploadDocuments()) {
-        alert('Document uploads open once your application is accepted.');
+        alert('Uploads are available while your application is under review.');
         return;
     }
     const gallery = getReportCardGallery(appId, docKey);
@@ -1055,7 +1056,7 @@ async function renderRequirements(appId) {
     // Ended, upload controls are shown but disabled, with a note explaining why.
     const canUpload = canUploadDocuments();
     const uploadsClosedBanner = !canUpload
-        ? `<p style="font-size:.8rem; color:#7a5a00; margin:10px 0; padding:10px 12px; background:#fff7db; border-radius:8px;">📌 Document uploads open once you're accepted as a scholar. For now, please prepare physical copies (original + photocopy) to bring to your interview/document check.</p>`
+        ? `<p style="font-size:.8rem; color:#7a5a00; margin:10px 0; padding:10px 12px; background:#fff7db; border-radius:8px;">📌 Uploads are available while your application is under review. Please keep your documents ready for staff evaluation.</p>`
         : '';
 
     const rows = [
@@ -1085,7 +1086,7 @@ async function renderRequirements(appId) {
                         ➕<br>Add Photo
                     </label>`;
                 const countLabel = !canUpload
-                    ? `<div class="doc-upload-status">Uploads open once your application is accepted.</div>`
+                    ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
                     : gallery.length
                         ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
                         : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
@@ -1096,7 +1097,7 @@ async function renderRequirements(appId) {
             }
 
             const uploadLabel = !canUpload
-                ? `<div class="doc-upload-status">Uploads open once your application is accepted.</div>`
+                ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
                 : d.fileName
                     ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
                     : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;

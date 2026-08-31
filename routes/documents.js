@@ -79,7 +79,9 @@ async function seedChecklistForApplicationAsync(appId) {
 async function applicantCanUploadDocument(appId, user) {
   if (!user || user.type !== 'applicant') return true;
   const app = await db.prepare('SELECT status FROM applications WHERE id = ?').get(appId);
-  return Boolean(app) && String(app.status || '').trim() === 'Accepted';
+  if (!app) return false;
+  const status = String(app.status || '').trim();
+  return ['Pending Review', 'Interviewing', 'Accepted'].includes(status);
 }
 
 async function saveDocumentUploadAsync(appId, docKey, payload) {
