@@ -71,7 +71,7 @@ function parseJsonArray(value) {
 
 async function verifyToken(token, ip) {
   const payload = {
-    secret: process.env.HCAPTCHA_SECRET_KEY || 'ES_ad1db99159a14101b4369c4c7e89f4e4',
+    secret: process.env.HCAPTCHA_SECRET_KEY,
     response: token,
     remoteip: ip,
     sitekey: 'f41a910a-432a-4c04-97ec-9ce24de41162',
