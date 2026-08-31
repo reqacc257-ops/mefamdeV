@@ -76,6 +76,12 @@ async function seedChecklistForApplicationAsync(appId) {
   return buildChecklistAsync(appId);
 }
 
+async function applicantCanUploadDocument(appId, user) {
+  if (!user || user.type !== 'applicant') return true;
+  const app = await db.prepare('SELECT status FROM applications WHERE id = ?').get(appId);
+  return Boolean(app) && String(app.status || '').trim() === 'Accepted';
+}
+
 async function saveDocumentUploadAsync(appId, docKey, payload) {
   const existing = await db.prepare('SELECT * FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
   const status = payload.status || (payload.fileData ? 'Pending' : 'Required');
@@ -183,6 +189,13 @@ router.post('/:appId/:docKey/upload', async (req, res) => {
     return res.status(400).json({ error: 'Unknown document type' });
   }
 
+  if (req.user.type === 'applicant') {
+    const canUpload = await applicantCanUploadDocument(appId, req.user);
+    if (!canUpload) {
+      return res.status(403).json({ error: 'Document uploads are only available after your application is accepted.' });
+    }
+  }
+
   const payload = req.body || {};
   if (!payload.fileData || !payload.fileName) {
     return res.status(400).json({ error: 'Image data and file name are required' });
@@ -197,5 +210,5 @@ router.post('/:appId/:docKey/upload', async (req, res) => {
 });
 
 router.seedChecklistForApplication = db.isPostgres ? seedChecklistForApplicationAsync : seedChecklistForApplication;
-router.__test = { saveDocumentUpload, seedChecklistForApplication };
+router.__test = { saveDocumentUpload, seedChecklistForApplication, applicantCanUploadDocument };
 module.exports = router;

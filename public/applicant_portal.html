@@ -829,7 +829,7 @@ function renderPortal(app, session) {
 
 async function submitAttendanceCode() {
     const code = (document.getElementById('attCodeInput') || {}).value || '';
-    const studentId = (document.getElementById('attStudentId') || {}).value || appData?.referenceNumber || appData?.reference || appData?.reference_number || `APP-${appData?.id || ''}`;
+    const studentId = (document.getElementById('attStudentId') || {}).value || currentApplicant?.referenceNumber || currentApplicant?.reference || currentApplicant?.reference_number || `APP-${currentApplicant?.id || currentAppId || ''}`;
     const statusEl = document.getElementById('attStatus');
     const heroStatusText = (document.getElementById('heroStatus') || {}).innerText || '';
     if (!heroStatusText.includes('Accepted')) { alert('Attendance is available only to accepted scholars.'); return; }
@@ -1073,8 +1073,7 @@ async function renderRequirements(appId) {
             if (isReportCardDoc(d)) {
                 // Report Card: multi-photo gallery — lets the applicant add another page/photo
                 // instead of replacing the previous one. Only editable once Accepted.
-                const gallery = d.status === 'Missing' ? [] : getReportCardGallery(appId, d.key);
-                if (d.status === 'Missing') saveReportCardGallery(appId, d.key, []);
+                const gallery = getReportCardGallery(appId, d.key);
                 const galleryThumbs = gallery.map((g, i) => `
                     <div class="doc-gallery-item" data-image-src="${g.fileData}" data-image-label="${escapeHtml(d.label)} (${i + 1})" onclick="showImagePreview(this)">
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
@@ -1130,6 +1129,14 @@ async function renderRequirements(appId) {
         else badge.style.display = 'none';
     }
 }
+
+window.addEventListener('message', (event) => {
+    const data = event && event.data ? event.data : {};
+    if (data.type === 'mefamdev:grade-updated' && currentAppId) {
+        refreshRequirementsBadge(currentAppId);
+        renderRequirements(currentAppId);
+    }
+});
 
 async function refreshRequirementsBadge(appId) {
     try {
@@ -1392,4 +1399,4 @@ async function viewMyReportCard() {
 function closeReportCardModal() { document.getElementById('reportCardModal').classList.remove('open'); }
 </script>
 </body>
-</html>
+</html>bt
