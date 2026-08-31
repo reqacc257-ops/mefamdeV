@@ -1721,6 +1721,7 @@
 </script>
 <script src="/components/report-card.js"></script>
 <script src="/mefamdev-api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script>
 /* ══════════════════════════════════════
    CORE STATE
@@ -3573,8 +3574,7 @@ async function deleteApp(id) {
 
 function adminLogout() {
     if (confirm('Sign out of the admin dashboard?')) {
-        sessionStorage.removeItem('mefamdev_session');
-        window.location.href = 'index.html';
+        MefamAPI.logout();
     }
 }
 
@@ -3657,7 +3657,7 @@ function renderAnnouncements() {
             <div class="ann-body">${a.message}</div>
             <div class="ann-meta">
                 <span>&#128197; Posted: ${a.date}</span>
-                <span>&#128100; By: ${a.postedBy}</span>
+                <span>&#128100; By: ${a.postedBy || a.posted_by || '—'}</span>
             </div>
         </div>`).join('');
 }
@@ -4303,7 +4303,7 @@ function renderAttendanceSessionControls(ev) {
     try {
         generateAttendanceQRCode(active.code, ev.id);
         const qrImg = document.getElementById('attendanceQRCode');
-        if (qrImg) qrImg.onclick = () => printAttendanceQRCode(active.code);
+        if (qrImg) qrImg.onclick = () => printAttendanceQRCode(active.code, ev.id);
     } catch(e){}
 
     // start UI poll intervals
@@ -4373,26 +4373,45 @@ function generateAttendanceQRCode(code, evtId) {
     if (!img) return;
     try {
         const target = `${location.origin}/applicant_portal.html?code=${encodeURIComponent(code)}&event=${encodeURIComponent(evtId)}`;
-        img.src = `https://chart.googleapis.com/chart?cht=qr&chs=220x220&chl=${encodeURIComponent(target)}`;
-        img.alt = `Attendance QR code for ${code}`;
+        if (window.QRCode && typeof QRCode.toDataURL === 'function') {
+            QRCode.toDataURL(target, { width: 220, margin: 1, errorCorrectionLevel: 'M' }, (err, url) => {
+                if (err || !url) {
+                    img.alt = code;
+                    return;
+                }
+                img.src = url;
+                img.alt = `Attendance QR code for ${code}`;
+            });
+            return;
+        }
+        img.alt = code;
     } catch (e) {
         img.alt = code;
     }
 }
 
-function printAttendanceQRCode(code) {
-    const target = `${location.origin}/applicant_portal.html?code=${encodeURIComponent(code)}`;
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Attendance QR</title><style>body{font-family:Arial,Helvetica,sans-serif; text-align:center; padding:24px;} .card{display:inline-block; border:1px solid #ddd; padding:18px;} img{width:260px;height:260px;} .code{font-size:20px; margin-top:12px; letter-spacing:3px; font-weight:700;}</style></head><body><div class="card"><img src="https://chart.googleapis.com/chart?cht=qr&chs=400x400&chl=${encodeURIComponent(target)}" alt="QR"><div class="code">${code}</div><div style="font-size:.9rem; color:#666; margin-top:8px;">Scan or enter this code at the applicant portal</div></div></body></html>`;
-    const w = window.open('', '_blank');
-    if (!w) {
-        alert('Unable to open print window — please allow popups.');
+function printAttendanceQRCode(code, evtId) {
+    const target = `${location.origin}/applicant_portal.html?code=${encodeURIComponent(code)}&event=${encodeURIComponent(evtId || '')}`;
+    if (!window.QRCode || typeof QRCode.toDataURL !== 'function') {
+        alert('Unable to generate the attendance QR code right now.');
         return;
     }
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    // Give the window a short moment to load the image
-    setTimeout(() => w.print(), 600);
+    QRCode.toDataURL(target, { width: 400, margin: 1, errorCorrectionLevel: 'M' }, (err, url) => {
+        if (err || !url) {
+            alert('Unable to generate the attendance QR code right now.');
+            return;
+        }
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Attendance QR</title><style>body{font-family:Arial,Helvetica,sans-serif; text-align:center; padding:24px;} .card{display:inline-block; border:1px solid #ddd; padding:18px;} img{width:260px;height:260px;} .code{font-size:20px; margin-top:12px; letter-spacing:3px; font-weight:700;}</style></head><body><div class="card"><img src="${url}" alt="QR"><div class="code">${escapeHtml(code)}</div><div style="font-size:.9rem; color:#666; margin-top:8px;">Scan or enter this code at the applicant portal</div></div></body></html>`;
+        const w = window.open('', '_blank');
+        if (!w) {
+            alert('Unable to open print window — please allow popups.');
+            return;
+        }
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        setTimeout(() => w.print(), 600);
+    });
 }
 
 /* ══════════════════════════════════════
@@ -4870,7 +4889,7 @@ function renderFinancials() {
     if (disbBody) {
         disbBody.innerHTML = disbLog.length
             ? [...disbLog].reverse().map(d => `<tr>
-                <td><strong>${d.scholarName}</strong></td>
+                <td><strong>${d.scholarName || d.scholar_name || 'Unknown'}</strong></td>
                 <td style="color:var(--red); font-weight:700;">−₱${Number(d.amount).toLocaleString()}</td>
                 <td style="font-size:.82rem;">${d.period || '—'}</td>
                 <td style="font-size:.82rem;">${d.date}</td>

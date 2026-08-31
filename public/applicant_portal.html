@@ -864,11 +864,9 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-/* Applicants may only upload/replace documents once their application has
-   been Accepted. While Pending Review / Interviewing / Rejected / Year Ended,
-   uploads are disabled (they bring physical copies to the interview instead).
-   This check backs up the disabled UI state below in case a request slips
-   through (e.g. a stale/re-enabled input). */
+/* Applicants can upload while their application is under review and before a
+   staff member locks a specific document as Received. A received document is
+   locked until a staff member re-opens it as Missing. */
 function canUploadDocuments() {
     const status = normalizeStatus(currentApplicant?.status);
     return ['Pending Review', 'Interviewing', 'Accepted'].includes(status);
@@ -958,6 +956,13 @@ async function uploadReportCardPhoto(input) {
         return;
     }
 
+    const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
+    if (currentItem && String(currentItem.status || '').trim() === 'Received') {
+        alert('This document was already approved and is locked until staff marks it as Missing again.');
+        input.value = '';
+        return;
+    }
+
     const maxSize = 10 * 1024 * 1024; // 10 MB
     const statusEl = document.getElementById('rcGalleryStatus');
 
@@ -1019,6 +1024,11 @@ function removeReportCardPhoto(appId, docKey, index) {
         alert('Uploads are available while your application is under review.');
         return;
     }
+    const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
+    if (currentItem && String(currentItem.status || '').trim() === 'Received') {
+        alert('This document was already approved and is locked until staff marks it as Missing again.');
+        return;
+    }
     const gallery = getReportCardGallery(appId, docKey);
     gallery.splice(index, 1);
     saveReportCardGallery(appId, docKey, gallery);
@@ -1051,10 +1061,10 @@ async function renderRequirements(appId) {
         'Required': { icon: '📋', cls: 'sbadge-pending',  label: 'Required' },
     };
 
-    // Uploads (new or replacement) are only allowed once the application has
-    // been Accepted. While Pending Review / Interviewing / Rejected / Year
-    // Ended, upload controls are shown but disabled, with a note explaining why.
+    // Applicants may upload while the application is under review, but a staff-approved
+    // document is locked until a staff member re-opened it as Missing.
     const canUpload = canUploadDocuments();
+    window.__mefamdevRequirements = items;
     const uploadsClosedBanner = !canUpload
         ? `<p style="font-size:.8rem; color:#7a5a00; margin:10px 0; padding:10px 12px; background:#fff7db; border-radius:8px;">📌 Uploads are available while your application is under review. Please keep your documents ready for staff evaluation.</p>`
         : '';
@@ -1073,41 +1083,45 @@ async function renderRequirements(appId) {
 
             if (isReportCardDoc(d)) {
                 // Report Card: multi-photo gallery — lets the applicant add another page/photo
-                // instead of replacing the previous one. Only editable once Accepted.
+                // instead of replacing the previous one. A Received document is locked.
                 const gallery = getReportCardGallery(appId, d.key);
                 const galleryThumbs = gallery.map((g, i) => `
                     <div class="doc-gallery-item" data-image-src="${g.fileData}" data-image-label="${escapeHtml(d.label)} (${i + 1})" onclick="showImagePreview(this)">
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
-                        ${canUpload ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
+                        ${canUpload && d.status !== 'Received' ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
                     </div>`).join('');
-                const allowUpload = canUpload;
+                const allowUpload = canUpload && d.status !== 'Received';
                 const addTile = `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
                         <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)"${allowUpload ? '' : ' disabled'}>
                         ➕<br>Add Photo
                     </label>`;
-                const countLabel = !canUpload
-                    ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
-                    : gallery.length
-                        ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
-                        : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
+                const countLabel = d.status === 'Received'
+                    ? `<div class="doc-upload-status">This document was approved and is locked until staff marks it as Missing again.</div>`
+                    : !canUpload
+                        ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
+                        : gallery.length
+                            ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
+                            : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
                 return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}
                     <div class="doc-gallery">${galleryThumbs}${addTile}</div>
                     ${countLabel}
                     <div id="rcGalleryStatus" style="font-size:.75rem; color:var(--muted);"></div>`;
             }
 
-            const uploadLabel = !canUpload
-                ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
-                : d.fileName
-                    ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
-                    : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
+            const uploadLabel = d.status === 'Received'
+                ? `<div class="doc-upload-status">This document was approved and is locked until staff marks it as Missing again.</div>`
+                : !canUpload
+                    ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
+                    : d.fileName
+                        ? `<div class="doc-upload-status">Last upload: ${escapeHtml(d.fileName)}${d.uploadMethod === 'camera' ? ' • Photo' : ''} (max 10MB)</div>`
+                        : `<div class="doc-upload-status">Upload a photo or image file (max 10MB)</div>`;
             const previewLink = d.fileData
                 ? `<button type="button" class="doc-preview-link" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)">View image</button>`
                 : '';
             const previewImage = d.fileData
                 ? `<div class="doc-upload-thumbnail" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
                 : '';
-            const allowUpload = canUpload;
+            const allowUpload = canUpload && d.status !== 'Received';
             return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)"${allowUpload ? '' : ' disabled'}>📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
     ];
@@ -1385,8 +1399,14 @@ async function viewMyReportCard() {
     // scholar data from stored apps or preview session
     let apps = [];
     try { apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]'); } catch (e) { apps = []; }
-    const app = apps.find(a => String(a.id) === String(appId)) || {};
-    const scholarData = { name: app.name || sess.name || '', gradeLevel: app.grade || app.eduLevel || '', school: app.school || '', refNo: app.reference || app.referenceNumber || '', schoolYear };
+    const app = apps.find(a => String(a.id) === String(appId)) || currentApplicant || {};
+    const scholarData = {
+        name: app.name || currentApplicant?.name || sess.name || '',
+        gradeLevel: app.grade || app.gradeLevel || app.eduLevel || app.educationLevel || currentApplicant?.grade || currentApplicant?.gradeLevel || currentApplicant?.eduLevel || '',
+        school: app.school || currentApplicant?.school || '',
+        refNo: app.reference || app.referenceNumber || app.reference_number || currentApplicant?.reference || currentApplicant?.referenceNumber || currentApplicant?.reference_number || '',
+        schoolYear
+    };
 
     const container = document.getElementById('reportCardModalContent');
     if (!container) return;

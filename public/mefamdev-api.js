@@ -72,6 +72,16 @@ const MefamAPI = {
   },
 
   logout() {
+    const token = this._token();
+    const session = this.getSession();
+    if (token && session?.type === 'staff') {
+      fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        credentials: 'same-origin',
+        keepalive: true,
+      }).catch(() => {});
+    }
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');
     window.location.href = '/index.html';

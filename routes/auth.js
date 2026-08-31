@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const db = require('../db');
+const staffSessions = require('../lib/staff-sessions');
 
 const JWT_SECRET  = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' && !JWT_SECRET) {
@@ -27,6 +28,15 @@ function isDirectorVerificationEnabled() {
 
 function hashPassword(pw) {
   return crypto.createHash('sha256').update(pw).digest('hex');
+}
+
+function issueStaffToken(staff) {
+  const sessionId = crypto.randomBytes(24).toString('hex');
+  const payload = { type: 'staff', id: staff.id, username: staff.username, role: staff.role, name: staff.name, sid: sessionId };
+  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
+  const decoded = jwt.decode(token);
+  staffSessions.createSession(staff.username, sessionId, decoded.exp * 1000);
+  return { token, payload };
 }
 
 function normalizeDeviceId(deviceId) {
@@ -223,6 +233,7 @@ router.post('/login', async (req, res) => {
   const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(username);
   if (!staff) return res.status(401).json({ error: 'Invalid username or password' });
   if (staff.password !== hashPassword(password)) return res.status(401).json({ error: 'Invalid username or password' });
+  if (staffSessions.hasActiveSession(staff.username)) return res.status(409).json({ error: 'This staff account is already logged in on another device or browser.' });
 
   if (staff.role === 'director' && isDirectorVerificationEnabled()) {
     const email = getStaffEmail(staff);
@@ -230,9 +241,8 @@ router.post('/login', async (req, res) => {
     const normalizedDeviceId = normalizeDeviceId(deviceId);
     const trusted = isTrustedDevice(staff.username, normalizedDeviceId);
     if (trusted) {
-      const payload = { type: 'staff', id: staff.id, username: staff.username, role: 'director', name: staff.name };
-      const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
-      return res.json({ token, user: payload, trustedDevice: true });
+      const issued = issueStaffToken({ ...staff, role: 'director' });
+      return res.json({ token: issued.token, user: issued.payload, trustedDevice: true });
     }
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -253,9 +263,8 @@ router.post('/login', async (req, res) => {
     });
   }
 
-  const payload = { type: 'staff', id: staff.id, username: staff.username, role: staff.role, name: staff.name };
-  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
-  res.json({ token, user: payload });
+  const issued = issueStaffToken(staff);
+  res.json({ token: issued.token, user: issued.payload });
 });
 
 router.post('/director/verify-otp', async (req, res) => {
@@ -278,14 +287,21 @@ router.post('/director/verify-otp', async (req, res) => {
   const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(challenge.username);
   directorOtpChallenges.delete(challengeId);
   if (!staff || staff.role !== 'director') return res.status(403).json({ error: 'Director access required.' });
+  if (staffSessions.hasActiveSession(staff.username)) return res.status(409).json({ error: 'This staff account is already logged in on another device or browser.' });
 
   if (trustDevice && deviceId) {
     trustedDevices.set(getTrustedDeviceKey(staff.username, deviceId), { username: staff.username, expiresAt: Date.now() + TRUSTED_DEVICE_MS });
   }
 
-  const payload = { type: 'staff', id: staff.id, username: staff.username, role: 'director', name: staff.name };
-  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
-  res.json({ token, user: payload, trustedDevice: Boolean(trustDevice && deviceId) });
+  const issued = issueStaffToken({ ...staff, role: 'director' });
+  res.json({ token: issued.token, user: issued.payload, trustedDevice: Boolean(trustDevice && deviceId) });
+});
+
+router.post('/logout', require('../middleware/auth').requireAuth, (req, res) => {
+  if (req.user?.type === 'staff' && req.user.username && req.user.sid) {
+    staffSessions.revokeSession(req.user.username, req.user.sid);
+  }
+  res.json({ ok: true });
 });
 
 async function findApplicantByIdentifier(identifier, name) {

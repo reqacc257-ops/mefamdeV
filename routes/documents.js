@@ -76,12 +76,15 @@ async function seedChecklistForApplicationAsync(appId) {
   return buildChecklistAsync(appId);
 }
 
-async function applicantCanUploadDocument(appId, user) {
+async function applicantCanUploadDocument(appId, user, docKey) {
   if (!user || user.type !== 'applicant') return true;
   const app = await db.prepare('SELECT status FROM applications WHERE id = ?').get(appId);
   if (!app) return false;
   const status = String(app.status || '').trim();
-  return ['Pending Review', 'Interviewing', 'Accepted'].includes(status);
+  if (!['Pending Review', 'Interviewing', 'Accepted'].includes(status)) return false;
+  if (!docKey) return true;
+  const row = await db.prepare('SELECT status FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, docKey);
+  return !(row && String(row.status || '').trim() === 'Received');
 }
 
 async function saveDocumentUploadAsync(appId, docKey, payload) {
@@ -192,9 +195,9 @@ router.post('/:appId/:docKey/upload', async (req, res) => {
   }
 
   if (req.user.type === 'applicant') {
-    const canUpload = await applicantCanUploadDocument(appId, req.user);
+    const canUpload = await applicantCanUploadDocument(appId, req.user, docKey);
     if (!canUpload) {
-      return res.status(403).json({ error: 'Document uploads are only available after your application is accepted.' });
+      return res.status(403).json({ error: 'This document was already approved and is locked until staff marks it as Missing again.' });
     }
   }
 

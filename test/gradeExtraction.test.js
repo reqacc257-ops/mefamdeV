@@ -54,12 +54,13 @@ test('approved grade review marks the report card requirement as Received', asyn
   db.prepare('DELETE FROM document_status WHERE app_id = ?').run(appId);
   db.prepare('DELETE FROM grade_extraction WHERE app_id = ?').run(appId);
 
-  const info = await db.prepare(`
+  await db.prepare(`
     INSERT INTO grade_extraction (app_id, status, file_name, file_type, file_data, extracted, flags, uploaded_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(appId, 'pending', 'report-card.jpg', 'image/jpeg', 'data:image/jpeg;base64,abc123', JSON.stringify({ schoolYear: '2025-2026', subjects: [] }), JSON.stringify([]), new Date().toISOString());
 
-  const extraction = await db.prepare('SELECT * FROM grade_extraction WHERE id = ?').get(info.lastInsertRowid);
+  const extraction = await db.prepare('SELECT * FROM grade_extraction WHERE app_id = ? ORDER BY id DESC LIMIT 1').get(appId);
+  assert.ok(extraction, 'grade extraction row should exist');
   await gradeExtractionRouter.__test.markReportCardReceived(extraction.app_id, 'Approved by staff after grade review.');
 
   const row = await db.prepare('SELECT status, note FROM document_status WHERE app_id = ? AND doc_key = ?').get(appId, 'reportCard');

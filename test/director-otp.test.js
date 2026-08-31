@@ -44,6 +44,12 @@ test('director login requires an OTP before issuing a dashboard token', async ()
     assert.equal(verifyRes.status, 200);
     assert.ok(verified.token);
     assert.equal(verified.user.role, 'director');
+
+    const logoutRes = await fetch(`${base}/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${verified.token}` }
+    });
+    assert.equal(logoutRes.status, 200);
   } finally {
     server.close();
     if (previousEmail === undefined) delete process.env.DIRECTOR_EMAIL;
@@ -86,6 +92,12 @@ test('director can trust a device for one day after email verification', async (
     const trusted = await trustRes.json();
     assert.equal(trustRes.status, 200);
     assert.ok(trusted.token);
+
+    const logoutRes = await fetch(`${base}/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${trusted.token}` }
+    });
+    assert.equal(logoutRes.status, 200);
 
     const secondLoginRes = await fetch(`${base}/login`, {
       method: 'POST',

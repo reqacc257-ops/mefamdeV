@@ -735,7 +735,7 @@
         return;
       }
       const today = new Date(); today.setHours(0,0,0,0);
-      container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th></tr></thead><tbody>` +
+      container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Actions</th></tr></thead><tbody>` +
         events.map(ev => {
           const attended = getEventAttendanceIds(ev, getAcceptedScholars()).size;
           const max = Number(ev.max || 0) || 0;
@@ -747,6 +747,11 @@
             <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
             <td style="font-size:.82rem;">${escapeHtml(ev.venue || '—')}</td>
             <td><span class="badge ${badgeCls}">${attended}/${max}</span></td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-navy btn-sm" type="button" onclick="openEventAttendance(${Number(ev.id)})">Attendance</button>
+              <button class="btn btn-gold btn-sm" type="button" onclick="startEventSession(${Number(ev.id)})">${ev.activeAttendanceSession ? 'New code' : 'Start'}</button>
+              <button class="btn btn-danger btn-sm" type="button" onclick="deleteEvent(${Number(ev.id)})">Delete</button>
+            </td>
           </tr>`;
         }).join('') + `</tbody></table>`;
     }

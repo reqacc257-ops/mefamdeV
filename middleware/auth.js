@@ -4,6 +4,7 @@
  * Usage: app.use('/api/protected', requireAuth, router)
  */
 const jwt = require('jsonwebtoken');
+const staffSessions = require('../lib/staff-sessions');
 const JWT_SECRET = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' && !JWT_SECRET) {
   throw new Error('JWT_SECRET must be set in production.');
@@ -18,6 +19,9 @@ function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Invalid authorization header' });
   try {
     req.user = jwt.verify(token, signingSecret);
+    if (req.user.type === 'staff' && req.user.sid && !staffSessions.isActiveSession(req.user.username, req.user.sid, req.user.exp)) {
+      return res.status(401).json({ error: 'Staff session is no longer active' });
+    }
     next();
   } catch (e) {
     return res.status(401).json({ error: 'Invalid or expired token' });
