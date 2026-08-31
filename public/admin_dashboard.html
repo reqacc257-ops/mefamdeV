@@ -3208,6 +3208,15 @@ async function deleteSelectedRetainedGrades() {
     await loadSettingsRetention();
 }
 
+function readEditFormValue(app, keys) {
+    const source = app?.submittedData && typeof app.submittedData === 'object' ? app.submittedData : {};
+    for (const key of keys) {
+        const value = app?.[key] ?? source?.[key];
+        if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+    }
+    return '';
+}
+
 function openApplicationEdit(id) {
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
     const app = apps.find(item => String(item.id) === String(id));
@@ -3215,22 +3224,22 @@ function openApplicationEdit(id) {
 
     const values = {
         editAppId: app.id,
-        editAppName: app.name,
+        editAppName: readEditFormValue(app, ['name', 'fullName', 'full_name']),
         editAppStatus: app.status || 'Pending Review',
-        editAppSy: app.sy,
-        editAppSchool: app.school,
-        editAppGrade: app.grade,
-        editAppEduLevel: app.eduLevel || app.edu_level,
-        editAppDegree: app.degree,
-        editAppContact: app.contact,
-        editAppEmail: app.email,
-        editAppBarangay: app.barangay,
-        editAppDob: app.dob,
-        editAppIncome: app.totalIncome || app.total_income,
-        editAppExpense: app.totalExpense || app.total_expense,
-        editAppAddress: app.address,
-        editAppAmbition: app.ambition,
-        editAppWhyScholar: app.whyScholar || app.why_scholar
+        editAppSy: readEditFormValue(app, ['sy', 'schoolYear', 'school_year']),
+        editAppSchool: readEditFormValue(app, ['school', 'nextSchool', 'schoolName', 'prevSchool']),
+        editAppGrade: readEditFormValue(app, ['grade', 'nextGrade', 'gradeLevel', 'yearLevel', 'grade_level']),
+        editAppEduLevel: readEditFormValue(app, ['eduLevel', 'educationLevel', 'education_level', 'edu_level']),
+        editAppDegree: readEditFormValue(app, ['degree', 'track', 'course', 'program']),
+        editAppContact: readEditFormValue(app, ['contact', 'phoneNumber', 'mobile']),
+        editAppEmail: readEditFormValue(app, ['email', 'mail']),
+        editAppBarangay: readEditFormValue(app, ['barangay', 'barangayName']),
+        editAppDob: readEditFormValue(app, ['dob', 'dateOfBirth']),
+        editAppIncome: readEditFormValue(app, ['totalIncome', 'total_income', 'income', 'monthlyIncome']),
+        editAppExpense: readEditFormValue(app, ['totalExpense', 'total_expense', 'expenses', 'monthlyExpenses']),
+        editAppAddress: readEditFormValue(app, ['address', 'homeAddress']),
+        editAppAmbition: readEditFormValue(app, ['ambition', 'careerAmbition']),
+        editAppWhyScholar: readEditFormValue(app, ['whyScholar', 'why_scholar', 'reason'])
     };
     Object.entries(values).forEach(([fieldId, value]) => {
         const field = document.getElementById(fieldId);
