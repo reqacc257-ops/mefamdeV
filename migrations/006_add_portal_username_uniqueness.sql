@@ -2,9 +2,7 @@
 -- This migration adds a unique constraint so that usernames can be the sole
 -- identifier for applicant login (no reference number required).
 --
--- Note: PostgreSQL allows multiple NULLs in UNIQUE columns, so this is safe
--- for existing applications with portal_username = NULL.
-
-ALTER TABLE applications
-ADD CONSTRAINT unique_portal_username UNIQUE (portal_username)
+-- PostgreSQL partial unique indexes allow multiple NULL portal usernames.
+CREATE UNIQUE INDEX unique_portal_username
+ON applications (portal_username)
 WHERE portal_username IS NOT NULL;
