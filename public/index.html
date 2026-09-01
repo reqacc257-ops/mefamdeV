@@ -358,9 +358,11 @@
                 <span class="input-icon">👤</span>
                 <input type="text" id="unifiedUsername"
                     placeholder="Your username"
-                    autocomplete="username"
+                    autocomplete="off"
                     autocapitalize="none"
+                    autocorrect="off"
                     spellcheck="false"
+                    data-no-autofill="true"
                     onkeydown="if(event.key==='Enter') proceedLogin()">
             </div>
         </div>
@@ -371,7 +373,11 @@
                 <span class="input-icon">🔒</span>
                 <input type="password" id="unifiedPassword"
                     placeholder="Your password"
-                    autocomplete="current-password"
+                    autocomplete="off"
+                    autocapitalize="none"
+                    autocorrect="off"
+                    spellcheck="false"
+                    data-no-autofill="true"
                     onkeydown="if(event.key==='Enter') proceedLogin()">
                 <button type="button" onclick="toggleUnifiedPassword()" id="toggleUnifiedPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
             </div>
@@ -602,6 +608,22 @@ function toggleUnifiedPassword() {
     if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
     else { el.type = 'password'; btn.textContent = 'Show'; }
 }
+
+function disableAutocompleteTraces() {
+    const selectors = ['#unifiedUsername', '#unifiedPassword', '#forgotEmailInput', '#forgotReferenceInput', '#directorOtpInput'];
+    selectors.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        el.setAttribute('autocomplete', 'off');
+        el.setAttribute('autocapitalize', 'none');
+        el.setAttribute('autocorrect', 'off');
+        el.setAttribute('spellcheck', 'false');
+        el.setAttribute('data-no-autofill', 'true');
+        el.value = '';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', disableAutocompleteTraces);
 
 function openForgotPasswordModal() {
     const modal = document.getElementById('forgotPasswordModal');

@@ -842,13 +842,13 @@
 
             <div style="margin-top:12px;">
                 <label class="field-label translatable" data-tl="Gumawa ng username sa portal" data-en="Create your portal username">Gumawa ng username sa portal<span class="req-mark">*</span></label>
-                <input type="text" id="appUsername" placeholder="Create a username for your portal login" style="width:100%; margin-bottom:10px;" required minlength="4">
+                <input type="text" id="appUsername" placeholder="Create a username for your portal login" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" style="width:100%; margin-bottom:10px;" required minlength="4">
                 <div id="usernameAvailability" aria-live="polite" style="font-size:.8rem; min-height:1.3em; margin-top:5px;"></div>
             </div>
             <div style="margin-top:12px;">
                 <label class="field-label translatable" data-tl="Gumawa ng password sa portal" data-en="Create your portal password">Gumawa ng password sa portal<span class="req-mark">*</span></label>
                 <div class="pw-wrap">
-                    <input type="password" id="appPassword" placeholder="Create a password to access your application" style="width:100%; margin-bottom:10px;" required minlength="6">
+                    <input type="password" id="appPassword" placeholder="Create a password to access your application" autocomplete="new-password" style="width:100%; margin-bottom:10px;" required minlength="6">
                     <button type="button" class="pw-toggle" id="toggleAppPw" onclick="toggleAppPassword()">Show</button>
                 </div>
                 <div class="password-strength" aria-live="polite">
@@ -859,7 +859,7 @@
             <div style="margin-top:12px;">
                 <label class="field-label translatable" data-tl="Kumpirmahin ang password sa portal" data-en="Confirm your portal password">Confirm your portal password<span class="req-mark">*</span></label>
                 <div class="pw-wrap">
-                    <input type="password" id="appPasswordConfirm" placeholder="Re-enter your password" style="width:100%; margin-bottom:10px;" required minlength="6">
+                    <input type="password" id="appPasswordConfirm" placeholder="Re-enter your password" autocomplete="new-password" style="width:100%; margin-bottom:10px;" required minlength="6">
                     <button type="button" class="pw-toggle" id="toggleAppPwConfirm" onclick="toggleConfirmPassword()">Show</button>
                 </div>
             </div>
