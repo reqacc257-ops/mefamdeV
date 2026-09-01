@@ -539,7 +539,7 @@
                         <div><label for="renewalEduLevel">Education level</label><select id="renewalEduLevel" required><option value="">Select level</option><option value="Elementary">Elementary</option><option value="JuniorHigh">Junior High School</option><option value="SeniorHigh">Senior High School</option><option value="College">College</option></select></div>
                         <div><label for="renewalGrade">Grade / year level</label><select id="renewalGrade" required><option value="">Select grade/level</option></select></div>
                     </div>
-                    <div><label for="renewalDegree">Course / track / strand</label><input id="renewalDegree" placeholder="Optional for elementary and junior high"></div>
+                    <div id="renewalTrackRow" style="display:none;"><label for="renewalTrack">Track / Course</label><select id="renewalTrack"><option value="">Select track or course</option></select></div>
                     <div class="form-row">
                         <div><label for="renewalContact">Mobile number</label><input id="renewalContact" type="tel" inputmode="tel" placeholder="09XX XXX XXXX"></div>
                         <div><label for="renewalEmail">Email address</label><input id="renewalEmail" type="email" placeholder="you@example.com"></div>
@@ -684,11 +684,111 @@ const gradesByLevel = {
     College: ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year']
 };
 
+// Schools organized by category (from application_form.html)
+const schoolsByCategory = {
+    'Public Elementary (Angat District)': [
+        'Angat Central School', 'Binagbag Elementary', 'Donacion Elementary', 'Marungko Elementary',
+        'Niugan Elementary', 'Paltok Elementary', 'Pulong Yantok Elementary', 'San Roque Elementary',
+        'Sta. Cruz Elementary', 'Sta. Lucia Elementary', 'Sto. Cristo Elementary', 'Sulucan Elementary', 'Taboc Elementary'
+    ],
+    'Public High Schools': [
+        'Angat National High School', 'Binagbag National High School', 'Pres. Diosdado Macapagal Memorial HS'
+    ],
+    'Colleges / Universities': [
+        'Bulacan State University (Main/Malolos)', 'Bulacan State University (Bustos)', 'Baliuag University',
+        'Baliwag Polytechnic College (BTECH)', 'Fernandez College (FCAT)', 'Norzagaray College'
+    ]
+};
+
+// SHS Track options
+const SHS_TRACK_OPTIONS = [
+    'Academic Track',
+    'Technical-Professional Track',
+    'Academic Track - General Academic Strand',
+    'Academic Track - Humanities and Social Sciences',
+    'Academic Track - Science, Technology, Engineering, and Mathematics',
+    'Technical-Professional Track - ICT / Computer Systems Servicing',
+    'Technical-Professional Track - Home Economics / Cookery',
+    'Technical-Professional Track - Industrial Arts / Electrical Installation'
+];
+
+// College course options
+const COLLEGE_COURSE_OPTIONS = [
+    'Bachelor of Science in Civil Engineering (BSCE)',
+    'Bachelor of Science in Computer Engineering (BSCpE)',
+    'Bachelor of Science in Electrical Engineering (BSEE)',
+    'Bachelor of Science in Electronics Engineering (BSECE)',
+    'Bachelor of Science in Industrial Engineering (BSIE)',
+    'Bachelor of Science in Mechanical Engineering (BSME)',
+    'Bachelor of Science in Chemical Engineering (BSChE)',
+    'Bachelor of Science in Mining Engineering (BSMinE)',
+    'Bachelor of Science in Geodetic Engineering (BSGE)',
+    'Bachelor of Science in Sanitary Engineering (BSSE)',
+    'Bachelor of Science in Aeronautical/Aerospace Engineering (BSAE)',
+    'Bachelor of Science in Computer Science (BSCS)',
+    'Bachelor of Science in Information Technology (BSIT)',
+    'Bachelor of Science in Information Systems (BSIS)',
+    'Bachelor of Science in Data Science (BSDS)',
+    'Bachelor of Science in Business Administration (BSBA)',
+    'Bachelor of Science in Accountancy (BSA)',
+    'Bachelor of Science in Management Accounting (BSMA)',
+    'Bachelor of Science in Entrepreneurship',
+    'Bachelor of Science in Hospitality Management (BSHM)',
+    'Bachelor of Science in Tourism Management (BSTM)',
+    'Bachelor of Science in Office Administration (BSOA)',
+    'Bachelor of Elementary Education (BEEd)',
+    'Bachelor of Secondary Education (BSEd)',
+    'Bachelor of Physical Education (BPEd)',
+    'Bachelor of Early Childhood Education (BECEd)',
+    'Bachelor of Science in Nursing (BSN)',
+    'Bachelor of Science in Pharmacy (BSPharm)',
+    'Bachelor of Science in Medical Technology (BSMT)',
+    'Bachelor of Science in Physical Therapy (BSPT)',
+    'Bachelor of Science in Radiologic Technology (BSRT)',
+    'Bachelor of Science in Nutrition and Dietetics (BSND)',
+    'Bachelor of Science in Midwifery (BSM)',
+    'Bachelor of Science in Biology (BSBio)',
+    'Bachelor of Science in Chemistry (BSChem)',
+    'Bachelor of Science in Physics',
+    'Bachelor of Science in Mathematics',
+    'Bachelor of Science in Psychology',
+    'Bachelor of Science in Environmental Science',
+    'Bachelor of Science in Architecture (BSArch)',
+    'Bachelor of Fine Arts (BFA)',
+    'Bachelor of Landscape Architecture (BLA)',
+    'Bachelor of Science in Interior Design (BSID)',
+    'Bachelor of Science in Criminology (BSCrim)',
+    'Bachelor of Science in Legal Management (BSLM)',
+    'Bachelor of Science in Agriculture (BSA)',
+    'Bachelor of Science in Agricultural Engineering (BSAE)',
+    'Bachelor of Science in Forestry (BSF)',
+    'Bachelor of Science in Fisheries (BSF)',
+    'Bachelor of Arts in Communication (AB Comm)',
+    'Bachelor of Arts in Journalism',
+    'Bachelor of Arts in Broadcasting',
+    'Bachelor of Arts in Political Science (AB PolSci)',
+    'Bachelor of Arts in Sociology',
+    'Bachelor of Arts in Economics',
+    'Bachelor of Arts in History',
+    'Bachelor of Arts in Philosophy',
+    'Bachelor of Arts in English/Literature',
+    'Bachelor of Science in Marine Transportation (BSMT)',
+    'Bachelor of Science in Marine Engineering (BSMarE)',
+    'Bachelor of Science in Public Administration (BSPA)',
+    'Bachelor of Science in Customs Administration (BSCA)',
+    'Bachelor of Science in Social Work (BSW)',
+    'Bachelor of Science in Foreign Service (BSFS)',
+    'Bachelor of Science in Statistics (BSS)',
+    'Bachelor of Science in Occupational Therapy (BSOT)',
+    'Bachelor of Science in Dentistry (BSD)',
+    'Bachelor of Science in Medicine (MD)',
+    'Bachelor of Science in Development Communication',
+    'Bachelor of Science in Real Estate Management',
+    'Bachelor of Science in Public Health (BSPH)'
+];
+
 // Barangay options
 const barangayOptions = ['Banaban', 'Baybay', 'Binagbag', 'Donacion', 'Encanto', 'Laog', 'Marungko', 'Niugan', 'Paltok', 'Pulong Yantok', 'San Roque (Poblacion)', 'Santa Cruz (Poblacion)', 'Santa Lucia', 'Sto. Cristo (Poblacion)', 'Sulucan', 'Taboc'];
-
-// Example schools (can be expanded or fetched from API)
-const knownSchools = ['Bulacan State University (Main/Malolos)', 'Bulacan State University (Angat Campus)', 'University of Bulacan', 'Angat High School', 'Malolos Science Academy'];
 
 function initializeRenewalFormDropdowns() {
     // Initialize school year dropdown
@@ -704,14 +804,19 @@ function initializeRenewalFormDropdowns() {
         }
     }
 
-    // Initialize school dropdown
+    // Initialize school dropdown with optgroups
     const schoolSelect = document.getElementById('renewalSchool');
     if (schoolSelect && schoolSelect.options.length === 2) { // Only "Select school" and "+ Add new school"
-        knownSchools.forEach(school => {
-            const option = document.createElement('option');
-            option.value = school;
-            option.textContent = school;
-            schoolSelect.insertBefore(option, schoolSelect.querySelector('option[value="__add_new__"]'));
+        Object.entries(schoolsByCategory).forEach(([category, schools]) => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = category;
+            schools.forEach(school => {
+                const option = document.createElement('option');
+                option.value = school;
+                option.textContent = school;
+                optgroup.appendChild(option);
+            });
+            schoolSelect.insertBefore(optgroup, schoolSelect.querySelector('option[value="__add_new__"]'));
         });
     }
 
@@ -746,7 +851,10 @@ function initializeRenewalFormDropdowns() {
     // Listen for education level changes
     const eduLevelSelect = document.getElementById('renewalEduLevel');
     if (eduLevelSelect) {
-        eduLevelSelect.onchange = updateGradeOptions;
+        eduLevelSelect.onchange = function() {
+            updateGradeOptions();
+            updateTrackOptions();
+        };
     }
 }
 
@@ -775,6 +883,35 @@ function updateGradeOptions() {
     }
 }
 
+function updateTrackOptions() {
+    const eduLevel = document.getElementById('renewalEduLevel').value;
+    const trackRow = document.getElementById('renewalTrackRow');
+    const trackSelect = document.getElementById('renewalTrack');
+    
+    if (eduLevel === 'SeniorHigh' || eduLevel === 'College') {
+        trackRow.style.display = 'block';
+        trackSelect.required = true;
+        
+        // Clear existing options
+        while (trackSelect.options.length > 1) {
+            trackSelect.remove(1);
+        }
+        
+        // Add appropriate options
+        const options = eduLevel === 'College' ? COLLEGE_COURSE_OPTIONS : SHS_TRACK_OPTIONS;
+        options.forEach(track => {
+            const option = document.createElement('option');
+            option.value = track;
+            option.textContent = track;
+            trackSelect.appendChild(option);
+        });
+    } else {
+        trackRow.style.display = 'none';
+        trackSelect.required = false;
+        trackSelect.value = '';
+    }
+}
+
 function openRenewalModal() {
     const app = currentApplicant || {};
     
@@ -790,6 +927,7 @@ function openRenewalModal() {
     const schoolSelect = document.getElementById('renewalSchool');
     if (app.school && Array.from(schoolSelect.options).some(o => o.value === app.school)) {
         schoolSelect.value = app.school;
+        document.getElementById('renewalSchoolCustomInput').style.display = 'none';
     } else if (app.school) {
         // If current school is not in list, show add new option
         schoolSelect.value = '__add_new__';
@@ -797,6 +935,7 @@ function openRenewalModal() {
         document.getElementById('renewalSchoolCustomInput').style.display = 'block';
     } else {
         schoolSelect.value = '';
+        document.getElementById('renewalSchoolCustomInput').style.display = 'none';
     }
 
     document.getElementById('renewalEduLevel').value = app.eduLevel || app.edu_level || app.educationLevel || '';
@@ -810,7 +949,13 @@ function openRenewalModal() {
         gradeSelect.value = app.grade;
     }
 
-    document.getElementById('renewalDegree').value = app.degree || '';
+    // Update and set track/course
+    updateTrackOptions();
+    const trackSelect = document.getElementById('renewalTrack');
+    if (app.degree && Array.from(trackSelect.options).some(o => o.value === app.degree)) {
+        trackSelect.value = app.degree;
+    }
+
     document.getElementById('renewalContact').value = app.contact || '';
     document.getElementById('renewalEmail').value = app.email || '';
     document.getElementById('renewalAddress').value = app.address || '';
@@ -844,8 +989,18 @@ async function submitRenewal(event) {
         school = document.getElementById('renewalSchoolCustom').value.trim();
     }
 
+    // Get track/course if visible
+    const trackRow = document.getElementById('renewalTrackRow');
+    const track = trackRow.style.display !== 'none' ? document.getElementById('renewalTrack').value.trim() : '';
+
     if (!schoolYear || !school || !eduLevel || !grade || !barangay) {
         alert('Please fill in all required fields.');
+        return;
+    }
+
+    // Check track/course for SHS and College
+    if ((eduLevel === 'SeniorHigh' || eduLevel === 'College') && !track) {
+        alert('Please select a track or course.');
         return;
     }
     
@@ -854,7 +1009,7 @@ async function submitRenewal(event) {
             school,
             eduLevel,
             grade,
-            degree: document.getElementById('renewalDegree').value.trim(),
+            degree: track,
             contact: document.getElementById('renewalContact').value.trim(),
             email: document.getElementById('renewalEmail').value.trim(),
             address: document.getElementById('renewalAddress').value.trim(),
