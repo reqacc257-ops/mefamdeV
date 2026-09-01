@@ -11,7 +11,11 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-const API_BASE = (window.MEFAMDEV_API_BASE || '/api').replace(/\/$/, '');
+const configuredApiBase = window.MEFAMDEV_API_BASE || '';
+const defaultApiBase = window.location.protocol === 'file:'
+  ? 'https://mefamdev.onrender.com/api'
+  : '/api';
+const API_BASE = (configuredApiBase || defaultApiBase).replace(/\/$/, '');
 function storeSession(user, token) {
   sessionStorage.setItem('mefamdev_token', token);
   sessionStorage.setItem('mefamdev_session', JSON.stringify({ ...user, loginTime: Date.now() }));
@@ -316,10 +320,6 @@ const MefamAPI = {
     return this._post(`/applications/${id}/reset-password`, { password });
   },
 
-  // ── Admin: submission cooldown
-  async getSubmitCooldown() { return this._get('/applications/cooldown'); },
-  async setSubmitCooldown(minutes) { return this._post('/applications/cooldown', { minutes }); },
-
   // ── Communications ────────────────────────────────────────────────────────
   async getAnnouncements() { return this._get('/comms'); },
   async postAnnouncement(subject, message, target, tag) {
@@ -429,9 +429,6 @@ const MefamAPI = {
     try {
       payload = JSON.parse(text);
     } catch (error) {
-      if (response.status === 429) {
-        throw new Error('Too many submission attempts. Please wait a moment and try again.');
-      }
       throw new Error(`Server returned invalid JSON (${response.status}).`);
     }
     if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);

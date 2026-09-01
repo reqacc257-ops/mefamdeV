@@ -16,9 +16,6 @@ const crypto = require('crypto');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const documentsRouter = require('./documents');
 
-// Runtime toggle for submission cooldown (minutes). 0 = disabled.
-let submitCooldownMinutes = 0;
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function parseApp(row) {
   if (!row) return null;
@@ -148,7 +145,6 @@ router.get('/', async (req, res) => {
 
   return res.json({ items, total, page, pageSize: pageSize || 20 });
 });
-
 // ── GET single ────────────────────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   const row = await db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
@@ -245,7 +241,6 @@ router.patch('/:id', async (req, res) => {
   await db.prepare(`UPDATE applications SET ${updates.join(', ')} WHERE id = ?`).run(...values);
   res.json({ ok: true });
 });
-
 // Close an applicant's current school-year cycle without deleting history.
 router.post('/:id/end-year', requireRole('director'), async (req, res) => {
   const id = req.params.id;
@@ -374,14 +369,6 @@ async function submitPublicApplication(req, res) {
     }
   }
 
-  // Server-side submission cooldown (minutes). Uses runtime value `submitCooldownMinutes` (0 = disabled).
-  if (submitCooldownMinutes > 0 && b.contact) {
-    const recent = await db.prepare(
-      `SELECT id FROM applications WHERE contact = ? AND submitted_at > datetime('now', '-${submitCooldownMinutes} minutes')`
-    ).get(b.contact);
-    if (recent) return res.status(429).json({ error: `Please wait ${submitCooldownMinutes} minutes before resubmitting.` });
-  }
-
   const hasId = b.id !== undefined && b.id !== null && b.id !== '';
   const insertColumns = [
     'sy', 'name', 'address', 'barangay', 'dob', 'age', 'gender', 'contact', 'email', 'religion', 'birthplace',
@@ -482,7 +469,6 @@ async function submitPublicApplication(req, res) {
 
 module.exports = router;
 module.exports.submitPublicApplication = submitPublicApplication;
-
 // ── Admin: reset / set applicant password ───────────────────────────────────
 router.post('/:id/reset-password', requireRole('director','program','finance'), async (req, res) => {
   const id = req.params.id;
@@ -501,14 +487,3 @@ router.post('/:id/reset-password', requireRole('director','program','finance'), 
   res.json({ ok: true });
 });
 
-// ── Admin: get/set submission cooldown minutes ──────────────────────────────
-router.get('/cooldown', requireRole('director','program','finance'), (req, res) => {
-  res.json({ minutes: submitCooldownMinutes });
-});
-
-router.post('/cooldown', requireRole('director','program','finance'), (req, res) => {
-  const mins = parseInt(req.body.minutes, 10);
-  if (isNaN(mins) || mins < 0) return res.status(400).json({ error: 'Invalid minutes' });
-  submitCooldownMinutes = mins;
-  res.json({ ok: true, minutes: submitCooldownMinutes });
-});
