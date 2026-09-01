@@ -904,47 +904,6 @@
         if (img && (!img.complete || img.naturalWidth === 0)) img.style.display = 'none';
     };
 
-    function fillEducationDemoData() {
-        const eduSelect = document.getElementById('eduLevel');
-        const schoolSelect = document.getElementById('nextSchool');
-        const gradeSelect = document.getElementById('nextGrade');
-        const degreeInput = document.getElementById('degree');
-        const degreeCustom = document.getElementById('degreeCustom');
-
-        const presets = {
-            Elementary: { school: 'Angat Central School', grade: 'Grade 4', track: '' },
-            JuniorHigh: { school: 'Angat National High School', grade: 'Grade 9', track: 'Academic Track - General Academic Strand' },
-            SeniorHigh: { school: 'Angat National High School', grade: 'Grade 11', track: 'Academic Track - Science, Technology, Engineering, and Mathematics' },
-            College: { school: 'Bulacan State University (Main/Malolos)', grade: '1st Year College', track: 'Bachelor of Science in Information Technology (BSIT)' }
-        };
-
-        const selected = presets[eduSelect.value] || presets.SeniorHigh;
-
-        eduSelect.value = eduSelect.value || 'SeniorHigh';
-        updateAcademicFields();
-
-        if (schoolSelect) schoolSelect.value = selected.school;
-        if (gradeSelect) {
-            const matches = Array.from(gradeSelect.options).some(option => option.value === selected.grade);
-            if (matches) gradeSelect.value = selected.grade;
-            else if (gradeSelect.options.length > 1) gradeSelect.selectedIndex = 1;
-        }
-
-        if (degreeInput) {
-            degreeInput.value = selected.track;
-            degreeInput.style.display = '';
-            degreeInput.setAttribute('required', 'required');
-            if (degreeCustom) {
-                degreeCustom.value = '';
-                degreeCustom.style.display = 'none';
-            }
-            closeDegreeOptions();
-        }
-
-        renderReviewSummary();
-    }
-
-
         [5000, 1200, 2500, 1800].forEach((value, i) => { if (expenseInputs[i]) expenseInputs[i].value = value; });
         calcTotal();
 
