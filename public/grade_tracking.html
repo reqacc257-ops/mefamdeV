@@ -188,7 +188,9 @@
 
         function buildFallbackPeriodOptions(periodType = 'quarter') {
             const typeLabel = String(periodType || 'quarter').charAt(0).toUpperCase() + String(periodType || 'quarter').slice(1);
-            return Array.from({ length: 4 }, (_, index) => ({
+            let periodCount = 3;
+            try { periodCount = Number(localStorage.getItem('mefamdev_grading_periods')) === 4 ? 4 : 3; } catch (e) {}
+            return Array.from({ length: periodCount }, (_, index) => ({
                 value: `${periodType}-${index + 1}`,
                 label: `${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : index === 2 ? 'rd' : 'th'} ${typeLabel}`
             }));
