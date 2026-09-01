@@ -74,7 +74,7 @@ async function verifyToken(token, ip) {
     secret: process.env.HCAPTCHA_SECRET_KEY,
     response: token,
     remoteip: ip,
-    sitekey: 'f41a910a-432a-4c04-97ec-9ce24de41162',
+    sitekey: process.env.HCAPTCHA_SITE_KEY || '12a47bb6-f1d0-4c60-9c1c-f94653d2b97e',
   };
 
   const params = new URLSearchParams(payload);
