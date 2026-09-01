@@ -257,6 +257,7 @@
             <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
             <div class="modal-body">
                 <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
+                <div style="margin-top:16px;"><label for="gradingPeriodsSelect">Grading format</label><select id="gradingPeriodsSelect" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px;"><option value="3">3 terms (DepEd-style)</option><option value="4">4 quarters (private-school option)</option></select><small style="display:block; margin-top:5px; color:var(--text-muted);">Existing Quarter 4 records are kept and appear when 4 quarters is selected.</small></div>
                 <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
                 <div style="margin-top:16px;"><ul id="subjectsListView"></ul></div>
             </div>
@@ -501,6 +502,7 @@
             document.getElementById('gradeSubject').value = '';
             document.getElementById('gradeQuarter').value = '';
             document.getElementById('gradeInput').value = '';
+            renderGradePeriodOptions();
             // Clear any pending-row tag left over from a previous edit session
             // so this fresh entry doesn't get routed to editGrade() by mistake.
             delete document.getElementById('gradeModal').dataset.gradeRowId;
@@ -780,7 +782,20 @@
             }
         }
 
-        function openSubjectsModal() { document.getElementById('subjectsModal').classList.add('open'); renderSubjectsDatalist(); }
+        function renderGradePeriodOptions() {
+            const select = document.getElementById('gradeQuarter');
+            if (!select) return;
+            let count = 3;
+            try { count = Number(localStorage.getItem('mefamdev_grading_periods')) === 4 ? 4 : 3; } catch (e) {}
+            select.innerHTML = '<option value="">-- Select Period --</option>' + Array.from({ length: count }, (_, index) => `<option value="${index + 1}">${count === 3 ? 'Term' : 'Quarter'} ${index + 1}</option>`).join('');
+        }
+
+        function openSubjectsModal() {
+            const select = document.getElementById('gradingPeriodsSelect');
+            if (select) select.value = Number(localStorage.getItem('mefamdev_grading_periods')) === 4 ? '4' : '3';
+            document.getElementById('subjectsModal').classList.add('open');
+            renderSubjectsDatalist();
+        }
 
         async function addSubject() {
             const input = document.getElementById('newSubjectInput');
@@ -824,7 +839,13 @@
             }
         }
 
-        async function saveSubjects() { closeModal('subjectsModal'); await renderSubjectsDatalist(); }
+        async function saveSubjects() {
+            const periods = document.getElementById('gradingPeriodsSelect')?.value === '4' ? 4 : 3;
+            localStorage.setItem('mefamdev_grading_periods', String(periods));
+            closeModal('subjectsModal');
+            renderGradePeriodOptions();
+            await renderSubjectsDatalist();
+        }
 
         function makeJsString(value) {
             // Must produce the literal 6-character escape sequence text (e.g.
