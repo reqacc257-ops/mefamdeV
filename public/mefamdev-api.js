@@ -20,6 +20,19 @@ function storeSession(user, token) {
 // ── Token helpers ─────────────────────────────────────────────────────────────
 const MefamAPI = {
   // ── Auth ───────────────────────────────────────────────────────────────────
+  async loginUser(username, password) {
+    // Unified login: backend determines if staff or applicant
+    sessionStorage.removeItem('mefamdev_token');
+    sessionStorage.removeItem('mefamdev_session');
+    try {
+      const deviceId = `browser:${navigator.userAgent || 'unknown-device'}`;
+      const res = await this._post('/auth/login', { username, password, deviceId }, false);
+      if (res?.token) storeSession(res.user, res.token);
+      return res;
+    } catch (error) {
+      return { error: 'Unable to reach the server. Please try again.' };
+    }
+  },
   async loginStaff(username, password) {
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');
@@ -38,11 +51,11 @@ const MefamAPI = {
     return res;
   },
 
-  async loginApplicant(refNo, name, password, username) {
+  async loginApplicant(username, password) {
+    // Simplified: username + password only (no reference number needed)
     sessionStorage.removeItem('mefamdev_token');
     sessionStorage.removeItem('mefamdev_session');
-    const payload = { refNo, name, password };
-    if (username) payload.username = username;
+    const payload = { username, password };
     try {
       const res = await this._post('/auth/applicant', payload, false);
       if (res?.token) storeSession(res.user, res.token);

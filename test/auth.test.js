@@ -83,21 +83,11 @@ test('applicant auth accepts a timestamp-style reference number and password', a
 
   try {
     const { port } = server.address();
-    const lookupRes = await fetch(`http://127.0.0.1:${port}/api/auth/lookup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier: referenceNumber })
-    });
-    const lookupBody = await lookupRes.json();
-
-    assert.equal(lookupRes.status, 200);
-    assert.equal(lookupBody.applicant?.id, 1);
-    assert.equal(lookupBody.applicant?.username, 'portaluser');
-
+    // Updated: login uses portal_username, not reference number
     const loginRes = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refNo: referenceNumber, password: 'secret123' })
+      body: JSON.stringify({ username: 'portaluser', password: 'secret123' })
     });
     const loginBody = await loginRes.json();
 
@@ -126,10 +116,11 @@ test('applicant auth accepts a compact reference number without slashes', async 
 
   try {
     const { port } = server.address();
+    // Updated: login uses portal_username, not reference number
     const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refNo: referenceNumber, password: 'secret123' })
+      body: JSON.stringify({ username: 'slashless', password: 'secret123' })
     });
     const body = await res.json();
 
@@ -146,7 +137,7 @@ test('applicant auth accepts reference id plus portal username for login', async
   const passwordHash = crypto.createHash('sha256').update('secret123').digest('hex');
   db.prepare(
     'INSERT INTO applications (name, portal_username, password_hash, reference_number, status) VALUES (?, ?, ?, ?, ?)' 
-  ).run('Maria Lopez', 'portaluser', passwordHash, '20260831105124', 'Pending Review');
+  ).run('Maria Lopez', 'marialopez', passwordHash, '20260831105124', 'Pending Review');
 
   const app = express();
   app.use(express.json());
@@ -157,10 +148,11 @@ test('applicant auth accepts reference id plus portal username for login', async
 
   try {
     const { port } = server.address();
+    // Updated: simplified to username + password, reference number no longer needed for login
     const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refNo: '20260831105124', name: 'portaluser', password: 'secret123' })
+      body: JSON.stringify({ username: 'marialopez', password: 'secret123' })
     });
     const body = await res.json();
 
@@ -177,7 +169,7 @@ test('applicant auth accepts full applicant name for login', async () => {
   const passwordHash = crypto.createHash('sha256').update('secret123').digest('hex');
   db.prepare(
     'INSERT INTO applications (name, portal_username, password_hash, status) VALUES (?, ?, ?, ?)' 
-  ).run('Maria Lopez', 'portaluser', passwordHash, 'Pending Review');
+  ).run('Maria Lopez', 'marialopez', passwordHash, 'Pending Review');
 
   const app = express();
   app.use(express.json());
@@ -188,10 +180,11 @@ test('applicant auth accepts full applicant name for login', async () => {
 
   try {
     const { port } = server.address();
+    // Updated: simplified to use portal_username rather than full name
     const res = await fetch(`http://127.0.0.1:${port}/api/auth/applicant`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'Maria Lopez', password: 'secret123' })
+      body: JSON.stringify({ username: 'marialopez', password: 'secret123' })
     });
     const body = await res.json();
 

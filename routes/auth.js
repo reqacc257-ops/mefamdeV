@@ -226,47 +226,66 @@ async function sendPasswordResetEmail(app, token, req) {
   }
 }
 
-// ── Staff login ───────────────────────────────────────────────────────────────
+// ── Unified login (staff or applicant) ────────────────────────────────────────
 router.post('/login', async (req, res) => {
   const { username, password, deviceId } = req.body;
   if (!username) return res.status(400).json({ error: 'Username required' });
   if (!password) return res.status(400).json({ error: 'Password required' });
 
+  // Try staff login first
   const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(username);
-  if (!staff) return res.status(401).json({ error: 'Invalid username or password' });
-  if (staff.password !== hashPassword(password)) return res.status(401).json({ error: 'Invalid username or password' });
-  if (staffSessions.hasActiveSession(staff.username)) return res.status(409).json({ error: 'This staff account is already logged in on another device or browser.' });
+  if (staff && staff.password === hashPassword(password)) {
+    if (staffSessions.hasActiveSession(staff.username)) return res.status(409).json({ error: 'This staff account is already logged in on another device or browser.' });
 
-  if (staff.role === 'director' && isDirectorVerificationEnabled()) {
-    const email = getStaffEmail(staff);
-    if (!email) return res.status(503).json({ error: 'Director email verification is not configured. Set DIRECTOR_EMAIL.' });
-    const normalizedDeviceId = normalizeDeviceId(deviceId);
-    const trusted = isTrustedDevice(staff.username, normalizedDeviceId);
-    if (trusted) {
-      const issued = issueStaffToken({ ...staff, role: 'director' });
-      return res.json({ token: issued.token, user: issued.payload, trustedDevice: true });
+    if (staff.role === 'director' && isDirectorVerificationEnabled()) {
+      const email = getStaffEmail(staff);
+      if (!email) return res.status(503).json({ error: 'Director email verification is not configured. Set DIRECTOR_EMAIL.' });
+      const normalizedDeviceId = normalizeDeviceId(deviceId);
+      const trusted = isTrustedDevice(staff.username, normalizedDeviceId);
+      if (trusted) {
+        const issued = issueStaffToken({ ...staff, role: 'director' });
+        return res.json({ token: issued.token, user: issued.payload, trustedDevice: true });
+      }
+
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const challengeId = crypto.randomBytes(24).toString('hex');
+      const sent = sendDirectorOtp(email, code);
+      return Promise.resolve(sent).then(delivery => {
+        if (!delivery) return res.status(502).json({ error: 'Unable to send Director verification code.' });
+        directorOtpChallenges.set(challengeId, {
+          username: staff.username,
+          codeHash: hashPassword(code),
+          expiresAt: Date.now() + 10 * 60 * 1000,
+          attempts: 0,
+          deviceId: normalizedDeviceId,
+        });
+        const response = { requiresOtp: true, challengeId, expiresIn: 600, message: `Verification code sent to ${email.replace(/(.{2}).+(@.*)/, '$1***$2')}` };
+        if (delivery === 'development') response.developmentOtp = code;
+        return res.json(response);
+      });
     }
 
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    const challengeId = crypto.randomBytes(24).toString('hex');
-    const sent = sendDirectorOtp(email, code);
-    return Promise.resolve(sent).then(delivery => {
-      if (!delivery) return res.status(502).json({ error: 'Unable to send Director verification code.' });
-      directorOtpChallenges.set(challengeId, {
-        username: staff.username,
-        codeHash: hashPassword(code),
-        expiresAt: Date.now() + 10 * 60 * 1000,
-        attempts: 0,
-        deviceId: normalizedDeviceId,
-      });
-      const response = { requiresOtp: true, challengeId, expiresIn: 600, message: `Verification code sent to ${email.replace(/(.{2}).+(@.*)/, '$1***$2')}` };
-      if (delivery === 'development') response.developmentOtp = code;
-      return res.json(response);
-    });
+    const issued = issueStaffToken(staff);
+    return res.json({ token: issued.token, user: issued.payload });
   }
 
-  const issued = issueStaffToken(staff);
-  res.json({ token: issued.token, user: issued.payload });
+  // Try applicant login
+  const apps = await db.prepare('SELECT * FROM applications').all();
+  const app = apps.find(row => String(row.portal_username || row.username || '').toLowerCase() === username.toLowerCase());
+  
+  if (!app) return res.status(401).json({ error: 'Invalid username or password' });
+
+  // Check password
+  if (app.password_hash) {
+    const hashed = crypto.createHash('sha256').update(String(password || '')).digest('hex');
+    if (!password || hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid username or password' });
+  } else if (password) {
+    return res.status(401).json({ error: 'Invalid username or password' });
+  }
+
+  const payload = { type: 'applicant', appId: app.id, name: app.name };
+  const token = jwt.sign(payload, signingSecret, { expiresIn: JWT_EXPIRES });
+  return res.json({ token, user: payload });
 });
 
 router.post('/director/verify-otp', async (req, res) => {
@@ -422,49 +441,22 @@ router.post('/applicant/reset-password', async (req, res) => {
   res.json({ ok: true, message: 'Your password has been reset successfully.' });
 });
 
-// ── Applicant portal login ────────────────────────────────────────────────────
+// ── Applicant portal login (username + password only) ────────────────────────
 router.post('/applicant', async (req, res) => {
-  const { refNo, name, password, username } = req.body;
-  const rawIdentifier = String(username || refNo || '').trim();
-  const requestName = String(name || '').trim();
-  const requestUsername = String(username || '').trim();
+  const { username, password } = req.body;
+  if (!username) return res.status(400).json({ error: 'Username required' });
 
-  if (!rawIdentifier) return res.status(400).json({ error: 'Reference number or portal username required' });
+  const apps = await db.prepare('SELECT * FROM applications').all();
+  const app = apps.find(row => String(row.portal_username || row.username || '').toLowerCase() === username.toLowerCase());
+  
+  if (!app) return res.status(401).json({ error: 'Invalid username or password' });
 
-  const app = await findApplicantByIdentifier(rawIdentifier, requestName);
-  if (!app) return res.status(404).json({ error: 'Application not found' });
-
-  // Accept the real applicant portal payload: reference ID + portal username + password.
-  // Also keep the legacy full-name login working for older flows.
-  const allowedUsername = String(app.portal_username || app.username || '').trim().toLowerCase();
-  const requestNameLower = requestName.toLowerCase();
-  const requestUsernameLower = requestUsername.toLowerCase();
-
-  const isUsernameMatch = !!allowedUsername && (
-    allowedUsername === requestUsernameLower ||
-    allowedUsername === requestNameLower ||
-    requestUsernameLower === requestNameLower
-  );
-
-  if (requestUsername || requestName) {
-    if (!isUsernameMatch) {
-      const fullName = String(app.name || '').trim().toLowerCase();
-      const pieces = fullName.split(/[\s,]+/).filter(Boolean);
-      const inputName = requestNameLower || requestUsernameLower;
-      const nameMatch = !!inputName && (
-        fullName === inputName ||
-        pieces.some(p => p && inputName.includes(p)) ||
-        inputName.includes(fullName)
-      );
-      if (!nameMatch) return res.status(401).json({ error: 'Username or name does not match the application on file' });
-    }
-  }
-
+  // Check password
   if (app.password_hash) {
     const hashed = crypto.createHash('sha256').update(String(password || '')).digest('hex');
-    if (!password || hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid password' });
+    if (!password || hashed !== app.password_hash) return res.status(401).json({ error: 'Invalid username or password' });
   } else if (password) {
-    return res.status(401).json({ error: 'No application password is set. Leave the password blank to continue.' });
+    return res.status(401).json({ error: 'Invalid username or password' });
   }
 
   const payload = { type: 'applicant', appId: app.id, name: app.name };

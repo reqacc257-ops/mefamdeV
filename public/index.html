@@ -137,35 +137,18 @@
             position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
             font-size: .95rem; color: #aaa; pointer-events: none;
         }
-        input[type="text"], input[type="password"], input[type="email"], select {
+        input[type="text"], input[type="password"], input[type="email"] {
             width: 100%; padding: 11px 13px 11px 38px;
             border: 1.5px solid #e0e3ea; border-radius: 8px;
             font-family: 'DM Sans', sans-serif; font-size: .93rem;
             color: var(--text); background: #fff; transition: border .2s, box-shadow .2s;
         }
-        select { padding-left: 38px; }
-        input:focus, select:focus {
+        input:focus {
             outline: none; border-color: var(--gold);
             box-shadow: 0 0 0 3px rgba(245,166,35,.2);
         }
 
-        /* Role selector cards */
-        .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-        .role-card {
-            border: 2px solid #e8eaef; border-radius: 9px; padding: 12px 10px;
-            cursor: pointer; transition: .15s; text-align: center;
-            position: relative;
-        }
-        .role-card:hover { border-color: var(--gold); background: #fffbf2; }
-        .role-card.selected { border-color: var(--navy); background: #f0f4ff; }
-        .role-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
-        .role-card .rc-icon { font-size: 1.5rem; margin-bottom: 4px; }
-        .role-card .rc-name { font-size: .78rem; font-weight: 700; color: var(--navy); }
-        .role-card .rc-sub { font-size: .68rem; color: #999; margin-top: 1px; }
-        .role-card.selected::after {
-            content: '✓'; position: absolute; top: 5px; right: 8px;
-            font-size: .7rem; color: var(--navy); font-weight: 700;
-        }
+
 
         /* Submit */
         .btn-login {
@@ -346,17 +329,7 @@
         <h2>Sign in to your portal</h2>
     </div>
 
-    <!-- Detected applicant reference (shown once an applicant identifier is recognised) -->
-    <div id="detectedRole" style="display:none; margin-bottom:18px;">
-        <div id="detectedRolePill" style="
-            display:inline-flex; align-items:center; gap:8px;
-            padding:8px 16px; border-radius:20px;
-            font-size:.82rem; font-weight:700;
-            background:#e8f5e9; color:#1b5e20;
-            border:1px solid #a5d6a7;
-            transition: all .2s;
-        "></div>
-    </div>
+
 
     <!-- Error dialog (shared by staff and applicant login) -->
     <div class="error-banner" id="loginError" role="alertdialog" aria-modal="true" aria-labelledby="loginErrorTitle" aria-describedby="loginErrorMsg">
@@ -376,66 +349,31 @@
         </div>
     </div>
 
-    <!-- ── STEP 1: Username / Reference ── -->
+    <!-- ── Unified Login Form ── -->
     <div id="step1">
         <input type="text" id="botTrap" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
         <div class="form-group">
-            <label id="usernameLabel">Staff Username / Reference ID</label>
+            <label>Username</label>
             <div class="input-wrap">
-                <span class="input-icon" id="usernameIcon">👤</span>
+                <span class="input-icon">👤</span>
                 <input type="text" id="unifiedUsername"
-                    placeholder="Staff or Student Reference ID(e.g. 20260830171806)"
+                    placeholder="Your username"
                     autocomplete="username"
                     autocapitalize="none"
                     spellcheck="false"
-                    oninput="onUsernameInput(this)"
                     onkeydown="if(event.key==='Enter') proceedLogin()">
             </div>
-            <p id="usernameHint" style="font-size:.74rem; color:#aaa; margin-top:5px;">Use your staff username and password assigned to your account.</p>
-            
         </div>
 
-        <!-- Step 2a: Staff password (shown when staff username detected) -->
-        <div id="staffPasswordField" style="display:none;">
-            <div class="form-group">
-                <label>Password</label>
-                <div class="input-wrap">
-                    <span class="input-icon">🔒</span>
-                    <input type="password" id="unifiedPassword"
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                        onkeydown="if(event.key==='Enter') proceedLogin()">
-                    <button type="button" onclick="toggleUnifiedPassword()" id="toggleUnifiedPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
-                </div>
-                <p style="font-size:.74rem; color:#bbb; margin-top:5px; text-align:right;">
-                    Need help signing in? Use the Forgot Password link below.
-                </p>
-            </div>
-        </div>
-
-        <!-- Step 2b: Applicant verification (shown once a Reference ID has been entered) -->
-        <div id="applicantNameField" style="display:none;">
-            <div class="form-group">
-                <label>User Name</label>
-                <p style="font-size:.72rem; color:#999; margin:-2px 0 6px;">The username you set at the end of your application form.</p>
-                <div class="input-wrap">
-                    <input type="text" id="unifiedName2"
-                        placeholder="Username from your application"
-                        autocapitalize="none"
-                        spellcheck="false"
-                        onkeydown="if(event.key==='Enter') proceedLogin()">
-                </div>
-            </div>
-            <div id="applicantPasswordField">
-                <div class="form-group">
-                    <label>User Password</label>
-                    <p style="font-size:.72rem; color:#999; margin:-2px 0 6px;">The password you set at the end of your application form.</p>
-                    <div class="input-wrap">
-                        <span class="input-icon">🔒</span>
-                            <input type="password" id="unifiedAppPassword" placeholder="Password from your application" onkeydown="if(event.key==='Enter') proceedLogin()">
-                            <button type="button" onclick="toggleUnifiedAppPassword()" id="toggleUnifiedAppPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
-                    </div>
-                </div>
+        <div class="form-group">
+            <label>Password</label>
+            <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="unifiedPassword"
+                    placeholder="Your password"
+                    autocomplete="current-password"
+                    onkeydown="if(event.key==='Enter') proceedLogin()">
+                <button type="button" onclick="toggleUnifiedPassword()" id="toggleUnifiedPw" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;">Show</button>
             </div>
         </div>
 
@@ -455,16 +393,7 @@
 
     <!-- Hint box — switches content based on detected type -->
     <div class="demo-hint" style="margin-top:20px;">
-        <div id="hintStaff">
-            <p>Staff sign-in requires an authorized account and password.</p>
-        </div>
-        <div id="hintApplicant" style="display:none;">
-            <p>
-                <strong>Applicant access:</strong><br>
-                Enter your Reference ID exactly as given after you submitted your application, then the username and password you created at the end of the form.<br>
-                Example: ref ID = <code>20260830171806</code> · username = <code>jaycee</code> · password = <code>marco</code>
-            </p>
-        </div>
+        <p>Sign in with your username and password. Both staff and applicants use the same login form.</p>
     </div>
 
     <p class="footer-note">© 2026 MEFAMDEV-Life · Angat, Bulacan · Data Privacy Act RA 10173</p>
@@ -543,108 +472,11 @@ function clearLoginAttempts() {
 }
 
 /* ══════════════════════════════════════
-   SMART USERNAME DETECTION
-   Field 1 is either:
-   - a staff username (director/edu/finance/program), or
-   - an applicant's Reference ID (nothing else — no name, no password here)
-══════════════════════════════════════ */
-let detectedType = null; // 'staff' | 'applicant' | null
-
-function isValidRefIdFormat(value) {
-    const cleanRef = String(value || '').trim().replace(/^app-/i, '');
-    return /^\d{14}$/.test(cleanRef) || /^\d{4}\/\d{2}\/\d{2}\/\d{6}$/.test(cleanRef) || /^\d+$/.test(cleanRef);
-}
-function cleanRefId(value) {
-    return String(value || '').trim().replace(/^app-/i, '');
-}
-
-function onUsernameInput(input) {
-    if (!input) return;
-    const rawValue = String(input.value || '');
-    const v = rawValue.trim().toLowerCase();
-    hideError();
-
-    // Reset to base state
-    document.getElementById('staffPasswordField').style.display = 'none';
-    document.getElementById('applicantNameField').style.display = 'none';
-    document.getElementById('applicantPasswordField').style.display = 'none';
-    document.getElementById('detectedRole').style.display = 'none';
-    document.getElementById('hintStaff').style.display = 'block';
-    document.getElementById('hintApplicant').style.display = 'none';
-    document.getElementById('loginBtn').textContent = 'Continue →';
-    document.getElementById('loginBtn').style.background = 'var(--navy)';
-    document.getElementById('usernameLabel').textContent = 'Staff Username / Reference ID';
-    document.getElementById('usernameHint').style.color = '#aaa';
-    document.getElementById('usernameHint').textContent = 'Use your staff username and password assigned to your account.';
-    detectedType = null;
-
-    if (!v) return;
-
-    const isStaff = STAFF_USERNAMES.includes(v);
-
-    if (isStaff) {
-        detectedType = 'staff';
-        document.getElementById('staffPasswordField').style.display = 'block';
-        document.getElementById('usernameLabel').textContent = 'Staff Username';
-        document.getElementById('loginBtn').textContent = 'Sign In to Admin Dashboard →';
-        document.getElementById('loginBtn').style.background = 'var(--navy)';
-        document.getElementById('hintStaff').style.display = 'block';
-        document.getElementById('hintApplicant').style.display = 'none';
-        showDetected('👤 Staff Account', '#e8f5e9', '#1b5e20', '#81c784');
-        return;
-    }
-
-    // Anything that isn't a staff username is treated as the applicant's Reference ID.
-    detectedType = 'applicant';
-    document.getElementById('usernameLabel').textContent = 'Reference ID';
-    document.getElementById('applicantNameField').style.display = 'block';
-    document.getElementById('applicantPasswordField').style.display = 'block';
-    document.getElementById('loginBtn').textContent = 'Track My Application →';
-    document.getElementById('loginBtn').style.background = 'var(--teal)';
-    document.getElementById('hintStaff').style.display = 'none';
-    document.getElementById('hintApplicant').style.display = 'block';
-
-    if (isValidRefIdFormat(rawValue)) {
-        const cleanRef = cleanRefId(rawValue);
-        const inputDigits = cleanRef.replace(/\D+/g, '');
-        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-        const found = apps.find(a => {
-            const reference = String(a.referenceNumber || '').trim();
-            const referenceDigits = reference.replace(/\D+/g, '');
-            return String(a.id) === cleanRef
-                || reference.toLowerCase() === cleanRef.toLowerCase()
-                || (inputDigits && referenceDigits === inputDigits);
-        });
-        if (found) {
-            showDetected('📋 Reference ID Recognized', '#e8f5e9', '#1b5e20', '#81c784');
-            document.getElementById('usernameHint').textContent = 'Now enter the username and password you set at the end of your application.';
-            document.getElementById('usernameHint').style.color = '#666';
-        } else {
-            showDetected('⚠️ Reference ID Not Found', '#fff3e0', '#e65100', '#ff9800');
-            document.getElementById('usernameHint').textContent = "We couldn't find this reference ID. Double-check the number from your application confirmation.";
-            document.getElementById('usernameHint').style.color = '#e65100';
-        }
-    } else {
-        showDetected('📋 Applicant Portal', '#fff8e1', '#6d4c00', '#ffd54f');
-        document.getElementById('usernameHint').textContent = 'Enter your Reference ID exactly as given when you submitted your application — nothing else goes in this field.';
-        document.getElementById('usernameHint').style.color = '#d84315';
-    }
-}
-
-function showDetected(label, bg, color, border) {
-    const pill = document.getElementById('detectedRolePill');
-    pill.textContent = label;
-    pill.style.background = bg;
-    pill.style.color = color;
-    pill.style.borderColor = border;
-    document.getElementById('detectedRole').style.display = 'block';
-}
-
-/* ══════════════════════════════════════
    UNIFIED LOGIN HANDLER
 ══════════════════════════════════════ */
 function proceedLogin() {
-    const raw = document.getElementById('unifiedUsername').value.trim();
+    const username = document.getElementById('unifiedUsername').value.trim();
+    const password = document.getElementById('unifiedPassword').value.trim();
     const honeypot = document.getElementById('botTrap');
     hideError();
 
@@ -660,39 +492,24 @@ function proceedLogin() {
         return;
     }
 
-    if (!raw) {
-        showError('Please enter your staff username or your applicant Reference ID.');
+    if (!username) {
+        showError('Please enter your username.');
         return;
     }
 
-    if (detectedType === 'staff') {
-        doStaffLogin(raw.toLowerCase());
-    } else if (detectedType === 'applicant') {
-        doApplicantLogin(raw);
-    } else {
-        const v = raw.toLowerCase();
-        if (STAFF_USERNAMES.includes(v)) {
-            detectedType = 'staff';
-            document.getElementById('staffPasswordField').style.display = 'block';
-            document.getElementById('unifiedPassword').focus();
-            showError('Please enter your password to continue.');
-        } else {
-            showError('Wrong username or password.');
-        }
-    }
-}
-
-async function doStaffLogin(username) {
-    const pass = document.getElementById('unifiedPassword').value;
-    if (!pass) {
-        document.getElementById('staffPasswordField').style.display = 'block';
-        document.getElementById('unifiedPassword').focus();
+    if (!password) {
         showError('Please enter your password.');
         return;
     }
 
+    // Backend will determine if it's staff or applicant based on username
+    doUnifiedLogin(username, password);
+}
+
+async function doUnifiedLogin(username, password) {
     try {
-        const res = await MefamAPI.loginStaff(username, pass);
+        const res = await MefamAPI.loginUser(username, password);
+        
         if (res?.requiresOtp) {
             clearLoginAttempts();
             directorOtpChallengeId = res.challengeId;
@@ -700,16 +517,14 @@ async function doStaffLogin(username) {
         } else if (res?.token) {
             clearLoginAttempts();
             showLoading('Signing in…', () => {
-                window.location.assign('/admin_dashboard.html');
+                window.location.assign(res.user?.type === 'staff' ? '/admin_dashboard.html' : '/applicant_portal.html');
             });
         } else {
             recordFailedLoginAttempt();
-            showError(res?.error || 'Wrong username or password.');
-            document.getElementById('unifiedPassword').value = '';
-            document.getElementById('unifiedPassword').focus();
+            showError('Wrong username or password.');
         }
     } catch (error) {
-        console.error('Staff login failed:', error);
+        console.error('Login failed:', error);
         recordFailedLoginAttempt();
         showError('Unable to sign in right now. Please try again.');
     }
@@ -755,53 +570,6 @@ async function verifyDirectorOtp() {
     showLoading('Opening Director Dashboard…', () => window.location.assign('/admin_dashboard.html?director=1'));
 }
 
-/* ══════════════════════════════════════
-   APPLICANT LOGIN
-   Requires all three: Reference ID (field 1) + Username + Password
-══════════════════════════════════════ */
-async function doApplicantLogin(ref) {
-    const nameInput = document.getElementById('unifiedName2').value.trim();
-    const pwInput = (document.getElementById('unifiedAppPassword')?.value || '').trim();
-
-    if (!isValidRefIdFormat(ref)) {
-        showError('Please enter a valid Reference ID exactly as given when you submitted your application — no other text.');
-        document.getElementById('unifiedUsername').focus();
-        return;
-    }
-    if (!nameInput) {
-        showError('Please enter your username.');
-        document.getElementById('unifiedName2').focus();
-        return;
-    }
-    if (!pwInput) {
-        showError('Please enter your password.');
-        document.getElementById('unifiedAppPassword').focus();
-        return;
-    }
-
-    const cleanRef = cleanRefId(ref);
-
-    try {
-        const res = await MefamAPI.loginApplicant(cleanRef, nameInput, pwInput, '');
-        if (res?.token) {
-            clearLoginAttempts();
-            showLoading('Welcome!', () => {
-                window.location.assign('/applicant_portal.html');
-            });
-        } else {
-            recordFailedLoginAttempt();
-            showError(res?.error || 'Wrong reference ID, username, or password.');
-        }
-    } catch (error) {
-        console.error('Applicant login failed:', error);
-        recordFailedLoginAttempt();
-        showError('Unable to look up your application right now.');
-    }
-}
-
-/* ══════════════════════════════════════
-   HELPERS
-══════════════════════════════════════ */
 function showError(msg) {
     document.getElementById('loginError').classList.add('show');
     document.getElementById('loginErrorMsg').textContent = msg;
@@ -830,14 +598,6 @@ function showLoading(msg, callback) {
 function toggleUnifiedPassword() {
     const el = document.getElementById('unifiedPassword');
     const btn = document.getElementById('toggleUnifiedPw');
-    if (!el) return;
-    if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
-    else { el.type = 'password'; btn.textContent = 'Show'; }
-}
-
-function toggleUnifiedAppPassword() {
-    const el = document.getElementById('unifiedAppPassword');
-    const btn = document.getElementById('toggleUnifiedAppPw');
     if (!el) return;
     if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
     else { el.type = 'password'; btn.textContent = 'Show'; }
