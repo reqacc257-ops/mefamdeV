@@ -904,31 +904,6 @@
         if (img && (!img.complete || img.naturalWidth === 0)) img.style.display = 'none';
     };
 
-        [5000, 1200, 2500, 1800].forEach((value, i) => { if (expenseInputs[i]) expenseInputs[i].value = value; });
-        calcTotal();
-
-        document.getElementById('prevGrade').value = 'Grade 10';
-        document.getElementById('prevSchool').value = 'Angat National High School';
-        document.getElementById('eduLevel').value = 'SeniorHigh';
-        updateAcademicFields();
-        document.getElementById('nextSchool').value = 'Bulacan State University (Main/Malolos)';
-        document.getElementById('nextGrade').value = 'Grade 11';
-        document.getElementById('degree').value = 'Academic Track - Science, Technology, Engineering, and Mathematics';
-        document.getElementById('whyScholar').value = 'I want to finish my studies and help my family become stable.';
-
-        document.querySelectorAll('#page-4 input[type="checkbox"]').forEach(cb => cb.checked = true);
-        document.getElementById('consent').checked = true;
-
-        const username = document.getElementById('appUsername');
-        const password = document.getElementById('appPassword');
-        const confirmPassword = document.getElementById('appPasswordConfirm');
-        if (username) username.value = 'user1-40';
-        if (password) password.value = 'pass1-40';
-        if (confirmPassword) confirmPassword.value = 'pass1-40';
-
-        renderReviewSummary();
-    }
-
     /* ── Navigation ── */
     function goToPage(n) {
         if (n > currentPage) {
