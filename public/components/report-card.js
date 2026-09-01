@@ -5,8 +5,17 @@
 
 // Default learning areas; will be merged with configured subjects or grades-derived subjects
 const DEFAULT_AREAS = [
-  'Filipino','English','Mathematics','Science','Araling Panlipunan','MAPEH','Technology and Livelihood Education (TLE)','Edukasyon sa Pagpapakatao'
+  'Filipino','English','Mathematics','Science','Araling Panlipunan (AP)','GMRC / Values Education','EPP / TLE','MAPEH'
 ];
+
+function getReportCardPeriodCount() {
+  try {
+    const configured = Number(localStorage.getItem('mefamdev_grading_periods'));
+    return configured === 4 ? 4 : 3;
+  } catch (e) {
+    return 3;
+  }
+}
 
 function calculateFinalGrade(grades) {
   if (!grades || grades.length === 0) return 0;
@@ -39,6 +48,8 @@ function mergeSubjectGrades(target, source) {
 
 function buildReportCardHTML(scholarData, gradesData) {
   const { name, gradeLevel, school, refNo, schoolYear } = scholarData;
+  const periodCount = getReportCardPeriodCount();
+  const periods = Array.from({ length: periodCount }, (_, index) => `Q${index + 1}`);
   
   // Organize grades by subject and quarter
   const gradesBySubject = {};
@@ -86,32 +97,25 @@ function buildReportCardHTML(scholarData, gradesData) {
   const finalSubjectList = Array.from(new Set([...configuredSubjects, ...subjectsFromGrades].map(canonicalSubjectName)))
     .filter(subject => subject && !excludedSubjects.has(String(subject).toLowerCase()) && subject !== 'Music' && subject !== 'Arts' && subject !== 'PE' && subject !== 'Health');
 
-  const quarterlyAverages = { Q1: [], Q2: [], Q3: [], Q4: [] };
+  const quarterlyAverages = Object.fromEntries(periods.map(period => [period, []]));
   const subjectFinalGrades = [];
   let tableRows = '';
 
   for (const subj of finalSubjectList) {
     const subjectGrades = gradesBySubject[subj] || {};
-    const q1 = subjectGrades.Q1 || '';
-    const q2 = subjectGrades.Q2 || '';
-    const q3 = subjectGrades.Q3 || '';
-    const q4 = subjectGrades.Q4 || '';
-    const finalGrade = calculateFinalGrade([q1, q2, q3, q4].filter(g => g !== ''));
+    const periodValues = periods.map(period => subjectGrades[period] || '');
+    const finalGrade = calculateFinalGrade(periodValues.filter(g => g !== ''));
     const remark = getRemarkFromGrade(finalGrade);
     if (finalGrade > 0) subjectFinalGrades.push(finalGrade);
 
-    if (q1) quarterlyAverages.Q1.push(Number(q1));
-    if (q2) quarterlyAverages.Q2.push(Number(q2));
-    if (q3) quarterlyAverages.Q3.push(Number(q3));
-    if (q4) quarterlyAverages.Q4.push(Number(q4));
+    periods.forEach((period, index) => {
+      if (periodValues[index]) quarterlyAverages[period].push(Number(periodValues[index]));
+    });
 
     tableRows += `
       <tr>
         <td class="rc-area">${subj}</td>
-        <td class="rc-grade">${q1 || '-'}</td>
-        <td class="rc-grade">${q2 || '-'}</td>
-        <td class="rc-grade">${q3 || '-'}</td>
-        <td class="rc-grade">${q4 || '-'}</td>
+        ${periodValues.map(value => `<td class="rc-grade">${value || '-'}</td>`).join('')}
         <td class="rc-final">${finalGrade > 0 ? finalGrade : '-'}</td>
         <td class="rc-remark ${remark === 'Passed' ? 'remark-pass' : 'remark-pending'}">${finalGrade > 0 ? remark : '-'}</td>
       </tr>
@@ -119,12 +123,11 @@ function buildReportCardHTML(scholarData, gradesData) {
   }
 
   // Calculate general average
-  const genAvgQ1 = quarterlyAverages.Q1.length > 0 ? Math.round((quarterlyAverages.Q1.reduce((a, b) => a + b, 0) / quarterlyAverages.Q1.length) * 10) / 10 : 0;
-  const genAvgQ2 = quarterlyAverages.Q2.length > 0 ? Math.round((quarterlyAverages.Q2.reduce((a, b) => a + b, 0) / quarterlyAverages.Q2.length) * 10) / 10 : 0;
-  const genAvgQ3 = quarterlyAverages.Q3.length > 0 ? Math.round((quarterlyAverages.Q3.reduce((a, b) => a + b, 0) / quarterlyAverages.Q3.length) * 10) / 10 : 0;
-  const genAvgQ4 = quarterlyAverages.Q4.length > 0 ? Math.round((quarterlyAverages.Q4.reduce((a, b) => a + b, 0) / quarterlyAverages.Q4.length) * 10) / 10 : 0;
-  const overallGenAvg = [genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).length > 0 
-    ? Math.round(([genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).reduce((a, b) => a + b, 0) / [genAvgQ1, genAvgQ2, genAvgQ3, genAvgQ4].filter(g => g > 0).length) * 10) / 10
+  const periodAverages = periods.map(period => quarterlyAverages[period].length > 0
+    ? Math.round((quarterlyAverages[period].reduce((a, b) => a + b, 0) / quarterlyAverages[period].length) * 10) / 10
+    : 0);
+  const overallGenAvg = periodAverages.filter(g => g > 0).length > 0
+    ? Math.round((periodAverages.filter(g => g > 0).reduce((a, b) => a + b, 0) / periodAverages.filter(g => g > 0).length) * 10) / 10
     : 0;
   const overallFinalGrade = subjectFinalGrades.length
     ? Math.round((subjectFinalGrades.reduce((sum, grade) => sum + grade, 0) / subjectFinalGrades.length) * 10) / 10
@@ -133,10 +136,7 @@ function buildReportCardHTML(scholarData, gradesData) {
   tableRows += `
     <tr class="rc-avg">
       <td class="rc-area">General Average</td>
-      <td>${genAvgQ1 > 0 ? genAvgQ1 : '-'}</td>
-      <td>${genAvgQ2 > 0 ? genAvgQ2 : '-'}</td>
-      <td>${genAvgQ3 > 0 ? genAvgQ3 : '-'}</td>
-      <td>${genAvgQ4 > 0 ? genAvgQ4 : '-'}</td>
+      ${periodAverages.map(average => `<td>${average > 0 ? average : '-'}</td>`).join('')}
       <td class="rc-final" style="background:var(--navy); color:#fff;">${overallFinalGrade > 0 ? overallFinalGrade : '-'}</td>
       <td class="rc-remark" style="color:#8be3ae;">${overallGenAvg >= 75 ? 'Passed' : overallGenAvg > 0 ? 'Did Not Meet' : '-'}</td>
     </tr>
@@ -147,7 +147,7 @@ function buildReportCardHTML(scholarData, gradesData) {
       <div class="rc-head">
         <div class="rc-org">MEFAMDEV-Life · Angat, Bulacan</div>
         <div class="rc-title">Report on Learning Progress and Achievement</div>
-        <div class="rc-sub">School Year ${schoolYear || 'N/A'} · Quarter 1–4</div>
+        <div class="rc-sub">School Year ${schoolYear || 'N/A'} · ${periodCount === 3 ? 'Terms 1–3' : 'Quarters 1–4'}</div>
       </div>
 
       <div class="rc-info">
@@ -174,7 +174,7 @@ function buildReportCardHTML(scholarData, gradesData) {
           <thead>
             <tr>
               <th style="text-align:left; width:34%;">Learning Areas</th>
-              <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
+              ${periods.map((period, index) => `<th>${periodCount === 3 ? `Term ${index + 1}` : `Q${index + 1}`}</th>`).join('')}
               <th>Final Grade</th>
               <th>Remarks</th>
             </tr>
