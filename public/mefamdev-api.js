@@ -425,13 +425,16 @@ const MefamAPI = {
       if (!response.ok) throw new Error(`Server returned an empty error response (${response.status}).`);
       return {};
     }
+    let payload;
     try {
-      const payload = JSON.parse(text);
-      if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);
-      return payload;
+      payload = JSON.parse(text);
     } catch (error) {
-      if (error.message && !error.message.includes('Unexpected token')) throw error;
+      if (response.status === 429) {
+        throw new Error('Too many submission attempts. Please wait a moment and try again.');
+      }
       throw new Error(`Server returned invalid JSON (${response.status}).`);
     }
+    if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);
+    return payload;
   },
 };
