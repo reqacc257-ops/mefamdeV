@@ -482,8 +482,19 @@ async function submitPublicApplication(req, res) {
   res.json({ ok: true, id: info.lastInsertRowid });
 }
 
+async function checkPublicUsernameAvailability(req, res) {
+  const username = String(req.query.username || '').trim();
+  if (!username) return res.json({ available: false, error: 'Username is required' });
+
+  const normalizedUsername = username.toLowerCase();
+  const existingUsername = (await db.prepare('SELECT portal_username FROM applications').all())
+    .some(row => String(row.portal_username || '').trim().toLowerCase() === normalizedUsername);
+  return res.json({ available: !existingUsername });
+}
+
 module.exports = router;
 module.exports.submitPublicApplication = submitPublicApplication;
+module.exports.checkPublicUsernameAvailability = checkPublicUsernameAvailability;
 // ── Admin: reset / set applicant password ───────────────────────────────────
 router.post('/:id/reset-password', requireRole('director','program','finance'), async (req, res) => {
   const id = req.params.id;

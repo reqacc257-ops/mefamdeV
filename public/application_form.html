@@ -843,6 +843,7 @@
             <div style="margin-top:12px;">
                 <label class="field-label translatable" data-tl="Gumawa ng username sa portal" data-en="Create your portal username">Gumawa ng username sa portal<span class="req-mark">*</span></label>
                 <input type="text" id="appUsername" placeholder="Create a username for your portal login" style="width:100%; margin-bottom:10px;" required minlength="4">
+                <div id="usernameAvailability" aria-live="polite" style="font-size:.8rem; min-height:1.3em; margin-top:5px;"></div>
             </div>
             <div style="margin-top:12px;">
                 <label class="field-label translatable" data-tl="Gumawa ng password sa portal" data-en="Create your portal password">Gumawa ng password sa portal<span class="req-mark">*</span></label>
@@ -1664,6 +1665,39 @@
     }
 
     document.getElementById('appPassword')?.addEventListener('input', updateAppPasswordStrength);
+
+    let usernameCheckTimer;
+    let usernameCheckVersion = 0;
+    function scheduleUsernameAvailabilityCheck() {
+        const input = document.getElementById('appUsername');
+        const message = document.getElementById('usernameAvailability');
+        if (!input || !message) return;
+        const username = input.value.trim();
+        window.clearTimeout(usernameCheckTimer);
+        usernameCheckVersion += 1;
+        const version = usernameCheckVersion;
+        message.textContent = '';
+        message.style.color = '';
+        if (username.length < 4) return;
+        message.textContent = currentLang === 'tl' ? 'Sinusuri ang username...' : 'Checking username...';
+        usernameCheckTimer = window.setTimeout(async () => {
+            try {
+                const result = await MefamAPI.checkUsernameAvailability(username);
+                if (version !== usernameCheckVersion) return;
+                if (result?.available) {
+                    message.textContent = currentLang === 'tl' ? '✓ Maaaring gamitin ang username na ito.' : '✓ This username is available.';
+                    message.style.color = 'var(--green)';
+                } else {
+                    message.textContent = currentLang === 'tl' ? '✕ Nagamit na ang username. Pumili ng iba.' : '✕ This username is already taken. Choose another.';
+                    message.style.color = 'var(--red)';
+                }
+            } catch (error) {
+                if (version === usernameCheckVersion) message.textContent = '';
+            }
+        }, 350);
+    }
+
+    document.getElementById('appUsername')?.addEventListener('input', scheduleUsernameAvailabilityCheck);
 
     function toggleConfirmPassword() {
         const el = document.getElementById('appPasswordConfirm');

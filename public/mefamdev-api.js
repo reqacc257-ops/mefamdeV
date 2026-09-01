@@ -159,6 +159,9 @@ const MefamAPI = {
       return { error: error.message || 'Unable to submit application. Please try again.' };
     }
   },
+  async checkUsernameAvailability(username) {
+    return this._get(`/public/username-availability?username=${encodeURIComponent(username)}`);
+  },
 
   // ── Families ───────────────────────────────────────────────────────────────
   async getFamilies() { return this._get('/families'); },

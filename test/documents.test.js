@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const documentsRouter = require('../routes/documents');
 const db = require('../db');
-const { submitPublicApplication } = require('../routes/applications');
+const { submitPublicApplication, checkPublicUsernameAvailability } = require('../routes/applications');
 
 test('document uploads persist file metadata for the applicant checklist', () => {
   const appId = 999;
@@ -203,5 +203,20 @@ test('public application submission returns a conflict for a duplicate portal us
 
   assert.equal(res.statusCode, 409);
   assert.match(res.body.error, /already in use/i);
+  db.prepare('DELETE FROM applications WHERE id = ?').run(existing.lastInsertRowid);
+});
+
+test('public username availability reports duplicate and unused names', async () => {
+  const existing = db.prepare('INSERT INTO applications (name, sy, portal_username, status) VALUES (?, ?, ?, ?)')
+    .run('Availability Test Applicant', '2026-2027', 'availability-check', 'Pending Review');
+  const makeResponse = () => ({ body: null, status(code) { this.statusCode = code; return this; }, json(payload) { this.body = payload; return this; } });
+
+  const duplicateResponse = makeResponse();
+  await checkPublicUsernameAvailability({ query: { username: ' AVAILABILITY-CHECK ' } }, duplicateResponse);
+  assert.equal(duplicateResponse.body.available, false);
+
+  const availableResponse = makeResponse();
+  await checkPublicUsernameAvailability({ query: { username: 'brand-new-availability-check' } }, availableResponse);
+  assert.equal(availableResponse.body.available, true);
   db.prepare('DELETE FROM applications WHERE id = ?').run(existing.lastInsertRowid);
 });

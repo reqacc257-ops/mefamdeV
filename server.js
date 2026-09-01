@@ -69,8 +69,9 @@ app.use('/api/schools', requireAuth, schoolsRouter);
 app.use('/api/grades', requireAuth, gradesRouter);
 
 // Public submit route
-const { submitPublicApplication } = require('./routes/applications');
+const { submitPublicApplication, checkPublicUsernameAvailability } = require('./routes/applications');
 app.post('/api/public/apply', submitPublicApplication);
+app.get('/api/public/username-availability', checkPublicUsernameAvailability);
 
 app.get('/api/site-config', (req, res) => {
   res.json({
