@@ -1009,53 +1009,69 @@ function openRenewalModal() {
     // Initialize dropdowns if not already done
     initializeRenewalFormDropdowns();
 
-    // Set values
+    // Set school year - use next year if not specified
     const currentYear = new Date().getFullYear();
-    const defaultSchoolYear = `${currentYear}-${currentYear + 1}`;
-    document.getElementById('renewalSchoolYear').value = defaultSchoolYear;
+    const schoolYear = app.sy || app.schoolYear || `${currentYear}-${currentYear + 1}`;
+    const nextSchoolYear = schoolYear.split('-')[0]; // Get first part of year range
+    const nextYear = parseInt(nextSchoolYear) + 1;
+    const defaultSchoolYear = `${nextYear}-${nextYear + 1}`;
+    
+    const schoolYearSelect = document.getElementById('renewalSchoolYear');
+    if (Array.from(schoolYearSelect.options).some(o => o.value === defaultSchoolYear)) {
+        schoolYearSelect.value = defaultSchoolYear;
+    } else {
+        schoolYearSelect.value = schoolYearSelect.options[1]?.value || defaultSchoolYear;
+    }
 
     // Set school
     const schoolSelect = document.getElementById('renewalSchool');
-    if (app.school && Array.from(schoolSelect.options).some(o => o.value === app.school)) {
-        schoolSelect.value = app.school;
+    const appSchool = app.school || app.nextSchool || '';
+    if (appSchool && Array.from(schoolSelect.options).some(o => o.value === appSchool)) {
+        schoolSelect.value = appSchool;
         document.getElementById('renewalSchoolCustomInput').style.display = 'none';
-    } else if (app.school) {
+    } else if (appSchool) {
         // If current school is not in list, show add new option
         schoolSelect.value = '__add_new__';
-        document.getElementById('renewalSchoolCustom').value = app.school || '';
+        document.getElementById('renewalSchoolCustom').value = appSchool;
         document.getElementById('renewalSchoolCustomInput').style.display = 'block';
     } else {
         schoolSelect.value = '';
         document.getElementById('renewalSchoolCustomInput').style.display = 'none';
     }
 
-    document.getElementById('renewalEduLevel').value = app.eduLevel || app.edu_level || app.educationLevel || '';
+    // Set education level - try multiple possible property names
+    const eduLevel = app.eduLevel || app.edu_level || app.educationLevel || app.nextEduLevel || '';
+    document.getElementById('renewalEduLevel').value = eduLevel;
     
     // Update grade options for current education level
     updateGradeOptions();
     
-    // Set grade
+    // Set grade - try multiple possible property names
     const gradeSelect = document.getElementById('renewalGrade');
-    if (app.grade && Array.from(gradeSelect.options).some(o => o.value === app.grade)) {
-        gradeSelect.value = app.grade;
+    const appGrade = app.grade || app.nextGrade || app.gradeLevel || '';
+    if (appGrade && Array.from(gradeSelect.options).some(o => o.value === appGrade)) {
+        gradeSelect.value = appGrade;
     }
 
-    // Update and set track/course
+    // Update and set track/course - try multiple possible property names
     updateTrackOptions();
     const trackInput = document.getElementById('renewalTrack');
-    if (app.degree) {
-        trackInput.value = app.degree;
+    const appDegree = app.degree || app.nextDegree || app.track || app.course || '';
+    if (appDegree) {
+        trackInput.value = appDegree;
     }
 
-    document.getElementById('renewalContact').value = app.contact || '';
+    // Set contact information
+    document.getElementById('renewalContact').value = app.contact || app.mobile || app.phone || '';
     document.getElementById('renewalEmail').value = app.email || '';
     document.getElementById('renewalAddress').value = app.address || '';
     
-    // Set barangay
+    // Set barangay - try multiple possible property names
     const barangaySelect = document.getElementById('renewalBarangay');
-    if (app.barangay && Array.from(barangaySelect.options).some(o => o.value === app.barangay)) {
-        barangaySelect.value = app.barangay;
-    } else {
+    const appBarangay = app.barangay || app.barangayName || app.brgy || '';
+    if (appBarangay && Array.from(barangaySelect.options).some(o => o.value === appBarangay)) {
+        barangaySelect.value = appBarangay;
+    } else if (appBarangay) {
         barangaySelect.value = '';
     }
 
