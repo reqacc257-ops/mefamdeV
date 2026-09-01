@@ -104,18 +104,7 @@
             display: flex;
             justify-content: flex-end;
         }
-        .demo-bar {
-            background: var(--white);
-            padding: 12px 36px 0;
-            display: flex;
-            justify-content: center;
-        }
-        .demo-btn {
-            width: 100%;
-            justify-content: center;
-            background: var(--gold);
-            color: var(--navy);
-        }
+
         .lang-toggle { display: flex; background: #eef0f3; border-radius: 20px; overflow: hidden; }
         .lang-btn {
             background: transparent; border: none; padding: 7px 16px;
@@ -427,10 +416,6 @@
             <button class="lang-btn active" id="btn-tl" onclick="setLanguage('tl')">Tagalog</button>
             <button class="lang-btn" id="btn-en" onclick="setLanguage('en')">English</button>
         </div>
-    </div>
-
-    <div class="demo-bar">
-        <button type="button" class="btn demo-btn" onclick="fillApplicantTestData()">🧪 Temporary Autofill</button>
     </div>
 
     <!-- Body -->
@@ -959,65 +944,7 @@
         renderReviewSummary();
     }
 
-    function fillApplicantTestData() {
-        const names = [
-            ['Andrea', 'Guevarra', 'Ubaldo'],
-            ['Angeline', 'Dela Cruz', 'Toribio'],
-            ['Jaycee', 'Ramos', 'Marco'],
-            ['Jerico', 'Santos', 'Bong'],
-            ['Reyjen', 'Mendoza', 'Cruz']
-        ];
-        const selected = names[Math.floor(Math.random() * names.length)];
-        const [first, middle, last] = selected;
 
-        document.getElementById('firstName').value = first || '';
-        document.getElementById('middleName').value = middle || '';
-        document.getElementById('lastName').value = last || '';
-        document.getElementById('address').value = '123 Sample Street, Purok 4';
-        document.getElementById('barangay').value = 'Banaban';
-        document.getElementById('dob').value = '2007-05-14';
-        document.getElementById('age').value = calculateAge('2007-05-14');
-        document.getElementById('gender').value = 'Babae';
-        document.getElementById('contact').value = '09171234567';
-        document.getElementById('email').value = 'reqacc257@gmail.com';
-        document.getElementById('religion').value = 'Roman Catholic';
-        document.getElementById('birthplace').value = 'Angat, Bulacan';
-        document.getElementById('livingWith').value = 'Parehong tatay at nanay';
-        document.getElementById('talents').value = 'Singing, Drawing';
-        document.getElementById('clubs').value = 'School Dance Club';
-        document.getElementById('ambition').value = 'To become a teacher and help my family.';
-
-        const familyRows = document.querySelectorAll('#familyTableBody tr');
-        const familyData = [
-            { name: 'Maria Ubaldo', dob: '1985-01-10', sex: 'Babae', relation: 'Ina', civil: 'Kasal', educ: 'College Graduate', occup: 'Vendor', contact: '09181234567', income: '15000' },
-            { name: 'Jose Ubaldo', dob: '1980-09-22', sex: 'Lalaki', relation: 'Ama', civil: 'Kasal', educ: 'High School Graduate', occup: 'Driver', contact: '09191234567', income: '18000' },
-            { name: 'Ana Ubaldo', dob: '2009-08-02', sex: 'Babae', relation: 'Kapatid', civil: 'Single', educ: 'Grade 4', occup: 'Student', contact: '', income: '0' }
-        ];
-        familyRows.forEach((row, index) => {
-            const cells = row.querySelectorAll('input, select');
-            const data = familyData[index] || familyData[0];
-            cells[0].value = data.name;
-            cells[1].value = calculateAge(data.dob);
-            cells[2].value = data.dob;
-            cells[3].value = data.sex;
-            cells[4].value = data.relation;
-            cells[5].value = data.civil;
-            cells[6].value = data.educ;
-            cells[7].value = data.occup;
-            cells[8].value = data.contact || '';
-            cells[9].value = data.income;
-        });
-
-        document.querySelectorAll('#propertiesContainer input[type="checkbox"]').forEach(cb => {
-            if (['Sariling Bahay', '4Ps Beneficiary'].includes(cb.value)) cb.checked = true;
-        });
-        document.getElementById('propVehicle').value = 'Motorcycle';
-        document.getElementById('propLivestock').value = 'Chicken';
-        document.getElementById('propOther').value = 'Rice Cooker';
-
-        const incomeInputs = document.querySelectorAll('.income-input');
-        const expenseInputs = document.querySelectorAll('.expense-input');
-        [18000, 3000, 0, 500].forEach((value, i) => { if (incomeInputs[i]) incomeInputs[i].value = value; });
         [5000, 1200, 2500, 1800].forEach((value, i) => { if (expenseInputs[i]) expenseInputs[i].value = value; });
         calcTotal();
 
