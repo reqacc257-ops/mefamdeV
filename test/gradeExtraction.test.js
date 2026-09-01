@@ -68,3 +68,18 @@ test('approved grade review marks the report card requirement as Received', asyn
   assert.equal(row.status, 'Received');
   assert.match(String(row.note || ''), /approved/i);
 });
+
+test('rejected grade-file review does not reject the applicant', async () => {
+  const appId = 2002;
+  const now = new Date().toISOString();
+  await db.prepare('DELETE FROM applications WHERE id = ?').run(appId);
+  await db.prepare(`
+    INSERT INTO applications (id, name, email, status, reference_number, submitted_at, status_updated_at, status_history)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(appId, 'Accepted Grade Upload Test', 'accepted-grade@example.com', 'Accepted', '2002', now, now, JSON.stringify([{ status: 'Accepted', changedAt: now }]));
+
+  await gradeExtractionRouter.__test.syncApplicationStatusFromReview(appId, 'reject', 'Blurry report card image.');
+
+  const row = await db.prepare('SELECT status FROM applications WHERE id = ?').get(appId);
+  assert.equal(row.status, 'Accepted');
+});

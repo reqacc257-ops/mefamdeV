@@ -21,6 +21,7 @@ function normalizeExtraction(row) {
 }
 
 async function syncApplicationStatusFromReview(appId, action, note) {
+  if (action !== 'approve') return;
   const appIdNum = Number(appId);
   if (!appIdNum) return;
 
@@ -208,5 +209,5 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
 });
 
 router.markReportCardReceived = markReportCardReceived;
-router.__test = { markReportCardReceived };
+router.__test = { markReportCardReceived, syncApplicationStatusFromReview };
 module.exports = router;
