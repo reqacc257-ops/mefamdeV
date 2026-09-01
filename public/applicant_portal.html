@@ -531,12 +531,13 @@
                 <form class="renewal-form" id="renewalForm" onsubmit="submitRenewal(event)">
                     <div class="renewal-note">Tell us what changed for the next school year. Your previous grades remain saved, and staff will review these updates before approval.</div>
                     <div class="form-row">
-                        <div><label for="renewalSchoolYear">School year</label><input id="renewalSchoolYear" required placeholder="2026-2027"></div>
-                        <div><label for="renewalSchool">New school</label><input id="renewalSchool" required placeholder="School name"></div>
+                        <div><label for="renewalSchoolYear">School year</label><select id="renewalSchoolYear" required><option value="">Select year</option></select></div>
+                        <div><label for="renewalSchool">New school</label><select id="renewalSchool" required><option value="">Select school</option><option value="__add_new__">+ Add new school</option></select></div>
                     </div>
+                    <div id="renewalSchoolCustomInput" style="display:none; margin-bottom:14px;"><label for="renewalSchoolCustom">School name</label><input id="renewalSchoolCustom" placeholder="Enter school name"></div>
                     <div class="form-row">
                         <div><label for="renewalEduLevel">Education level</label><select id="renewalEduLevel" required><option value="">Select level</option><option value="Elementary">Elementary</option><option value="JuniorHigh">Junior High School</option><option value="SeniorHigh">Senior High School</option><option value="College">College</option></select></div>
-                        <div><label for="renewalGrade">Grade / year level</label><input id="renewalGrade" required placeholder="Grade 12 or 1st Year College"></div>
+                        <div><label for="renewalGrade">Grade / year level</label><select id="renewalGrade" required><option value="">Select grade/level</option></select></div>
                     </div>
                     <div><label for="renewalDegree">Course / track / strand</label><input id="renewalDegree" placeholder="Optional for elementary and junior high"></div>
                     <div class="form-row">
@@ -545,7 +546,7 @@
                     </div>
                     <div class="form-row">
                         <div><label for="renewalAddress">Address</label><input id="renewalAddress" placeholder="House/street address"></div>
-                        <div><label for="renewalBarangay">Barangay</label><input id="renewalBarangay" placeholder="Barangay"></div>
+                        <div><label for="renewalBarangay">Barangay</label><select id="renewalBarangay" required><option value="">Select barangay</option></select></div>
                     </div>
                     <div class="renewal-actions"><button class="btn btn-navy" type="button" onclick="closeRenewalModal()">Cancel</button><button class="btn btn-gold" type="submit">Submit updates</button></div>
                 </form>
@@ -675,17 +676,153 @@ function normalizeStatus(status) {
     return ['Pending Review', 'Interviewing', 'Accepted', 'Rejected', 'Year Ended'].includes(value) ? value : 'Pending Review';
 }
 
+// Grade options by education level
+const gradesByLevel = {
+    Elementary: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
+    JuniorHigh: ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'],
+    SeniorHigh: ['Grade 11', 'Grade 12'],
+    College: ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year']
+};
+
+// Barangay options
+const barangayOptions = ['Banaban', 'Baybay', 'Binagbag', 'Donacion', 'Encanto', 'Laog', 'Marungko', 'Niugan', 'Paltok', 'Pulong Yantok', 'San Roque (Poblacion)', 'Santa Cruz (Poblacion)', 'Santa Lucia', 'Sto. Cristo (Poblacion)', 'Sulucan', 'Taboc'];
+
+// Example schools (can be expanded or fetched from API)
+const knownSchools = ['Bulacan State University (Main/Malolos)', 'Bulacan State University (Angat Campus)', 'University of Bulacan', 'Angat High School', 'Malolos Science Academy'];
+
+function initializeRenewalFormDropdowns() {
+    // Initialize school year dropdown
+    const currentYear = new Date().getFullYear();
+    const schoolYearSelect = document.getElementById('renewalSchoolYear');
+    if (schoolYearSelect && schoolYearSelect.options.length === 1) {
+        for (let i = 0; i <= 2; i++) {
+            const year = currentYear + i;
+            const option = document.createElement('option');
+            option.value = `${year}-${year + 1}`;
+            option.textContent = `${year}-${year + 1}`;
+            schoolYearSelect.appendChild(option);
+        }
+    }
+
+    // Initialize school dropdown
+    const schoolSelect = document.getElementById('renewalSchool');
+    if (schoolSelect && schoolSelect.options.length === 2) { // Only "Select school" and "+ Add new school"
+        knownSchools.forEach(school => {
+            const option = document.createElement('option');
+            option.value = school;
+            option.textContent = school;
+            schoolSelect.insertBefore(option, schoolSelect.querySelector('option[value="__add_new__"]'));
+        });
+    }
+
+    // Initialize grade dropdown
+    updateGradeOptions();
+
+    // Initialize barangay dropdown
+    const barangaySelect = document.getElementById('renewalBarangay');
+    if (barangaySelect && barangaySelect.options.length === 1) {
+        barangayOptions.forEach(barangay => {
+            const option = document.createElement('option');
+            option.value = barangay;
+            option.textContent = barangay;
+            barangaySelect.appendChild(option);
+        });
+    }
+
+    // Listen for school changes
+    const schoolSelector = document.getElementById('renewalSchool');
+    if (schoolSelector) {
+        schoolSelector.onchange = function() {
+            const customInput = document.getElementById('renewalSchoolCustomInput');
+            if (this.value === '__add_new__') {
+                customInput.style.display = 'block';
+                document.getElementById('renewalSchoolCustom').focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+        };
+    }
+
+    // Listen for education level changes
+    const eduLevelSelect = document.getElementById('renewalEduLevel');
+    if (eduLevelSelect) {
+        eduLevelSelect.onchange = updateGradeOptions;
+    }
+}
+
+function updateGradeOptions() {
+    const eduLevel = document.getElementById('renewalEduLevel').value;
+    const gradeSelect = document.getElementById('renewalGrade');
+    const currentGrade = gradeSelect.value;
+
+    // Clear all options except the first one
+    while (gradeSelect.options.length > 1) {
+        gradeSelect.remove(1);
+    }
+
+    // Add grades for selected education level
+    const grades = gradesByLevel[eduLevel] || [];
+    grades.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade;
+        option.textContent = grade;
+        gradeSelect.appendChild(option);
+    });
+
+    // Try to restore previous selection if it exists
+    if (currentGrade && Array.from(gradeSelect.options).some(o => o.value === currentGrade)) {
+        gradeSelect.value = currentGrade;
+    }
+}
+
 function openRenewalModal() {
     const app = currentApplicant || {};
-    document.getElementById('renewalSchoolYear').value = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
-    document.getElementById('renewalSchool').value = app.school || '';
+    
+    // Initialize dropdowns if not already done
+    initializeRenewalFormDropdowns();
+
+    // Set values
+    const currentYear = new Date().getFullYear();
+    const defaultSchoolYear = `${currentYear}-${currentYear + 1}`;
+    document.getElementById('renewalSchoolYear').value = defaultSchoolYear;
+
+    // Set school
+    const schoolSelect = document.getElementById('renewalSchool');
+    if (app.school && Array.from(schoolSelect.options).some(o => o.value === app.school)) {
+        schoolSelect.value = app.school;
+    } else if (app.school) {
+        // If current school is not in list, show add new option
+        schoolSelect.value = '__add_new__';
+        document.getElementById('renewalSchoolCustom').value = app.school || '';
+        document.getElementById('renewalSchoolCustomInput').style.display = 'block';
+    } else {
+        schoolSelect.value = '';
+    }
+
     document.getElementById('renewalEduLevel').value = app.eduLevel || app.edu_level || app.educationLevel || '';
-    document.getElementById('renewalGrade').value = app.grade || '';
+    
+    // Update grade options for current education level
+    updateGradeOptions();
+    
+    // Set grade
+    const gradeSelect = document.getElementById('renewalGrade');
+    if (app.grade && Array.from(gradeSelect.options).some(o => o.value === app.grade)) {
+        gradeSelect.value = app.grade;
+    }
+
     document.getElementById('renewalDegree').value = app.degree || '';
     document.getElementById('renewalContact').value = app.contact || '';
     document.getElementById('renewalEmail').value = app.email || '';
     document.getElementById('renewalAddress').value = app.address || '';
-    document.getElementById('renewalBarangay').value = app.barangay || '';
+    
+    // Set barangay
+    const barangaySelect = document.getElementById('renewalBarangay');
+    if (app.barangay && Array.from(barangaySelect.options).some(o => o.value === app.barangay)) {
+        barangaySelect.value = app.barangay;
+    } else {
+        barangaySelect.value = '';
+    }
+
     document.getElementById('renewalModal').classList.add('open');
     document.getElementById('renewalSchoolYear').focus();
 }
@@ -697,10 +834,21 @@ function closeRenewalModal() {
 async function submitRenewal(event) {
     event.preventDefault();
     const schoolYear = document.getElementById('renewalSchoolYear').value.trim();
-    const school = document.getElementById('renewalSchool').value.trim();
+    let school = document.getElementById('renewalSchool').value.trim();
     const eduLevel = document.getElementById('renewalEduLevel').value;
     const grade = document.getElementById('renewalGrade').value.trim();
-    if (!schoolYear || !school || !eduLevel || !grade) return;
+    const barangay = document.getElementById('renewalBarangay').value.trim();
+    
+    // If "Add new school" is selected, use the custom input
+    if (school === '__add_new__') {
+        school = document.getElementById('renewalSchoolCustom').value.trim();
+    }
+
+    if (!schoolYear || !school || !eduLevel || !grade || !barangay) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
     try {
         const result = await MefamAPI.reapplyApplication(currentAppId, schoolYear, {
             school,
@@ -710,7 +858,7 @@ async function submitRenewal(event) {
             contact: document.getElementById('renewalContact').value.trim(),
             email: document.getElementById('renewalEmail').value.trim(),
             address: document.getElementById('renewalAddress').value.trim(),
-            barangay: document.getElementById('renewalBarangay').value.trim(),
+            barangay: barangay,
         });
         if (!result?.ok) throw new Error(result?.error || 'Unable to submit your re-application right now.');
         closeRenewalModal();
