@@ -143,7 +143,7 @@ const MefamAPI = {
   async submitApplication(data) {
     const payload = { ...data, id: data.id || Date.now() };
     try {
-      const res = await this._post('/public/apply', payload, false);
+      const res = await this._post('/public/apply', payload, false, true);
       if (res?.ok || res?.id) {
         const appId = res.id || payload.id;
         const loginRes = await this.loginApplicant(appId, payload.name, payload.password, payload.username);
@@ -364,15 +364,21 @@ const MefamAPI = {
       await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)));
     }
   },
-  async _post(path, body, auth = true) {
+  async _post(path, body, auth = true, retryTransient = false) {
     const headers = { 'Content-Type': 'application/json' };
     if (auth) {
       const token = this._token();
       if (token) headers['Authorization'] = 'Bearer ' + token;
     }
-    const r = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });
-    if (auth && r.status === 401) { this.logout(); return; }
-    return this._parseJsonResponse(r);
+    const attempts = retryTransient ? 3 : 1;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const r = await fetch(`${API_BASE}${path}`, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'same-origin' });
+      if (auth && r.status === 401) { this.logout(); return; }
+      if (!retryTransient || ![502, 503, 504].includes(r.status) || attempt === attempts - 1) {
+        return this._parseJsonResponse(r);
+      }
+      await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+    }
   },
   async _patch(path, body) {
     const headers = { 'Content-Type': 'application/json' };
