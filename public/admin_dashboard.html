@@ -3193,8 +3193,10 @@ async function viewApp(id) {
     };
     const submittedEntries = Object.entries(a.submittedData || {}).filter(([key, value]) => {
         if (!value || (Array.isArray(value) && value.length === 0)) return false;
-        const hiddenKeys = ['captchaInput', 'submitBtn', 'scholarForm', 'appUsername', 'appPassword', 'username', 'password'];
-        return !hiddenKeys.includes(key);
+        const normalizedKey = String(key || '').toLowerCase();
+        const hiddenKeys = ['captchainput', 'submitbtn', 'scholarform', 'appusername', 'apppassword', 'username', 'password'];
+        const isCaptchaField = normalizedKey.includes('captcha') || normalizedKey.includes('recaptcha') || normalizedKey.includes('h-captcha');
+        return !hiddenKeys.includes(normalizedKey) && !isCaptchaField;
     });
     const submittedHTML = submittedEntries.length > 0
         ? `<div class="modal-section" style="margin-top:16px;">Submitted Form Details</div>

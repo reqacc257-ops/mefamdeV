@@ -69,6 +69,14 @@ function parseJsonArray(value) {
   }
 }
 
+function sanitizeSubmittedData(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).filter(([key]) => {
+    const normalizedKey = String(key || '').toLowerCase();
+    return !normalizedKey.includes('captcha') && !normalizedKey.includes('recaptcha');
+  }));
+}
+
 async function verifyToken(token, ip) {
   const payload = {
     secret: process.env.HCAPTCHA_SECRET_KEY,
@@ -425,7 +433,7 @@ async function submitPublicApplication(req, res) {
     portal_username: b.username ? String(b.username).trim() : null,
     reference_number: b.referenceNumber || b.reference_number || '',
     submitted_at: b.submittedAt || b.submitted_at || new Date().toISOString(),
-    submitted_data: b.submittedData || {},
+    submitted_data: sanitizeSubmittedData(b.submittedData),
     status_updated_at: b.statusUpdatedAt || b.status_updated_at || b.submittedAt || b.submitted_at || new Date().toISOString(),
     status_history: b.statusHistory || [{ status: 'Pending Review', changedAt: new Date().toISOString(), note: 'Application submitted' }]
   };

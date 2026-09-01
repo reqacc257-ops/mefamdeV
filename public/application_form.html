@@ -346,6 +346,10 @@
             background: none; border: none; color: var(--navy); font-size: .78rem;
             font-weight: 700; cursor: pointer; padding: 4px 8px;
         }
+        .password-strength { display:flex; align-items:center; gap:8px; margin:2px 0 8px; min-height:14px; }
+        .password-strength-bars { display:flex; gap:3px; flex:1; }
+        .password-strength-bars span { height:4px; flex:1; border-radius:2px; background:#e3e8f0; transition:background .2s ease; }
+        .password-strength-label { min-width:42px; color:#999; font-size:.68rem; font-weight:700; text-align:right; }
 
         /* Nav buttons */
         .form-nav {
@@ -845,6 +849,10 @@
                 <div class="pw-wrap">
                     <input type="password" id="appPassword" placeholder="Create a password to access your application" style="width:100%; margin-bottom:10px;" required minlength="6">
                     <button type="button" class="pw-toggle" id="toggleAppPw" onclick="toggleAppPassword()">Show</button>
+                </div>
+                <div class="password-strength" aria-live="polite">
+                    <div class="password-strength-bars"><span></span><span></span><span></span><span></span></div>
+                    <span class="password-strength-label" id="appPasswordStrengthLabel"></span>
                 </div>
             </div>
             <div style="margin-top:12px;">
@@ -1632,6 +1640,30 @@
         if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
         else { el.type = 'password'; btn.textContent = 'Show'; }
     }
+
+    function scoreAppPassword(value) {
+        if (!value) return 0;
+        let score = 0;
+        if (value.length >= 8) score++;
+        if (value.length >= 12) score++;
+        if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
+        if (/[0-9]/.test(value) && /[^A-Za-z0-9]/.test(value)) score++;
+        return Math.min(score, 4);
+    }
+
+    function updateAppPasswordStrength() {
+        const input = document.getElementById('appPassword');
+        const label = document.getElementById('appPasswordStrengthLabel');
+        const bars = document.querySelectorAll('.password-strength-bars span');
+        if (!input || !label) return;
+        const score = scoreAppPassword(input.value);
+        const colors = ['#c0392b', '#c98a2c', '#0e7c7b', '#1f7a4d'];
+        const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+        bars.forEach((bar, index) => { bar.style.background = index < score ? colors[score - 1] : '#e3e8f0'; });
+        label.textContent = labels[score];
+    }
+
+    document.getElementById('appPassword')?.addEventListener('input', updateAppPasswordStrength);
 
     function toggleConfirmPassword() {
         const el = document.getElementById('appPasswordConfirm');
