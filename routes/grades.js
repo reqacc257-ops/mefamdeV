@@ -3,6 +3,7 @@ const db = require('../db');
 const { requireRole } = require('../middleware/auth');
 const logger = require('../lib/logger');
 const gradeExtractionRouter = require('./gradeExtraction');
+const { buildGradeEntryCandidate } = require('../lib/normalization');
 
 const RETENTION_YEARS = 7;
 
@@ -40,6 +41,106 @@ router.post('/retention/:appId/delete', requireRole('director'), async (req, res
   await db.prepare('DELETE FROM quarterly_grades WHERE student_id = ?').run(req.params.appId);
   await db.prepare('DELETE FROM grade_extraction WHERE app_id = ?').run(req.params.appId);
   res.json({ ok: true, deleted: true, appId: Number(req.params.appId) });
+});
+
+router.get('/review-queue', requireRole('director','edu'), async (req, res) => {
+  try {
+    const rows = await db.prepare('SELECT * FROM grade_entries WHERE needs_review = 1 ORDER BY created_at DESC').all();
+    res.json(rows || []);
+  } catch (error) {
+    logger.error('Failed to load review queue', error?.message || error);
+    res.status(500).json({ error: 'Unable to load review queue' });
+  }
+});
+
+router.post('/ocr-import', requireRole('director','edu','program'), async (req, res) => {
+  try {
+    const payload = Array.isArray(req.body) ? req.body : (req.body && Array.isArray(req.body.entries) ? req.body.entries : []);
+    if (!payload.length) return res.status(400).json({ error: 'No OCR entries provided' });
+
+    const inserted = [];
+    for (const item of payload) {
+      const candidate = await buildGradeEntryCandidate({
+        studentId: item.studentId || item.student_id,
+        schoolId: item.schoolId || item.school_id,
+        schoolYear: item.schoolYear || item.school_year,
+        rawSubjectText: item.rawSubjectText || item.subject || item.subjectText,
+        rawPeriodText: item.rawPeriodText || item.period || item.periodText,
+        rawGrade: item.rawGrade || item.grade || item.gradeValue,
+      });
+
+      const row = {
+        student_id: candidate.student_id,
+        canonical_subject_id: candidate.canonical_subject_id,
+        grading_period_id: candidate.grading_period_id,
+        raw_grade: candidate.raw_grade,
+        normalized_grade: candidate.normalized_grade,
+        source: candidate.source || 'ocr',
+        confidence: candidate.confidence,
+        needs_review: Boolean(candidate.needs_review),
+        review_notes: candidate.review_notes,
+      };
+
+      const created = await db.prepare(
+        'INSERT INTO grade_entries (student_id, canonical_subject_id, grading_period_id, raw_grade, normalized_grade, source, confidence, needs_review, review_notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(
+        row.student_id,
+        row.canonical_subject_id,
+        row.grading_period_id,
+        row.raw_grade,
+        row.normalized_grade,
+        row.source,
+        row.confidence,
+        row.needs_review ? 1 : 0,
+        row.review_notes
+      );
+
+      inserted.push({ id: created.lastInsertRowid, ...row });
+    }
+
+    res.json({ ok: true, inserted });
+  } catch (error) {
+    logger.error('OCR import failed', error?.message || error);
+    res.status(500).json({ error: 'Unable to process OCR-imported grades' });
+  }
+});
+
+router.post('/:id/resolve', requireRole('director','edu'), async (req, res) => {
+  try {
+    const entryId = Number(req.params.id || 0);
+    const body = req.body || {};
+    const row = await db.prepare('SELECT * FROM grade_entries WHERE id = ?').get(entryId);
+    if (!row) return res.status(404).json({ error: 'Grade entry not found' });
+
+    const canonicalSubjectId = Number(body.canonicalSubjectId || body.canonical_subject_id || row.canonical_subject_id);
+    const gradingPeriodId = Number(body.gradingPeriodId || body.grading_period_id || row.grading_period_id);
+    const normalizedGrade = body.normalizedGrade !== undefined ? Number(body.normalizedGrade) : Number(body.normalized_grade || row.normalized_grade);
+    const reviewNotes = body.reviewNotes || body.review_notes || '';
+
+    if (!canonicalSubjectId || !gradingPeriodId || !Number.isFinite(normalizedGrade)) {
+      return res.status(400).json({ error: 'Resolved grade must include canonical subject, period and numeric grade' });
+    }
+
+    await db.prepare(`
+      UPDATE grade_entries
+      SET canonical_subject_id = ?, grading_period_id = ?, normalized_grade = ?, needs_review = 0, review_notes = ?, confidence = 1, source = 'manual'
+      WHERE id = ?
+    `).run(canonicalSubjectId, gradingPeriodId, normalizedGrade, reviewNotes, entryId);
+
+    const schoolId = await db.prepare('SELECT school_id FROM grading_periods WHERE id = ?').get(gradingPeriodId);
+    const aliasText = body.subjectAlias || body.aliasText || body.subject || '';
+    if (aliasText && schoolId && schoolId.school_id) {
+      const existing = await db.prepare('SELECT * FROM subject_aliases WHERE school_id = ? AND alias_text = ?').get(schoolId.school_id, aliasText);
+      if (!existing) {
+        await db.prepare('INSERT INTO subject_aliases (canonical_subject_id, school_id, alias_text) VALUES (?, ?, ?)').run(canonicalSubjectId, schoolId.school_id, aliasText);
+      }
+    }
+
+    res.json({ ok: true, id: entryId });
+  } catch (error) {
+    logger.error('Failed to resolve grade review', error?.message || error);
+    res.status(500).json({ error: 'Unable to resolve OCR review entry' });
+  }
 });
 
 // Student: submit a quarter (array of subjects)

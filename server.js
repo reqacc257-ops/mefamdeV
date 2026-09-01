@@ -15,6 +15,7 @@ const recordsRouter = require('./routes/records');
 const gradeExtractionRouter = require('./routes/gradeExtraction');
 const commsRouter = require('./routes/comms');
 const gradesRouter = require('./routes/grades');
+const schoolsRouter = require('./routes/schools');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/api/records', requireAuth, recordsRouter);
 app.use('/api/documents', requireAuth, require('./routes/documents'));
 app.use('/api/grade-extraction', requireAuth, gradeExtractionRouter);
 app.use('/api/comms', requireAuth, commsRouter);
+app.use('/api/schools', requireAuth, schoolsRouter);
 app.use('/api/grades', requireAuth, gradesRouter);
 
 // Public submit route

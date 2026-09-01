@@ -174,6 +174,21 @@ const MefamAPI = {
   async getGrades(semester) {
     return semester ? this._get(`/events/grades?semester=${encodeURIComponent(semester)}`) : this._get('/events/grades');
   },
+  async getSchools() {
+    return this._get('/schools');
+  },
+  async getSchoolConfig(schoolId) {
+    return this._get(`/schools/${encodeURIComponent(schoolId)}/config`);
+  },
+  async ocrImportGrades(payload) {
+    return this._post('/grades/ocr-import', payload);
+  },
+  async getReviewQueue() {
+    return this._get('/grades/review-queue');
+  },
+  async resolveGradeReview(id, payload) {
+    return this._post(`/grades/${encodeURIComponent(id)}/resolve`, payload);
+  },
   async getGradeRetention(appId) { return this._get(`/grades/retention/${appId}`); },
   async deleteRetainedGrades(appId) { return this._post(`/grades/retention/${appId}/delete`, { confirm: true }); },
   async saveGrade(appId, grade, semesterOrOptions, maybeOptions) {

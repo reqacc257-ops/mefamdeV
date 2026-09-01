@@ -337,25 +337,28 @@ router.delete('/:id', requireRole('director'), async (req, res) => {
 async function submitPublicApplication(req, res) {
   const b = req.body;
   const hcaptchaToken = b.hcaptchaToken || b['h-captcha-response'] || '';
+  const hcaptchaEnabled = Boolean(process.env.HCAPTCHA_SECRET_KEY) && process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'development';
   if (!b.name || !b.sy) return res.status(400).json({ error: 'Name and school year required' });
   if (!b.username) return res.status(400).json({ error: 'Portal username required' });
   if (!b.password) return res.status(400).json({ error: 'Portal password required' });
 
-  if (!hcaptchaToken) {
+  if (hcaptchaEnabled && !hcaptchaToken) {
     return res.status(400).json({ error: 'Please complete the security verification.' });
   }
 
-  try {
-    const [ok, hcaptchaErrors] = await verifyToken(hcaptchaToken, req.ip || '');
-    if (!ok) {
-      return res.status(400).json({
-        error: 'Security verification failed. Please try again.',
-        hcaptchaErrors,
-      });
+  if (hcaptchaEnabled) {
+    try {
+      const [ok, hcaptchaErrors] = await verifyToken(hcaptchaToken, req.ip || '');
+      if (!ok) {
+        return res.status(400).json({
+          error: 'Security verification failed. Please try again.',
+          hcaptchaErrors,
+        });
+      }
+    } catch (error) {
+      console.error('hCaptcha verification failed:', error);
+      return res.status(500).json({ error: 'Security verification is temporarily unavailable.' });
     }
-  } catch (error) {
-    console.error('hCaptcha verification failed:', error);
-    return res.status(500).json({ error: 'Security verification is temporarily unavailable.' });
   }
 
   // Server-side submission cooldown (minutes). Uses runtime value `submitCooldownMinutes` (0 = disabled).

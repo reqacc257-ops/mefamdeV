@@ -34,6 +34,11 @@ function createFreshData() {
     document_status: [],
     quarterly_grades: [],
     grade_extraction: [],
+    schools: [],
+    canonical_subjects: [],
+    subject_aliases: [],
+    grading_periods: [],
+    grade_entries: [],
   };
 }
 

@@ -1654,9 +1654,9 @@
                             <button class="btn btn-ghost btn-sm" style="height:36px; margin-top:22px;" onclick="openSubjectsModal()">Manage Subjects</button>
                             <datalist id="subjectsList"></datalist>
                         </div>
-            <div style="margin-bottom:12px;"><label>Quarter</label>
-                <select id="gradeQuarter">
-                    <option value="">-- Select Quarter --</option>
+            <div style="margin-bottom:12px;"><label>Quarter/Period</label>
+                <select id="gradeQuarter" style="width:100%; border-radius:10px; padding:10px 12px;">
+                    <option value="">-- Select Period --</option>
                     <option value="1">Quarter 1</option>
                     <option value="2">Quarter 2</option>
                     <option value="3">Quarter 3</option>
@@ -1779,9 +1779,63 @@
 let currentRole = 'director';
 let savedGrades = {};
 let currentGradeSemester = '';
+        let schoolCatalog = [];
 
-if (!localStorage.getItem('mefamdev_families')) {
-    localStorage.setItem('mefamdev_families', JSON.stringify([]));
+        function normalizeSchoolName(name) {
+            return String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+
+        function buildFallbackPeriodOptions(periodType = 'quarter') {
+            const typeLabel = String(periodType || 'quarter').charAt(0).toUpperCase() + String(periodType || 'quarter').slice(1);
+            return Array.from({ length: 4 }, (_, index) => ({
+                value: `${periodType}-${index + 1}`,
+                label: `${index + 1}${index === 0 ? 'st' : index === 1 ? 'nd' : index === 2 ? 'rd' : 'th'} ${typeLabel}`
+            }));
+        }
+
+        function buildPeriodOptionsFromConfig(config = {}, fallbackType = 'quarter') {
+            const periods = Array.isArray(config.periods) ? config.periods : [];
+            if (periods.length) {
+                return periods.map(period => {
+                    const label = String(period.label || '').trim() || `${capitalize(period.period_type || fallbackType)} ${period.period_number || ''}`.trim();
+                    return {
+                        value: String(period.label || `${period.period_type || fallbackType}-${period.period_number || ''}`),
+                        label,
+                    };
+                });
+            }
+            return buildFallbackPeriodOptions(config.default_period_type || fallbackType || 'quarter');
+        }
+
+        function capitalize(value) {
+            return String(value || '').split(' ').map(part => part ? part.charAt(0).toUpperCase() + part.slice(1) : '').join(' ');
+        }
+
+        async function loadSchoolCatalog() {
+            try {
+                const schools = await MefamAPI.getSchools?.() || [];
+                schoolCatalog = Array.isArray(schools) ? schools : [];
+            } catch (error) {
+                console.warn('Unable to fetch school catalog for grade modal:', error);
+                schoolCatalog = [];
+            }
+        }
+
+        async function resolvePeriodOptionsForApplicant(applicant) {
+            const schoolName = String(applicant?.school || applicant?.schoolName || applicant?.school_name || '').trim();
+            if (!schoolName) return buildFallbackPeriodOptions('quarter');
+
+            const match = schoolCatalog.find(school => normalizeSchoolName(school.name || school.school || school.schoolName) === normalizeSchoolName(schoolName));
+            if (!match || !match.id) return buildFallbackPeriodOptions('quarter');
+
+            try {
+                const config = await MefamAPI.getSchoolConfig(match.id) || {};
+                return buildPeriodOptionsFromConfig(config, match.default_period_type || 'quarter');
+            } catch (error) {
+                console.warn('Failed to load school config', error);
+                return buildFallbackPeriodOptions(match.default_period_type || 'quarter');
+            }
+        }
 }
 
 /* ══════════════════════════════════════
@@ -1819,6 +1873,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.remove('auth-pending');
     loadSystemSettings();
     initCharts();
+    loadSchoolCatalog();
     ensureGradeSemesterOptions();
     currentGradeSemester = document.getElementById('gradeSemSelect')?.value || '';
     document.getElementById('gradeSemSelect')?.addEventListener('change', () => {
@@ -2951,26 +3006,37 @@ function renderGrades(scholars) {
 }
 
 function openGradeModal(id, name) {
+    const applicant = window.pipelineApps?.find(s => Number(s.id) === Number(id)) || { name, school: '' };
     document.getElementById('gradeModalName').innerText = name;
     document.getElementById('gradeModalAppId').value = id;
     document.getElementById('gradeModalId').value = id;
     document.getElementById('gradeInput').value = '';
     document.getElementById('gradeSchoolYear').value = new Date().getFullYear() + '-' + (new Date().getFullYear() + 1);
     document.getElementById('gradeSubject').value = '';
-    document.getElementById('gradeQuarter').value = '';
+    renderPeriodOptionsForDashboard(applicant);
     document.getElementById('gradeModal').classList.add('open');
+}
+
+async function renderPeriodOptionsForDashboard(applicant) {
+    const select = document.getElementById('gradeQuarter');
+    if (!select) return;
+    const choices = await resolvePeriodOptionsForApplicant(applicant);
+    const html = choices.map(option => `<option value="${escapeHtml(option.value)}" data-label="${escapeHtml(option.label)}">${escapeHtml(option.label)}</option>`).join('');
+    select.innerHTML = `<option value="">-- Select Period --</option>${html}`;
 }
 
 async function saveGrade() {
     const appId = parseInt(document.getElementById('gradeModalAppId').value);
     const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
     const subject = document.getElementById('gradeSubject').value.trim();
-    const quarter = document.getElementById('gradeQuarter').value.trim();
+    const quarterSelect = document.getElementById('gradeQuarter');
+    const selectedOption = quarterSelect?.selectedOptions?.[0];
+    const quarter = selectedOption ? (selectedOption.dataset.label || selectedOption.value) : '';
     const grade = parseInt(document.getElementById('gradeInput').value);
 
     if (!schoolYear) { alert('Please enter a school year.'); return; }
     if (!subject) { alert('Please select a subject.'); return; }
-    if (!quarter) { alert('Please select a quarter.'); return; }
+    if (!quarter) { alert('Please select a period.'); return; }
     if (!(grade >= 60 && grade <= 100)) { alert('Please enter a valid grade between 60 and 100.'); return; }
 
     try {
