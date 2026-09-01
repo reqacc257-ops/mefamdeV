@@ -268,6 +268,21 @@
         .renewal-form label { display: block; margin-bottom: 5px; color: var(--text); font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
         .renewal-form input, .renewal-form select { width: 100%; padding: 10px 11px; border: 1px solid #d9e1eb; border-radius: 8px; color: var(--text); background: #fff; font: inherit; }
         .renewal-form input:focus, .renewal-form select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,166,35,.18); }
+        .renewal-track-combobox { position: relative; }
+        .renewal-track-combobox input { margin-bottom: 0; width: 100%; }
+        .renewal-track-options {
+            position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0;
+            display: none; background: #fff; border: 1.5px solid var(--border);
+            border-radius: 8px; box-shadow: var(--shadow); overflow: hidden;
+            max-height: 240px; overflow-y: auto; overflow-x: hidden;
+        }
+        .renewal-track-options.open { display: block; }
+        .renewal-track-option {
+            display: block; width: 100%; padding: 10px 12px; border: 0;
+            background: #fff; color: var(--text); text-align: left; font: inherit; font-size: .87rem;
+            cursor: pointer; transition: .15s;
+        }
+        .renewal-track-option:hover, .renewal-track-option.active { background: var(--gold-light); color: var(--navy); font-weight: 500; }
         .renewal-note { padding: 11px 12px; border-radius: 8px; background: #fff8e8; border: 1px solid #f4d99b; color: #6b4b12; font-size: .82rem; line-height: 1.45; }
         .renewal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
         @media (max-width: 560px) { .renewal-form .form-row { grid-template-columns: 1fr; gap: 14px; } .renewal-actions { flex-direction: column-reverse; } .renewal-actions button { width: 100%; justify-content: center; } }
@@ -539,7 +554,7 @@
                         <div><label for="renewalEduLevel">Education level</label><select id="renewalEduLevel" required><option value="">Select level</option><option value="Elementary">Elementary</option><option value="JuniorHigh">Junior High School</option><option value="SeniorHigh">Senior High School</option><option value="College">College</option></select></div>
                         <div><label for="renewalGrade">Grade / year level</label><select id="renewalGrade" required><option value="">Select grade/level</option></select></div>
                     </div>
-                    <div id="renewalTrackRow" style="display:none;"><label for="renewalTrack">Track / Course</label><select id="renewalTrack"><option value="">Select track or course</option></select></div>
+                    <div id="renewalTrackRow" style="display:none;"><label for="renewalTrack">Track / Course</label><div class="renewal-track-combobox"><input type="text" id="renewalTrack" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="renewalTrackOptions" placeholder="Search for a track or course..."><div id="renewalTrackOptions" class="renewal-track-options" role="listbox"></div></div></div>
                     <div class="form-row">
                         <div><label for="renewalContact">Mobile number</label><input id="renewalContact" type="tel" inputmode="tel" placeholder="09XX XXX XXXX"></div>
                         <div><label for="renewalEmail">Email address</label><input id="renewalEmail" type="email" placeholder="you@example.com"></div>
@@ -676,7 +691,93 @@ function normalizeStatus(status) {
     return ['Pending Review', 'Interviewing', 'Accepted', 'Rejected', 'Year Ended'].includes(value) ? value : 'Pending Review';
 }
 
-// Grade options by education level
+// Track combobox state
+let renewalTrackActiveIndex = -1;
+let renewalTrackMatches = [];
+
+function initRenewalTrackCombobox() {
+    const input = document.getElementById('renewalTrack');
+    if (!input || input.dataset.comboboxReady) return;
+    input.dataset.comboboxReady = 'true';
+    input.addEventListener('input', () => renderRenewalTrackOptions(true));
+    input.addEventListener('focus', () => renderRenewalTrackOptions());
+    input.addEventListener('keydown', handleRenewalTrackKeydown);
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.renewal-track-combobox')) closeRenewalTrackOptions();
+    });
+}
+
+function renderRenewalTrackOptions(resetActive = false, openMenu = true) {
+    const input = document.getElementById('renewalTrack');
+    const menu = document.getElementById('renewalTrackOptions');
+    if (!input || !menu || !document.getElementById('renewalTrackRow') || document.getElementById('renewalTrackRow').style.display === 'none') return;
+    if (resetActive) renewalTrackActiveIndex = -1;
+    const query = input.value.trim().toLowerCase();
+    const eduLevel = document.getElementById('renewalEduLevel').value;
+    const options = eduLevel === 'College' ? COLLEGE_COURSE_OPTIONS : SHS_TRACK_OPTIONS;
+    renewalTrackMatches = options.filter(option => option.toLowerCase().includes(query));
+    menu.replaceChildren();
+    renewalTrackMatches.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `renewal-track-option${renewalTrackActiveIndex === index ? ' active' : ''}`;
+        button.textContent = option;
+        button.setAttribute('role', 'option');
+        button.addEventListener('mousedown', event => event.preventDefault());
+        button.addEventListener('click', () => selectRenewalTrackOption(option));
+        menu.appendChild(button);
+    });
+    menu.classList.toggle('open', openMenu);
+    input.setAttribute('aria-expanded', openMenu ? 'true' : 'false');
+}
+
+function handleRenewalTrackKeydown(event) {
+    if (event.key === 'Escape') { closeRenewalTrackOptions(); return; }
+    if (!['ArrowDown', 'ArrowUp', 'Enter'].includes(event.key)) return;
+    event.preventDefault();
+    if (!document.getElementById('renewalTrackOptions').classList.contains('open')) renderRenewalTrackOptions();
+    const maxIndex = renewalTrackMatches.length;
+    if (event.key === 'ArrowDown') renewalTrackActiveIndex = renewalTrackActiveIndex >= maxIndex - 1 ? 0 : renewalTrackActiveIndex + 1;
+    if (event.key === 'ArrowUp') renewalTrackActiveIndex = renewalTrackActiveIndex <= 0 ? maxIndex - 1 : renewalTrackActiveIndex - 1;
+    if (event.key === 'Enter') {
+        if (renewalTrackActiveIndex >= 0) selectRenewalTrackOption(renewalTrackMatches[renewalTrackActiveIndex]);
+        return;
+    }
+    renderRenewalTrackOptions();
+}
+
+function selectRenewalTrackOption(value) {
+    const input = document.getElementById('renewalTrack');
+    input.value = value;
+    closeRenewalTrackOptions();
+}
+
+function closeRenewalTrackOptions() {
+    const input = document.getElementById('renewalTrack');
+    const menu = document.getElementById('renewalTrackOptions');
+    if (menu) menu.classList.remove('open');
+    if (input) input.setAttribute('aria-expanded', 'false');
+    renewalTrackActiveIndex = -1;
+}
+
+function updateTrackOptions() {
+    const eduLevel = document.getElementById('renewalEduLevel').value;
+    const trackRow = document.getElementById('renewalTrackRow');
+    const trackInput = document.getElementById('renewalTrack');
+    
+    if (eduLevel === 'SeniorHigh' || eduLevel === 'College') {
+        trackRow.style.display = 'block';
+        trackInput.setAttribute('required', 'required');
+        trackInput.placeholder = eduLevel === 'College' ? 'Search for a course...' : 'Search for a track...';
+        initRenewalTrackCombobox();
+        renderRenewalTrackOptions(true, false);
+    } else {
+        trackRow.style.display = 'none';
+        trackInput.removeAttribute('required');
+        trackInput.value = '';
+        closeRenewalTrackOptions();
+    }
+}
 const gradesByLevel = {
     Elementary: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
     JuniorHigh: ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'],
@@ -883,35 +984,6 @@ function updateGradeOptions() {
     }
 }
 
-function updateTrackOptions() {
-    const eduLevel = document.getElementById('renewalEduLevel').value;
-    const trackRow = document.getElementById('renewalTrackRow');
-    const trackSelect = document.getElementById('renewalTrack');
-    
-    if (eduLevel === 'SeniorHigh' || eduLevel === 'College') {
-        trackRow.style.display = 'block';
-        trackSelect.required = true;
-        
-        // Clear existing options
-        while (trackSelect.options.length > 1) {
-            trackSelect.remove(1);
-        }
-        
-        // Add appropriate options
-        const options = eduLevel === 'College' ? COLLEGE_COURSE_OPTIONS : SHS_TRACK_OPTIONS;
-        options.forEach(track => {
-            const option = document.createElement('option');
-            option.value = track;
-            option.textContent = track;
-            trackSelect.appendChild(option);
-        });
-    } else {
-        trackRow.style.display = 'none';
-        trackSelect.required = false;
-        trackSelect.value = '';
-    }
-}
-
 function openRenewalModal() {
     const app = currentApplicant || {};
     
@@ -951,9 +1023,9 @@ function openRenewalModal() {
 
     // Update and set track/course
     updateTrackOptions();
-    const trackSelect = document.getElementById('renewalTrack');
-    if (app.degree && Array.from(trackSelect.options).some(o => o.value === app.degree)) {
-        trackSelect.value = app.degree;
+    const trackInput = document.getElementById('renewalTrack');
+    if (app.degree) {
+        trackInput.value = app.degree;
     }
 
     document.getElementById('renewalContact').value = app.contact || '';
