@@ -350,6 +350,14 @@ async function submitPublicApplication(req, res) {
   if (!b.username) return res.status(400).json({ error: 'Portal username required' });
   if (!b.password) return res.status(400).json({ error: 'Portal password required' });
 
+  const portalUsername = String(b.username).trim();
+  const normalizedUsername = portalUsername.toLowerCase();
+  const existingUsername = (await db.prepare('SELECT id, portal_username FROM applications').all())
+    .find(row => String(row.portal_username || '').trim().toLowerCase() === normalizedUsername);
+  if (existingUsername) {
+    return res.status(409).json({ error: 'That portal username is already in use. Please choose another.' });
+  }
+
   if (hcaptchaEnabled && !hcaptchaToken) {
     return res.status(400).json({ error: 'Please complete the security verification.' });
   }
@@ -417,7 +425,7 @@ async function submitPublicApplication(req, res) {
     status:        'Pending Review',
     date_label:    b.date || b.dateLabel || b.applicationDate || b.application_date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     password_hash: b.password ? crypto.createHash('sha256').update(String(b.password)).digest('hex') : null,
-    portal_username: b.username ? String(b.username).trim() : null,
+    portal_username: portalUsername,
     reference_number: b.referenceNumber || b.reference_number || '',
     submitted_at: b.submittedAt || b.submitted_at || new Date().toISOString(),
     submitted_data: sanitizeSubmittedData(b.submittedData),
@@ -427,8 +435,15 @@ async function submitPublicApplication(req, res) {
   if (hasId) params.id = Number(b.id);
 
   let info;
-  if (db.isPostgres) info = await stmt.run(params);
-  else info = stmt.run(params);
+  try {
+    if (db.isPostgres) info = await stmt.run(params);
+    else info = stmt.run(params);
+  } catch (error) {
+    if (error?.code === '23505' && error?.constraint === 'unique_portal_username') {
+      return res.status(409).json({ error: 'That portal username is already in use. Please choose another.' });
+    }
+    throw error;
+  }
 
   if (!db.isPostgres) {
     db.prepare(`

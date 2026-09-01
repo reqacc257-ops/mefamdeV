@@ -67,12 +67,13 @@ test('applicant uploads close after the 10-minute review grace period expires', 
   assert.equal(canUpload, false);
 });
 
-test('public application submission preserves the application date from the paper-style form', () => {
+test('public application submission preserves the application date from the paper-style form', async () => {
+  const username = `dateapplicant-${Date.now()}-date`;
   const req = {
     body: {
       name: 'Date Applicant',
       sy: '2026-2027',
-      username: 'dateapplicant',
+      username,
       password: 'secret123',
       contact: '09170000003',
       applicationDate: '2026-07-12'
@@ -91,19 +92,20 @@ test('public application submission preserves the application date from the pape
     }
   };
 
-  submitPublicApplication(req, res);
+  await submitPublicApplication(req, res);
 
   const createdAppId = res.body.id;
   const savedApp = db.prepare('SELECT date_label FROM applications WHERE id = ?').get(createdAppId);
   assert.equal(savedApp.date_label, '2026-07-12');
 });
 
-test('public application submission seeds the required document checklist', () => {
+test('public application submission seeds the required document checklist', async () => {
+  const username = `testapplicant-${Date.now()}-checklist`;
   const req = {
     body: {
       name: 'Test Applicant',
       sy: '2026-2027',
-      username: 'testapplicant',
+      username,
       password: 'secret123',
       contact: '09170000000'
     }
@@ -121,7 +123,7 @@ test('public application submission seeds the required document checklist', () =
     }
   };
 
-  submitPublicApplication(req, res);
+  await submitPublicApplication(req, res);
 
   const createdAppId = res.body.id;
   const rows = db.prepare('SELECT doc_key, status FROM document_status WHERE app_id = ?').all(createdAppId);
@@ -140,12 +142,13 @@ test('public application submission seeds the required document checklist', () =
   ]);
 });
 
-test('public application submission preserves the full paper-form metadata', () => {
+test('public application submission preserves the full paper-form metadata', async () => {
+  const username = `metadataapplicant-${Date.now()}-metadata`;
   const req = {
     body: {
       name: 'Metadata Applicant',
       sy: '2026-2027',
-      username: 'metadataapplicant',
+      username,
       password: 'secret123',
       contact: '09170000001',
       submittedData: { fullName: 'Metadata Applicant', barangay: 'Narra' },
@@ -167,7 +170,7 @@ test('public application submission preserves the full paper-form metadata', () 
     }
   };
 
-  submitPublicApplication(req, res);
+  await submitPublicApplication(req, res);
 
   const createdAppId = res.body.id;
   const savedApp = db.prepare('SELECT * FROM applications WHERE id = ?').get(createdAppId);
@@ -176,4 +179,29 @@ test('public application submission preserves the full paper-form metadata', () 
   assert.equal(savedApp.status, 'Pending Review');
   assert.deepEqual(savedApp.submitted_data, { fullName: 'Metadata Applicant', barangay: 'Narra' });
   assert.deepEqual(savedApp.status_history, [{ status: 'Pending Review', changedAt: '2026-07-12T00:00:00.000Z', note: 'Application submitted' }]);
+});
+
+test('public application submission returns a conflict for a duplicate portal username', async () => {
+  const existing = db.prepare('INSERT INTO applications (name, sy, portal_username, status) VALUES (?, ?, ?, ?)')
+    .run('Existing Username Applicant', '2026-2027', 'pokoloy-duplicate-test', 'Pending Review');
+  const req = {
+    body: {
+      name: 'Duplicate Username Applicant',
+      sy: '2026-2027',
+      username: '  POKOLOY-DUPLICATE-TEST  ',
+      password: 'secret123'
+    }
+  };
+  const res = {
+    statusCode: 200,
+    body: null,
+    status(code) { this.statusCode = code; return this; },
+    json(payload) { this.body = payload; return this; }
+  };
+
+  await submitPublicApplication(req, res);
+
+  assert.equal(res.statusCode, 409);
+  assert.match(res.body.error, /already in use/i);
+  db.prepare('DELETE FROM applications WHERE id = ?').run(existing.lastInsertRowid);
 });
