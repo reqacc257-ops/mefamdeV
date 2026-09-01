@@ -129,8 +129,8 @@ const MefamAPI = {
   async endAllApplicationYears() {
     return this._post('/applications/end-year-all', { confirmAll: true });
   },
-  async reapplyApplication(id, schoolYear) {
-    return this._post(`/applications/${id}/reapply`, { schoolYear });
+  async reapplyApplication(id, schoolYear, details = {}) {
+    return this._post(`/applications/${id}/reapply`, { schoolYear, ...details });
   },
   async deleteApplication(id, confirmation = {}) {
     return this._delete(`/applications/${id}`, confirmation);

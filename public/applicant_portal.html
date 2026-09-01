@@ -262,6 +262,16 @@
         .content-modal .modal-close:hover { background: rgba(255,255,255,.25); }
         .content-modal .modal-body { padding: 8px 22px 20px; overflow-y: auto; }
 
+        .renewal-modal .modal-card { width: min(680px, 100%); }
+        .renewal-form { display: grid; gap: 14px; }
+        .renewal-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .renewal-form label { display: block; margin-bottom: 5px; color: var(--text); font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+        .renewal-form input, .renewal-form select { width: 100%; padding: 10px 11px; border: 1px solid #d9e1eb; border-radius: 8px; color: var(--text); background: #fff; font: inherit; }
+        .renewal-form input:focus, .renewal-form select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(245,166,35,.18); }
+        .renewal-note { padding: 11px 12px; border-radius: 8px; background: #fff8e8; border: 1px solid #f4d99b; color: #6b4b12; font-size: .82rem; line-height: 1.45; }
+        .renewal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+        @media (max-width: 560px) { .renewal-form .form-row { grid-template-columns: 1fr; gap: 14px; } .renewal-actions { flex-direction: column-reverse; } .renewal-actions button { width: 100%; justify-content: center; } }
+
         /* ── Announcements ── */
         .ann-item { padding: 14px 0; border-bottom: 1px solid #f0f2f6; }
         .ann-item:last-child { border-bottom: none; }
@@ -387,7 +397,7 @@
                 </div>
             </div>
             <div class="cycle-actions" id="cycleActions">
-                <button class="btn btn-gold" type="button" onclick="reapplyForNextYear()">🔁 Re-apply</button>
+                <button class="btn btn-gold" type="button" onclick="openRenewalModal()">🔁 Re-apply</button>
                 <button class="btn btn-navy" type="button" onclick="declineReapply()">No, keep closed</button>
             </div>
         </div>
@@ -509,6 +519,39 @@
 
     </div><!-- /portalContent -->
 </div><!-- /main -->
+
+    <!-- Next school-year renewal modal -->
+    <div class="content-modal renewal-modal" id="renewalModal" onclick="if (event.target === this) closeRenewalModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">🔁 Re-apply for the next school year</div>
+                <button class="modal-close" type="button" aria-label="Close" onclick="closeRenewalModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form class="renewal-form" id="renewalForm" onsubmit="submitRenewal(event)">
+                    <div class="renewal-note">Tell us what changed for the next school year. Your previous grades remain saved, and staff will review these updates before approval.</div>
+                    <div class="form-row">
+                        <div><label for="renewalSchoolYear">School year</label><input id="renewalSchoolYear" required placeholder="2026-2027"></div>
+                        <div><label for="renewalSchool">New school</label><input id="renewalSchool" required placeholder="School name"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label for="renewalEduLevel">Education level</label><select id="renewalEduLevel" required><option value="">Select level</option><option value="Elementary">Elementary</option><option value="JuniorHigh">Junior High School</option><option value="SeniorHigh">Senior High School</option><option value="College">College</option></select></div>
+                        <div><label for="renewalGrade">Grade / year level</label><input id="renewalGrade" required placeholder="Grade 12 or 1st Year College"></div>
+                    </div>
+                    <div><label for="renewalDegree">Course / track / strand</label><input id="renewalDegree" placeholder="Optional for elementary and junior high"></div>
+                    <div class="form-row">
+                        <div><label for="renewalContact">Mobile number</label><input id="renewalContact" type="tel" inputmode="tel" placeholder="09XX XXX XXXX"></div>
+                        <div><label for="renewalEmail">Email address</label><input id="renewalEmail" type="email" placeholder="you@example.com"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label for="renewalAddress">Address</label><input id="renewalAddress" placeholder="House/street address"></div>
+                        <div><label for="renewalBarangay">Barangay</label><input id="renewalBarangay" placeholder="Barangay"></div>
+                    </div>
+                    <div class="renewal-actions"><button class="btn btn-navy" type="button" onclick="closeRenewalModal()">Cancel</button><button class="btn btn-gold" type="submit">Submit updates</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 <!-- Requirements modal -->
 <div class="content-modal" id="requirementsModal" onclick="if (event.target === this) closeRequirementsModal()">
@@ -632,12 +675,45 @@ function normalizeStatus(status) {
     return ['Pending Review', 'Interviewing', 'Accepted', 'Rejected', 'Year Ended'].includes(value) ? value : 'Pending Review';
 }
 
-async function reapplyForNextYear() {
-    const schoolYear = prompt('Enter the school year you want to apply for:', `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`);
-    if (!schoolYear || !schoolYear.trim()) return;
+function openRenewalModal() {
+    const app = currentApplicant || {};
+    document.getElementById('renewalSchoolYear').value = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+    document.getElementById('renewalSchool').value = app.school || '';
+    document.getElementById('renewalEduLevel').value = app.eduLevel || app.edu_level || app.educationLevel || '';
+    document.getElementById('renewalGrade').value = app.grade || '';
+    document.getElementById('renewalDegree').value = app.degree || '';
+    document.getElementById('renewalContact').value = app.contact || '';
+    document.getElementById('renewalEmail').value = app.email || '';
+    document.getElementById('renewalAddress').value = app.address || '';
+    document.getElementById('renewalBarangay').value = app.barangay || '';
+    document.getElementById('renewalModal').classList.add('open');
+    document.getElementById('renewalSchoolYear').focus();
+}
+
+function closeRenewalModal() {
+    document.getElementById('renewalModal')?.classList.remove('open');
+}
+
+async function submitRenewal(event) {
+    event.preventDefault();
+    const schoolYear = document.getElementById('renewalSchoolYear').value.trim();
+    const school = document.getElementById('renewalSchool').value.trim();
+    const eduLevel = document.getElementById('renewalEduLevel').value;
+    const grade = document.getElementById('renewalGrade').value.trim();
+    if (!schoolYear || !school || !eduLevel || !grade) return;
     try {
-        const result = await MefamAPI.reapplyApplication(currentAppId, schoolYear.trim());
+        const result = await MefamAPI.reapplyApplication(currentAppId, schoolYear, {
+            school,
+            eduLevel,
+            grade,
+            degree: document.getElementById('renewalDegree').value.trim(),
+            contact: document.getElementById('renewalContact').value.trim(),
+            email: document.getElementById('renewalEmail').value.trim(),
+            address: document.getElementById('renewalAddress').value.trim(),
+            barangay: document.getElementById('renewalBarangay').value.trim(),
+        });
         if (!result?.ok) throw new Error(result?.error || 'Unable to submit your re-application right now.');
+        closeRenewalModal();
         alert('Your re-application was sent for staff review. Your previous grades remain saved.');
         await loadApplicantData();
     } catch (error) {

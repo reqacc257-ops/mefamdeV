@@ -296,17 +296,22 @@ router.post('/:id/reapply', requireAuth, async (req, res) => {
 
   const schoolYear = String(req.body?.schoolYear || '').trim();
   if (!schoolYear) return res.status(400).json({ error: 'School year is required.' });
+  const nextSchool = String(req.body?.school || '').trim() || String(app.school || '');
+  const nextGrade = String(req.body?.grade || '').trim() || String(app.grade || '');
+  const nextEducationLevel = String(req.body?.eduLevel || '').trim() || String(app.edu_level || '');
+  const nextDegree = String(req.body?.degree || '').trim() || String(app.degree || '');
+  const nextContact = String(req.body?.contact || '').trim() || String(app.contact || '');
+  const nextEmail = String(req.body?.email || '').trim() || String(app.email || '');
+  const nextAddress = String(req.body?.address || '').trim() || String(app.address || '');
+  const nextBarangay = String(req.body?.barangay || '').trim() || String(app.barangay || '');
   const now = new Date().toISOString();
   const history = typeof app.status_history === 'string'
     ? (() => { try { return JSON.parse(app.status_history || '[]'); } catch { return []; } })()
     : (app.status_history || []);
   history.push({ status: 'Pending Review', changedAt: now, note: isStaff ? `Staff initiated renewal for ${schoolYear}.` : `Applicant reapplied for ${schoolYear}.` });
-  await db.prepare(`
-    UPDATE applications
-    SET status = ?, sy = ?, status_updated_at = ?, status_history = ?, reapply_allowed = ?
-    WHERE id = ?
-  `).run('Pending Review', schoolYear, now, history, 0, id);
-  res.json({ ok: true, status: 'Pending Review', schoolYear, gradesRetained: true });
+  await db.prepare(`UPDATE applications SET status = ?, sy = ?, school = ?, grade = ?, edu_level = ?, degree = ?, contact = ?, email = ?, address = ?, barangay = ?, status_updated_at = ?, status_history = ?, reapply_allowed = ? WHERE id = ?`)
+    .run('Pending Review', schoolYear, nextSchool, nextGrade, nextEducationLevel, nextDegree, nextContact, nextEmail, nextAddress, nextBarangay, now, history, 0, id);
+  res.json({ ok: true, status: 'Pending Review', schoolYear, school: nextSchool, grade: nextGrade, eduLevel: nextEducationLevel, degree: nextDegree, contact: nextContact, email: nextEmail, gradesRetained: true });
 });
 
 // ── DELETE ────────────────────────────────────────────────────────────────────

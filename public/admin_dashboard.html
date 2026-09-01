@@ -2770,14 +2770,28 @@ async function triggerScholarRenewal(appId) {
     if (!appId) return;
     const schoolYear = prompt('Enter the school year for renewal (for example: 2026-2027):');
     if (!schoolYear || !schoolYear.trim()) return;
+    const currentApp = (window.pipelineApps || []).find(app => String(app.id) === String(appId)) || {};
+    const school = prompt('Enter the school for the new school year (leave blank to keep the current school):', currentApp.school || '');
+    if (school === null) return;
+    const educationLevel = prompt('Enter the new education level (Elementary, Junior High School, Senior High School, or College):', currentApp.eduLevel || currentApp.educationLevel || '');
+    if (educationLevel === null) return;
+    const grade = prompt('Enter the new grade/year level (for example: Grade 12 or 1st Year College):', currentApp.grade || '');
+    if (grade === null) return;
     try {
-        const result = await MefamAPI.reapplyApplication(appId, schoolYear.trim());
+        const result = await MefamAPI.reapplyApplication(appId, schoolYear.trim(), {
+            school: school.trim(),
+            eduLevel: educationLevel.trim(),
+            grade: grade.trim(),
+        });
         if (!result?.ok) throw new Error(result?.error || 'Unable to trigger renewal.');
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         const app = apps.find(item => String(item.id) === String(appId));
         if (app) {
             app.status = 'Pending Review';
             app.sy = schoolYear.trim();
+            if (school.trim()) app.school = school.trim();
+            if (educationLevel.trim()) app.eduLevel = educationLevel.trim();
+            if (grade.trim()) app.grade = grade.trim();
             localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
         }
         alert('Scholar renewal has been triggered and the application is back in review.');

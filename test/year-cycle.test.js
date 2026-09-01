@@ -32,16 +32,24 @@ test('director can close a school year and applicant can reapply without losing 
     const reapplyRes = await fetch(`${base}/applications/${appId}/reapply`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${applicantToken}` },
-      body: JSON.stringify({ schoolYear: '2026-2027' })
+      body: JSON.stringify({
+        schoolYear: '2026-2027',
+        school: 'New College University',
+        eduLevel: 'College',
+        grade: '1st Year College'
+      })
     });
     assert.equal(reapplyRes.status, 200);
     assert.equal((await reapplyRes.json()).gradesRetained, true);
 
     const savedGrade = db.prepare('SELECT * FROM grades WHERE app_id = ?').get(appId);
-    const savedApp = db.prepare('SELECT status, sy FROM applications WHERE id = ?').get(appId);
+    const savedApp = db.prepare('SELECT status, sy, school, edu_level, grade FROM applications WHERE id = ?').get(appId);
     assert.equal(savedGrade.grade_val, 91);
     assert.equal(savedApp.status, 'Pending Review');
     assert.equal(savedApp.sy, '2026-2027');
+    assert.equal(savedApp.school, 'New College University');
+    assert.equal(savedApp.edu_level, 'College');
+    assert.equal(savedApp.grade, '1st Year College');
   } finally {
     server.close();
     db.prepare('DELETE FROM applications WHERE id = ?').run(appId);
