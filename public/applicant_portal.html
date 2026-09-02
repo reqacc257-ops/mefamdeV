@@ -617,8 +617,6 @@ window.onload = function () {
         if (previewRaw) {
             raw = previewRaw;
             localStorage.removeItem('mefamdev_preview_session');
-            // Carry over the staff member's token so authenticated calls
-            // (application details, document checklist) work in this tab.
             try {
                 const previewSession = JSON.parse(previewRaw);
                 if (previewSession.token) sessionStorage.setItem('mefamdev_token', previewSession.token);
@@ -626,12 +624,28 @@ window.onload = function () {
         }
     }
 
-    if (!raw) { showNotFound(); return; }
+    if (!raw) {
+        sessionStorage.removeItem('mefamdev_token');
+        showNotFound();
+        return;
+    }
 
     let session;
-    try { session = JSON.parse(raw); } catch(e) { showNotFound(); return; }
+    try { session = JSON.parse(raw); } catch(e) {
+        sessionStorage.removeItem('mefamdev_token');
+        sessionStorage.removeItem('mefamdev_session');
+        showNotFound();
+        return;
+    }
 
-    if (session.type !== 'applicant' || !session.appId) { showNotFound(); return; }
+    const loginAge = Number(session.loginTime || 0);
+    if (session.type !== 'applicant' || !session.appId || (loginAge && Date.now() - loginAge > 8 * 60 * 60 * 1000)) {
+        sessionStorage.removeItem('mefamdev_token');
+        sessionStorage.removeItem('mefamdev_session');
+        localStorage.removeItem('mefamdev_preview_session');
+        showNotFound();
+        return;
+    }
 
     loadApplicantData(session);
 };
@@ -1843,8 +1857,8 @@ document.addEventListener('keydown', function (event) {
 
 function logout() {
     if (confirm('Sign out of your applicant portal?')) {
-        sessionStorage.removeItem('mefamdev_session');
-        window.location.href = 'index.html';
+        clearClientSession();
+        window.location.assign('/index.html');
     }
 }
 

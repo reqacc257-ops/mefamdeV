@@ -1844,10 +1844,23 @@ document.addEventListener('DOMContentLoaded', () => {
     cleanLegacyDemoData();
     // ── Session Guard ──
     const raw = sessionStorage.getItem('mefamdev_session');
-    if (!raw) { window.location.href = 'index.html'; return; }
+    if (!raw) {
+        clearClientSession();
+        window.location.href = 'index.html';
+        return;
+    }
     let session;
-    try { session = JSON.parse(raw); } catch(e) { window.location.href = 'index.html'; return; }
-    if (session.type !== 'staff') { window.location.href = 'index.html'; return; }
+    try { session = JSON.parse(raw); } catch(e) {
+        clearClientSession();
+        window.location.href = 'index.html';
+        return;
+    }
+    const loginAge = Number(session.loginTime || 0);
+    if (session.type !== 'staff' || (loginAge && Date.now() - loginAge > 8 * 60 * 60 * 1000)) {
+        clearClientSession();
+        window.location.href = 'index.html';
+        return;
+    }
 
     // ── Load session into UI ──
     const directorOnly = new URLSearchParams(window.location.search).get('director') === '1';

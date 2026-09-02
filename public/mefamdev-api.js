@@ -17,8 +17,16 @@ const defaultApiBase = window.location.protocol === 'file:'
   : '/api';
 const API_BASE = (configuredApiBase || defaultApiBase).replace(/\/$/, '');
 function storeSession(user, token) {
+  localStorage.removeItem('mefamdev_preview_session');
   sessionStorage.setItem('mefamdev_token', token);
   sessionStorage.setItem('mefamdev_session', JSON.stringify({ ...user, loginTime: Date.now() }));
+}
+
+function clearClientSession() {
+  sessionStorage.removeItem('mefamdev_token');
+  sessionStorage.removeItem('mefamdev_session');
+  localStorage.removeItem('mefamdev_preview_session');
+  localStorage.removeItem('mefamdev_trusted_device_until');
 }
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
@@ -99,13 +107,29 @@ const MefamAPI = {
         keepalive: true,
       }).catch(() => {});
     }
-    sessionStorage.removeItem('mefamdev_token');
-    sessionStorage.removeItem('mefamdev_session');
-    window.location.href = '/index.html';
+    clearClientSession();
+    window.location.assign('/index.html');
   },
 
   getSession() {
-    try { return JSON.parse(sessionStorage.getItem('mefamdev_session')); } catch { return null; }
+    try {
+      const raw = sessionStorage.getItem('mefamdev_session');
+      if (!raw) return null;
+      const session = JSON.parse(raw);
+      const loginTime = Number(session?.loginTime || 0);
+      if (!session || typeof session !== 'object') {
+        clearClientSession();
+        return null;
+      }
+      if (loginTime && Date.now() - loginTime > 8 * 60 * 60 * 1000) {
+        clearClientSession();
+        return null;
+      }
+      return session;
+    } catch {
+      clearClientSession();
+      return null;
+    }
   },
 
   // ── Applications ───────────────────────────────────────────────────────────

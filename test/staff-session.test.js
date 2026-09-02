@@ -8,7 +8,7 @@ const authRouter = require('../routes/auth');
 const password = 'single-session-test-password';
 const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
 
-test('staff account allows only one active session until logout', async () => {
+test('staff login replaces stale active session instead of blocking a valid retry', async () => {
   db.prepare('UPDATE staff SET password = ? WHERE username = ?').run(passwordHash, 'edu');
 
   const app = express();
@@ -30,14 +30,15 @@ test('staff account allows only one active session until logout', async () => {
     assert.equal(firstLogin.status, 200);
     assert.ok(firstBody.token);
 
-    const blockedLogin = await login();
-    const blockedBody = await blockedLogin.json();
-    assert.equal(blockedLogin.status, 409);
-    assert.match(blockedBody.error, /already logged in/i);
+    const retryLogin = await login();
+    const retryBody = await retryLogin.json();
+    assert.equal(retryLogin.status, 200);
+    assert.ok(retryBody.token);
+    assert.notEqual(retryBody.token, firstBody.token);
 
     const logout = await fetch(`${base}/logout`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${firstBody.token}` }
+      headers: { Authorization: `Bearer ${retryBody.token}` }
     });
     assert.equal(logout.status, 200);
 

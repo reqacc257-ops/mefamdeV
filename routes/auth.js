@@ -235,7 +235,10 @@ router.post('/login', async (req, res) => {
   // Try staff login first
   const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(username);
   if (staff && staff.password === hashPassword(password)) {
-    if (staffSessions.hasActiveSession(staff.username)) return res.status(409).json({ error: 'This staff account is already logged in on another device or browser.' });
+    const existingSession = staffSessions.hasActiveSession(staff.username);
+    if (existingSession) {
+      staffSessions.revokeSession(staff.username);
+    }
 
     if (staff.role === 'director' && isDirectorVerificationEnabled()) {
       const email = getStaffEmail(staff);
@@ -308,7 +311,9 @@ router.post('/director/verify-otp', async (req, res) => {
   const staff = await db.prepare('SELECT * FROM staff WHERE username = ?').get(challenge.username);
   directorOtpChallenges.delete(challengeId);
   if (!staff || staff.role !== 'director') return res.status(403).json({ error: 'Director access required.' });
-  if (staffSessions.hasActiveSession(staff.username)) return res.status(409).json({ error: 'This staff account is already logged in on another device or browser.' });
+  if (staffSessions.hasActiveSession(staff.username)) {
+    staffSessions.revokeSession(staff.username);
+  }
 
   if (trustDevice && deviceId) {
     trustedDevices.set(getTrustedDeviceKey(staff.username, deviceId), { username: staff.username, expiresAt: Date.now() + TRUSTED_DEVICE_MS });

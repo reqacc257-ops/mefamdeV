@@ -682,15 +682,24 @@ async function submitForgotPassword() {
 
 /* ── Auto-redirect if already logged in ── */
 window.onload = function () {
-    const session = sessionStorage.getItem('mefamdev_session');
-    if (session) {
-        try {
-            const s = JSON.parse(session);
-            if (Date.now() - s.loginTime < 8 * 60 * 60 * 1000) {
-                if (s.type === 'staff') window.location.assign('/admin_dashboard.html');
-                else window.location.assign('/applicant_portal.html');
-            }
-        } catch(e) { sessionStorage.removeItem('mefamdev_session'); }
+    const raw = sessionStorage.getItem('mefamdev_session');
+    if (!raw) return;
+    try {
+        const s = JSON.parse(raw);
+        const loginAge = Number(s.loginTime || 0);
+        if (loginAge && Date.now() - loginAge > 8 * 60 * 60 * 1000) {
+            clearClientSession();
+            return;
+        }
+        if (s.type === 'staff') {
+            window.location.assign('/admin_dashboard.html');
+            return;
+        }
+        if (s.type === 'applicant') {
+            window.location.assign('/applicant_portal.html');
+        }
+    } catch (e) {
+        clearClientSession();
     }
 };
 </script>
