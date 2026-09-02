@@ -198,10 +198,25 @@ router.get('/student/:studentId/grade-card', async (req, res) => {
   if (!studentId || !schoolYear) return res.status(400).json({ error: 'studentId and school_year are required' });
   const quarterlyRows = await db.prepare('SELECT subject, quarter, grade_value FROM quarterly_grades WHERE student_id = ? AND school_year = ? AND status = ?').all(studentId, schoolYear, 'approved');
   const finalizedRows = await db.prepare('SELECT subject, quarter, grade_val FROM grades WHERE app_id = ? AND school_year = ?').all(studentId, schoolYear);
-  const rows = [
-    ...quarterlyRows,
-    ...finalizedRows.map(row => ({ subject: row.subject, quarter: row.quarter, grade_value: row.grade_val })),
-  ];
+  // A finalized uploaded card replaces the older quarterly view for the same
+  // school year. Merging both sources introduces learning areas from another
+  // card or an earlier submission.
+  const approvedExtraction = await db.prepare('SELECT extracted FROM grade_extraction WHERE app_id = ? AND status = ? ORDER BY reviewed_at DESC LIMIT 1').get(studentId, 'approved');
+  let allowedSubjects = null;
+  if (approvedExtraction?.extracted) {
+    try {
+      const extracted = JSON.parse(approvedExtraction.extracted);
+      if (Array.isArray(extracted.subjects)) {
+        allowedSubjects = new Set(extracted.subjects.map(subject => String(subject?.name || '').trim().toLowerCase()).filter(Boolean));
+      }
+    } catch (_) {}
+  }
+  const filteredFinalizedRows = allowedSubjects
+    ? finalizedRows.filter(row => allowedSubjects.has(String(row.subject || '').trim().toLowerCase()))
+    : finalizedRows;
+  const rows = finalizedRows.length
+    ? filteredFinalizedRows.map(row => ({ subject: row.subject, quarter: row.quarter, grade_value: row.grade_val }))
+    : quarterlyRows;
   const grouped = {};
   rows.forEach(r => {
     const subj = r.subject || 'Unknown';

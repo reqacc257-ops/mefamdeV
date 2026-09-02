@@ -33,12 +33,6 @@ function getRemarkFromGrade(grade) {
 }
 
 function canonicalSubjectName(name) {
-  const normalized = String(name || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
-  if (normalized.includes('araling panlipunan') || normalized === 'ap') return 'Araling Panlipunan (AP)';
-  if (normalized.includes('gmrc') || normalized.includes('values education')) return 'GMRC / Values Education';
-  if (normalized === 'epp' || normalized.includes('epp / tle') || normalized.includes('edukasyong pantahanan')) return 'EPP / TLE';
-  if (normalized === 'esp' || normalized === 'edukasyon sa pagpapakatao') return 'Edukasyon sa Pagpapakatao';
-  if (normalized === 'tle' || normalized.includes('technology') && normalized.includes('livelihood') || normalized === 'education (tle)') return 'Technology and Livelihood Education (TLE)';
   return String(name || '').trim();
 }
 

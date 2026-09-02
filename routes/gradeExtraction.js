@@ -166,6 +166,11 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
       });
     }
 
+    // An uploaded report card is the complete source for this school year.
+    // Remove older finalized rows first so unrelated learning areas cannot
+    // leak into the newly approved card.
+    await db.prepare('DELETE FROM grades WHERE app_id = ? AND school_year = ?').run(row.app_id, schoolYear);
+
     for (const subject of subjects) {
       const name = String(subject.name || '').trim();
       if (!name) continue;
@@ -197,8 +202,22 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
       WHERE app_id = ? AND doc_key = ?
     `).run('Missing', applicantNote, reviewedAt, '', '', '', '', row.app_id, 'reportCard');
   } else {
+    const reviewedExtraction = {
+      ...(extracted || {}),
+      schoolYear,
+      subjects: subjects.filter(subject => String(subject?.name || '').trim()).map(subject => ({
+        name: String(subject.name).trim(),
+        q1: subject.q1 ?? null,
+        q2: subject.q2 ?? null,
+        q3: subject.q3 ?? null,
+        q4: subject.q4 ?? null,
+        final: subject.final ?? null,
+      })),
+    };
     await db.prepare('UPDATE grade_extraction SET status = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
       .run(status, reviewNotes, reviewerId, reviewedAt, id);
+    await db.prepare('UPDATE grade_extraction SET extracted = ? WHERE id = ?')
+      .run(JSON.stringify(reviewedExtraction), id);
     await markReportCardReceived(row.app_id, reviewNotes || 'Report card approved and marked as received.');
   }
 
