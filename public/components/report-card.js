@@ -42,7 +42,7 @@ function mergeSubjectGrades(target, source) {
   });
 }
 
-function buildReportCardHTML(scholarData, gradesData, sourceImage = '') {
+function buildReportCardHTML(scholarData, gradesData) {
   const { name, gradeLevel, school, refNo, schoolYear } = scholarData;
   const periodCount = getReportCardPeriodCount();
   const periods = Array.from({ length: periodCount }, (_, index) => `Q${index + 1}`);
@@ -139,13 +139,7 @@ function buildReportCardHTML(scholarData, gradesData, sourceImage = '') {
         </div>
       </div>
 
-      ${sourceImage ? `<section class="rc-original-card">
-        <div class="rc-original-label">Original uploaded report card</div>
-        <img src="${escapeReportCardHtml(sourceImage)}" alt="Original uploaded report card" onclick="openImageZoom(this.src)">
-      </section>` : ''}
-
       <div class="rc-table-wrap">
-        <div class="rc-transcription-label">Verified grade transcription</div>
         <table class="rc-table">
           <thead>
             <tr>
@@ -173,15 +167,6 @@ function buildReportCardHTML(scholarData, gradesData, sourceImage = '') {
       </div>
     </div>
   `;
-}
-
-function escapeReportCardHtml(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 // CSS for report card
@@ -223,9 +208,6 @@ const REPORT_CARD_STYLES = `
   .rc-info-cell .rc-val { font-size: .9rem; font-weight: 600; color: var(--text); }
 
   .rc-table-wrap { padding: 24px 28px 8px; }
-  .rc-original-card { padding: 24px 28px 8px; border-bottom: 1px solid var(--border); }
-  .rc-original-label, .rc-transcription-label { margin-bottom: 10px; font-size: .74rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
-  .rc-original-card img { display: block; width: 100%; max-height: 80vh; object-fit: contain; object-position: top center; border: 1px solid var(--border); cursor: zoom-in; }
   table.rc-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
   table.rc-table caption { text-align: left; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
   table.rc-table th, table.rc-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
@@ -257,7 +239,6 @@ const REPORT_CARD_STYLES = `
     table.rc-table { font-size: .72rem; }
     table.rc-table td.rc-sub { padding-left: 14px; }
     .rc-footer { grid-template-columns: 1fr; }
-    .rc-original-card, .rc-table-wrap { padding-left: 14px; padding-right: 14px; }
   }
 
   @media print {

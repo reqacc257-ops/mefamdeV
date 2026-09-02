@@ -641,17 +641,6 @@
                 if (!Array.isArray(response)) {
                     throw new Error(response?.error || 'The approved grades could not be loaded.');
                 }
-                let sourceImage = '';
-                try {
-                    const history = await MefamAPI.getGradeExtractionHistory(appId) || [];
-                    const approvedUploads = history.filter(item => item.status === 'approved' && item.fileData);
-                    const approvedUpload = approvedUploads.find(item =>
-                        !schoolYear || item.extracted?.schoolYear === schoolYear
-                    ) || approvedUploads[0];
-                    sourceImage = approvedUpload?.fileData || '';
-                } catch (historyError) {
-                    console.warn('Unable to load the original report-card image:', historyError);
-                }
                 const approvedSubjects = response;
                 const scholarGrades = approvedSubjects.flatMap(subject => Object.entries(subject.quarters || {}).map(([quarter, grade_value]) => ({
                     subject: subject.subject,
@@ -659,7 +648,7 @@
                     grade_val: grade_value,
                 })));
                 const scholarData = { name, gradeLevel, school, refNo: refNo || appId, schoolYear: schoolYear || 'N/A' };
-                const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades, sourceImage);
+                const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades);
                 document.getElementById('reportCardContent').innerHTML = reportCardHTML;
                 if (!document.getElementById('reportCardStyles')) {
                     const styleEl = document.createElement('style');
