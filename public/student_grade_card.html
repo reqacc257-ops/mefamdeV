@@ -670,10 +670,10 @@
             const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
             const extracted = extraction?.extracted || {};
             const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
-            const mapehComponents = new Set(['music', 'arts', 'pe', 'physical education', 'health']);
-            const visibleSubjects = subjects.filter(subject => !mapehComponents.has(String(subject.name || '').trim().toLowerCase()));
-            const reviewSubjects = visibleSubjects.length
-                ? visibleSubjects
+            // The uploaded card is the source of truth. Keep every detected
+            // learning area, including component rows under MAPEH.
+            const reviewSubjects = subjects.length
+                ? subjects
                 : DEFAULT_REVIEW_SUBJECTS.map(name => ({ name, q1: null, q2: null, q3: null, q4: null, final: null }));
             const content = document.getElementById('reviewExtractionContent');
             if (!content) return;
@@ -704,7 +704,8 @@
                     <div class="review-grade-column">
                         <div class="review-panel-title">Grade entry</div>
                         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
-                        <div class="review-table-toolbar" aria-label="Grade table horizontal scrolling">
+                        <div class="review-table-toolbar" aria-label="Grade table controls">
+                            <button class="btn btn-gold btn-sm" type="button" onclick="addReviewSubjectRow()">+ Add learning area</button>
                             <button class="btn btn-ghost" type="button" title="Scroll grades left" aria-label="Scroll grades left" onclick="scrollReviewGrades(-1)">←</button>
                             <button class="btn btn-ghost" type="button" title="Scroll grades right" aria-label="Scroll grades right" onclick="scrollReviewGrades(1)">→</button>
                         </div>
@@ -722,6 +723,19 @@
                 <div class="form-group" style="margin-top:12px;"><label>Review Notes</label><textarea id="reviewNotes" rows="3" style="width:100%; border:1px solid var(--border); border-radius:10px; padding:10px;"></textarea></div>
             `;
             document.getElementById('reviewExtractionModal').classList.add('open');
+        }
+
+        function addReviewSubjectRow() {
+            const table = document.querySelector('#reviewGradesTableWrap tbody');
+            if (!table) return;
+            const row = document.createElement('tr');
+            row.className = 'review-subject-row';
+            row.dataset.index = String(table.rows.length);
+            row.innerHTML = `<td><input type="text" class="review-subject-name" placeholder="Learning area name" style="width:100%;"></td>
+                ${['q1', 'q2', 'q3', 'q4', 'final'].map(field => `<td><div><input type="number" class="review-quarter-input review-cell-warning" data-quarter="${field}" value="" min="60" max="100" style="width:70px;"><span class="review-cell-warning-label">Blank</span></div></td>`).join('')}`;
+            table.appendChild(row);
+            row.querySelector('.review-subject-name')?.focus();
+            row.scrollIntoView({ block: 'nearest' });
         }
 
         let imageZoomScale = 1;
