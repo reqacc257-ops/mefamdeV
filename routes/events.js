@@ -418,6 +418,28 @@ router.put('/grades/:appId', async (req, res) => {
     } else {
       await db.prepare('INSERT INTO grades (app_id, school_year, subject, quarter, grade_val, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(appId, schoolYear, subject, quarter, grade, timestamp);
     }
+
+    // Manual staff additions are part of the approved card. Register the new
+    // learning area in the extraction whitelist so it is displayed while old
+    // subjects from unrelated cards remain excluded.
+    const approvedExtraction = await db.prepare('SELECT id, extracted FROM grade_extraction WHERE app_id = ? AND status = ? ORDER BY reviewed_at DESC LIMIT 1').get(appId, 'approved');
+    if (approvedExtraction?.extracted) {
+      try {
+        const extracted = JSON.parse(approvedExtraction.extracted);
+        const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
+        let entry = subjects.find(item => String(item?.name || '').trim().toLowerCase() === String(subject).trim().toLowerCase());
+        if (!entry) {
+          entry = { name: String(subject).trim(), q1: null, q2: null, q3: null, q4: null, final: null };
+          subjects.push(entry);
+        }
+        const quarterKey = `q${Number(quarter)}`;
+        if (/^q[1-4]$/.test(quarterKey)) entry[quarterKey] = Number(grade);
+        extracted.subjects = subjects;
+        await db.prepare('UPDATE grade_extraction SET extracted = ? WHERE id = ?').run(JSON.stringify(extracted), approvedExtraction.id);
+      } catch (error) {
+        console.warn('Unable to update approved card learning areas:', error?.message || error);
+      }
+    }
   } else {
     // Legacy semester-based grades
     const sem = semester || '';
