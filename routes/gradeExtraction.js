@@ -135,6 +135,10 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   const subjects = Array.isArray(req.body.subjects) ? req.body.subjects : [];
   const reviewNotes = String(req.body.reviewNotes || '');
   const schoolYear = String(req.body.schoolYear || extracted?.schoolYear || '').trim();
+  const requestedPeriodCount = Number(req.body.gradingPeriodCount);
+  const periodCount = requestedPeriodCount === 4 || requestedPeriodCount === 3
+    ? requestedPeriodCount
+    : Number(extracted?.gradingPeriodCount) === 4 ? 4 : 3;
   const reviewerId = req.user.id || req.user.username || 'staff';
 
   let rejectedCells = [];
@@ -150,7 +154,7 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
     for (const subject of subjects) {
       const name = String(subject.name || '').trim();
       if (!name) continue;
-      for (const quarterKey of ['q1', 'q2', 'q3', 'q4']) {
+      for (const quarterKey of ['q1', 'q2', 'q3', ...(periodCount === 4 ? ['q4'] : [])]) {
         const raw = subject[quarterKey];
         if (raw === null || raw === undefined || raw === '') continue;
         const value = Number(raw);
@@ -174,7 +178,7 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
     for (const subject of subjects) {
       const name = String(subject.name || '').trim();
       if (!name) continue;
-      for (const [index, quarterKey] of ['q1', 'q2', 'q3', 'q4'].entries()) {
+      for (const [index, quarterKey] of ['q1', 'q2', 'q3', ...(periodCount === 4 ? ['q4'] : [])].entries()) {
         const raw = subject[quarterKey];
         if (raw === null || raw === undefined || raw === '') continue;
         const value = Number(raw);
@@ -204,6 +208,7 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   } else {
     const reviewedExtraction = {
       ...(extracted || {}),
+      gradingPeriodCount: periodCount,
       schoolYear,
       subjects: subjects.filter(subject => String(subject?.name || '').trim()).map(subject => ({
         name: String(subject.name).trim(),

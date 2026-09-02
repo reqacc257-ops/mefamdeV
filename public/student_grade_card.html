@@ -669,6 +669,7 @@
             activeExtractionId = Number(id);
             const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
             const extracted = extraction?.extracted || {};
+            let reviewPeriodCount = Number(extracted.gradingPeriodCount) === 4 ? 4 : 3;
             const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
             // The uploaded card is the source of truth. Keep every detected
             // learning area, including component rows under MAPEH.
@@ -692,6 +693,9 @@
                 const warningLabel = isBlank ? 'Blank' : '';
                 return `<div><input type="number" class="review-quarter-input${warning ? ' review-cell-warning' : ''}" data-quarter="${field}" value="${isBlank ? '' : escapeHtml(value)}" min="60" max="100" style="width:70px;"${warning && warningLabel ? ` aria-label="${escapeHtml(subject.name)} ${field.toUpperCase()} ${warningLabel}"` : ''}>${warningLabel ? `<span class="review-cell-warning-label">${warningLabel}</span>` : ''}</div>`;
             };
+            const periodWord = reviewPeriodCount === 4 ? 'Quarter' : 'Term';
+            const periodFields = Array.from({ length: reviewPeriodCount }, (_, index) => `q${index + 1}`);
+            const renderReviewPeriodCell = (subject, field) => `<td>${renderReviewGradeInput(subject, field)}</td>`;
             const photo = extraction.fileData
                 ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)">`
                 : '<div class="empty-state">Original image is unavailable.</div>';
@@ -704,18 +708,16 @@
                     <div class="review-grade-column">
                         <div class="review-panel-title">Grade entry</div>
                         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
+                        <div class="form-group"><label for="reviewPeriodCount">Grading format</label><select id="reviewPeriodCount" onchange="updateReviewPeriodFields()"><option value="3"${reviewPeriodCount === 3 ? ' selected' : ''}>3 terms</option><option value="4"${reviewPeriodCount === 4 ? ' selected' : ''}>4 quarters</option></select></div>
                         <div class="review-table-toolbar" aria-label="Grade table controls">
                             <button class="btn btn-gold btn-sm" type="button" onclick="addReviewSubjectRow()">+ Add learning area</button>
                             <button class="btn btn-ghost" type="button" title="Scroll grades left" aria-label="Scroll grades left" onclick="scrollReviewGrades(-1)">←</button>
                             <button class="btn btn-ghost" type="button" title="Scroll grades right" aria-label="Scroll grades right" onclick="scrollReviewGrades(1)">→</button>
                         </div>
-                        <div class="table-wrap" id="reviewGradesTableWrap"><table><thead><tr><th>Subject</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead><tbody>${reviewSubjects.map((subject, idx) => `
+                        <div class="table-wrap" id="reviewGradesTableWrap"><table><thead><tr><th>Subject</th>${periodFields.map((_, index) => `<th>${periodWord} ${index + 1}</th>`).join('')}<th>Final</th></tr></thead><tbody>${reviewSubjects.map((subject, idx) => `
                             <tr class="review-subject-row" data-index="${idx}">
                                 <td><input type="text" class="review-subject-name" value="${escapeHtml(subject.name || '')}" style="width:100%;"></td>
-                                <td>${renderReviewGradeInput(subject, 'q1')}</td>
-                                <td>${renderReviewGradeInput(subject, 'q2')}</td>
-                                <td>${renderReviewGradeInput(subject, 'q3')}</td>
-                                <td>${renderReviewGradeInput(subject, 'q4')}</td>
+                                ${periodFields.map(field => renderReviewPeriodCell(subject, field)).join('')}
                                 <td>${renderReviewGradeInput(subject, 'final')}</td>
                             </tr>`).join('')}</tbody></table></div>
                     </div>
@@ -731,11 +733,19 @@
             const row = document.createElement('tr');
             row.className = 'review-subject-row';
             row.dataset.index = String(table.rows.length);
+            const periodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3;
             row.innerHTML = `<td><input type="text" class="review-subject-name" placeholder="Learning area name" style="width:100%;"></td>
-                ${['q1', 'q2', 'q3', 'q4', 'final'].map(field => `<td><div><input type="number" class="review-quarter-input review-cell-warning" data-quarter="${field}" value="" min="60" max="100" style="width:70px;"><span class="review-cell-warning-label">Blank</span></div></td>`).join('')}`;
+                ${Array.from({ length: periodCount }, (_, index) => `q${index + 1}`).concat('final').map(field => `<td><div><input type="number" class="review-quarter-input review-cell-warning" data-quarter="${field}" value="" min="60" max="100" style="width:70px;"><span class="review-cell-warning-label">Blank</span></div></td>`).join('')}`;
             table.appendChild(row);
             row.querySelector('.review-subject-name')?.focus();
             row.scrollIntoView({ block: 'nearest' });
+        }
+
+        function updateReviewPeriodFields() {
+            const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
+            if (!extraction) return;
+            extraction.extracted = { ...(extraction.extracted || {}), gradingPeriodCount: Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3 };
+            openReviewModal(activeExtractionId);
         }
 
         let imageZoomScale = 1;
@@ -770,7 +780,8 @@
             const rows = Array.from(document.querySelectorAll('.review-subject-row'));
             return rows.map(row => {
                 const payload = { name: row.querySelector('.review-subject-name')?.value?.trim() || '' };
-                ['q1', 'q2', 'q3', 'q4', 'final'].forEach(key => {
+                const periodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3;
+                Array.from({ length: periodCount }, (_, index) => `q${index + 1}`).concat('final').forEach(key => {
                     const raw = row.querySelector(`[data-quarter="${key}"]`)?.value;
                     payload[key] = raw === '' || raw === null || raw === undefined ? null : Number(raw);
                 });
@@ -789,7 +800,8 @@
             try {
                 const reviewNotes = document.getElementById('reviewNotes')?.value || '';
                 const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim() || '';
-                const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear);
+                const gradingPeriodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3;
+                const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear, gradingPeriodCount);
                 if (response?.error) throw new Error(response.error);
                 const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
                 const appId = extraction?.appId ? Number(extraction.appId) : null;

@@ -303,8 +303,8 @@ const MefamAPI = {
   },
   async getPendingGradeExtractions() { return this._get('/grade-extraction/pending'); },
   async getGradeExtractionHistory(appId) { return this._get(`/grade-extraction/${appId}`); },
-  async reviewGradeExtraction(id, action, subjects, reviewNotes, schoolYear) {
-    return this._put(`/grade-extraction/${id}/review`, { action, subjects, reviewNotes, schoolYear });
+  async reviewGradeExtraction(id, action, subjects, reviewNotes, schoolYear, gradingPeriodCount) {
+    return this._put(`/grade-extraction/${id}/review`, { action, subjects, reviewNotes, schoolYear, gradingPeriodCount });
   },
 
   // ── Grades (applicant + admin) ─────────────────────────────────────────

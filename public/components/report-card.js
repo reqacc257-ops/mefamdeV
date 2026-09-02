@@ -8,7 +8,10 @@ const DEFAULT_AREAS = [
   'Filipino','English','Mathematics','Science','Araling Panlipunan (AP)','GMRC / Values Education','EPP / TLE','MAPEH'
 ];
 
-function getReportCardPeriodCount() {
+function getReportCardPeriodCount(gradesData) {
+  const hasQuarterFour = (gradesData || []).some(grade => String(grade.quarter || '').replace(/^Q/i, '') === '4');
+  if (hasQuarterFour) return 4;
+  if (Array.isArray(gradesData) && gradesData.length > 0) return 3;
   try {
     const configured = Number(localStorage.getItem('mefamdev_grading_periods'));
     return configured === 4 ? 4 : 3;
@@ -44,7 +47,7 @@ function mergeSubjectGrades(target, source) {
 
 function buildReportCardHTML(scholarData, gradesData) {
   const { name, gradeLevel, school, refNo, schoolYear } = scholarData;
-  const periodCount = getReportCardPeriodCount();
+  const periodCount = getReportCardPeriodCount(gradesData);
   const periods = Array.from({ length: periodCount }, (_, index) => `Q${index + 1}`);
   
   // Organize grades by subject and quarter
