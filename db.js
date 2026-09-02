@@ -6,7 +6,9 @@ if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL must be set in production; refusing to use the local memory store.');
 }
 
-const db = process.env.DATABASE_URL
+const usePostgres = Boolean(process.env.DATABASE_URL) && (process.env.NODE_ENV === 'production' || process.env.USE_POSTGRES === 'true' || process.env.USE_POSTGRES === '1');
+
+const db = usePostgres
   ? new (require('./postgres-store').PostgresStore)(process.env.DATABASE_URL)
   : require('./memory-store');
 

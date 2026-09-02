@@ -435,4 +435,5 @@ class QueryBuilder {
   }
 }
 
-module.exports = new MemoryStore(process.env.DB_PATH || process.env.DATABASE_URL || path.join(process.cwd(), 'data', 'mefamdev.json'));
+const defaultStorePath = process.env.DB_PATH || path.join(process.cwd(), 'data', 'mefamdev.json');
+module.exports = new MemoryStore(defaultStorePath);
