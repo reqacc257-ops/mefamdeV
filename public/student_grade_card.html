@@ -63,6 +63,49 @@
         .form-group { margin-bottom: 14px; }
         label { display: block; font-size: .85rem; margin-bottom: 8px; color: var(--text-muted); }
         input[type=text], select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: .95rem; }
+        /* Catches every other input variant the rule above misses: number
+           inputs (type="number"), and combo/autocomplete fields that carry
+           a `list` attribute but no explicit `type` at all (e.g. the Subject
+           field) — both previously fell through to unstyled browser defaults. */
+        input:not([type]), input[type=number], input[type=search], input[type=email], input[type=date], textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: .95rem;
+            font-family: inherit;
+            color: var(--text);
+            background: #fff;
+        }
+        input[type=text], input:not([type]), input[type=number], input[type=search], input[type=email], input[type=date], select, textarea {
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        input[type=text]:hover, input:not([type]):hover, input[type=number]:hover, select:hover, textarea:hover {
+            border-color: #c7d0dd;
+        }
+        input[type=text]:focus, input:not([type]):focus, input[type=number]:focus, input[type=search]:focus, input[type=email]:focus, input[type=date]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(245,166,35,.16);
+        }
+        input::placeholder, textarea::placeholder { color: #a7b1bd; }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%237f8c8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        label { letter-spacing: .1px; }
+        .form-group label { font-weight: 600; color: #5f6d7a; }
+        .modal-overlay .modal { animation: modalPop .16s ease-out; }
+        @keyframes modalPop {
+            from { opacity: 0; transform: translateY(6px) scale(.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         ul { list-style: none; padding: 0; margin: 0; }
         .empty-state { background: #f8fbff; border: 1px solid #dfe8f3; color: #5f6d7a; padding: 24px; border-radius: 14px; text-align: center; }
         .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
@@ -234,7 +277,7 @@
                 <div class="form-group"><label>School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
                 <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
                 <datalist id="subjectsList"></datalist>
-                <div class="form-group"><label>Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
+                <div class="form-group"><label id="gradeQuarterLabel" for="gradeQuarter">Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
                 <div class="form-group"><label>Grade (60-100)</label><input type="number" id="gradeInput" min="60" max="100"></div>
                 <input type="hidden" id="gradeModalAppId">
             </div>
@@ -787,7 +830,10 @@
             if (!select) return;
             let count = 3;
             try { count = Number(localStorage.getItem('mefamdev_grading_periods')) === 4 ? 4 : 3; } catch (e) {}
-            select.innerHTML = '<option value="">-- Select Period --</option>' + Array.from({ length: count }, (_, index) => `<option value="${index + 1}">${count === 3 ? 'Term' : 'Quarter'} ${index + 1}</option>`).join('');
+            const periodWord = count === 3 ? 'Term' : 'Quarter';
+            const label = document.getElementById('gradeQuarterLabel');
+            if (label) label.textContent = periodWord;
+            select.innerHTML = `<option value="">-- Select ${periodWord} --</option>` + Array.from({ length: count }, (_, index) => `<option value="${index + 1}">${periodWord} ${index + 1}</option>`).join('');
         }
 
         function openSubjectsModal() {

@@ -11,7 +11,7 @@ function setTestDirectorPassword() {
   db.prepare('UPDATE staff SET password = ? WHERE username = ?').run(TEST_DIRECTOR_HASH, 'director');
 }
 
-test('director OTP is disabled by default when the env flag is omitted', async () => {
+test('director email verification is enabled by default when an email is configured', async () => {
   const previousEmail = process.env.DIRECTOR_EMAIL;
   const previousNodeEnv = process.env.NODE_ENV;
   const previousVerificationEnabled = process.env.DIRECTOR_VERIFICATION_ENABLED;
@@ -30,11 +30,11 @@ test('director OTP is disabled by default when the env flag is omitted', async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: 'director', password: TEST_DIRECTOR_PASSWORD })
     });
-    const body = await loginRes.json();
+    const challenge = await loginRes.json();
     assert.equal(loginRes.status, 200);
-    assert.ok(body.token);
-    assert.equal(body.requiresOtp, undefined);
-    assert.equal(body.user.role, 'director');
+    assert.equal(challenge.requiresOtp, true);
+    assert.match(challenge.developmentOtp || '', /^\d{6}$/);
+    assert.equal(challenge.user, undefined);
   } finally {
     server.close();
     if (previousEmail === undefined) delete process.env.DIRECTOR_EMAIL;

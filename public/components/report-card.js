@@ -34,7 +34,6 @@ function getRemarkFromGrade(grade) {
 
 function canonicalSubjectName(name) {
   const normalized = String(name || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
-  if (['music', 'arts', 'pe', 'physical education', 'health', 'mapeh'].includes(normalized)) return 'MAPEH';
   if (normalized.includes('araling panlipunan') || normalized === 'ap') return 'Araling Panlipunan (AP)';
   if (normalized.includes('gmrc') || normalized.includes('values education')) return 'GMRC / Values Education';
   if (normalized === 'epp' || normalized.includes('epp / tle') || normalized.includes('edukasyong pantahanan')) return 'EPP / TLE';
@@ -56,15 +55,8 @@ function buildReportCardHTML(scholarData, gradesData) {
   
   // Organize grades by subject and quarter
   const gradesBySubject = {};
-  const componentNames = new Set(['music', 'arts', 'pe', 'physical education', 'health']);
-  const componentGrades = [];
   (gradesData || []).forEach(grade => {
     const rawSubject = grade.subject || grade.subject_name || grade.subjectName;
-    const normalizedRawSubject = String(rawSubject || '').toLowerCase().replace(/&/g, 'and').replace(/\s+/g, ' ').trim();
-    if (componentNames.has(normalizedRawSubject)) {
-      componentGrades.push(grade);
-      return;
-    }
     const subj = canonicalSubjectName(rawSubject);
     if (!subj) return;
     if (!gradesBySubject[subj]) {
@@ -76,29 +68,10 @@ function buildReportCardHTML(scholarData, gradesData) {
       if (value !== null && value !== undefined && value !== '') gradesBySubject[subj][q] = value;
     }
   });
-
-  if (!gradesBySubject.MAPEH && componentGrades.length) {
-    gradesBySubject.MAPEH = { Q1: '', Q2: '', Q3: '', Q4: '' };
-    ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
-      const values = componentGrades.map(grade => grade.quarter && `Q${grade.quarter}` === quarter ? Number(grade.grade_val ?? grade.grade_value) : null).filter(Number.isFinite);
-      if (values.length) gradesBySubject.MAPEH[quarter] = Math.round(values.reduce((sum, value) => sum + value, 0) / values.length * 10) / 10;
-    });
-  }
-
-  // If no configured subjects, assemble from grades and default areas
-  const configured = (() => {
-    try {
-      const raw = localStorage.getItem('mefamdev_subjects');
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return null;
-  })();
-
+  // Approved rows are the source of truth. Do not add default or configured
+  // subjects that were not present on this student's report card.
   const subjectsFromGrades = Object.keys(gradesBySubject);
-  const configuredSubjects = configured && Array.isArray(configured) && configured.length > 0 ? configured : DEFAULT_AREAS;
-  const excludedSubjects = new Set();
-  const finalSubjectList = Array.from(new Set([...configuredSubjects, ...subjectsFromGrades].map(canonicalSubjectName)))
-    .filter(subject => subject && !excludedSubjects.has(String(subject).toLowerCase()) && subject !== 'Music' && subject !== 'Arts' && subject !== 'PE' && subject !== 'Health');
+  const finalSubjectList = subjectsFromGrades.filter(Boolean);
 
   const quarterlyAverages = Object.fromEntries(periods.map(period => [period, []]));
   const subjectFinalGrades = [];

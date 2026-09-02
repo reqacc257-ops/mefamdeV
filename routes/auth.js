@@ -22,10 +22,12 @@ const directorOtpChallenges = new Map();
 const trustedDevices = new Map();
 const TRUSTED_DEVICE_MS = 24 * 60 * 60 * 1000;
 
-function isDirectorVerificationEnabled() {
-  const value = process.env.DIRECTOR_VERIFICATION_ENABLED;
-  if (value === undefined) return false;
-  return String(value).toLowerCase() === 'true';
+function isDirectorVerificationEnabled(staff) {
+  const configuredValue = process.env.DIRECTOR_VERIFICATION_ENABLED;
+  if (configuredValue !== undefined) {
+    return String(configuredValue).trim().toLowerCase() === 'true';
+  }
+  return Boolean(getStaffEmail(staff));
 }
 
 function hashPassword(pw) {
@@ -240,7 +242,7 @@ router.post('/login', async (req, res) => {
       staffSessions.revokeSession(staff.username);
     }
 
-    if (staff.role === 'director' && isDirectorVerificationEnabled()) {
+    if (staff.role === 'director' && isDirectorVerificationEnabled(staff)) {
       const email = getStaffEmail(staff);
       if (!email) return res.status(503).json({ error: 'Director email verification is not configured. Set DIRECTOR_EMAIL.' });
       const normalizedDeviceId = normalizeDeviceId(deviceId);
