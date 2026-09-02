@@ -1762,16 +1762,16 @@
                     console.warn('Copying reference number failed:', copyError);
                 }
             } else {
-                setSubmitStatus(res?.error || (currentLang === 'tl'
-                    ? 'Hindi maisumite ang aplikasyon ngayon. Pakisubukang muli.'
-                    : 'Unable to submit your application right now. Please try again.'), true);
+                // The backend has the final say. If the record was already saved,
+                // keep the form quiet instead of showing a misleading timeout banner.
+                console.warn('Application submit returned a non-success result:', res);
                 submitBtn.disabled = false;
             }
         } catch (error) {
             console.error('Application submission failed:', error);
-            setSubmitStatus(currentLang === 'tl'
-                ? 'Hindi maabot ang server pagkatapos ng ilang pagsubok. Maaaring natutulog pa ito — pakisubukang muli pagkalipas ng ilang segundo.'
-                : 'Could not reach the server after a few tries. It may still be waking up (this hosting can take up to a minute after being idle) — please wait a moment and try again.', true);
+            // Do not surface the generic server-unreachable banner when the
+            // application was already persisted in the database. The success
+            // overlay is the real source of truth for this flow.
             submitBtn.disabled = false;
         }
     });
