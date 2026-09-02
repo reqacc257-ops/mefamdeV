@@ -201,7 +201,15 @@ router.get('/student/:studentId/grade-card', async (req, res) => {
   // A finalized uploaded card replaces the older quarterly view for the same
   // school year. Merging both sources introduces learning areas from another
   // card or an earlier submission.
-  const approvedExtraction = await db.prepare('SELECT extracted FROM grade_extraction WHERE app_id = ? AND status = ? ORDER BY reviewed_at DESC LIMIT 1').get(studentId, 'approved');
+  const approvedExtractions = await db.prepare('SELECT extracted FROM grade_extraction WHERE app_id = ? AND status = ? ORDER BY reviewed_at DESC').all(studentId, 'approved');
+  const approvedExtraction = approvedExtractions.find(row => {
+    try {
+      const extracted = JSON.parse(row.extracted || '{}');
+      return String(extracted.schoolYear || '').trim() === schoolYear;
+    } catch (_) {
+      return false;
+    }
+  });
   let allowedSubjects = null;
   if (approvedExtraction?.extracted) {
     try {

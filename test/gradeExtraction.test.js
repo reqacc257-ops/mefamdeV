@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('assert');
 const db = require('../db');
 const gradeExtractionRouter = require('../routes/gradeExtraction');
-const { normalizeExtractionResult, parseNumber } = require('../lib/gradeExtraction');
+const { normalizeExtractionResult, parseNumber, parseOcrSpaceText } = require('../lib/gradeExtraction');
 
 test('parseNumber handles numeric strings and nulls', () => {
   assert.strictEqual(parseNumber('86'), 86);
@@ -47,6 +47,12 @@ test('normalizeExtractionResult merges MAPEH subcomponents and parses values', (
   assert.strictEqual(tleRows.length, 1, 'TLE variants should merge into one row');
   assert.strictEqual(tleRows[0].q1, 90);
   assert.strictEqual(tleRows[0].q2, 91);
+});
+
+test('OCR keeps unfamiliar course-code learning areas without a hard-coded name', () => {
+  const result = parseOcrSpaceText('Learning Areas\nTerm 1 Term 2 Term 3 Final Grade\nHC101\n90 92 93 92\n');
+  const subject = result.subjects.find(item => item.name === 'HC101');
+  assert.deepStrictEqual(subject, { name: 'HC101', q1: 90, q2: 92, q3: 93, q4: null, final: 92 });
 });
 
 test('approved grade review marks the report card requirement as Received', async () => {
