@@ -24,7 +24,7 @@ const TRUSTED_DEVICE_MS = 24 * 60 * 60 * 1000;
 
 function isDirectorVerificationEnabled() {
   const value = process.env.DIRECTOR_VERIFICATION_ENABLED;
-  if (value === undefined) return true;
+  if (value === undefined) return false;
   return String(value).toLowerCase() === 'true';
 }
 
