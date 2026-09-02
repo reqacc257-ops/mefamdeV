@@ -593,7 +593,7 @@
             </div>
 
             <div class="field-group" style="margin-top: 24px;">
-                <label class="field-label translatable" data-tl="C. Pagmamay-ari at Benepisyo" data-en="C. Properties and Benefits">C. Pagmamay-ari at Benepisyo</label>
+                <label class="field-label translatable" data-tl="B. Pagmamay-ari at Benepisyo" data-en="B. Properties and Benefits">B. Pagmamay-ari at Benepisyo</label>
                 <div class="check-grid" id="propertiesContainer">
                     <label class="check-item"><input type="checkbox" value="Sariling Lupa"><span class="translatable" data-tl="Sariling Lupa" data-en="Owned Land">Sariling Lupa</span></label>
                     <label class="check-item"><input type="checkbox" value="Sariling Bahay"><span class="translatable" data-tl="Sariling Bahay" data-en="Owned House">Sariling Bahay</span></label>
@@ -618,7 +618,7 @@
 
         <!-- PAGE 2: Financial -->
         <div class="form-page" id="page-2">
-            <div class="section-heading"><span class="icon">💰</span><span class="translatable" data-tl="K. Kita at Gastusin Bawat Buwan" data-en="C. Monthly Income and Expenses">K. Kita at Gastusin Bawat Buwan</span></div>
+            <div class="section-heading"><span class="icon">💰</span><span class="translatable" data-tl="III. Kita at Gastusin Bawat Buwan" data-en="III. Monthly Income and Expenses">III. Kita at Gastusin Bawat Buwan</span></div>
 
             <div class="grid-2">
                 <div>
@@ -656,7 +656,7 @@
 
         <!-- PAGE 3: Education -->
         <div class="form-page" id="page-3">
-            <div class="section-heading"><span class="icon">🎓</span><span class="translatable" data-tl="III & IV. Impormasyon sa Edukasyon" data-en="III & IV. Educational Background">III & IV. Impormasyon sa Edukasyon</span></div>
+            <div class="section-heading"><span class="icon">🎓</span><span class="translatable" data-tl="IV. Impormasyon sa Edukasyon" data-en="IV. Educational Background">IV. Impormasyon sa Edukasyon</span></div>
 
             <div style="padding:16px; border:1.5px solid var(--border); border-radius:8px; margin-bottom:20px;">
                 <p style="font-size:.83rem; font-weight:700; color:var(--navy); text-transform:uppercase; margin-bottom:12px;" class="translatable" data-tl="A. Nakaraang Pasukan" data-en="A. Previous School Year">A. Nakaraang Pasukan</p>
@@ -771,7 +771,7 @@
             </div>
 
             <div class="pledge-block">
-                <div class="pledge-title translatable" data-tl="K. Anong makakaya mong tustusan para sa iyong anak?" data-en="C. What can you provide to support your child's studies?">K. Anong makakaya mong tustusan?</div>
+                <div class="pledge-title translatable" data-tl="C. Anong makakaya mong tustusan para sa iyong anak?" data-en="C. What can you provide to support your child's studies?">C. Anong makakaya mong tustusan?</div>
                 <div class="check-grid">
                     <label class="check-item"><input type="checkbox" value="School Fees"><span>School Fees</span></label>
                     <label class="check-item"><input type="checkbox" value="Supplies"><span class="translatable" data-tl="Supplies / Kagamitan" data-en="Supplies">Supplies</span></label>
@@ -853,6 +853,7 @@
             <button type="submit" class="btn btn-submit" id="submitBtn">
                 <span class="translatable" data-tl="IPASA ANG APLIKASYON ✓" data-en="SUBMIT APPLICATION ✓">IPASA ANG APLIKASYON ✓</span>
             </button>
+            <p id="submitStatus" role="status" aria-live="polite" style="font-size:.82rem; color:#666; margin-top:10px; min-height:1.2em; text-align:center;"></p>
 
             <div class="form-nav">
                 <button type="button" class="btn btn-secondary" onclick="goToPage(4)">← <span class="translatable" data-tl="Nakaraan" data-en="Back">Nakaraan</span></button>
@@ -900,9 +901,19 @@
         initDegreeCombobox();
         initValidationNotice();
         setLanguage('tl');
+        // FIX: prevent picking a birthdate in the future
+        const dobInput = document.getElementById('dob');
+        if (dobInput) dobInput.max = todayISO();
         const img = document.querySelector('.logo');
         if (img && (!img.complete || img.naturalWidth === 0)) img.style.display = 'none';
     };
+
+    /* Returns today's date as YYYY-MM-DD, for use as a <input type="date"> max attribute. */
+    function todayISO() {
+        const now = new Date();
+        const pad = (value) => String(value).padStart(2, '0');
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    }
 
     /* ── Navigation ── */
     function goToPage(n) {
@@ -943,6 +954,7 @@
                 if (fieldOk && el.type === 'email') fieldOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
                 if (fieldOk && el.id === 'contact') fieldOk = /^09\d{9}$/.test(value);
                 if (fieldOk && el.hasAttribute('minlength')) fieldOk = value.length >= Number(el.getAttribute('minlength'));
+                if (fieldOk && el.type === 'date' && el.hasAttribute('max')) fieldOk = value <= el.getAttribute('max');
                 if (!fieldOk) {
                     ok = false;
                     firstInvalid ||= el;
@@ -1115,7 +1127,7 @@
         row.innerHTML = `
             <td><input type="text" placeholder="${currentLang === 'tl' ? 'Pangalan' : 'Name'}" style="min-width:120px;"></td>
             <td><input type="number" class="fam-age" readonly placeholder="Auto" style="min-width:50px; text-align:center;"></td>
-            <td><input type="date" style="min-width:120px;" onchange="this.closest('tr').querySelector('.fam-age').value=calculateAge(this.value)"></td>
+            <td><input type="date" max="${todayISO()}" style="min-width:120px;" onchange="this.closest('tr').querySelector('.fam-age').value=calculateAge(this.value)"></td>
             <td><select style="min-width:80px;">${sexOpts}</select></td>
             <td><input type="text" placeholder="${currentLang === 'tl' ? 'Ina/Ama' : 'Mother/Father'}" style="min-width:90px;"></td>
             <td><select style="min-width:90px;">${civilOpts}</select></td>
@@ -1477,8 +1489,10 @@
 
     function collectSubmittedFields() {
         const payload = {};
+        // FIX: also exclude 'appPassword' (not just 'appPasswordConfirm') so the
+        // plaintext password isn't duplicated inside the generic submittedData blob.
         document.querySelectorAll('#scholarForm input, #scholarForm select, #scholarForm textarea').forEach(el => {
-            if (!el.id || ['submit', 'button', 'captchaInput', 'appPasswordConfirm'].includes(el.id)) return;
+            if (!el.id || ['submit', 'button', 'captchaInput', 'appPassword', 'appPasswordConfirm'].includes(el.id)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
                 if (el.checked) {
                     if (!payload[el.id]) payload[el.id] = [];
@@ -1505,7 +1519,10 @@
 
     function scoreAppPassword(value) {
         if (!value) return 0;
-        let score = 0;
+        // FIX: any non-empty password now gets at least 1 point ("Weak") instead of
+        // showing a blank strength label when it's shorter than 8 characters — the
+        // minlength on the field is 6, so a valid password should never read as "".
+        let score = 1;
         if (value.length >= 8) score++;
         if (value.length >= 12) score++;
         if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
@@ -1581,10 +1598,43 @@
 </script>
 <script src="mefamdev-api.js"></script>
 <script>
+    function setSubmitStatus(message, isError) {
+        const el = document.getElementById('submitStatus');
+        if (!el) return;
+        el.textContent = message || '';
+        el.style.color = isError ? 'var(--red)' : '#666';
+    }
+
+    function dpDelay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    /* Wraps MefamAPI.submitApplication with a timeout and a couple of retries.
+       This form's backend runs on a free hosting tier that spins down when
+       idle, so the very first request after a quiet period can time out even
+       though the server is otherwise fine — a short wait and retry usually
+       succeeds without the applicant needing to do anything themselves. */
+    async function submitWithRetry(data, attempts = 3, timeoutMs = 20000) {
+        let lastError;
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            if (attempt > 1) {
+                setSubmitStatus(currentLang === 'tl'
+                    ? `Muling sinusubukan (${attempt}/${attempts})... Maaaring ilang segundo bago gumising ang server.`
+                    : `Retrying (${attempt}/${attempts})... the server may take a few seconds to wake up.`, false);
+                await dpDelay(3000 * (attempt - 1));
+            }
+            try {
+                return await Promise.race([
+                    MefamAPI.submitApplication(data),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), timeoutMs))
+                ]);
+            } catch (err) {
+                lastError = err;
+            }
+        }
+        throw lastError;
+    }
+
     document.getElementById('scholarForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const successOverlay = document.getElementById('successMessage');
-        successOverlay?.style.setProperty('display', 'none');
 
         // Validate every page (in case a field was left blank after using the
         // step tabs / back button, or JS state got out of sync).
@@ -1684,10 +1734,12 @@
 
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
+        setSubmitStatus(currentLang === 'tl' ? 'Isinusumite...' : 'Submitting...', false);
 
         try {
-            const res = await MefamAPI.submitApplication(data);
+            const res = await submitWithRetry(data);
             if (res?.ok) {
+                setSubmitStatus('', false);
                 document.getElementById('refNumberDisplay').innerText = data.referenceNumber;
                 document.getElementById('refStatusDisplay').innerText = 'Pending Review';
                 document.getElementById('successMessage').style.display = 'flex';
@@ -1710,12 +1762,16 @@
                     console.warn('Copying reference number failed:', copyError);
                 }
             } else {
-                alert(res?.error || 'Unable to submit your application right now.');
+                setSubmitStatus(res?.error || (currentLang === 'tl'
+                    ? 'Hindi maisumite ang aplikasyon ngayon. Pakisubukang muli.'
+                    : 'Unable to submit your application right now. Please try again.'), true);
                 submitBtn.disabled = false;
             }
         } catch (error) {
             console.error('Application submission failed:', error);
-            alert('Unable to submit your application right now.');
+            setSubmitStatus(currentLang === 'tl'
+                ? 'Hindi maabot ang server pagkatapos ng ilang pagsubok. Maaaring natutulog pa ito — pakisubukang muli pagkalipas ng ilang segundo.'
+                : 'Could not reach the server after a few tries. It may still be waking up (this hosting can take up to a minute after being idle) — please wait a moment and try again.', true);
             submitBtn.disabled = false;
         }
     });
