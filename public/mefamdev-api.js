@@ -73,7 +73,7 @@ const MefamAPI = {
       if (res?.token) storeSession(res.user, res.token);
       return res;
     } catch (error) {
-      return { error: 'Unable to reach the server. Please try again.' };
+      return { error: error.message || 'Invalid username or password.' };
     }
   },
 
@@ -184,7 +184,7 @@ const MefamAPI = {
         return { error: 'Submission was not confirmed by the server.' };
       }
 
-      const loginRes = await this.loginApplicant(appId, payload.name, payload.password, payload.username);
+      const loginRes = await this.loginApplicant(payload.username, payload.password);
       if (!loginRes?.token) {
         return loginRes || { error: 'Unable to sign in after submitting application.' };
       }
