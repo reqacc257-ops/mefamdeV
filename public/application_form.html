@@ -1583,6 +1583,8 @@
 <script>
     document.getElementById('scholarForm').addEventListener('submit', async function (e) {
         e.preventDefault();
+        const successOverlay = document.getElementById('successMessage');
+        successOverlay?.style.setProperty('display', 'none');
 
         // Validate every page (in case a field was left blank after using the
         // step tabs / back button, or JS state got out of sync).

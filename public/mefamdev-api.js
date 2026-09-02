@@ -172,13 +172,23 @@ const MefamAPI = {
     const payload = { ...data, id: data.id || Date.now() };
     try {
       const res = await this._post('/public/apply', payload, false, true);
-      if (res?.ok || res?.id) {
-        const appId = res.id || payload.id;
-        const loginRes = await this.loginApplicant(appId, payload.name, payload.password, payload.username);
-        if (!loginRes?.token) return loginRes || { error: 'Unable to sign in after submitting application.' };
-        return { ok: true, id: appId };
+      if (res?.error) {
+        return { error: res.error };
       }
-      throw new Error(res?.error || 'Unable to submit application');
+      if (res?.ok !== true) {
+        return { error: 'Submission was not confirmed by the server.' };
+      }
+
+      const appId = Number(res.id ?? payload.id);
+      if (!Number.isFinite(appId)) {
+        return { error: 'Submission was not confirmed by the server.' };
+      }
+
+      const loginRes = await this.loginApplicant(appId, payload.name, payload.password, payload.username);
+      if (!loginRes?.token) {
+        return loginRes || { error: 'Unable to sign in after submitting application.' };
+      }
+      return { ok: true, id: appId };
     } catch (error) {
       return { error: error.message || 'Unable to submit application. Please try again.' };
     }
