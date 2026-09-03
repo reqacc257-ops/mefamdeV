@@ -1018,7 +1018,7 @@
                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                         <label style="font-size:.84rem; color:var(--text-muted); margin:0;">Quarter:</label>
                         <select id="gradeSemSelect" style="width:auto;"></select>
-                        <button class="btn btn-sm btn-ghost" type="button" onclick="addGradeSemester()" style="padding:8px 10px;">+ Add Semester</button>
+                        <button class="btn btn-sm btn-ghost" type="button" onclick="addGradeQuarter()" style="padding:8px 10px;">+ Add Quarter</button>
                     </div>
                 </div>
                 <div class="table-wrap">
@@ -1957,6 +1957,15 @@ function addGradeQuarter() {
     localStorage.setItem('mefamdev_grade_semesters', JSON.stringify(next));
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
     renderGrades(apps.filter(a => a.status === 'Accepted'));
+}
+
+function openCooldownPrompt() {
+    const button = document.getElementById('cooldownToggleBtn');
+    if (!button) return;
+    const enabled = button.dataset.enabled !== 'true';
+    button.dataset.enabled = String(enabled);
+    button.textContent = `Cooldown: ${enabled ? 'On' : 'Off'}`;
+    localStorage.setItem('mefamdev_cooldown_enabled', String(enabled));
 }
 
 function toggleSidebar() {
