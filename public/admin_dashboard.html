@@ -744,7 +744,6 @@
             <button onclick="adminLogout()" style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer; margin-left:8px;">
                 &#128682; Logout
             </button>
-            <button id="cooldownToggleBtn" class="btn btn-ghost" style="margin-left:8px;" onclick="openCooldownPrompt()">Cooldown: Off</button>
         </div>
     </header>
 
@@ -1957,15 +1956,6 @@ function addGradeQuarter() {
     localStorage.setItem('mefamdev_grade_semesters', JSON.stringify(next));
     const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
     renderGrades(apps.filter(a => a.status === 'Accepted'));
-}
-
-function openCooldownPrompt() {
-    const button = document.getElementById('cooldownToggleBtn');
-    if (!button) return;
-    const enabled = button.dataset.enabled !== 'true';
-    button.dataset.enabled = String(enabled);
-    button.textContent = `Cooldown: ${enabled ? 'On' : 'Off'}`;
-    localStorage.setItem('mefamdev_cooldown_enabled', String(enabled));
 }
 
 function toggleSidebar() {

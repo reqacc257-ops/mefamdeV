@@ -27,7 +27,7 @@ function isDirectorVerificationEnabled(staff) {
   if (configuredValue !== undefined) {
     return String(configuredValue).trim().toLowerCase() === 'true';
   }
-  return Boolean(getStaffEmail(staff));
+  return false;
 }
 
 function hashPassword(pw) {

@@ -11,7 +11,7 @@ function setTestDirectorPassword() {
   db.prepare('UPDATE staff SET password = ? WHERE username = ?').run(TEST_DIRECTOR_HASH, 'director');
 }
 
-test('director email verification is enabled by default when an email is configured', async () => {
+test('director email verification is disabled by default', async () => {
   const previousEmail = process.env.DIRECTOR_EMAIL;
   const previousNodeEnv = process.env.NODE_ENV;
   const previousVerificationEnabled = process.env.DIRECTOR_VERIFICATION_ENABLED;
@@ -32,9 +32,9 @@ test('director email verification is enabled by default when an email is configu
     });
     const challenge = await loginRes.json();
     assert.equal(loginRes.status, 200);
-    assert.equal(challenge.requiresOtp, true);
-    assert.match(challenge.developmentOtp || '', /^\d{6}$/);
-    assert.equal(challenge.user, undefined);
+    assert.ok(challenge.token);
+    assert.equal(challenge.user.role, 'director');
+    assert.equal(challenge.requiresOtp, undefined);
   } finally {
     server.close();
     if (previousEmail === undefined) delete process.env.DIRECTOR_EMAIL;
