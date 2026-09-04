@@ -20,6 +20,7 @@
             --text: #2c3e50;
             --text-muted: #7f8c8d;
             --shadow: 0 2px 12px rgba(26,46,68,0.09);
+            --shadow-lg: 0 12px 40px rgba(26,46,68,0.14);
             --radius: 10px;
             --focus-ring: 0 0 0 3px rgba(245,166,35,0.28);
         }
@@ -56,11 +57,22 @@
             background: radial-gradient(ellipse at 70% -20%, rgba(245,166,35,.25) 0%, transparent 65%);
             pointer-events: none;
         }
+        .form-header::after {
+            content: '';
+            position: absolute;
+            inset: auto 0 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: .8;
+            pointer-events: none;
+        }
         .form-header img.logo {
             height: 72px;
             object-fit: contain;
             margin-bottom: 10px;
             filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+            position: relative;
+            z-index: 1;
         }
         .form-header .org-name {
             font-size: .75rem;
@@ -111,12 +123,13 @@
             font-size: .82rem; font-weight: 600; cursor: pointer; color: #888; transition: .2s;
         }
         .lang-btn.active { background: var(--navy); color: #fff; border-radius: 20px; }
+        .lang-btn:hover:not(.active) { color: var(--navy); background: #e2e5ea; }
 
         /* ── Main card ── */
         .form-body {
             background: var(--white);
             border-radius: 0 0 var(--radius) var(--radius);
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
         }
 
@@ -144,6 +157,7 @@
         }
         .step-tab.done { color: var(--green); border-color: var(--green); }
         .step-tab.active { color: var(--navy); border-color: var(--gold); background: #fffdf5; }
+        .step-tab:hover { color: var(--navy); background: #f7f9fb; }
         .step-tab .step-num {
             display: inline-block;
             width: 20px; height: 20px;
