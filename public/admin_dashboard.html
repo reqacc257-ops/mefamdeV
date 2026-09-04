@@ -26,7 +26,10 @@
             --header-h: 64px;
             --shadow-sm: 0 1px 4px rgba(26,46,68,.08);
             --shadow: 0 3px 14px rgba(26,46,68,.11);
+            --shadow-lg: 0 12px 40px rgba(26,46,68,.14);
             --radius: 10px;
+            --radius-lg: 16px;
+            --transition: .25s cubic-bezier(.22,.68,0,1);
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,11 +38,12 @@
 
         /* ── Sidebar ── */
         .sidebar {
-            width: var(--sidebar-w); background: var(--navy);
+            width: var(--sidebar-w); background: linear-gradient(180deg, #14273b 0%, var(--navy) 100%);
             display: flex; flex-direction: column;
             overflow-y: auto; flex-shrink: 0;
-            transition: transform .3s;
+            transition: transform var(--transition);
             z-index: 120;
+            border-right: 1px solid rgba(255,255,255,.04);
         }
         .sidebar-backdrop {
             display: none;
@@ -81,8 +85,8 @@
             transition: background .15s, color .15s;
             position: relative;
         }
-        .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
-        .nav-item.active { background: var(--gold); color: var(--navy); font-weight: 700; }
+        .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; transform: translateX(2px); }
+        .nav-item.active { background: var(--gold); color: var(--navy); font-weight: 700; box-shadow: 0 4px 14px rgba(245,166,35,.25); }
         .nav-item.active .nav-icon { opacity: 1; }
         .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
         .nav-badge {
@@ -110,10 +114,12 @@
 
         /* ── Topbar ── */
         .topbar {
-            height: var(--header-h); background: var(--white);
+            height: var(--header-h); background: rgba(255,255,255,.86);
             border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 28px; box-shadow: var(--shadow-sm); flex-shrink: 0; z-index: 50;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         .topbar-title { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--navy); }
         .topbar-right { display: flex; align-items: center; gap: 16px; }
@@ -172,7 +178,9 @@
         .card {
             background: var(--white); border-radius: var(--radius);
             box-shadow: var(--shadow-sm); padding: 20px;
+            transition: box-shadow var(--transition), transform .2s;
         }
+        .card:hover { box-shadow: var(--shadow); }
         .card-title { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 14px; }
 
         /* ── Stat boxes ── */
@@ -181,7 +189,9 @@
             background: var(--white); border-radius: var(--radius);
             padding: 18px 20px; box-shadow: var(--shadow-sm);
             border-top: 4px solid var(--gold); position: relative; overflow: hidden;
+            transition: transform .2s, box-shadow var(--transition);
         }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
         .stat-card::after {
             content: attr(data-icon); position: absolute; right: 14px; top: 14px;
             font-size: 1.7rem; opacity: .15;
@@ -419,13 +429,13 @@
         /* Modal */
         .modal-overlay {
             display: none; position: fixed; inset: 0;
-            background: rgba(10,20,40,.7); z-index: 1000;
+            background: rgba(10,20,40,.7); backdrop-filter: blur(6px); z-index: 1000;
             justify-content: center; align-items: center;
             animation: fadeIn .2s;
         }
         .modal-overlay.open { display: flex; }
         .modal {
-            background: var(--white); border-radius: 12px; width: 880px; max-width: 96vw;
+            background: var(--white); border-radius: var(--radius-lg); width: 880px; max-width: 96vw;
             max-height: 90vh; overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,.3);
             animation: popIn .25s cubic-bezier(.34,1.56,.64,1);

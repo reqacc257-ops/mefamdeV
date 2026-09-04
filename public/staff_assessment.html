@@ -356,7 +356,6 @@ let currentIntakeId = null;
 // Listen for applicants data from parent window (admin dashboard)
 window.addEventListener('message', function(event) {
     if (event.data.type === 'prefill-applicants') {
-        console.log('Received applicants from parent:', event.data.applicants);
         window.prefillApplicantsCache = event.data.applicants;
         localStorage.setItem('mefamdev_apps', JSON.stringify(event.data.applicants));
         renderPrefillSearchList(event.data.applicants);
@@ -364,13 +363,11 @@ window.addEventListener('message', function(event) {
 });
 
 window.onload = function () {
-    console.log('🔍 Staff Assessment page loaded');
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     initFamTable();
     initActionTable();
     
     // Call populatePrefill first and ensure it completes
-    console.log('Calling populatePrefill()');
     setTimeout(() => {
         populatePrefill();
     }, 100);
@@ -505,7 +502,6 @@ function addActionRow() {
 
 /* Prefill */
 function populatePrefill() {
-    console.log('Loading prefill applicants...');
     let apps = [];
     
     // Try to get from localStorage
@@ -516,15 +512,11 @@ function populatePrefill() {
         apps = [];
     }
     
-    console.log('Total apps found:', apps.length);
-    console.log('Apps:', apps);
-    
     // If no apps in localStorage, try to get from parent window (admin dashboard)
     if (apps.length === 0 && window.parent && window.parent !== window) {
         try {
             const parentApps = window.parent.window.prefillApplicantsCache || 
                               JSON.parse(window.parent.localStorage.getItem('mefamdev_apps') || '[]');
-            console.log('Got apps from parent window:', parentApps.length);
             apps = parentApps;
         } catch(e) {
             console.warn('Could not access parent window:', e);
@@ -535,7 +527,6 @@ function populatePrefill() {
     renderPrefillSearchList(apps);
 }
 function renderPrefillSearchList(apps) {
-    console.log('Rendering prefill list with apps:', apps);
     const results = document.getElementById('prefillResults');
     const detail = document.getElementById('prefillDetail');
     if (!results) {
@@ -564,15 +555,12 @@ function renderPrefillSearchList(apps) {
         </div>
     `).join('');
     
-    console.log('Setting prefillResults HTML with', displayApps.length, 'apps');
     results.innerHTML = html;
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
 }
 function filterPrefillApplicants() {
-    console.log('Filtering prefill applicants');
     const query = document.getElementById('prefillSearch')?.value.toLowerCase().trim() || '';
     const apps = window.prefillApplicantsCache || [];
-    console.log('Query:', query, 'Available apps:', apps.length);
     const filtered = query === '' ? apps : apps.filter(a => {
         const name = (a.name || '').toLowerCase();
         const school = (a.school || '').toLowerCase();
@@ -581,7 +569,6 @@ function filterPrefillApplicants() {
         const grade = (a.grade || '').toLowerCase();
         return name.includes(query) || school.includes(query) || barangay.includes(query) || status.includes(query) || grade.includes(query);
     });
-    console.log('Filtered results:', filtered.length);
     renderPrefillSearchList(filtered);
 }
 function selectPrefillApplicant(appId) {
@@ -677,7 +664,6 @@ function toggleSpouseSection() {
 
 /* Save */
 function saveIntake() {
-    console.log('💾 Save button clicked');
     try {
         const data = collectData();
         const caseNo = String(data.caseNo || '').trim();
@@ -691,8 +677,6 @@ function saveIntake() {
             return;
         }
         data.caseNo = caseNo;
-        console.log('Collected data:', data);
-        
         let saved = [];
         try { saved = JSON.parse(localStorage.getItem('mefamdev_intake_sheets')) || []; } catch(e){ saved = []; }
 
@@ -705,8 +689,6 @@ function saveIntake() {
         if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
         localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
         localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
-        console.log('Saved to localStorage. Case No:', data.caseNo);
-
         const hostWindow = window.parent !== window ? window.parent : window.opener;
         if (hostWindow && !hostWindow.closed) {
             hostWindow.postMessage({ type: 'intake-saved', record: data }, '*');
@@ -723,7 +705,6 @@ function saveIntake() {
             }
         }
         const message = `Intake Sheet saved! Case No: ${data.caseNo || '(no case no.)'}`;
-        console.log('✅', message);
         alert(message);
     } catch (e) {
         console.error('❌ Error saving intake:', e);
@@ -885,7 +866,6 @@ function clearForm() {
 }
 
 function printIntakeSheet() {
-    console.log('🖨️ Print button clicked');
     try {
         // hide fully empty family rows in print to save space
         document.querySelectorAll('#famTableBody tr').forEach(tr => {
@@ -894,9 +874,7 @@ function printIntakeSheet() {
             tr.classList.toggle('fam-row-empty-print', !hasData);
         });
         prepareSigImagesForPrint();
-        console.log('About to call window.print()');
         setTimeout(() => {
-            console.log('Executing window.print()');
             window.print();
         }, 30);
     } catch (e) {
