@@ -7,3 +7,4 @@ data/mefamdev.json
 tmp-*
 tmp_*
 .env
+*.md
