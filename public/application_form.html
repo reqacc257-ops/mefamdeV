@@ -539,11 +539,11 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Kasarian" data-en="Sex">Kasarian<span class="req-mark">*</span></label>
-                    <div class="choice-grid" id="genderGroup" role="radiogroup">
-                        <button type="button" class="choice-item-btn" data-value="Male" onclick="selectChoice('genderGroup', this, 'gender')">Male</button>
-                        <button type="button" class="choice-item-btn" data-value="Female" onclick="selectChoice('genderGroup', this, 'gender')">Female</button>
-                    </div>
-                    <input type="hidden" id="gender" required>
+                    <select id="gender" required>
+                        <option value="" disabled selected>Select sex...</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
                 </div>
             </div>
 
@@ -558,14 +558,14 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Relihiyon" data-en="Religion">Relihiyon</label>
-                    <div class="choice-grid" id="religionGroup">
-                        <button type="button" class="choice-item-btn" data-value="Roman Catholic" onclick="selectChoice('religionGroup', this, 'religion')">Roman Catholic</button>
-                        <button type="button" class="choice-item-btn" data-value="Christian" onclick="selectChoice('religionGroup', this, 'religion')">Christian</button>
-                        <button type="button" class="choice-item-btn" data-value="Muslim" onclick="selectChoice('religionGroup', this, 'religion')">Muslim</button>
-                        <button type="button" class="choice-item-btn" data-value="INC" onclick="selectChoice('religionGroup', this, 'religion')">INC</button>
-                        <button type="button" class="choice-item-btn show-other" onclick="selectChoice('religionGroup', this, 'religion')">Other <input type="text" class="other-input" placeholder="Specify" oninput="updateOtherChoice(this, 'religion')"></button>
-                    </div>
-                    <input type="hidden" id="religion">
+                    <select id="religion">
+                        <option value="">Select religion...</option>
+                        <option>Roman Catholic</option>
+                        <option>Christian</option>
+                        <option>Muslim</option>
+                        <option>INC</option>
+                        <option>Other</option>
+                    </select>
                 </div>
             </div>
 
@@ -576,46 +576,47 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Nakatira kasama ang" data-en="Living With">Nakatira kasama ang<span class="req-mark">*</span></label>
-                    <div class="choice-grid" id="livingGroup" role="radiogroup">
-                        <button type="button" class="choice-item-btn" data-value="Both parents" onclick="selectChoice('livingGroup', this, 'livingWith')">Both parents</button>
-                        <button type="button" class="choice-item-btn" data-value="Single parent" onclick="selectChoice('livingGroup', this, 'livingWith')">Single parent</button>
-                        <button type="button" class="choice-item-btn" data-value="Relatives" onclick="selectChoice('livingGroup', this, 'livingWith')">Relatives</button>
-                    </div>
-                    <input type="hidden" id="livingWith" required>
+                    <select id="livingWith" required>
+                        <option value="" disabled selected>Select arrangement...</option>
+                        <option>Both parents</option>
+                        <option>Single parent</option>
+                        <option>Relatives</option>
+                    </select>
                 </div>
             </div>
 
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Mga Talento at Kakayahan" data-en="Talents and Skills">Mga Talento at Kakayahan</label>
-                <div class="choice-grid" id="talentsGroup">
-                    <button type="button" class="choice-item-btn" data-value="Music" onclick="toggleChoice('talentsGroup', this, 'talents')">Music</button>
-                    <button type="button" class="choice-item-btn" data-value="Arts" onclick="toggleChoice('talentsGroup', this, 'talents')">Arts</button>
-                    <button type="button" class="choice-item-btn" data-value="Sports" onclick="toggleChoice('talentsGroup', this, 'talents')">Sports</button>
-                    <button type="button" class="choice-item-btn" data-value="Writing" onclick="toggleChoice('talentsGroup', this, 'talents')">Writing</button>
-                    <button type="button" class="choice-item-btn" data-value="Leadership" onclick="toggleChoice('talentsGroup', this, 'talents')">Leadership</button>
-                    <button type="button" class="choice-item-btn show-other" onclick="toggleChoice('talentsGroup', this, 'talents')">Other <input type="text" class="other-input" placeholder="Specify" oninput="updateMultiChoiceHidden('talentsGroup', 'talents')"></button>
-                </div>
-                <input type="hidden" id="talents">
+                <select id="talents" aria-label="Select talent">
+                    <option value="" disabled selected>Select talent...</option>
+                    <option>Music</option>
+                    <option>Arts</option>
+                    <option>Sports</option>
+                    <option>Writing</option>
+                    <option>Leadership</option>
+                    <option>Other</option>
+                </select>
             </div>
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Grupo/Club na Sinalihan" data-en="Clubs / Organizations">Grupo/Club na Sinalihan</label>
-                <div class="choice-grid" id="clubsGroup">
-                    <button type="button" class="choice-item-btn" data-value="Yes" onclick="selectChoice('clubsGroup', this, 'clubs')">Yes</button>
-                    <button type="button" class="choice-item-btn show-other" onclick="selectChoice('clubsGroup', this, 'clubs')">Specify club <input type="text" class="other-input" placeholder="Club name" oninput="updateOtherChoice(this, 'clubs')"></button>
-                </div>
-                <input type="hidden" id="clubs">
+                <select id="clubs">
+                    <option value="">Select an option...</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                    <option>Specify club</option>
+                </select>
             </div>
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Ambisyon sa Buhay" data-en="Life Ambition">Ambisyon sa Buhay<span class="req-mark">*</span></label>
-                <div class="choice-grid" id="ambitionGroup" role="radiogroup">
-                    <button type="button" class="choice-item-btn" data-value="Doctor" onclick="selectChoice('ambitionGroup', this, 'ambition')">Doctor</button>
-                    <button type="button" class="choice-item-btn" data-value="Teacher" onclick="selectChoice('ambitionGroup', this, 'ambition')">Teacher</button>
-                    <button type="button" class="choice-item-btn" data-value="Engineer" onclick="selectChoice('ambitionGroup', this, 'ambition')">Engineer</button>
-                    <button type="button" class="choice-item-btn" data-value="Business" onclick="selectChoice('ambitionGroup', this, 'ambition')">Business</button>
-                    <button type="button" class="choice-item-btn" data-value="OFW" onclick="selectChoice('ambitionGroup', this, 'ambition')">OFW</button>
-                    <button type="button" class="choice-item-btn show-other" onclick="selectChoice('ambitionGroup', this, 'ambition')">Other <input type="text" class="other-input" placeholder="Specify" oninput="updateOtherChoice(this, 'ambition')"></button>
-                </div>
-                <input type="hidden" id="ambition" required>
+                <select id="ambition" required>
+                    <option value="" disabled selected>Select ambition...</option>
+                    <option>Doctor</option>
+                    <option>Teacher</option>
+                    <option>Engineer</option>
+                    <option>Business</option>
+                    <option>OFW</option>
+                    <option>Other</option>
+                </select>
             </div>
 
             <div class="form-nav">
@@ -1620,7 +1621,9 @@
                     payload[el.id].push(el.value || 'checked');
                 }
             } else if (el.type !== 'file') {
-                payload[el.id] = el.value;
+                payload[el.id] = el.multiple
+                    ? Array.from(el.selectedOptions).map(option => option.value).join(', ')
+                    : el.value;
             }
         });
         return payload;
@@ -1803,6 +1806,9 @@
         const username = document.getElementById('appUsername')?.value?.trim() || '';
         const password = document.getElementById('appPassword')?.value?.trim() || '';
         const email = document.getElementById('email')?.value?.trim() || '';
+        const talents = Array.from(document.getElementById('talents')?.selectedOptions || [])
+            .map(option => option.value)
+            .join(', ');
 
         const data = {
             id: Number(referenceNumber),
@@ -1826,7 +1832,7 @@
             email: email,
             religion: document.getElementById('religion').value,
             birthplace: document.getElementById('birthplace').value,
-            talents: document.getElementById('talents').value,
+            talents,
             clubs: document.getElementById('clubs').value,
             ambition: document.getElementById('ambition').value.trim(),
             livingWith: document.getElementById('livingWith').value,
