@@ -201,6 +201,33 @@
         .sub-note { font-size: .73rem; color: #999; font-weight: normal; text-transform: none; }
         .req-mark { color: var(--red); margin-left: 2px; }
 
+        .choice-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 0;
+        }
+        .choice-item-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 24px;
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+            font-size: .84rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color .15s, background .15s, color .15s, transform .15s;
+        }
+        .choice-item-btn:hover { border-color: var(--gold); background: #fffbf0; transform: translateY(-1px); }
+        .choice-item-btn.active { border-color: var(--navy); background: var(--navy); color: #fff; }
+        .choice-item-btn.show-other.active { background: #fff; color: var(--text); border-color: var(--gold); }
+        .choice-item-btn .other-input { display: none; width: 130px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 16px; font-size: .8rem; background: #fff; }
+        .choice-item-btn.show-other.active .other-input { display: inline-block; }
+
         input[type="text"], input[type="date"], input[type="number"], input[type="email"],
         input[type="password"], select, textarea {
             width: 100%;
@@ -512,11 +539,11 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Kasarian" data-en="Sex">Kasarian<span class="req-mark">*</span></label>
-                    <select id="gender" required>
-                        <option value="" disabled selected>Pumili...</option>
-                        <option class="translatable" data-tl="Lalaki" data-en="Male">Lalaki</option>
-                        <option class="translatable" data-tl="Babae" data-en="Female">Babae</option>
-                    </select>
+                    <div class="choice-grid" id="genderGroup" role="radiogroup">
+                        <button type="button" class="choice-item-btn" data-value="Male" onclick="selectChoice('genderGroup', this, 'gender')">Male</button>
+                        <button type="button" class="choice-item-btn" data-value="Female" onclick="selectChoice('genderGroup', this, 'gender')">Female</button>
+                    </div>
+                    <input type="hidden" id="gender" required>
                 </div>
             </div>
 
@@ -531,7 +558,14 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Relihiyon" data-en="Religion">Relihiyon</label>
-                    <input type="text" id="religion">
+                    <div class="choice-grid" id="religionGroup">
+                        <button type="button" class="choice-item-btn" data-value="Roman Catholic" onclick="selectChoice('religionGroup', this, 'religion')">Roman Catholic</button>
+                        <button type="button" class="choice-item-btn" data-value="Christian" onclick="selectChoice('religionGroup', this, 'religion')">Christian</button>
+                        <button type="button" class="choice-item-btn" data-value="Muslim" onclick="selectChoice('religionGroup', this, 'religion')">Muslim</button>
+                        <button type="button" class="choice-item-btn" data-value="INC" onclick="selectChoice('religionGroup', this, 'religion')">INC</button>
+                        <button type="button" class="choice-item-btn show-other" onclick="selectChoice('religionGroup', this, 'religion')">Other <input type="text" class="other-input" placeholder="Specify" oninput="updateOtherChoice(this, 'religion')"></button>
+                    </div>
+                    <input type="hidden" id="religion">
                 </div>
             </div>
 
@@ -542,26 +576,46 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label translatable" data-tl="Nakatira kasama ang" data-en="Living With">Nakatira kasama ang<span class="req-mark">*</span></label>
-                    <select id="livingWith" required>
-                        <option value="" disabled selected>Pumili...</option>
-                        <option class="translatable" data-tl="Magulang na solo parent" data-en="Single parent">Magulang na solo parent</option>
-                        <option class="translatable" data-tl="Parehong tatay at nanay" data-en="Both parents">Parehong tatay at nanay</option>
-                        <option class="translatable" data-tl="Kamag-anak" data-en="Relatives">Kamag-anak</option>
-                    </select>
+                    <div class="choice-grid" id="livingGroup" role="radiogroup">
+                        <button type="button" class="choice-item-btn" data-value="Both parents" onclick="selectChoice('livingGroup', this, 'livingWith')">Both parents</button>
+                        <button type="button" class="choice-item-btn" data-value="Single parent" onclick="selectChoice('livingGroup', this, 'livingWith')">Single parent</button>
+                        <button type="button" class="choice-item-btn" data-value="Relatives" onclick="selectChoice('livingGroup', this, 'livingWith')">Relatives</button>
+                    </div>
+                    <input type="hidden" id="livingWith" required>
                 </div>
             </div>
 
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Mga Talento at Kakayahan" data-en="Talents and Skills">Mga Talento at Kakayahan</label>
-                <input type="text" id="talents" class="translatable-ph" data-tl-ph="hal. Musika, Sining, Sports..." data-en-ph="e.g. Music, Arts, Sports...">
+                <div class="choice-grid" id="talentsGroup">
+                    <button type="button" class="choice-item-btn" data-value="Music" onclick="toggleChoice('talentsGroup', this, 'talents')">Music</button>
+                    <button type="button" class="choice-item-btn" data-value="Arts" onclick="toggleChoice('talentsGroup', this, 'talents')">Arts</button>
+                    <button type="button" class="choice-item-btn" data-value="Sports" onclick="toggleChoice('talentsGroup', this, 'talents')">Sports</button>
+                    <button type="button" class="choice-item-btn" data-value="Writing" onclick="toggleChoice('talentsGroup', this, 'talents')">Writing</button>
+                    <button type="button" class="choice-item-btn" data-value="Leadership" onclick="toggleChoice('talentsGroup', this, 'talents')">Leadership</button>
+                    <button type="button" class="choice-item-btn show-other" onclick="toggleChoice('talentsGroup', this, 'talents')">Other <input type="text" class="other-input" placeholder="Specify" oninput="updateMultiChoiceHidden('talentsGroup', 'talents')"></button>
+                </div>
+                <input type="hidden" id="talents">
             </div>
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Grupo/Club na Sinalihan" data-en="Clubs / Organizations">Grupo/Club na Sinalihan</label>
-                <input type="text" id="clubs">
+                <div class="choice-grid" id="clubsGroup">
+                    <button type="button" class="choice-item-btn" data-value="Yes" onclick="selectChoice('clubsGroup', this, 'clubs')">Yes</button>
+                    <button type="button" class="choice-item-btn show-other" onclick="selectChoice('clubsGroup', this, 'clubs')">Specify club <input type="text" class="other-input" placeholder="Club name" oninput="updateOtherChoice(this, 'clubs')"></button>
+                </div>
+                <input type="hidden" id="clubs">
             </div>
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Ambisyon sa Buhay" data-en="Life Ambition">Ambisyon sa Buhay<span class="req-mark">*</span></label>
-                <input type="text" id="ambition" required class="translatable-ph" data-tl-ph="Ilahad ang iyong pangarap..." data-en-ph="Describe your dreams and goals...">
+                <div class="choice-grid" id="ambitionGroup" role="radiogroup">
+                    <button type="button" class="choice-item-btn" data-value="Doctor" onclick="selectChoice('ambitionGroup', this, 'ambition')">Doctor</button>
+                    <button type="button" class="choice-item-btn" data-value="Teacher" onclick="selectChoice('ambitionGroup', this, 'ambition')">Teacher</button>
+                    <button type="button" class="choice-item-btn" data-value="Engineer" onclick="selectChoice('ambitionGroup', this, 'ambition')">Engineer</button>
+                    <button type="button" class="choice-item-btn" data-value="Business" onclick="selectChoice('ambitionGroup', this, 'ambition')">Business</button>
+                    <button type="button" class="choice-item-btn" data-value="OFW" onclick="selectChoice('ambitionGroup', this, 'ambition')">OFW</button>
+                    <button type="button" class="choice-item-btn show-other" onclick="selectChoice('ambitionGroup', this, 'ambition')">Other <input type="text" class="other-input" placeholder="Specify" oninput="updateOtherChoice(this, 'ambition')"></button>
+                </div>
+                <input type="hidden" id="ambition" required>
             </div>
 
             <div class="form-nav">
@@ -1125,6 +1179,50 @@
         }
     }
 
+    function selectChoice(groupId, button, hiddenId) {
+        const group = document.getElementById(groupId);
+        const hidden = document.getElementById(hiddenId);
+        if (!group || !hidden) return;
+        group.querySelectorAll('.choice-item-btn').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        const other = button.querySelector('.other-input');
+        hidden.value = other ? other.value.trim() : (button.dataset.value || '');
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        other?.focus();
+    }
+
+    function toggleChoice(groupId, button, hiddenId) {
+        button.classList.toggle('active');
+        updateMultiChoiceHidden(groupId, hiddenId);
+        if (button.classList.contains('active')) button.querySelector('.other-input')?.focus();
+    }
+
+    function updateMultiChoiceHidden(groupId, hiddenId) {
+        const group = document.getElementById(groupId);
+        const hidden = document.getElementById(hiddenId);
+        if (!group || !hidden) return;
+        const values = Array.from(group.querySelectorAll('.choice-item-btn.active')).map(button => {
+            const other = button.querySelector('.other-input');
+            return other ? other.value.trim() : (button.dataset.value || '');
+        }).filter(Boolean);
+        hidden.value = values.join(', ');
+        hidden.dispatchEvent(new Event('input', { bubbles: true }));
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function updateOtherChoice(input, hiddenId) {
+        const button = input.closest('.choice-item-btn');
+        if (!button?.classList.contains('active')) return;
+        const group = button.closest('.choice-grid');
+        if (!group) return;
+        if (group.id === 'talentsGroup') updateMultiChoiceHidden(group.id, hiddenId);
+        else {
+            const hidden = document.getElementById(hiddenId);
+            if (hidden) hidden.value = input.value.trim();
+        }
+    }
+
     /* ── Family table ── */
     function initFamilyRows() { for (let i = 0; i < 3; i++) addFamilyRow(); }
 
@@ -1486,8 +1584,17 @@
             ['Baitang/Taon / Level', document.getElementById('nextGrade').value],
             [academicDetailLabel, document.getElementById('degree').value],
         ];
-        const html = fields.map(([k, v]) => `<div><strong>${k}:</strong> ${v || '—'}</div>`).join('');
+        const html = fields.map(([k, v]) => `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v || '—')}</div>`).join('');
         document.getElementById('reviewContent').innerHTML = html;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     /* ── Privacy toggle ── */
