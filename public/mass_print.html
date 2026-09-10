@@ -708,17 +708,39 @@
       const selectedYear = text(document.getElementById('schoolYearFilter').value);
       const search = text(document.getElementById('searchFilter').value);
       const school = text(item.school || item.schoolName || app?.school);
-      const searchable = text([recordName(item), item.familySurname, item.student, item.reference, item.referenceNumber, item.caseNo, item.source, item.subject, item.message].filter(Boolean).join(' '));
+      const searchable = text([recordName(item), item.familySurname, item.student, item.reference, item.referenceNumber, item.caseNo, item.source, item.subject, item.message, item.gradeSummary].filter(Boolean).join(' '));
       return (!selectedStatus || status === selectedStatus) && (!selectedGrade || grade === selectedGrade) && (!selectedBarangay || barangay === selectedBarangay) && (!selectedSchool || school === selectedSchool) && (!selectedYear || year.includes(selectedYear)) && (!search || searchable.includes(search));
     }
 
     /* ---------- Record source ---------- */
+    function buildGradeRegisterRecords() {
+      const grouped = new Map();
+      state.grades.forEach(grade => {
+        const appId = String(grade.app_id || grade.appId || grade.student_id || '');
+        if (!appId) return;
+        if (!grouped.has(appId)) {
+          const app = state.apps.find(item => String(item.id) === appId) || {};
+          grouped.set(appId, { ...app, app_id: appId, gradeRows: [] });
+        }
+        grouped.get(appId).gradeRows.push(grade);
+      });
+      return [...grouped.values()].map(record => ({
+        ...record,
+        gradeSummary: record.gradeRows.map(grade => {
+          const subject = grade.subject || grade.subject_name || 'Unknown subject';
+          const quarter = grade.quarter ? ` Q${grade.quarter}` : '';
+          const score = grade.grade_val ?? grade.grade ?? '—';
+          return `${subject}${quarter}: ${score}`;
+        }).join(' | ')
+      }));
+    }
+
     function currentRecords() {
       const type = document.getElementById('printType').value;
       if (type === 'intake') return state.intakes;
       if (type === 'assessment') return state.assessments;
       if (type === 'applications') return state.apps;
-      if (type === 'grades') return state.grades.map(grade => ({ ...grade, app_id: grade.app_id || grade.appId }));
+      if (type === 'grades') return buildGradeRegisterRecords();
       if (type === 'alerts') {
         const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
         return state.apps.filter(app => app.status === 'Accepted' && (absences[app.id]?.status === 'yellow' || absences[app.id]?.status === 'bad' || absences[app.id]?.reason)).map(app => ({ ...app, alert: absences[app.id]?.reason || absences[app.id]?.status || 'Formation follow-up' }));
@@ -778,7 +800,7 @@
         type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] :
         type === 'alerts' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Alert'] :
         type === 'applications' ? ['Reference', 'Name', 'Grade', 'School', 'Barangay', 'Status'] :
-        type === 'grades' ? ['Scholar', 'School', 'Grade', 'Subject', 'Quarter', 'Score'] :
+        type === 'grades' ? ['Scholar', 'School', 'Grade', 'Subjects and grades'] :
         ['Student', 'Grade', 'Barangay', 'School', 'Status'];
 
       head.innerHTML = `<tr><th class="col-check"><input type="checkbox" id="selectAll" aria-label="Select all visible records" onchange="toggleVisibleSelection(this.checked)"></th>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
@@ -808,8 +830,8 @@
               bold(item.name), val(item.grade), val(item.school), val(item.barangay), badge(item.status)
             ] :
             type === 'grades' ? [
-              bold(app.name), val(app.school), val(app.grade),
-              val(item.subject || item.subject_name), val(item.quarter), val(item.grade_val || item.grade)
+              bold(recordName(item)), val(app.school), val(app.grade),
+              { html: escapeHtml(item.gradeSummary || DASH).replace(/ \| /g, '<br>') }
             ] :
             [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(app.status)];
 
@@ -895,7 +917,7 @@
     function buildAssessmentPrint(item) { return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Family</span>${escapeHtml(item.familySurname || '-')}</div><div class="field"><span class="label">Student</span>${escapeHtml(item.student || '-')}</div><div class="field"><span class="label">Final result</span>${escapeHtml(item.finalResult || 'Unset')}</div><div class="field"><span class="label">Saved</span>${escapeHtml(item.savedAt || item.assessmentDate || item.created_at || '-')}</div></div><p>${escapeHtml(item.notes || item.assessmentNotes || item.background || 'No assessment notes recorded.')}</p><div class="signature"><div class="line">Staff signature</div><div class="line">Director signature</div></div></section>`; }
     function buildDirectoryPrint(records) { return `<section><h2>Scholar Directory</h2><table><thead><tr><th>No.</th><th>Name</th><th>Student ID</th><th>Grade</th><th>School</th><th>Barangay</th><th>Contact</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildApplicationsPrint(records) { return `<section><h2>Application Register</h2><table><thead><tr><th>Reference</th><th>Name</th><th>Grade</th><th>School</th><th>Barangay</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
-    function buildGradesPrint(records) { return `<section><h2>Grade Register</h2><table><thead><tr><th>Scholar</th><th>School</th><th>Grade</th><th>Subject</th><th>Quarter</th><th>Score</th><th>School Year</th></tr></thead><tbody>${records.map(item => { const app = appFor(item) || {}; return `<tr><td>${escapeHtml(app.name || '-')}</td><td>${escapeHtml(app.school || '-')}</td><td>${escapeHtml(app.grade || '-')}</td><td>${escapeHtml(item.subject || item.subject_name || '-')}</td><td>${escapeHtml(item.quarter || '-')}</td><td>${escapeHtml(item.grade_val || item.grade || '-')}</td><td>${escapeHtml(item.school_year || item.schoolYear || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
+    function buildGradesPrint(records) { return `<section><h2>Grade Register</h2><table><thead><tr><th>Scholar</th><th>School</th><th>Grade</th><th>Subjects and grades</th></tr></thead><tbody>${records.map(item => { const app = appFor(item) || item; const gradeSummary = item.gradeRows.map(grade => `${grade.subject || grade.subject_name || 'Unknown subject'}${grade.quarter ? ` Q${grade.quarter}` : ''}: ${grade.grade_val ?? grade.grade ?? '-'}`).join(' | '); return `<tr><td>${escapeHtml(app.name || '-')}</td><td>${escapeHtml(app.school || '-')}</td><td>${escapeHtml(app.grade || '-')}</td><td>${escapeHtml(gradeSummary || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
     function buildFormationPrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const attended = new Set((state.events.length && JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}')[event.id] || []).map(String)); const checkins = state.checkins[event.id] || []; checkins.forEach(checkin => { const match = records.find(item => text(item.name) === text(checkin.student_name) || text(item.reference) === text(checkin.student_id)); if (match) attended.add(String(match.id)); }); return `<section><h2>Formation Attendance</h2><div class="summary"><strong>${escapeHtml(event.name || 'Formation event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${attended.has(String(item.id)) ? 'Present' : 'Absent'}</td><td style="height:28px"></td><td></td></tr>`).join('')}</tbody></table></section>`; }
     async function buildReportCardsPrint(records) { const parts = []; for (const item of records) { const grades = state.grades.filter(grade => Number(grade.app_id || grade.appId) === Number(item.id)); const html = buildReportCardHTML({ name:item.name, gradeLevel:item.grade, school:item.school, refNo:item.reference || item.referenceNumber || item.reference_number || item.id, schoolYear:item.sy || 'N/A' }, grades); parts.push(html); } return parts.join(''); }
     async function buildDocumentsPrint(records) { const sections = []; for (const item of records) { const docs = await MefamAPI.getDocuments(item.id).catch(() => []); sections.push(`<section class="record"><h2>Document Checklist: ${escapeHtml(item.name || '-')}</h2><table><thead><tr><th>Document</th><th>Status</th><th>Note</th></tr></thead><tbody>${(Array.isArray(docs) ? docs : []).map(doc => `<tr><td>${escapeHtml(doc.label || '-')}</td><td>${escapeHtml(doc.status || '-')}</td><td>${escapeHtml(doc.note || '-')}</td></tr>`).join('')}</tbody></table></section>`); } return sections.join(''); }
