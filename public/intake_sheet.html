@@ -708,6 +708,20 @@
         flex-wrap:wrap;
         box-shadow:0 -8px 24px -12px rgba(26,46,68,.15);
     }
+    .save-status{
+        padding:0 28px 14px;
+        color:var(--muted);
+        font-size:.74rem;
+        text-align:right;
+    }
+    .save-status::before{
+        content:'';
+        display:inline-block;
+        width:7px;height:7px;
+        margin:0 6px 1px 0;
+        border-radius:50%;
+        background:var(--muted-2);
+    }
 
     /* ══ PRINT ══ */
     @page{ size:A4; margin:8mm 10mm; }
@@ -727,6 +741,7 @@
         }
         .prefill-bar,
         .toolbar,
+        .save-status,
         .btn-add,
         .spouse-toggle-row,
         .btn,
@@ -1266,6 +1281,7 @@
                 Save Intake Sheet
             </button>
         </div>
+        <div id="saveStatus" class="save-status" role="status" aria-live="polite">Not saved yet</div>
 
     </div>
 </div>
@@ -1273,6 +1289,38 @@
 <script>
 let linkedAppId = null;
 let currentIntakeId = null;
+let intakeDirty = false;
+let lastSavedAt = '';
+
+function markIntakeDirty() {
+    intakeDirty = true;
+    const status = document.getElementById('saveStatus');
+    if (status) status.textContent = 'Unsaved changes';
+}
+
+function setSavedStatus(record) {
+    intakeDirty = false;
+    lastSavedAt = record?.savedAt || '';
+    const status = document.getElementById('saveStatus');
+    if (!status) return;
+    const savedBy = record?.savedBy ? ` by ${record.savedBy}` : '';
+    status.textContent = lastSavedAt ? `Saved ${lastSavedAt}${savedBy}` : 'Saved';
+}
+
+function getCurrentStaffName() {
+    try {
+        const session = JSON.parse(localStorage.getItem('mefamdev_session') || 'null');
+        return session?.name || session?.username || session?.email || 'Staff user';
+    } catch (error) {
+        return 'Staff user';
+    }
+}
+
+window.addEventListener('beforeunload', event => {
+    if (!intakeDirty) return;
+    event.preventDefault();
+    event.returnValue = '';
+});
 
 /* ══════════════════════════════════════════
    AUTO CASE NUMBER
@@ -1342,6 +1390,8 @@ window.onload = function () {
     populatePrefill();
     initSigPad('clientSig');
     initSigPad('staffSig');
+    document.querySelector('.doc-body')?.addEventListener('input', markIntakeDirty);
+    document.querySelector('.doc-body')?.addEventListener('change', markIntakeDirty);
 
     const params = new URLSearchParams(window.location.search);
     const recordId = params.get('record');
@@ -1381,7 +1431,7 @@ function initSigPad(id) {
         const p = e.touches ? e.touches[0] : e;
         return { x: p.clientX - r.left, y: p.clientY - r.top };
     }
-    function start(e) { drawing = true; const p = pos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }
+    function start(e) { drawing = true; markIntakeDirty(); const p = pos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }
     function move(e) {
         if (!drawing) return;
         const p = pos(e);
@@ -1405,6 +1455,7 @@ function clearSig(id) {
     pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
     const img = document.getElementById(id + 'Img');
     if (img) img.src = '';
+    markIntakeDirty();
 }
 function isSigEmpty(id) {
     const pad = sigPads[id];
@@ -1643,7 +1694,8 @@ function saveIntake() {
     const recordId = data.id || window.currentIntakeId || Date.now();
     data.id = recordId;
     window.currentIntakeId = recordId;
-    data.savedAt = data.savedAt || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    data.savedAt = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    data.savedBy = getCurrentStaffName();
 
     const existing = saved.findIndex(s => String(s.id) === String(recordId) || (s.caseNo && data.caseNo && s.caseNo === data.caseNo));
     if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
@@ -1665,6 +1717,7 @@ function saveIntake() {
             localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
         }
     }
+    setSavedStatus(data);
     alert(`Intake Sheet saved!\nCase No: ${data.caseNo || '(no case no.)'}`);
 }
 
@@ -1675,6 +1728,7 @@ function loadSavedIntakeRecord(recordId) {
 
     currentIntakeId = record.id;
     linkedAppId = record.linkedAppId || null;
+    setSavedStatus(record);
 
     setVal('caseNo', record.caseNo || '');
     lastAutoCaseNo = record.caseNo || ''; // prevent auto-overwrite
@@ -1847,6 +1901,7 @@ function clearForm() {
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
     clearSig('clientSig');
     clearSig('staffSig');
+    markIntakeDirty();
 }
 
 function printIntakeSheet() {
