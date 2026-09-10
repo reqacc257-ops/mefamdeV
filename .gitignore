@@ -8,3 +8,6 @@ tmp-*
 tmp_*
 .env
 *.md
+docs/mefamdev-visual-user-manual.doc
+docs/mefamdev-visual-user-manual.html
+docs/mefamdev-visual-user-manual.pdf
