@@ -732,11 +732,51 @@
                 <div class="grid-2">
                     <div class="field-group">
                         <label class="field-label translatable" data-tl="Baitang/Taon" data-en="Grade/Year Level">Baitang/Taon<span class="req-mark">*</span></label>
-                        <input type="text" id="prevGrade" required oninput="updateAcademicFields()">
+                        <select id="prevGrade" required onchange="updateAcademicFields()">
+                            <option value="" disabled selected class="translatable" data-tl="Pumili ng baitang/taon..." data-en="Select grade/year level...">Pumili ng baitang/taon...</option>
+                            <optgroup label="Elementary">
+                                <option value="Grade 1">Grade 1</option><option value="Grade 2">Grade 2</option>
+                                <option value="Grade 3">Grade 3</option><option value="Grade 4">Grade 4</option>
+                                <option value="Grade 5">Grade 5</option><option value="Grade 6">Grade 6</option>
+                            </optgroup>
+                            <optgroup label="Junior High School">
+                                <option value="Grade 7">Grade 7</option><option value="Grade 8">Grade 8</option>
+                                <option value="Grade 9">Grade 9</option><option value="Grade 10">Grade 10</option>
+                            </optgroup>
+                            <optgroup label="Senior High School">
+                                <option value="Grade 11">Grade 11</option><option value="Grade 12">Grade 12</option>
+                            </optgroup>
+                            <optgroup label="College">
+                                <option value="1st Year College">1st Year College</option><option value="2nd Year College">2nd Year College</option>
+                                <option value="3rd Year College">3rd Year College</option><option value="4th Year College">4th Year College</option>
+                            </optgroup>
+                        </select>
                     </div>
                     <div class="field-group">
                         <label class="field-label translatable" data-tl="Paaralan" data-en="School">Paaralan<span class="req-mark">*</span></label>
-                        <input type="text" id="prevSchool" required>
+                        <select id="prevSchool" required>
+                            <option value="" disabled selected class="translatable" data-tl="Pumili ng paaralan..." data-en="Select school...">Pumili ng paaralan...</option>
+                            <optgroup label="Public Elementary (Angat District)">
+                                <option>Angat Central School</option><option>Binagbag Elementary</option>
+                                <option>Donacion Elementary</option><option>Marungko Elementary</option>
+                                <option>Niugan Elementary</option><option>Paltok Elementary</option>
+                                <option>Pulong Yantok Elementary</option><option>San Roque Elementary</option>
+                                <option>Sta. Cruz Elementary</option><option>Sta. Lucia Elementary</option>
+                                <option>Sto. Cristo Elementary</option><option>Sulucan Elementary</option>
+                                <option>Taboc Elementary</option>
+                            </optgroup>
+                            <optgroup label="Public High Schools">
+                                <option>Angat National High School</option><option>Binagbag National High School</option>
+                                <option>Pres. Diosdado Macapagal Memorial HS</option>
+                            </optgroup>
+                            <optgroup label="Colleges / Universities">
+                                <option>Bulacan State University (Main/Malolos)</option>
+                                <option>Bulacan State University (Bustos)</option><option>Baliuag University</option>
+                                <option>Baliwag Polytechnic College (BTECH)</option><option>Fernandez College (FCAT)</option>
+                                <option>Norzagaray College</option>
+                            </optgroup>
+                            <optgroup label="Other"><option>Other / Outside Bulacan</option></optgroup>
+                        </select>
                     </div>
                 </div>
             </div>
