@@ -5,54 +5,487 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MEFAMDEV - Mass Print Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --navy:#1a2e44; --navy2:#243b55; --gold:#f5a623; --bg:#eef1f5; --white:#fff; --border:#dde3ec; --text:#2c3e50; --muted:#718096; --red:#c0392b; --green:#1a8a4a; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; }
-    .page { max-width:1240px; margin:0 auto; padding:24px; }
-    .topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
-    h1 { margin:0; color:var(--navy); font:2rem 'DM Serif Display', serif; }
-    p { margin:5px 0 0; color:var(--muted); font-size:.9rem; }
-    .btn, select, input { font:inherit; }
-    .btn { display:inline-flex; align-items:center; gap:6px; border:0; border-radius:7px; padding:9px 14px; cursor:pointer; font-weight:700; }
-    .btn:disabled { opacity:.5; cursor:not-allowed; }
-    .btn-navy { color:#fff; background:var(--navy); }
-    .btn-gold { color:var(--navy); background:var(--gold); }
-    .btn-ghost { color:var(--text); background:#f0f2f5; }
-    .panel { background:var(--white); border:1px solid var(--border); border-radius:12px; box-shadow:0 2px 8px rgba(26,46,68,.07); padding:18px; margin-bottom:18px; }
-    .controls { display:grid; grid-template-columns:repeat(6, minmax(130px, 1fr)); gap:10px; align-items:end; }
-    label { display:block; margin-bottom:5px; color:#586779; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-    input, select { width:100%; min-width:0; padding:9px 10px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--text); }
-    input:focus, select:focus { outline:0; border-color:var(--gold); box-shadow:0 0 0 3px rgba(245,166,35,.16); }
-    .actions { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; }
-    .count { color:var(--muted); font-size:.85rem; }
-    .table-wrap { overflow:auto; max-height:58vh; }
-    table { width:100%; border-collapse:collapse; font-size:.86rem; }
-    th, td { padding:10px 9px; border-bottom:1px solid #edf0f4; text-align:left; vertical-align:top; }
-    th { position:sticky; top:0; z-index:1; background:#f4f6f9; color:#536273; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
-    .empty { padding:34px; color:var(--muted); text-align:center; }
-    .status { display:inline-block; padding:3px 8px; border-radius:999px; background:#edf2f7; color:#52606d; font-size:.72rem; font-weight:700; }
-    .status.good { background:#e9f7ef; color:var(--green); }
-    .status.bad { background:#fdedeb; color:var(--red); }
-    .status.warn { background:#fef5e4; color:#a56600; }
-    .back { color:var(--navy); text-decoration:none; font-weight:700; font-size:.85rem; }
-    .hint { margin-top:10px; color:var(--muted); font-size:.78rem; }
-    @media (max-width:900px) { .controls { grid-template-columns:repeat(2, minmax(130px, 1fr)); } }
-    @media (max-width:560px) { .page { padding:14px; } .controls { grid-template-columns:1fr; } h1 { font-size:1.6rem; } }
-    @media print { body { background:#fff; } .no-print { display:none !important; } }
+    :root{
+      --navy:#122b45;
+      --navy-2:#1d4066;
+      --navy-3:#0b1c2e;
+      --gold:#f5a623;
+      --gold-2:#e08c0b;
+      --bg:#eef2f7;
+      --surface:#fff;
+      --border:#e3e9f1;
+      --border-strong:#d3dce7;
+      --text:#1f2d3d;
+      --muted:#6b7c93;
+      --red:#b3261e;
+      --green:#0f7a4a;
+      --radius:16px;
+      --shadow-sm:0 1px 2px rgba(16,38,64,.06),0 1px 3px rgba(16,38,64,.05);
+      --shadow-md:0 4px 18px -4px rgba(16,38,64,.10),0 1px 3px rgba(16,38,64,.05);
+      --shadow-lg:0 22px 45px -18px rgba(16,38,64,.35);
+    }
+
+    *,*::before,*::after{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+      font-size:15px;
+      line-height:1.5;
+      background:
+        radial-gradient(1100px 520px at 8% -12%, rgba(245,166,35,.12), transparent 62%),
+        radial-gradient(900px 460px at 100% 0%, rgba(29,64,102,.10), transparent 58%),
+        var(--bg);
+      background-attachment:fixed;
+    }
+
+    /* ============ APP BAR ============ */
+    .appbar{
+      position:relative;
+      color:#fff;
+      background:linear-gradient(135deg,#0a1a2b 0%,#16324f 52%,#1e4670 100%);
+      overflow:hidden;
+      isolation:isolate;
+    }
+    .appbar::after{
+      content:'';
+      position:absolute;inset:0;z-index:-1;
+      background:
+        radial-gradient(620px 260px at 86% -20%, rgba(245,166,35,.32), transparent 68%),
+        radial-gradient(420px 220px at 12% 120%, rgba(96,165,250,.16), transparent 70%);
+    }
+    .appbar::before{
+      content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
+      background:linear-gradient(90deg,var(--gold-2),#ffd479 40%,var(--gold) 70%,var(--gold-2));
+    }
+    .appbar-inner{
+      position:relative;z-index:1;
+      max-width:1400px;margin:0 auto;
+      padding:22px 24px;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:22px;flex-wrap:wrap;
+    }
+    .brand{display:flex;align-items:center;gap:15px;min-width:0}
+    .brand-mark{
+      flex:0 0 auto;
+      width:48px;height:48px;border-radius:14px;
+      display:grid;place-items:center;
+      font-family:'DM Serif Display',serif;font-size:25px;line-height:1;
+      color:#12283f;
+      background:linear-gradient(140deg,#ffe0a3,#f5a623 55%,#d98508);
+      box-shadow:0 10px 24px -8px rgba(245,166,35,.75), inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .brand-org{
+      display:block;
+      font-size:.66rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+      color:rgba(255,255,255,.58);
+    }
+    h1{
+      margin:3px 0 0;
+      font-family:'DM Serif Display',serif;
+      font-weight:400;font-size:1.65rem;letter-spacing:.01em;
+      color:#fff;
+    }
+    .appbar-right{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+    .tagline{
+      margin:0;max-width:290px;
+      color:rgba(255,255,255,.68);font-size:.83rem;line-height:1.45;
+    }
+    .back{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 16px;border-radius:11px;
+      font-size:.82rem;font-weight:600;text-decoration:none;color:#fff;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.18);
+      transition:background .2s ease,transform .2s ease,border-color .2s ease;
+    }
+    .back svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    .back:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);transform:translateX(-2px)}
+
+    /* ============ LAYOUT ============ */
+    .page{
+      max-width:1400px;margin:0 auto;padding:24px;
+      display:flex;flex-direction:column;gap:22px;
+    }
+
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow-md);
+      overflow:hidden;
+    }
+    .panel-head{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;flex-wrap:wrap;
+      padding:16px 22px;
+      background:linear-gradient(180deg,#fcfdff,#f6f9fc);
+      border-bottom:1px solid var(--border);
+    }
+    .panel-head h2{
+      margin:0;font-size:.92rem;font-weight:700;
+      color:var(--navy);letter-spacing:.01em;
+    }
+    .panel-head p{margin:3px 0 0;font-size:.78rem;color:var(--muted)}
+    .panel-body{padding:20px 22px}
+    .panel-body + .panel-head{border-top:1px solid var(--border)}
+
+    /* ============ REPORT TYPE CHIPS ============ */
+    .chips{display:flex;flex-wrap:wrap;gap:9px}
+    .chip{
+      display:inline-flex;align-items:center;gap:9px;
+      padding:9px 15px;border-radius:11px;cursor:pointer;
+      font:inherit;font-size:.82rem;font-weight:600;
+      color:#41556b;background:#fff;
+      border:1px solid var(--border-strong);
+      transition:all .18s cubic-bezier(.2,.7,.3,1);
+    }
+    .chip svg{
+      width:15px;height:15px;flex:0 0 auto;
+      stroke:currentColor;fill:none;stroke-width:2;
+      stroke-linecap:round;stroke-linejoin:round;
+      opacity:.7;transition:opacity .18s ease,stroke .18s ease;
+    }
+    .chip:hover{
+      border-color:#bdcbdb;background:#f8fbff;color:var(--navy);
+      transform:translateY(-1px);box-shadow:var(--shadow-sm);
+    }
+    .chip:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(245,166,35,.28)}
+    .chip.is-active{
+      color:#fff;border-color:transparent;
+      background:linear-gradient(135deg,#16324f,#245075);
+      box-shadow:0 8px 20px -8px rgba(22,50,79,.75);
+    }
+    .chip.is-active svg{opacity:1;stroke:var(--gold)}
+
+    /* ============ FILTERS ============ */
+    .controls{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+      gap:15px;
+    }
+    .field{min-width:0}
+    .field label{
+      display:block;margin-bottom:7px;
+      font-size:.69rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+      color:#5d6e83;
+    }
+    input,select{
+      width:100%;min-width:0;
+      padding:10px 12px;
+      font:inherit;font-size:.86rem;
+      color:var(--text);background:#fff;
+      border:1px solid var(--border-strong);border-radius:11px;
+      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+    }
+    input::placeholder{color:#a9b6c6}
+    input:hover,select:hover{border-color:#b9c7d8}
+    input:focus,select:focus{
+      outline:none;border-color:var(--gold);
+      box-shadow:0 0 0 4px rgba(245,166,35,.17);
+    }
+    select{
+      appearance:none;-webkit-appearance:none;
+      padding-right:36px;
+      background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7c93' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+      background-repeat:no-repeat;
+      background-position:right 12px center;
+      background-size:13px;
+      cursor:pointer;
+    }
+
+    .hint{
+      display:flex;align-items:flex-start;gap:8px;
+      margin:16px 0 0;padding-top:14px;
+      border-top:1px dashed var(--border);
+      font-size:.78rem;color:var(--muted);line-height:1.5;
+    }
+    .hint svg{
+      width:15px;height:15px;flex:0 0 auto;margin-top:1px;
+      stroke:var(--gold-2);fill:none;stroke-width:2;
+      stroke-linecap:round;stroke-linejoin:round;
+    }
+
+    /* ============ BUTTONS ============ */
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:10px 16px;border:0;border-radius:11px;
+      font:inherit;font-size:.83rem;font-weight:700;letter-spacing:.01em;
+      cursor:pointer;white-space:nowrap;
+      transition:transform .16s ease,box-shadow .16s ease,background .16s ease,color .16s ease,border-color .16s ease;
+    }
+    .btn svg{
+      width:15px;height:15px;flex:0 0 auto;
+      stroke:currentColor;fill:none;stroke-width:2.2;
+      stroke-linecap:round;stroke-linejoin:round;
+    }
+    .btn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(245,166,35,.32)}
+    .btn:disabled{opacity:.42;cursor:not-allowed;transform:none !important;box-shadow:none !important}
+    .btn-sm{padding:8px 13px;font-size:.78rem;border-radius:9px}
+
+    .btn-gold{
+      color:#3d2700;
+      background:linear-gradient(135deg,#ffcc6d,#f5a623 58%,#e08c0b);
+      box-shadow:0 9px 20px -9px rgba(224,140,11,.95);
+    }
+    .btn-gold:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 13px 26px -9px rgba(224,140,11,1)}
+
+    .btn-ghost{
+      color:#41556b;background:#f2f5f9;border:1px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled){background:#e8eef6;color:var(--navy);border-color:#c8d5e4}
+
+    /* ============ RESULTS HEADER ============ */
+    .results-head{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:14px;flex-wrap:wrap;
+      padding:14px 20px;
+      background:linear-gradient(180deg,#fcfdff,#f5f9fd);
+      border-bottom:1px solid var(--border);
+    }
+    .results-meta{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+    .results-title{font-size:.9rem;font-weight:700;color:var(--navy)}
+    .pill-count{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 12px;border-radius:999px;
+      font-size:.74rem;font-weight:700;
+      color:#3d5878;background:#e7eef7;
+      border:1px solid #d8e3f0;
+    }
+    .pill-count strong{color:var(--navy)}
+    .results-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .count{
+      font-size:.79rem;font-weight:600;color:var(--muted);
+      padding:0 5px;white-space:nowrap;
+    }
+
+    /* ============ TABLE ============ */
+    .table-wrap{
+      overflow:auto;
+      max-height:62vh;
+      scrollbar-width:thin;
+      scrollbar-color:#c8d4e2 transparent;
+    }
+    .table-wrap::-webkit-scrollbar{width:10px;height:10px}
+    .table-wrap::-webkit-scrollbar-track{background:transparent}
+    .table-wrap::-webkit-scrollbar-thumb{
+      background:#cbd6e3;border-radius:99px;border:2px solid #fff;
+    }
+    .table-wrap::-webkit-scrollbar-thumb:hover{background:#b2c1d3}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem}
+    thead th{
+      position:sticky;top:0;z-index:2;
+      padding:12px 14px;
+      text-align:left;white-space:nowrap;
+      font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+      color:#5d6e83;background:#f5f8fc;
+      border-bottom:1px solid var(--border-strong);
+    }
+    tbody td{
+      padding:12px 14px;
+      vertical-align:top;
+      color:#33465b;
+      border-bottom:1px solid #f0f4f9;
+    }
+    tbody tr{transition:background .14s ease}
+    tbody tr:hover{background:#f8fbff}
+    tbody tr.is-selected{background:rgba(245,166,35,.10)}
+    tbody tr.is-selected:hover{background:rgba(245,166,35,.16)}
+    tbody tr:last-child td{border-bottom:0}
+
+    .col-check{width:46px;padding-right:0 !important;text-align:center}
+    .col-check input{margin:0 auto;display:block}
+
+    .cell-name{font-weight:600;color:#16283c}
+
+    input[type=checkbox]{
+      width:16px;height:16px;min-width:0;
+      margin:0;padding:0;border:0;background:none;
+      accent-color:#1d4066;
+      cursor:pointer;vertical-align:-2px;
+      box-shadow:none;
+    }
+    input[type=checkbox]:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+
+    /* ============ STATUS BADGES ============ */
+    .status{
+      display:inline-block;
+      padding:3px 10px;border-radius:999px;
+      font-size:.72rem;font-weight:700;letter-spacing:.01em;
+      white-space:nowrap;
+      color:#5b6b7f;background:#eef2f7;
+      border:1px solid rgba(0,0,0,.04);
+    }
+    .status.good{color:var(--green);background:#e5f6ee;border-color:#cdebdd}
+    .status.bad{color:var(--red);background:#fdeceb;border-color:#f8d5d2}
+    .status.warn{color:#95610a;background:#fff3df;border-color:#f8e2bd}
+
+    /* ============ EMPTY + LOADING ============ */
+    .empty{padding:0 !important;border-bottom:0 !important}
+    .empty-inner{
+      display:flex;flex-direction:column;align-items:center;gap:9px;
+      padding:64px 24px;text-align:center;
+    }
+    .empty-inner svg{
+      width:40px;height:40px;
+      stroke:#bcc9d9;fill:none;stroke-width:1.5;
+      stroke-linecap:round;stroke-linejoin:round;
+    }
+    .empty-inner p{margin:0;font-size:.92rem;font-weight:600;color:#5b6b7f}
+    .empty-inner span{font-size:.8rem;color:#93a3b6}
+
+    .loading-state{padding:22px;text-align:center;color:var(--muted);font-size:.88rem}
+    .skeleton{
+      height:46px;border-radius:12px;margin-bottom:11px;
+      background:linear-gradient(90deg,#eef2f7 25%,#f9fbfd 37%,#eef2f7 63%);
+      background-size:400% 100%;
+      animation:shimmer 1.5s ease infinite;
+    }
+    .skeleton:last-child{margin-bottom:0}
+    @keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+
+    /* ============ TOAST ============ */
+    .toast{
+      position:fixed;left:50%;bottom:30px;z-index:200;
+      padding:13px 22px;border-radius:13px;
+      font-size:.85rem;font-weight:600;color:#fff;
+      background:#122b45;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:var(--shadow-lg);
+      opacity:0;pointer-events:none;
+      transform:translate(-50%,26px);
+      transition:opacity .28s ease,transform .28s cubic-bezier(.2,.8,.3,1);
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .toast.warn{background:#8a5b00}
+    .toast.error{background:#8f2b22}
+
+    /* ============ UTIL ============ */
+    .sr-only{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width:900px){
+      .controls{grid-template-columns:repeat(2,minmax(150px,1fr))}
+      .tagline{display:none}
+    }
+    @media (max-width:640px){
+      .page{padding:15px;gap:16px}
+      .appbar-inner{padding:18px 16px}
+      h1{font-size:1.32rem}
+      .brand-mark{width:42px;height:42px;font-size:22px;border-radius:12px}
+      .panel-body{padding:16px}
+      .panel-head{padding:14px 16px}
+      .results-head{padding:13px 16px}
+      .results-actions{width:100%}
+      .results-actions .btn{flex:1 1 auto}
+      .count{width:100%;text-align:left;padding:0}
+      .controls{grid-template-columns:1fr}
+      .chip{font-size:.78rem;padding:8px 12px}
+    }
+
+    /* ============ PRINT ============ */
+    @media print{
+      body{background:#fff}
+      .no-print{display:none !important}
+    }
   </style>
 </head>
 <body>
-  <main class="page">
-    <header class="topbar no-print">
-      <div><h1>Mass Print Center</h1><p>Filter, select, and print operational records in batches.</p></div>
-      <a class="back" href="admin_dashboard.html">Back to dashboard</a>
-    </header>
 
+  <header class="appbar no-print">
+    <div class="appbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">M</div>
+        <div>
+          <span class="brand-org">MEFAMDEV</span>
+          <h1>Mass Print Center</h1>
+        </div>
+      </div>
+      <div class="appbar-right">
+        <p class="tagline">Filter, select, and print operational records in batches.</p>
+        <a class="back" href="admin_dashboard.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back to dashboard
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ============ SETUP ============ -->
     <section class="panel no-print">
-      <div class="controls">
-        <div><label for="printType">Report type</label><select id="printType" onchange="changePrintType()">
+
+      <div class="panel-head">
+        <div>
+          <h2>Report type</h2>
+          <p>Pick the record set you want to print.</p>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="chips" id="typeChips" role="group" aria-label="Report type">
+          <button type="button" class="chip is-active" data-type="intake" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="14" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+            <span>Intake sheets</span>
+          </button>
+          <button type="button" class="chip" data-type="assessment" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><polyline points="9 14 11.5 16.5 16 12"/></svg>
+            <span>Staff assessments</span>
+          </button>
+          <button type="button" class="chip" data-type="applications" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="14" x2="15" y2="14"/><line x1="9" y1="18" x2="13" y2="18"/></svg>
+            <span>Applications</span>
+          </button>
+          <button type="button" class="chip" data-type="formation" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+            <span>Formation attendance</span>
+          </button>
+          <button type="button" class="chip" data-type="directory" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Scholar directory</span>
+          </button>
+          <button type="button" class="chip" data-type="report-card" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.5 12.9 17 22l-5-3-5 3 1.5-9.1"/></svg>
+            <span>Report cards</span>
+          </button>
+          <button type="button" class="chip" data-type="grades" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            <span>Grade register</span>
+          </button>
+          <button type="button" class="chip" data-type="documents" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><polyline points="9 13 11 15 15 11"/></svg>
+            <span>Document checklist</span>
+          </button>
+          <button type="button" class="chip" data-type="families" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Beneficiary families</span>
+          </button>
+          <button type="button" class="chip" data-type="alerts" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <span>Formation alerts</span>
+          </button>
+          <button type="button" class="chip" data-type="announcements" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            <span>Announcements</span>
+          </button>
+          <button type="button" class="chip" data-type="financials" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+            <span>Financial registers</span>
+          </button>
+        </div>
+
+        <select id="printType" class="sr-only" tabindex="-1" aria-hidden="true" onchange="changePrintType()">
           <option value="intake">Intake sheets</option>
           <option value="assessment">Staff assessments</option>
           <option value="applications">Applications</option>
@@ -65,25 +498,97 @@
           <option value="alerts">Formation alerts</option>
           <option value="announcements">Announcements</option>
           <option value="financials">Financial registers</option>
-        </select></div>
-        <div><label for="statusFilter">Status</label><select id="statusFilter" onchange="renderRows()"><option value="">All statuses</option></select></div>
-        <div><label for="gradeFilter">Grade / level</label><select id="gradeFilter" onchange="renderRows()"><option value="">All grades</option></select></div>
-        <div><label for="barangayFilter">Barangay</label><select id="barangayFilter" onchange="renderRows()"><option value="">All barangays</option></select></div>
-        <div><label for="schoolFilter">School</label><select id="schoolFilter" onchange="renderRows()"><option value="">All schools</option></select></div>
-        <div><label for="schoolYearFilter">School year</label><input id="schoolYearFilter" placeholder="e.g. 2026-2027" oninput="renderRows()"></div>
-        <div><label for="searchFilter">Search</label><input id="searchFilter" placeholder="Name, family, reference..." oninput="renderRows()"></div>
-        <div id="eventFilterWrap"><label for="eventFilter">Formation event</label><select id="eventFilter" onchange="renderRows()"><option value="">Select event</option></select></div>
+        </select>
       </div>
-      <div class="actions">
-        <div><button class="btn btn-ghost" type="button" onclick="toggleVisibleSelection(true)">Select visible</button> <button class="btn btn-ghost" type="button" onclick="toggleVisibleSelection(false)">Clear visible</button></div>
-        <div><span class="count" id="selectionCount">0 selected</span> <button class="btn btn-gold" type="button" onclick="printSelected()">Print selected</button></div>
+
+      <div class="panel-head">
+        <div>
+          <h2>Filters</h2>
+          <p>Narrow the list before selecting records.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="resetFilters()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.4-4.4L3 8"/></svg>
+          Reset
+        </button>
       </div>
-      <div class="hint">Use grade and barangay together to print a specific group. Records are sorted by grade, barangay, then name.</div>
+
+      <div class="panel-body">
+        <div class="controls">
+          <div class="field">
+            <label for="statusFilter">Status</label>
+            <select id="statusFilter" onchange="renderRows()"><option value="">All statuses</option></select>
+          </div>
+          <div class="field">
+            <label for="gradeFilter">Grade / level</label>
+            <select id="gradeFilter" onchange="renderRows()"><option value="">All grades</option></select>
+          </div>
+          <div class="field">
+            <label for="barangayFilter">Barangay</label>
+            <select id="barangayFilter" onchange="renderRows()"><option value="">All barangays</option></select>
+          </div>
+          <div class="field">
+            <label for="schoolFilter">School</label>
+            <select id="schoolFilter" onchange="renderRows()"><option value="">All schools</option></select>
+          </div>
+          <div class="field">
+            <label for="schoolYearFilter">School year</label>
+            <input id="schoolYearFilter" placeholder="e.g. 2026-2027" oninput="renderRows()">
+          </div>
+          <div class="field">
+            <label for="searchFilter">Search</label>
+            <input id="searchFilter" placeholder="Name, family, reference..." oninput="renderRows()">
+          </div>
+          <div class="field" id="eventFilterWrap" style="display:none">
+            <label for="eventFilter">Formation event</label>
+            <select id="eventFilter" onchange="renderRows()"><option value="">Select event</option></select>
+          </div>
+        </div>
+
+        <p class="hint">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Combine grade and barangay to print a specific group. Records are automatically sorted by grade, barangay, then name.</span>
+        </p>
+      </div>
     </section>
 
+    <!-- ============ RESULTS ============ -->
     <section class="panel">
-      <div id="loading" class="empty">Loading records...</div>
-      <div class="table-wrap"><table id="recordTable" style="display:none"><thead id="recordHead"></thead><tbody id="recordBody"></tbody></table></div>
+      <div class="results-head no-print">
+        <div class="results-meta">
+          <span class="results-title">Records</span>
+          <span class="pill-count"><strong id="resultCount">0</strong> shown</span>
+        </div>
+        <div class="results-actions">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="toggleVisibleSelection(true)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Select visible
+          </button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="toggleVisibleSelection(false)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Clear
+          </button>
+          <span class="count" id="selectionCount">0 selected</span>
+          <button class="btn btn-gold" type="button" id="printBtn" onclick="printSelected()" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print selected
+          </button>
+        </div>
+      </div>
+
+      <div id="loading" class="loading-state">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="recordTable" style="display:none">
+          <thead id="recordHead"></thead>
+          <tbody id="recordBody"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 
@@ -96,9 +601,31 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const session = MefamAPI.getSession();
       if (!session || session.type !== 'staff') { window.location.href = 'index.html'; return; }
+      bindTypeChips();
       await loadPrintData();
     });
 
+    /* ---------- Report type chips ---------- */
+    function bindTypeChips() {
+      document.querySelectorAll('#typeChips .chip[data-type]').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const select = document.getElementById('printType');
+          if (select.value === chip.dataset.type) return;
+          select.value = chip.dataset.type;
+          changePrintType();
+        });
+      });
+    }
+    function syncTypeChips() {
+      const value = document.getElementById('printType').value;
+      document.querySelectorAll('#typeChips .chip[data-type]').forEach(chip => {
+        const active = chip.dataset.type === value;
+        chip.classList.toggle('is-active', active);
+        chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+
+    /* ---------- Data loading ---------- */
     async function loadPrintData() {
       const loading = document.getElementById('loading');
       try {
@@ -118,8 +645,7 @@
         state.announcements = Array.isArray(results[8]) ? results[8] : [];
         const checks = await Promise.all(state.events.map(async event => [event.id, await MefamAPI.getEventCheckins(event.id).catch(() => [])]));
         state.checkins = Object.fromEntries(checks);
-        populateFilters();
-        renderRows();
+        changePrintType();
         loading.style.display = 'none';
         document.getElementById('recordTable').style.display = 'table';
       } catch (error) {
@@ -131,10 +657,20 @@
     function changePrintType() {
       const type = document.getElementById('printType').value;
       document.getElementById('eventFilterWrap').style.display = type === 'formation' ? '' : 'none';
+      syncTypeChips();
       populateFilters();
       renderRows();
     }
 
+    function resetFilters() {
+      ['statusFilter', 'gradeFilter', 'barangayFilter', 'schoolFilter', 'schoolYearFilter', 'searchFilter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      renderRows();
+    }
+
+    /* ---------- Filters ---------- */
     function unique(values) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })); }
     function fillSelect(id, values, allLabel) {
       const select = document.getElementById(id);
@@ -176,6 +712,7 @@
       return (!selectedStatus || status === selectedStatus) && (!selectedGrade || grade === selectedGrade) && (!selectedBarangay || barangay === selectedBarangay) && (!selectedSchool || school === selectedSchool) && (!selectedYear || year.includes(selectedYear)) && (!search || searchable.includes(search));
     }
 
+    /* ---------- Record source ---------- */
     function currentRecords() {
       const type = document.getElementById('printType').value;
       if (type === 'intake') return state.intakes;
@@ -194,6 +731,34 @@
 
     function recordName(item) { return item.name || item.student || item.familySurname || item.scholarName || item.scholar_name || appFor(item)?.name || 'Unnamed record'; }
     function sortRecords(records) { return records.sort((a, b) => `${a.grade || a.gradeLevel || appFor(a)?.grade || ''} ${a.barangay || appFor(a)?.barangay || ''} ${recordName(a)}`.localeCompare(`${b.grade || b.gradeLevel || appFor(b)?.grade || ''} ${b.barangay || appFor(b)?.barangay || ''} ${recordName(b)}`, undefined, { numeric: true })); }
+
+    /* ---------- Cell helpers ---------- */
+    const DASH = '—';
+    function val(value) { const s = String(value ?? '').trim(); return s || DASH; }
+    function bold(value) { return { html: `<span class="cell-name">${escapeHtml(val(value))}</span>` }; }
+    function badge(value, forcedClass) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return DASH;
+      let cls = 'status';
+      if (forcedClass) cls += ' ' + forcedClass;
+      else {
+        const key = raw.toLowerCase();
+        if (/(accept|approv|active|complete|present|verified|paid|good|pass|cleared|enrolled|released)/.test(key)) cls += ' good';
+        else if (/(reject|denied|absent|fail|bad|overdue|inactive|drop|declin|cancel)/.test(key)) cls += ' bad';
+        else if (/(pending|review|wait|partial|warn|follow|process|unset|hold|draft)/.test(key)) cls += ' warn';
+      }
+      return { html: `<span class="${cls}">${escapeHtml(raw)}</span>` };
+    }
+    function money(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return DASH;
+      const n = Number(raw.replace(/[^0-9.-]/g, ''));
+      if (!isFinite(n) || !/\d/.test(raw)) return escapeHtml(raw) && { html: escapeHtml(raw) };
+      return { html: `<span class="cell-name">₱${n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` };
+    }
+    function cell(c) { return (c && typeof c === 'object') ? c.html : escapeHtml(c); }
+
+    /* ---------- Render ---------- */
     function renderRows() {
       const type = document.getElementById('printType').value;
       let records = currentRecords().filter(matches);
@@ -202,30 +767,103 @@
         if (!eventId) records = [];
       }
       visibleRecords = sortRecords(records);
+
       const head = document.getElementById('recordHead');
       const body = document.getElementById('recordBody');
-      const columns = type === 'intake' ? ['Case No.', 'Name', 'School', 'Barangay', 'Date'] : type === 'assessment' ? ['Family', 'Student', 'Result', 'Saved'] : type === 'financials' ? ['Type', 'Name / Source', 'Amount', 'Date / Period'] : type === 'families' ? ['Family', 'Guardian', 'Barangay', 'Bracket', 'Contact'] : type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] : type === 'alerts' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Alert'] : type === 'applications' ? ['Reference', 'Name', 'Grade', 'School', 'Barangay', 'Status'] : type === 'grades' ? ['Scholar', 'School', 'Grade', 'Subject', 'Quarter', 'Score'] : ['Student', 'Grade', 'Barangay', 'School', 'Status'];
-      head.innerHTML = `<tr><th><input type="checkbox" aria-label="Select all visible" onchange="toggleVisibleSelection(this.checked)"></th>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
-      body.innerHTML = visibleRecords.length ? visibleRecords.map((item, index) => {
-        const app = appFor(item) || item;
-        const id = `${document.getElementById('printType').value}-${item.id || app.id || index}`;
-        const cells = type === 'intake' ? [item.caseNo || '-', recordName(item), item.school || app.school || '-', item.barangay || app.barangay || '-', item.savedAt || item.caseDate || item.created_at || '-'] : type === 'assessment' ? [item.familySurname || '-', item.student || '-', item.finalResult || 'Unset', item.savedAt || item.assessmentDate || item.created_at || '-'] : type === 'financials' ? [state.funds.includes(item) ? 'Contribution' : 'Disbursement', item.source || item.scholarName || item.scholar_name || '-', item.amount || '-', item.date || item.period || '-'] : type === 'families' ? [item.surname ? `${item.surname} Family` : '-', item.guardian || '-', item.barangay || '-', item.bracket || '-', item.contact || '-'] : type === 'announcements' ? [item.subject || '-', item.target || '-', item.tag || '-', item.date || item.created_at || '-'] : type === 'alerts' ? [recordName(item), app.grade || '-', app.barangay || '-', app.school || '-', item.alert || item.reason || 'Formation follow-up'] : type === 'applications' ? [item.reference || item.referenceNumber || item.reference_number || item.id || '-', item.name || '-', item.grade || '-', item.school || '-', item.barangay || '-', item.status || '-'] : type === 'grades' ? [app.name || '-', app.school || '-', app.grade || '-', item.subject || item.subject_name || '-', item.quarter || '-', item.grade_val || item.grade || '-'] : [recordName(item), app.grade || '-', app.barangay || '-', app.school || '-', app.status || '-'];
-        return `<tr data-print-id="${escapeHtml(id)}"><td><input type="checkbox" class="record-check" value="${escapeHtml(id)}"></td>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`;
-      }).join('') : `<tr><td colspan="${columns.length + 1}" class="empty">No records match these filters.</td></tr>`;
+      const columns =
+        type === 'intake' ? ['Case No.', 'Name', 'School', 'Barangay', 'Date'] :
+        type === 'assessment' ? ['Family', 'Student', 'Result', 'Saved'] :
+        type === 'financials' ? ['Type', 'Name / Source', 'Amount', 'Date / Period'] :
+        type === 'families' ? ['Family', 'Guardian', 'Barangay', 'Bracket', 'Contact'] :
+        type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] :
+        type === 'alerts' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Alert'] :
+        type === 'applications' ? ['Reference', 'Name', 'Grade', 'School', 'Barangay', 'Status'] :
+        type === 'grades' ? ['Scholar', 'School', 'Grade', 'Subject', 'Quarter', 'Score'] :
+        ['Student', 'Grade', 'Barangay', 'School', 'Status'];
+
+      head.innerHTML = `<tr><th class="col-check"><input type="checkbox" id="selectAll" aria-label="Select all visible records" onchange="toggleVisibleSelection(this.checked)"></th>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
+
+      if (visibleRecords.length) {
+        body.innerHTML = visibleRecords.map((item, index) => {
+          const app = appFor(item) || item;
+          const id = `${type}-${item.id || app.id || index}`;
+
+          const cells =
+            type === 'intake' ? [val(item.caseNo), bold(recordName(item)), val(item.school || app.school), val(item.barangay || app.barangay), val(item.savedAt || item.caseDate || item.created_at)] :
+            type === 'assessment' ? [val(item.familySurname), bold(item.student), badge(item.finalResult || 'Unset'), val(item.savedAt || item.assessmentDate || item.created_at)] :
+            type === 'financials' ? [
+              state.funds.includes(item) ? badge('Contribution', 'good') : badge('Disbursement', 'warn'),
+              bold(item.source || item.scholarName || item.scholar_name),
+              money(item.amount),
+              val(item.date || item.period)
+            ] :
+            type === 'families' ? [
+              item.surname ? { html: `<span class="cell-name">${escapeHtml(item.surname)}</span> Family` } : DASH,
+              val(item.guardian), val(item.barangay), val(item.bracket), val(item.contact)
+            ] :
+            type === 'announcements' ? [bold(item.subject), val(item.target), val(item.tag), val(item.date || item.created_at)] :
+            type === 'alerts' ? [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(item.alert || item.reason || 'Formation follow-up', 'warn')] :
+            type === 'applications' ? [
+              val(item.reference || item.referenceNumber || item.reference_number || item.id),
+              bold(item.name), val(item.grade), val(item.school), val(item.barangay), badge(item.status)
+            ] :
+            type === 'grades' ? [
+              bold(app.name), val(app.school), val(app.grade),
+              val(item.subject || item.subject_name), val(item.quarter), val(item.grade_val || item.grade)
+            ] :
+            [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(app.status)];
+
+          return `<tr data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"></td>${cells.map(c => `<td>${cell(c)}</td>`).join('')}</tr>`;
+        }).join('');
+      } else {
+        body.innerHTML = `<tr><td colspan="${columns.length + 1}" class="empty">
+          <div class="empty-inner">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <p>No records match these filters.</p>
+            <span>Try clearing a filter or choosing a different report type.</span>
+          </div>
+        </td></tr>`;
+      }
+
+      document.getElementById('resultCount').textContent = visibleRecords.length;
       updateSelectionCount();
     }
-    function toggleVisibleSelection(checked) { document.querySelectorAll('#recordBody .record-check').forEach(input => { input.checked = checked; }); updateSelectionCount(); }
-    function updateSelectionCount() { document.getElementById('selectionCount').textContent = `${document.querySelectorAll('#recordBody .record-check:checked').length} selected`; }
-    document.addEventListener('change', event => { if (event.target.classList.contains('record-check')) updateSelectionCount(); });
 
+    /* ---------- Selection ---------- */
+    function toggleVisibleSelection(checked) {
+      document.querySelectorAll('#recordBody .record-check').forEach(input => { input.checked = checked; });
+      updateSelectionCount();
+    }
+    function updateSelectionCount() {
+      const boxes = [...document.querySelectorAll('#recordBody .record-check')];
+      const checked = boxes.filter(box => box.checked);
+
+      document.getElementById('selectionCount').textContent = `${checked.length} selected`;
+      boxes.forEach(box => box.closest('tr')?.classList.toggle('is-selected', box.checked));
+
+      const all = document.getElementById('selectAll');
+      if (all) {
+        all.checked = boxes.length > 0 && checked.length === boxes.length;
+        all.indeterminate = checked.length > 0 && checked.length < boxes.length;
+      }
+
+      const printBtn = document.getElementById('printBtn');
+      if (printBtn) printBtn.disabled = checked.length === 0;
+    }
+    document.addEventListener('change', event => {
+      if (event.target.classList.contains('record-check')) updateSelectionCount();
+    });
+
+    /* ---------- Print ---------- */
     async function printSelected() {
-      const selectedIds = new Set([...document.querySelectorAll('#recordBody .record-check:checked')].map(input => input.value));
-      const records = visibleRecords.filter((item, index) => selectedIds.has(`${document.getElementById('printType').value}-${item.id || appFor(item)?.id || index}`));
-      if (!records.length) { alert('Select at least one visible record to print.'); return; }
       const type = document.getElementById('printType').value;
+      const selectedIds = new Set([...document.querySelectorAll('#recordBody .record-check:checked')].map(input => input.value));
+      const records = visibleRecords.filter((item, index) => selectedIds.has(`${type}-${item.id || appFor(item)?.id || index}`));
+      if (!records.length) { toast('Select at least one record to print.', 'warn'); return; }
+
       const html = await buildPrintDocument(type, records);
       const printWindow = window.open('', '_blank');
-      if (!printWindow) { alert('Allow popups to print these records.'); return; }
+      if (!printWindow) { toast('Allow popups to print these records.', 'error'); return; }
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.focus();
@@ -246,6 +884,7 @@
       else if (type === 'financials') body = buildFinancialPrint(records);
       else if (type === 'intake') body = records.map(buildIntakePrint).join('');
       else body = records.map(buildAssessmentPrint).join('');
+
       return `<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Mass Print</title><style>
         @page { size:A4; margin:10mm; } * { box-sizing:border-box; } body { font-family:Arial, sans-serif; color:#111; font-size:11px; } h1 { text-align:center; font-size:20px; margin:0 0 4px; } h2 { font-size:15px; margin:0 0 8px; } .org,.meta { text-align:center; } .org { font-size:10px; text-transform:uppercase; letter-spacing:.08em; } .meta { color:#555; margin-bottom:12px; } .record { page-break-after:always; } .record:last-child { page-break-after:auto; } table { width:100%; border-collapse:collapse; margin:8px 0; } th,td { border:1px solid #555; padding:6px; text-align:left; vertical-align:top; } th { background:#eee; font-size:9px; text-transform:uppercase; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .field { border:1px solid #aaa; padding:6px; min-height:28px; } .label { display:block; color:#555; font-size:8px; text-transform:uppercase; margin-bottom:3px; } .signature { display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:28px; } .line { border-top:1px solid #111; padding-top:5px; text-align:center; } .summary { border:1px solid #888; padding:8px; margin-bottom:10px; } .rc-card { page-break-after:always; box-shadow:none !important; border:1px solid #aaa; } .rc-card:last-child { page-break-after:auto; } .rc-head { background:#1a2e44 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; } @media print { .no-print { display:none; } }
       ${typeof REPORT_CARD_STYLES === 'string' ? REPORT_CARD_STYLES : ''}
@@ -264,6 +903,21 @@
     function buildAlertsPrint(records) { return `<section><h2>Formation Alert Register</h2><table><thead><tr><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Alert / Reason</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.alert || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildAnnouncementsPrint(records) { return `<section><h2>Announcement Register</h2><table><thead><tr><th>Subject</th><th>Target</th><th>Tag</th><th>Message</th><th>Date</th><th>Posted By</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.subject || '-')}</td><td>${escapeHtml(item.target || '-')}</td><td>${escapeHtml(item.tag || '-')}</td><td>${escapeHtml(item.message || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td><td>${escapeHtml(item.postedBy || item.posted_by || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildFinancialPrint(records) { return `<section><h2>Financial Registers</h2><table><thead><tr><th>Type</th><th>Name / Source</th><th>Amount</th><th>Date / Period</th><th>Notes</th></tr></thead><tbody>${records.map(item => { const contribution = state.funds.includes(item); return `<tr><td>${contribution ? 'Contribution' : 'Disbursement'}</td><td>${escapeHtml(item.source || item.scholarName || item.scholar_name || '-')}</td><td>${escapeHtml(item.amount || '-')}</td><td>${escapeHtml(item.date || item.period || '-')}</td><td>${escapeHtml(item.notes || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
+
+    /* ---------- Toast ---------- */
+    let toastTimer;
+    function toast(message, kind) {
+      let el = document.getElementById('toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        document.body.appendChild(el);
+      }
+      el.className = 'toast show' + (kind ? ' ' + kind : '');
+      el.textContent = message;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.className = 'toast'; }, 3200);
+    }
 
     function escapeHtml(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
   </script>
