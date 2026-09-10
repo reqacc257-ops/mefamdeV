@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MEFAMDEV - Mass Print Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --navy:#1a2e44; --navy2:#243b55; --gold:#f5a623; --bg:#eef1f5; --white:#fff; --border:#dde3ec; --text:#2c3e50; --muted:#718096; --red:#c0392b; --green:#1a8a4a; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:'DM Sans', sans-serif; }
+    .page { max-width:1240px; margin:0 auto; padding:24px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+    h1 { margin:0; color:var(--navy); font:2rem 'DM Serif Display', serif; }
+    p { margin:5px 0 0; color:var(--muted); font-size:.9rem; }
+    .btn, select, input { font:inherit; }
+    .btn { display:inline-flex; align-items:center; gap:6px; border:0; border-radius:7px; padding:9px 14px; cursor:pointer; font-weight:700; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .btn-navy { color:#fff; background:var(--navy); }
+    .btn-gold { color:var(--navy); background:var(--gold); }
+    .btn-ghost { color:var(--text); background:#f0f2f5; }
+    .panel { background:var(--white); border:1px solid var(--border); border-radius:12px; box-shadow:0 2px 8px rgba(26,46,68,.07); padding:18px; margin-bottom:18px; }
+    .controls { display:grid; grid-template-columns:repeat(6, minmax(130px, 1fr)); gap:10px; align-items:end; }
+    label { display:block; margin-bottom:5px; color:#586779; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    input, select { width:100%; min-width:0; padding:9px 10px; border:1px solid var(--border); border-radius:7px; background:#fff; color:var(--text); }
+    input:focus, select:focus { outline:0; border-color:var(--gold); box-shadow:0 0 0 3px rgba(245,166,35,.16); }
+    .actions { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .count { color:var(--muted); font-size:.85rem; }
+    .table-wrap { overflow:auto; max-height:58vh; }
+    table { width:100%; border-collapse:collapse; font-size:.86rem; }
+    th, td { padding:10px 9px; border-bottom:1px solid #edf0f4; text-align:left; vertical-align:top; }
+    th { position:sticky; top:0; z-index:1; background:#f4f6f9; color:#536273; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
+    .empty { padding:34px; color:var(--muted); text-align:center; }
+    .status { display:inline-block; padding:3px 8px; border-radius:999px; background:#edf2f7; color:#52606d; font-size:.72rem; font-weight:700; }
+    .status.good { background:#e9f7ef; color:var(--green); }
+    .status.bad { background:#fdedeb; color:var(--red); }
+    .status.warn { background:#fef5e4; color:#a56600; }
+    .back { color:var(--navy); text-decoration:none; font-weight:700; font-size:.85rem; }
+    .hint { margin-top:10px; color:var(--muted); font-size:.78rem; }
+    @media (max-width:900px) { .controls { grid-template-columns:repeat(2, minmax(130px, 1fr)); } }
+    @media (max-width:560px) { .page { padding:14px; } .controls { grid-template-columns:1fr; } h1 { font-size:1.6rem; } }
+    @media print { body { background:#fff; } .no-print { display:none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar no-print">
+      <div><h1>Mass Print Center</h1><p>Filter, select, and print operational records in batches.</p></div>
+      <a class="back" href="admin_dashboard.html">Back to dashboard</a>
+    </header>
+
+    <section class="panel no-print">
+      <div class="controls">
+        <div><label for="printType">Report type</label><select id="printType" onchange="changePrintType()">
+          <option value="intake">Intake sheets</option>
+          <option value="assessment">Staff assessments</option>
+          <option value="applications">Applications</option>
+          <option value="formation">Formation attendance</option>
+          <option value="directory">Scholar directory</option>
+          <option value="report-card">Report cards</option>
+          <option value="grades">Grade register</option>
+          <option value="documents">Document checklist</option>
+          <option value="families">Beneficiary families</option>
+          <option value="alerts">Formation alerts</option>
+          <option value="announcements">Announcements</option>
+          <option value="financials">Financial registers</option>
+        </select></div>
+        <div><label for="statusFilter">Status</label><select id="statusFilter" onchange="renderRows()"><option value="">All statuses</option></select></div>
+        <div><label for="gradeFilter">Grade / level</label><select id="gradeFilter" onchange="renderRows()"><option value="">All grades</option></select></div>
+        <div><label for="barangayFilter">Barangay</label><select id="barangayFilter" onchange="renderRows()"><option value="">All barangays</option></select></div>
+        <div><label for="schoolFilter">School</label><select id="schoolFilter" onchange="renderRows()"><option value="">All schools</option></select></div>
+        <div><label for="schoolYearFilter">School year</label><input id="schoolYearFilter" placeholder="e.g. 2026-2027" oninput="renderRows()"></div>
+        <div><label for="searchFilter">Search</label><input id="searchFilter" placeholder="Name, family, reference..." oninput="renderRows()"></div>
+        <div id="eventFilterWrap"><label for="eventFilter">Formation event</label><select id="eventFilter" onchange="renderRows()"><option value="">Select event</option></select></div>
+      </div>
+      <div class="actions">
+        <div><button class="btn btn-ghost" type="button" onclick="toggleVisibleSelection(true)">Select visible</button> <button class="btn btn-ghost" type="button" onclick="toggleVisibleSelection(false)">Clear visible</button></div>
+        <div><span class="count" id="selectionCount">0 selected</span> <button class="btn btn-gold" type="button" onclick="printSelected()">Print selected</button></div>
+      </div>
+      <div class="hint">Use grade and barangay together to print a specific group. Records are sorted by grade, barangay, then name.</div>
+    </section>
+
+    <section class="panel">
+      <div id="loading" class="empty">Loading records...</div>
+      <div class="table-wrap"><table id="recordTable" style="display:none"><thead id="recordHead"></thead><tbody id="recordBody"></tbody></table></div>
+    </section>
+  </main>
+
+  <script src="/mefamdev-api.js"></script>
+  <script src="/components/report-card.js"></script>
+  <script>
+    const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {} };
+    let visibleRecords = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = MefamAPI.getSession();
+      if (!session || session.type !== 'staff') { window.location.href = 'index.html'; return; }
+      await loadPrintData();
+    });
+
+    async function loadPrintData() {
+      const loading = document.getElementById('loading');
+      try {
+        const results = await Promise.all([
+          MefamAPI.getApplications(), MefamAPI.getFamilies(), MefamAPI.getEvents(),
+          MefamAPI.getIntakeSheets(), MefamAPI.getAssessments(), MefamAPI.getGrades(),
+          MefamAPI.getFundLog(), MefamAPI.getDisbursements(), MefamAPI.getAnnouncements()
+        ]);
+        state.apps = Array.isArray(results[0]) ? results[0] : [];
+        state.families = Array.isArray(results[1]) ? results[1] : [];
+        state.events = Array.isArray(results[2]) ? results[2] : [];
+        state.intakes = Array.isArray(results[3]) ? results[3] : [];
+        state.assessments = Array.isArray(results[4]) ? results[4] : [];
+        state.grades = Array.isArray(results[5]) ? results[5] : [];
+        state.funds = Array.isArray(results[6]) ? results[6] : [];
+        state.disbursements = Array.isArray(results[7]) ? results[7] : [];
+        state.announcements = Array.isArray(results[8]) ? results[8] : [];
+        const checks = await Promise.all(state.events.map(async event => [event.id, await MefamAPI.getEventCheckins(event.id).catch(() => [])]));
+        state.checkins = Object.fromEntries(checks);
+        populateFilters();
+        renderRows();
+        loading.style.display = 'none';
+        document.getElementById('recordTable').style.display = 'table';
+      } catch (error) {
+        console.error('Mass print data load failed:', error);
+        loading.textContent = 'Unable to load print records. Refresh and try again.';
+      }
+    }
+
+    function changePrintType() {
+      const type = document.getElementById('printType').value;
+      document.getElementById('eventFilterWrap').style.display = type === 'formation' ? '' : 'none';
+      populateFilters();
+      renderRows();
+    }
+
+    function unique(values) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })); }
+    function fillSelect(id, values, allLabel) {
+      const select = document.getElementById(id);
+      const previous = select.value;
+      select.innerHTML = `<option value="">${allLabel}</option>` + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+      if (values.includes(previous)) select.value = previous;
+    }
+    function populateFilters() {
+      const type = document.getElementById('printType').value;
+      const apps = state.apps;
+      const source = type === 'intake' ? state.intakes : type === 'assessment' ? state.assessments : type === 'families' ? state.families : apps;
+      fillSelect('statusFilter', unique(source.map(item => item.status || item.finalResult)), 'All statuses');
+      fillSelect('gradeFilter', unique(source.map(item => item.grade || item.gradeLevel || item.grade_level || item.nextGrade)), 'All grades');
+      fillSelect('barangayFilter', unique(source.map(item => item.barangay)), 'All barangays');
+      fillSelect('schoolFilter', unique(source.map(item => item.school || item.schoolName || appFor(item)?.school)), 'All schools');
+      const eventSelect = document.getElementById('eventFilter');
+      const previousEvent = eventSelect.value;
+      eventSelect.innerHTML = '<option value="">Select event</option>' + state.events.map(event => `<option value="${Number(event.id)}">${escapeHtml(event.name || 'Formation event')} - ${escapeHtml(event.date || '')}</option>`).join('');
+      if (state.events.some(event => String(event.id) === previousEvent)) eventSelect.value = previousEvent;
+      else if (state.events.length) eventSelect.value = String(state.events[0].id);
+    }
+
+    function text(value) { return String(value || '').trim().toLowerCase(); }
+    function appFor(item) { return state.apps.find(app => String(app.id) === String(item.linkedAppId || item.appId || item.app_id || item.id)); }
+    function matches(item) {
+      const app = appFor(item) || item;
+      const status = text(item.status || item.finalResult);
+      const grade = text(item.grade || item.gradeLevel || item.grade_level || item.nextGrade || app?.grade);
+      const barangay = text(item.barangay || app?.barangay);
+      const year = text(item.schoolYear || item.school_year || item.sy || app?.sy);
+      const selectedStatus = text(document.getElementById('statusFilter').value);
+      const selectedGrade = text(document.getElementById('gradeFilter').value);
+      const selectedBarangay = text(document.getElementById('barangayFilter').value);
+      const selectedSchool = text(document.getElementById('schoolFilter').value);
+      const selectedYear = text(document.getElementById('schoolYearFilter').value);
+      const search = text(document.getElementById('searchFilter').value);
+      const school = text(item.school || item.schoolName || app?.school);
+      const searchable = text([recordName(item), item.familySurname, item.student, item.reference, item.referenceNumber, item.caseNo, item.source, item.subject, item.message].filter(Boolean).join(' '));
+      return (!selectedStatus || status === selectedStatus) && (!selectedGrade || grade === selectedGrade) && (!selectedBarangay || barangay === selectedBarangay) && (!selectedSchool || school === selectedSchool) && (!selectedYear || year.includes(selectedYear)) && (!search || searchable.includes(search));
+    }
+
+    function currentRecords() {
+      const type = document.getElementById('printType').value;
+      if (type === 'intake') return state.intakes;
+      if (type === 'assessment') return state.assessments;
+      if (type === 'applications') return state.apps;
+      if (type === 'grades') return state.grades.map(grade => ({ ...grade, app_id: grade.app_id || grade.appId }));
+      if (type === 'alerts') {
+        const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+        return state.apps.filter(app => app.status === 'Accepted' && (absences[app.id]?.status === 'yellow' || absences[app.id]?.status === 'bad' || absences[app.id]?.reason)).map(app => ({ ...app, alert: absences[app.id]?.reason || absences[app.id]?.status || 'Formation follow-up' }));
+      }
+      if (type === 'formation' || type === 'directory' || type === 'report-card' || type === 'documents') return state.apps.filter(app => app.status === 'Accepted');
+      if (type === 'families') return state.families;
+      if (type === 'announcements') return state.announcements;
+      return [...state.funds, ...state.disbursements];
+    }
+
+    function recordName(item) { return item.name || item.student || item.familySurname || item.scholarName || item.scholar_name || appFor(item)?.name || 'Unnamed record'; }
+    function sortRecords(records) { return records.sort((a, b) => `${a.grade || a.gradeLevel || appFor(a)?.grade || ''} ${a.barangay || appFor(a)?.barangay || ''} ${recordName(a)}`.localeCompare(`${b.grade || b.gradeLevel || appFor(b)?.grade || ''} ${b.barangay || appFor(b)?.barangay || ''} ${recordName(b)}`, undefined, { numeric: true })); }
+    function renderRows() {
+      const type = document.getElementById('printType').value;
+      let records = currentRecords().filter(matches);
+      if (type === 'formation') {
+        const eventId = document.getElementById('eventFilter').value;
+        if (!eventId) records = [];
+      }
+      visibleRecords = sortRecords(records);
+      const head = document.getElementById('recordHead');
+      const body = document.getElementById('recordBody');
+      const columns = type === 'intake' ? ['Case No.', 'Name', 'School', 'Barangay', 'Date'] : type === 'assessment' ? ['Family', 'Student', 'Result', 'Saved'] : type === 'financials' ? ['Type', 'Name / Source', 'Amount', 'Date / Period'] : type === 'families' ? ['Family', 'Guardian', 'Barangay', 'Bracket', 'Contact'] : type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] : type === 'alerts' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Alert'] : type === 'applications' ? ['Reference', 'Name', 'Grade', 'School', 'Barangay', 'Status'] : type === 'grades' ? ['Scholar', 'School', 'Grade', 'Subject', 'Quarter', 'Score'] : ['Student', 'Grade', 'Barangay', 'School', 'Status'];
+      head.innerHTML = `<tr><th><input type="checkbox" aria-label="Select all visible" onchange="toggleVisibleSelection(this.checked)"></th>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
+      body.innerHTML = visibleRecords.length ? visibleRecords.map((item, index) => {
+        const app = appFor(item) || item;
+        const id = `${document.getElementById('printType').value}-${item.id || app.id || index}`;
+        const cells = type === 'intake' ? [item.caseNo || '-', recordName(item), item.school || app.school || '-', item.barangay || app.barangay || '-', item.savedAt || item.caseDate || item.created_at || '-'] : type === 'assessment' ? [item.familySurname || '-', item.student || '-', item.finalResult || 'Unset', item.savedAt || item.assessmentDate || item.created_at || '-'] : type === 'financials' ? [state.funds.includes(item) ? 'Contribution' : 'Disbursement', item.source || item.scholarName || item.scholar_name || '-', item.amount || '-', item.date || item.period || '-'] : type === 'families' ? [item.surname ? `${item.surname} Family` : '-', item.guardian || '-', item.barangay || '-', item.bracket || '-', item.contact || '-'] : type === 'announcements' ? [item.subject || '-', item.target || '-', item.tag || '-', item.date || item.created_at || '-'] : type === 'alerts' ? [recordName(item), app.grade || '-', app.barangay || '-', app.school || '-', item.alert || item.reason || 'Formation follow-up'] : type === 'applications' ? [item.reference || item.referenceNumber || item.reference_number || item.id || '-', item.name || '-', item.grade || '-', item.school || '-', item.barangay || '-', item.status || '-'] : type === 'grades' ? [app.name || '-', app.school || '-', app.grade || '-', item.subject || item.subject_name || '-', item.quarter || '-', item.grade_val || item.grade || '-'] : [recordName(item), app.grade || '-', app.barangay || '-', app.school || '-', app.status || '-'];
+        return `<tr data-print-id="${escapeHtml(id)}"><td><input type="checkbox" class="record-check" value="${escapeHtml(id)}"></td>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`;
+      }).join('') : `<tr><td colspan="${columns.length + 1}" class="empty">No records match these filters.</td></tr>`;
+      updateSelectionCount();
+    }
+    function toggleVisibleSelection(checked) { document.querySelectorAll('#recordBody .record-check').forEach(input => { input.checked = checked; }); updateSelectionCount(); }
+    function updateSelectionCount() { document.getElementById('selectionCount').textContent = `${document.querySelectorAll('#recordBody .record-check:checked').length} selected`; }
+    document.addEventListener('change', event => { if (event.target.classList.contains('record-check')) updateSelectionCount(); });
+
+    async function printSelected() {
+      const selectedIds = new Set([...document.querySelectorAll('#recordBody .record-check:checked')].map(input => input.value));
+      const records = visibleRecords.filter((item, index) => selectedIds.has(`${document.getElementById('printType').value}-${item.id || appFor(item)?.id || index}`));
+      if (!records.length) { alert('Select at least one visible record to print.'); return; }
+      const type = document.getElementById('printType').value;
+      const html = await buildPrintDocument(type, records);
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Allow popups to print these records.'); return; }
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 500);
+    }
+
+    async function buildPrintDocument(type, records) {
+      let body = '';
+      if (type === 'formation') body = buildFormationPrint(records);
+      else if (type === 'directory') body = buildDirectoryPrint(records);
+      else if (type === 'report-card') body = await buildReportCardsPrint(records);
+      else if (type === 'applications') body = buildApplicationsPrint(records);
+      else if (type === 'grades') body = buildGradesPrint(records);
+      else if (type === 'documents') body = await buildDocumentsPrint(records);
+      else if (type === 'families') body = buildFamiliesPrint(records);
+      else if (type === 'alerts') body = buildAlertsPrint(records);
+      else if (type === 'announcements') body = buildAnnouncementsPrint(records);
+      else if (type === 'financials') body = buildFinancialPrint(records);
+      else if (type === 'intake') body = records.map(buildIntakePrint).join('');
+      else body = records.map(buildAssessmentPrint).join('');
+      return `<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Mass Print</title><style>
+        @page { size:A4; margin:10mm; } * { box-sizing:border-box; } body { font-family:Arial, sans-serif; color:#111; font-size:11px; } h1 { text-align:center; font-size:20px; margin:0 0 4px; } h2 { font-size:15px; margin:0 0 8px; } .org,.meta { text-align:center; } .org { font-size:10px; text-transform:uppercase; letter-spacing:.08em; } .meta { color:#555; margin-bottom:12px; } .record { page-break-after:always; } .record:last-child { page-break-after:auto; } table { width:100%; border-collapse:collapse; margin:8px 0; } th,td { border:1px solid #555; padding:6px; text-align:left; vertical-align:top; } th { background:#eee; font-size:9px; text-transform:uppercase; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .field { border:1px solid #aaa; padding:6px; min-height:28px; } .label { display:block; color:#555; font-size:8px; text-transform:uppercase; margin-bottom:3px; } .signature { display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:28px; } .line { border-top:1px solid #111; padding-top:5px; text-align:center; } .summary { border:1px solid #888; padding:8px; margin-bottom:10px; } .rc-card { page-break-after:always; box-shadow:none !important; border:1px solid #aaa; } .rc-card:last-child { page-break-after:auto; } .rc-head { background:#1a2e44 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; } @media print { .no-print { display:none; } }
+      ${typeof REPORT_CARD_STYLES === 'string' ? REPORT_CARD_STYLES : ''}
+      </style></head><body><div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div><h1>MEFAMDEV Mass Print</h1><div class="meta">Generated ${escapeHtml(new Date().toLocaleString())}</div>${body}</body></html>`;
+    }
+
+    function buildIntakePrint(item) { return `<section class="record"><h2>Intake Sheet</h2><div class="grid"><div class="field"><span class="label">Case No.</span>${escapeHtml(item.caseNo || '-')}</div><div class="field"><span class="label">Name</span>${escapeHtml(item.name || '-')}</div><div class="field"><span class="label">School</span>${escapeHtml(item.school || item.schoolName || '-')}</div><div class="field"><span class="label">Date</span>${escapeHtml(item.caseDate || item.savedAt || item.created_at || '-')}</div><div class="field"><span class="label">Barangay</span>${escapeHtml(item.barangay || '-')}</div><div class="field"><span class="label">Linked applicant</span>${escapeHtml(item.linkedAppId || '-')}</div></div><p>${escapeHtml(item.problem || item.background || item.notes || 'No additional notes recorded.')}</p><div class="signature"><div class="line">Social worker signature</div><div class="line">Supervisor signature</div></div></section>`; }
+    function buildAssessmentPrint(item) { return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Family</span>${escapeHtml(item.familySurname || '-')}</div><div class="field"><span class="label">Student</span>${escapeHtml(item.student || '-')}</div><div class="field"><span class="label">Final result</span>${escapeHtml(item.finalResult || 'Unset')}</div><div class="field"><span class="label">Saved</span>${escapeHtml(item.savedAt || item.assessmentDate || item.created_at || '-')}</div></div><p>${escapeHtml(item.notes || item.assessmentNotes || item.background || 'No assessment notes recorded.')}</p><div class="signature"><div class="line">Staff signature</div><div class="line">Director signature</div></div></section>`; }
+    function buildDirectoryPrint(records) { return `<section><h2>Scholar Directory</h2><table><thead><tr><th>No.</th><th>Name</th><th>Student ID</th><th>Grade</th><th>School</th><th>Barangay</th><th>Contact</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
+    function buildApplicationsPrint(records) { return `<section><h2>Application Register</h2><table><thead><tr><th>Reference</th><th>Name</th><th>Grade</th><th>School</th><th>Barangay</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
+    function buildGradesPrint(records) { return `<section><h2>Grade Register</h2><table><thead><tr><th>Scholar</th><th>School</th><th>Grade</th><th>Subject</th><th>Quarter</th><th>Score</th><th>School Year</th></tr></thead><tbody>${records.map(item => { const app = appFor(item) || {}; return `<tr><td>${escapeHtml(app.name || '-')}</td><td>${escapeHtml(app.school || '-')}</td><td>${escapeHtml(app.grade || '-')}</td><td>${escapeHtml(item.subject || item.subject_name || '-')}</td><td>${escapeHtml(item.quarter || '-')}</td><td>${escapeHtml(item.grade_val || item.grade || '-')}</td><td>${escapeHtml(item.school_year || item.schoolYear || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
+    function buildFormationPrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const attended = new Set((state.events.length && JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}')[event.id] || []).map(String)); const checkins = state.checkins[event.id] || []; checkins.forEach(checkin => { const match = records.find(item => text(item.name) === text(checkin.student_name) || text(item.reference) === text(checkin.student_id)); if (match) attended.add(String(match.id)); }); return `<section><h2>Formation Attendance</h2><div class="summary"><strong>${escapeHtml(event.name || 'Formation event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${attended.has(String(item.id)) ? 'Present' : 'Absent'}</td><td style="height:28px"></td><td></td></tr>`).join('')}</tbody></table></section>`; }
+    async function buildReportCardsPrint(records) { const parts = []; for (const item of records) { const grades = state.grades.filter(grade => Number(grade.app_id || grade.appId) === Number(item.id)); const html = buildReportCardHTML({ name:item.name, gradeLevel:item.grade, school:item.school, refNo:item.reference || item.referenceNumber || item.reference_number || item.id, schoolYear:item.sy || 'N/A' }, grades); parts.push(html); } return parts.join(''); }
+    async function buildDocumentsPrint(records) { const sections = []; for (const item of records) { const docs = await MefamAPI.getDocuments(item.id).catch(() => []); sections.push(`<section class="record"><h2>Document Checklist: ${escapeHtml(item.name || '-')}</h2><table><thead><tr><th>Document</th><th>Status</th><th>Note</th></tr></thead><tbody>${(Array.isArray(docs) ? docs : []).map(doc => `<tr><td>${escapeHtml(doc.label || '-')}</td><td>${escapeHtml(doc.status || '-')}</td><td>${escapeHtml(doc.note || '-')}</td></tr>`).join('')}</tbody></table></section>`); } return sections.join(''); }
+    function buildFamiliesPrint(records) { return `<section><h2>Beneficiary Family Register</h2><table><thead><tr><th>Family</th><th>Guardian</th><th>Barangay</th><th>Contact</th><th>Income</th><th>Bracket</th><th>Benefits</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.surname || '-')}</td><td>${escapeHtml(item.guardian || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td><td>${escapeHtml(item.income || '-')}</td><td>${escapeHtml(item.bracket || '-')}</td><td>${escapeHtml(item.benefits || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
+    function buildAlertsPrint(records) { return `<section><h2>Formation Alert Register</h2><table><thead><tr><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Alert / Reason</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.alert || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
+    function buildAnnouncementsPrint(records) { return `<section><h2>Announcement Register</h2><table><thead><tr><th>Subject</th><th>Target</th><th>Tag</th><th>Message</th><th>Date</th><th>Posted By</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.subject || '-')}</td><td>${escapeHtml(item.target || '-')}</td><td>${escapeHtml(item.tag || '-')}</td><td>${escapeHtml(item.message || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td><td>${escapeHtml(item.postedBy || item.posted_by || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
+    function buildFinancialPrint(records) { return `<section><h2>Financial Registers</h2><table><thead><tr><th>Type</th><th>Name / Source</th><th>Amount</th><th>Date / Period</th><th>Notes</th></tr></thead><tbody>${records.map(item => { const contribution = state.funds.includes(item); return `<tr><td>${contribution ? 'Contribution' : 'Disbursement'}</td><td>${escapeHtml(item.source || item.scholarName || item.scholar_name || '-')}</td><td>${escapeHtml(item.amount || '-')}</td><td>${escapeHtml(item.date || item.period || '-')}</td><td>${escapeHtml(item.notes || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
+
+    function escapeHtml(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  </script>
+</body>
+</html>

@@ -277,8 +277,15 @@
     <div class="card" style="margin-top:20px;">
       <div class="card-title-row">
         <div class="card-title">Attendance Log</div>
-        <input type="text" class="search-input" id="logSearch" placeholder="Search scholars…" oninput="renderAttendance(getAcceptedScholars())">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; width:min(100%, 760px);">
+          <select id="formationPrintEvent" aria-label="Formation event to print" onchange="renderFormationPrintOptions()" style="width:auto; min-width:190px;"></select>
+          <select id="formationPrintGrade" aria-label="Grade level filter" onchange="renderFormationPrintOptions()" style="width:auto; min-width:150px;"></select>
+          <select id="formationPrintBarangay" aria-label="Barangay filter" onchange="renderFormationPrintOptions()" style="width:auto; min-width:150px;"></select>
+          <button class="btn btn-navy btn-sm" type="button" onclick="printFormationAttendance()">🖨️ Print filtered list</button>
+          <input type="text" class="search-input" id="logSearch" placeholder="Search scholars…" oninput="renderAttendance(getAcceptedScholars())">
+        </div>
       </div>
+      <div id="formationPrintCount" style="font-size:.78rem; color:var(--text-muted); margin:-4px 0 10px;"></div>
       <div style="overflow:auto;">
         <table>
           <thead><tr><th>Scholar</th><th>School</th><th>Formation</th><th>Status</th></tr></thead>
@@ -675,6 +682,121 @@
     function getAcceptedScholars() {
       const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
       return (Array.isArray(apps) ? apps : []).filter(a => a.status === 'Accepted');
+    }
+
+    function formationPrintValue(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function renderFormationPrintOptions() {
+      const eventSelect = document.getElementById('formationPrintEvent');
+      const gradeSelect = document.getElementById('formationPrintGrade');
+      const barangaySelect = document.getElementById('formationPrintBarangay');
+      if (!eventSelect || !gradeSelect || !barangaySelect) return;
+
+      const previousEvent = eventSelect.value;
+      const previousGrade = gradeSelect.value;
+      const previousBarangay = barangaySelect.value;
+      const events = sortedEvents();
+      const scholars = getAcceptedScholars();
+      const grades = [...new Set(scholars.map(s => String(s.grade || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+      const barangays = [...new Set(scholars.map(s => String(s.barangay || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+      eventSelect.innerHTML = events.map(event => `<option value="${escapeHtml(String(event.id))}">${escapeHtml(event.name || 'Formation event')} · ${escapeHtml(event.date || 'No date')}</option>`).join('');
+      gradeSelect.innerHTML = '<option value="">All grades</option>' + grades.map(grade => `<option value="${escapeHtml(grade)}">${escapeHtml(grade)}</option>`).join('');
+      barangaySelect.innerHTML = '<option value="">All barangays</option>' + barangays.map(barangay => `<option value="${escapeHtml(barangay)}">${escapeHtml(barangay)}</option>`).join('');
+
+      if (events.some(event => String(event.id) === previousEvent)) eventSelect.value = previousEvent;
+      else if (events.length) eventSelect.value = String(events[0].id);
+      if (grades.includes(previousGrade)) gradeSelect.value = previousGrade;
+      if (barangays.includes(previousBarangay)) barangaySelect.value = previousBarangay;
+
+      const selectedGrade = formationPrintValue(gradeSelect.value);
+      const selectedBarangay = formationPrintValue(barangaySelect.value);
+      const filteredCount = scholars.filter(scholar => {
+        const gradeMatches = !selectedGrade || formationPrintValue(scholar.grade) === selectedGrade;
+        const barangayMatches = !selectedBarangay || formationPrintValue(scholar.barangay) === selectedBarangay;
+        return gradeMatches && barangayMatches;
+      }).length;
+      const countEl = document.getElementById('formationPrintCount');
+      if (countEl) countEl.textContent = `${filteredCount} scholar${filteredCount === 1 ? '' : 's'} match the selected print filters.`;
+    }
+
+    function printFormationAttendance() {
+      renderFormationPrintOptions();
+      const eventId = document.getElementById('formationPrintEvent')?.value;
+      const selectedGrade = document.getElementById('formationPrintGrade')?.value || '';
+      const selectedBarangay = document.getElementById('formationPrintBarangay')?.value || '';
+      const event = sortedEvents().find(item => String(item.id) === String(eventId));
+      if (!event) {
+        showToast('Create or select a formation event first.', 'error');
+        return;
+      }
+
+      const scholars = getAcceptedScholars().filter(scholar => {
+        const gradeMatches = !selectedGrade || formationPrintValue(scholar.grade) === formationPrintValue(selectedGrade);
+        const barangayMatches = !selectedBarangay || formationPrintValue(scholar.barangay) === formationPrintValue(selectedBarangay);
+        return gradeMatches && barangayMatches;
+      }).sort((a, b) => {
+        const gradeOrder = String(a.grade || '').localeCompare(String(b.grade || ''), undefined, { numeric: true });
+        if (gradeOrder !== 0) return gradeOrder;
+        const barangayOrder = String(a.barangay || '').localeCompare(String(b.barangay || ''));
+        if (barangayOrder !== 0) return barangayOrder;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      });
+      if (scholars.length === 0) {
+        showToast('No scholars match the selected grade and barangay.', 'error');
+        return;
+      }
+
+      const attendedIds = getEventAttendanceIds(event, getAcceptedScholars());
+      const rows = scholars.map((scholar, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td><strong>${escapeHtml(scholar.name || '—')}</strong></td>
+          <td>${escapeHtml(String(scholar.reference || scholar.referenceNumber || scholar.reference_number || scholar.id || '—'))}</td>
+          <td>${escapeHtml(scholar.grade || '—')}</td>
+          <td>${escapeHtml(scholar.barangay || '—')}</td>
+          <td>${attendedIds.has(String(scholar.id)) ? 'Present' : 'Absent'}</td>
+          <td class="signature-cell"></td>
+          <td></td>
+        </tr>`).join('');
+      const filterText = [
+        selectedGrade ? `Grade: ${selectedGrade}` : 'All grades',
+        selectedBarangay ? `Barangay: ${selectedBarangay}` : 'All barangays'
+      ].join(' · ');
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('Allow popups to print the attendance sheet.', 'error');
+        return;
+      }
+      printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Formation Attendance - ${escapeHtml(event.name || '')}</title><style>
+        @page { size: A4 landscape; margin: 12mm; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; font-size: 11px; }
+        h1 { margin: 0 0 3px; font-size: 20px; text-align: center; }
+        .org, .meta { text-align: center; }
+        .org { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+        .meta { color: #444; margin: 3px 0; }
+        .filters { margin: 12px 0 10px; padding: 6px 8px; border: 1px solid #999; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #555; padding: 6px 5px; text-align: left; vertical-align: middle; }
+        th { background: #eee; font-size: 9px; text-transform: uppercase; }
+        .signature-cell { width: 150px; height: 28px; }
+        .footer { display: flex; justify-content: space-between; margin-top: 28px; }
+        .sign { width: 220px; border-top: 1px solid #111; padding-top: 5px; text-align: center; }
+        @media print { .no-print { display: none; } }
+      </style></head><body>
+        <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
+        <h1>Formation Attendance Sheet</h1>
+        <div class="meta"><strong>${escapeHtml(event.name || 'Formation event')}</strong></div>
+        <div class="meta">Date: ${escapeHtml(event.date || '—')} · Venue: ${escapeHtml(event.venue || '—')}</div>
+        <div class="filters">Filters: ${escapeHtml(filterText)} · Printed: ${escapeHtml(new Date().toLocaleString())} · Scholars: ${scholars.length}</div>
+        <table><thead><tr><th>No.</th><th>Scholar</th><th>Student ID</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="footer"><div class="sign">Prepared by</div><div class="sign">Checked by</div></div>
+        <scr` + `ipt>window.onload = function () { window.focus(); window.print(); };</scr` + `ipt>
+      </body></html>`);
+      printWindow.document.close();
     }
 
     function getEventAttendanceIds(event, scholars) {
@@ -1080,6 +1202,8 @@
       const events = sortedEvents();
       const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
       const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
+
+      renderFormationPrintOptions();
 
       const formSummary = document.getElementById('formationAttSummary');
       if (formSummary) {
