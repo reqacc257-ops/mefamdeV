@@ -687,8 +687,11 @@
         <div class="nav-item" onclick="nav('profiles',this)" data-roles="director,edu">
             <span class="nav-icon">🎓</span> Scholar Profiles
         </div>
-        <div class="nav-item" onclick="openToolModal('student_grade_card.html', '📄 Student Grade/Card')" data-roles="director,edu" title="Open Student Grade/Card">
-            <span class="nav-icon">📄</span> Student Grade/Card
+        <div class="nav-item" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')" data-roles="director,edu" title="Open Report Cards">
+            <span class="nav-icon">📄</span> Report Cards
+        </div>
+        <div class="nav-item" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')" data-roles="director,edu" title="Open Grade Register">
+            <span class="nav-icon">📊</span> Grade Register
         </div>
         <div class="nav-item" onclick="nav('attendance',this)" data-roles="director,edu,program">
             <span class="nav-icon">📅</span> Attendance Alerts
@@ -2947,7 +2950,7 @@ function closeDocumentPreview() {
 }
 
 function openStudentGradeCard(appId) {
-    openToolModal(`student_grade_card.html?appId=${encodeURIComponent(appId)}`, '📄 Student Grade/Card');
+    openToolModal(`student_grade_card.html?appId=${encodeURIComponent(appId)}`, '📄 Report Cards');
 }
 
 function approveDoc(appId, docKey, containerId) {
