@@ -90,12 +90,12 @@
     .brand-mark{
         flex:0 0 auto;
         width:52px;height:52px;border-radius:14px;
-        display:grid;place-items:center;
-        font-family:Georgia, 'Times New Roman', serif;
-        font-size:26px;line-height:1;
-        color:#12283f;
+        display:block;
+        object-fit:contain;
         background:linear-gradient(140deg,#ffe0a3,#f5a623 55%,#d98508);
         box-shadow:0 10px 26px -8px rgba(245,166,35,.7), inset 0 1px 0 rgba(255,255,255,.7);
+        padding:6px;
+        border:1px solid rgba(255,255,255,.28);
     }
     .header-text{flex:1;min-width:0;}
     .doc-header .org{
@@ -654,6 +654,36 @@
         gap:6px;
         flex-wrap:wrap;
     }
+
+    /* E-sign pill toggle */
+    .esign-pill{
+        display:inline-flex;align-items:center;gap:5px;
+        padding:5px 10px;
+        border:1.5px solid var(--line-2);
+        border-radius:999px;
+        background:#fff;
+        cursor:pointer;
+        font-size:.64rem;
+        font-weight:700;
+        letter-spacing:.06em;
+        text-transform:uppercase;
+        color:var(--muted);
+        user-select:none;
+        transition:all .16s ease;
+        white-space:nowrap;
+    }
+    .esign-pill:hover{border-color:var(--gold);color:var(--accent);background:#fffbf0;}
+    .esign-pill input{
+        width:13px;height:13px;
+        accent-color:var(--gold-2);
+        margin:0;cursor:pointer;
+    }
+    .esign-pill:has(input:checked){
+        border-color:var(--gold-2);
+        background:var(--gold-soft);
+        color:#7a5a00;
+    }
+
     .sig-pad-wrap{
         position:relative;
         height:94px;
@@ -669,6 +699,40 @@
         border-color:var(--gold);
         background:#fffdf8;
     }
+
+    /* Printed-name input (default, non e-sign) */
+    .sig-pad-wrap input.sig-name-input{
+        position:absolute;
+        left:8%;right:8%;
+        bottom:16px;
+        width:auto;
+        padding:2px 6px;
+        border:1.5px dashed transparent;
+        border-radius:6px;
+        background:transparent;
+        text-align:center;
+        font-family:inherit;
+        font-size:.88rem;
+        font-weight:600;
+        color:var(--ink);
+        transition:border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .sig-pad-wrap input.sig-name-input::placeholder{
+        color:var(--muted-2);
+        font-weight:500;
+        font-style:italic;
+    }
+    .sig-pad-wrap input.sig-name-input:hover{
+        border-color:var(--line);
+        background:#f8fafc;
+    }
+    .sig-pad-wrap input.sig-name-input:focus{
+        outline:none;
+        border-color:var(--gold);
+        background:#fff;
+        box-shadow:var(--focus-ring);
+    }
+
     canvas.sig-canvas{
         position:absolute;inset:0;
         width:100%;height:100%;
@@ -693,16 +757,13 @@
         margin-top:6px;
         font-style:italic;
     }
-    .sig-field.is-esign .sig-hint{
-        display:block;
-    }
-    .sig-pad-wrap.is-esign .sig-canvas{
-        opacity:1;
-        pointer-events:auto;
-    }
-    .sig-pad-wrap.is-esign .sig-line{
-        display:none;
-    }
+
+    /* E-sign ON state */
+    .sig-field.is-esign .sig-hint{display:block;}
+    .sig-pad-wrap.is-esign .sig-canvas{opacity:1;pointer-events:auto;}
+    .sig-pad-wrap.is-esign .sig-line{display:none;}
+    .sig-pad-wrap.is-esign input.sig-name-input{display:none;}
+
     .sig-label{
         font-size:.7rem;
         font-weight:700;
@@ -731,14 +792,14 @@
         box-shadow:0 -8px 24px -12px rgba(26,46,68,.15);
     }
 
-    /* ══ PRINT ══ */
-    @page{ size:A4; margin:8mm 10mm; }
+    /* ══ PRINT — compact single page ══ */
+    @page{ size:A4 portrait; margin:6mm 8mm; }
     @media print{
         html,body{
             background:#fff !important;
             color:#000 !important;
-            font-size:8pt;
-            line-height:1.15;
+            font-size:7.2pt;
+            line-height:1.12;
             padding:0;margin:0;
         }
         .shell{
@@ -750,9 +811,10 @@
         .prefill-bar,
         .toolbar,
         .btn-add,
-        .spouse-toggle-row,
         .btn,
+        .spouse-toggle-row,
         .sig-tools,
+        .esign-pill,
         .case-no-actions,
         .auto-badge,
         .sig-hint{display:none !important;}
@@ -769,73 +831,79 @@
             print-color-adjust:exact;
         }
 
+        /* Header */
         .doc-header{
             background:#fff !important;
             color:#000 !important;
             border-bottom:1.5pt solid #000;
-            padding:0 0 5pt;
-            margin-bottom:6pt;
+            padding:0 0 3pt;
+            margin-bottom:4pt;
             break-after:avoid;
             page-break-after:avoid;
         }
         .doc-header::before,
         .doc-header::after{display:none !important;}
+        .header-inner{gap:6pt;}
         .brand-mark{
-            width:26pt;height:26pt;
-            font-size:13pt;
-            border-radius:6pt;
+            width:20pt;height:20pt;
+            font-size:10pt;
+            border-radius:4pt;
             background:#eee !important;
             color:#000 !important;
             box-shadow:none !important;
             border:1pt solid #000;
         }
-        .doc-header .org{font-size:6.5pt;color:#000 !important;letter-spacing:.1em;}
-        .doc-header h1{color:#000 !important;font-size:12pt;margin:1pt 0;}
-        .doc-header .sub{font-size:6.8pt;color:#000 !important;}
+        .doc-header .org{font-size:5.6pt;color:#000 !important;letter-spacing:.1em;}
+        .doc-header h1{color:#000 !important;font-size:11pt;margin:0.5pt 0;}
+        .doc-header .sub{font-size:6pt;color:#000 !important;}
         .header-chip{
             background:#eee !important;
             color:#000 !important;
             border:1pt solid #000;
             box-shadow:none !important;
-            font-size:6pt;
-            padding:2pt 6pt;
+            font-size:5.6pt;
+            padding:1.5pt 5pt;
         }
 
         .doc-body{padding:0;}
 
+        /* Meta cards */
         .meta-card{
             background:#fff !important;
             border:1pt solid #000;
-            padding:4pt 6pt;
-            gap:4pt;
-            margin-bottom:5pt;
+            padding:3pt 5pt !important;
+            gap:3pt !important;
+            margin-bottom:3.5pt !important;
             box-shadow:none !important;
             border-radius:0;
         }
 
+        /* Sections */
         .section{
             background:#fff !important;
             border:.75pt solid #999;
             border-radius:0;
-            padding:5pt 6pt 4pt;
-            margin-bottom:6pt;
+            padding:3.5pt 5pt 3pt;
+            margin-bottom:3.5pt;
             box-shadow:none !important;
         }
         .section:hover{box-shadow:none !important;}
+        .section:last-of-type{margin-bottom:3.5pt;}
         .section-title{
-            font-size:7.6pt;
+            font-size:7pt;
             color:#000 !important;
-            margin-bottom:4pt;
-            padding-bottom:3pt;
+            margin-bottom:3pt;
+            padding-bottom:2pt;
             border-bottom:1pt solid #000;
+            gap:5pt;
             break-after:avoid;
             page-break-after:avoid;
         }
         .section-title::after{display:none !important;}
         .section-title .num{
-            width:12pt;height:12pt;
-            font-size:6pt;
-            border-radius:3pt;
+            width:11pt;height:11pt;
+            font-size:5.6pt;
+            border-radius:2.5pt;
             background:#000 !important;
             color:#fff !important;
             box-shadow:none !important;
@@ -843,33 +911,36 @@
             print-color-adjust:exact;
         }
 
+        /* Fields */
         .field{
-            margin-bottom:2.5pt;
+            margin-bottom:2pt;
             break-inside:avoid;
             page-break-inside:avoid;
         }
         label.fl{
             color:#000 !important;
-            font-size:5.6pt;
-            margin-bottom:0.5pt;
+            font-size:5pt;
+            letter-spacing:.03em;
+            margin-bottom:0.3pt;
         }
         input[type="text"],input[type="date"],input[type="number"],select{
-            padding:1pt 3pt;
-            font-size:7.2pt;
-            height:13pt;
+            padding:0.5pt 2pt;
+            font-size:6.4pt;
+            height:11pt;
         }
         textarea{
-            font-size:7.2pt;
-            min-height:28pt;
-            padding:2pt 4pt;
+            font-size:6.4pt;
+            min-height:19pt;
+            padding:1.5pt 3pt;
+            line-height:1.18;
         }
 
-        .g2,.g3,.g4{gap:4pt;}
+        .g2,.g3,.g4{gap:3pt;}
         .meta-card{grid-template-columns:repeat(4, 1fr);}
 
         .subsection{
             border:1pt solid #000;
-            padding:3pt 5pt;
+            padding:2.5pt 4pt;
             margin-top:2pt;
             background:#fff !important;
             border-radius:0;
@@ -877,20 +948,23 @@
             page-break-inside:avoid;
         }
         .subsection-title{
-            font-size:6.2pt;
-            margin-bottom:3pt;
-            padding-left:4pt;
+            font-size:5.6pt;
+            margin-bottom:2pt;
+            padding-left:3pt;
             border-left:2pt solid #000;
             color:#000 !important;
         }
 
+        /* Family table */
         .table-wrap{
             border:1pt solid #000;
             border-radius:0;
             background:#fff;
+            overflow:visible;
+            margin-top:2pt;
         }
         table.fam-table{
-            font-size:6.2pt;
+            font-size:5.6pt;
             min-width:0;
         }
         .fam-table thead{display:table-header-group;}
@@ -898,8 +972,8 @@
             background:#eee !important;
             color:#000 !important;
             border:1pt solid #000;
-            padding:1.5pt 3pt;
-            font-size:5.6pt;
+            padding:1pt 2pt;
+            font-size:5pt;
             border-radius:0 !important;
             -webkit-print-color-adjust:exact;
             print-color-adjust:exact;
@@ -916,25 +990,28 @@
         .fam-table tbody tr:last-child td{border-bottom:.75pt solid #999;}
         .fam-table td input,
         .fam-table td select{
-            padding:1pt 2pt;
-            font-size:6.2pt;
+            padding:0.5pt 1.5pt;
+            font-size:5.6pt;
             border:none !important;
             background:#fff !important;
+            height:9.5pt;
         }
-        .row-num{font-size:5.6pt;}
+        .row-num{font-size:5pt;}
 
+        /* Action table */
         table.action-table{
-            font-size:6.8pt;
+            font-size:6pt;
             border:1pt solid #000;
             border-radius:0;
             overflow:visible;
+            margin-top:2pt;
         }
         .action-table thead{display:table-header-group;}
         .action-table thead th{
             background:#eee !important;
             color:#000 !important;
-            padding:2pt 4pt;
-            font-size:5.8pt;
+            padding:1pt 3pt;
+            font-size:5.2pt;
             border:1pt solid #000;
             -webkit-print-color-adjust:exact;
             print-color-adjust:exact;
@@ -950,16 +1027,18 @@
         }
         .action-table tbody tr:last-child td{border-bottom:.75pt solid #999;}
         .action-table td input{
-            font-size:6.8pt;
-            padding:1pt 3pt;
+            font-size:6pt;
+            padding:0.5pt 2pt;
+            height:10pt;
             border:none !important;
             background:#fff !important;
         }
 
+        /* Signatures */
         .sig-row{
-            gap:18pt;
-            margin-top:10pt;
-            padding-top:8pt;
+            gap:14pt;
+            margin-top:6pt;
+            padding-top:5pt;
             border-top:.75pt dashed #999;
             break-inside:avoid;
             page-break-inside:avoid;
@@ -969,7 +1048,7 @@
             background:#fff !important;
             border:1pt solid #000;
             border-radius:0;
-            padding:5pt 6pt;
+            padding:3pt 5pt;
             box-shadow:none !important;
             break-inside:avoid;
             page-break-inside:avoid;
@@ -979,32 +1058,48 @@
             border:1pt solid #000;
             border-radius:0;
             background:#fff !important;
+            margin-bottom:0;
         }
         canvas.sig-canvas{display:none !important;}
-        .sig-print-img{
+
+        /* printed name (default) */
+        .sig-pad-wrap input.sig-name-input{
+            position:absolute;
+            left:6%;right:6%;
+            bottom:6pt;
+            width:auto;
+            height:auto;
+            padding:0 !important;
+            border:0 !important;
+            background:transparent !important;
+            text-align:center;
+            font-size:7pt;
+            font-weight:600;
+            color:#000 !important;
+            box-shadow:none !important;
+        }
+        .sig-field.is-esign .sig-pad-wrap input.sig-name-input{display:none !important;}
+
+        .sig-print-img{display:none;}
+        .sig-print-img.has-sig{
             display:block !important;
-            max-height:28pt;
-            margin:0 auto 2pt;
+            max-height:22pt;
+            margin:1pt auto 0;
         }
         .sig-line{
             border-color:#000;
-            bottom:6pt;
-            left:8%;right:8%;
+            bottom:4pt;
+            left:6%;right:6%;
         }
         .sig-label{
-            font-size:6.2pt;
-            margin-top:2pt;
+            font-size:5.6pt;
+            margin-top:1.5pt;
             color:#000 !important;
         }
 
-        tr.fam-row-empty-print{display:none;}
-
-        /* Auto case number visual */
-        .case-no-wrap input{
-            font-size:7.4pt !important;
-            padding-right:3pt !important;
-        }
-        .meta-card .field{margin-bottom:0;}
+        /* Hide empty rows to save space */
+        tr.fam-row-empty-print{display:none !important;}
+        tr.action-row-empty-print{display:none !important;}
     }
 
     /* ══ RESPONSIVE ══ */
@@ -1037,7 +1132,7 @@
     <!-- ══ HEADER ══ -->
     <div class="doc-header">
         <div class="header-inner">
-            <div class="brand-mark" aria-hidden="true">M</div>
+            <img src="mefamdev.png" alt="MEFAMDEV" class="brand-mark">
             <div class="header-text">
                 <h1>Intake Sheet</h1>
             </div>
@@ -1236,33 +1331,48 @@
 
         <!-- ══ SIGNATURES ══ -->
         <div class="sig-row">
-            <div class="sig-field">
+            <div class="sig-field" id="clientSigField">
                 <div class="sig-tools">
                     <span class="sig-tools-label">Client</span>
-                    <button type="button" class="btn btn-add" onclick="clearSig('clientSig')">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        Clear
-                    </button>
+                    <div class="sig-tools-actions">
+                        <label class="esign-pill" title="Draw a signature instead of typing a printed name">
+                            <input type="checkbox" onchange="toggleEsign('clientSig', this.checked)">
+                            <span>E-Sign</span>
+                        </label>
+                        <button type="button" class="btn btn-add" onclick="clearSig('clientSig')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Clear
+                        </button>
+                    </div>
                 </div>
                 <div class="sig-pad-wrap">
                     <canvas class="sig-canvas" id="clientSig"></canvas>
                     <img class="sig-print-img" id="clientSigImg" alt="">
+                    <input type="text" class="sig-name-input" id="clientSigName" placeholder="Type printed name">
                     <div class="sig-line"></div>
                 </div>
                 <div class="sig-hint">Sign above with mouse or finger</div>
                 <div class="sig-label">Client's Signature over Printed Name</div>
             </div>
-            <div class="sig-field">
+
+            <div class="sig-field" id="staffSigField">
                 <div class="sig-tools">
                     <span class="sig-tools-label">Interviewer</span>
-                    <button type="button" class="btn btn-add" onclick="clearSig('staffSig')">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        Clear
-                    </button>
+                    <div class="sig-tools-actions">
+                        <label class="esign-pill" title="Draw a signature instead of typing a printed name">
+                            <input type="checkbox" onchange="toggleEsign('staffSig', this.checked)">
+                            <span>E-Sign</span>
+                        </label>
+                        <button type="button" class="btn btn-add" onclick="clearSig('staffSig')">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Clear
+                        </button>
+                    </div>
                 </div>
                 <div class="sig-pad-wrap">
                     <canvas class="sig-canvas" id="staffSig"></canvas>
                     <img class="sig-print-img" id="staffSigImg" alt="">
+                    <input type="text" class="sig-name-input" id="staffSigName" placeholder="Type printed name">
                     <div class="sig-line"></div>
                 </div>
                 <div class="sig-hint">Sign above with mouse or finger</div>
@@ -1322,7 +1432,6 @@ function generateCaseNo(dateStr) {
 function regenerateCaseNo(force) {
     const input = document.getElementById('caseNo');
     if (!input) return;
-    // If user has manually edited and this isn't a force, don't overwrite
     if (!force && input.value && input.value !== lastAutoCaseNo) return;
     const dateVal = document.getElementById('caseDate')?.value || '';
     const newNo = generateCaseNo(dateVal);
@@ -1377,6 +1486,7 @@ window.onload = function () {
 
 /* ── Signature pads ── */
 const sigPads = {};
+
 function initSigPad(id) {
     const canvas = document.getElementById(id);
     if (!canvas) return;
@@ -1393,6 +1503,10 @@ function initSigPad(id) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = '#1a2332';
+
+    // Avoid stacking duplicate listeners if re-initialised
+    if (canvas.dataset.sigBound === '1') { sigPads[id] = { canvas, ctx }; return; }
+    canvas.dataset.sigBound = '1';
 
     let drawing = false, lastX = 0, lastY = 0;
     function pos(e) {
@@ -1418,13 +1532,48 @@ function initSigPad(id) {
 
     sigPads[id] = { canvas, ctx };
 }
+
+function ensureSigPadReady(id) {
+    const pad = sigPads[id];
+    if (!pad) { initSigPad(id); return; }
+    const rect = pad.canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) initSigPad(id);
+}
+
+/* ── E-sign on/off ── */
+function setEsign(id, on) {
+    const canvas = document.getElementById(id);
+    const field = canvas ? canvas.closest('.sig-field') : null;
+    if (!field) return;
+    const wrap = field.querySelector('.sig-pad-wrap');
+    const cb = field.querySelector('.esign-pill input');
+    if (cb) cb.checked = !!on;
+    field.classList.toggle('is-esign', !!on);
+    if (wrap) wrap.classList.toggle('is-esign', !!on);
+}
+
+function toggleEsign(id, on) {
+    setEsign(id, on);
+    if (on) {
+        ensureSigPadReady(id);
+        // Give the browser a tick so the canvas has layout before drawing
+        setTimeout(() => ensureSigPadReady(id), 60);
+    }
+}
+
+function isEsignOn(id) {
+    const canvas = document.getElementById(id);
+    const field = canvas ? canvas.closest('.sig-field') : null;
+    return !!(field && field.classList.contains('is-esign'));
+}
+
 function clearSig(id) {
     const pad = sigPads[id];
-    if (!pad) return;
-    pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
+    if (pad && pad.ctx) pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
     const img = document.getElementById(id + 'Img');
-    if (img) img.src = '';
+    if (img) { img.src = ''; img.classList.remove('has-sig'); }
 }
+
 function isSigEmpty(id) {
     const pad = sigPads[id];
     if (!pad || !pad.canvas || !pad.ctx) return true;
@@ -1433,15 +1582,18 @@ function isSigEmpty(id) {
     for (let i = 3; i < data.length; i += 4) { if (data[i] !== 0) return false; }
     return true;
 }
+
 function getSigDataUrl(id) {
     const pad = sigPads[id];
     if (!pad || !pad.canvas || !pad.ctx || pad.canvas.width <= 0 || pad.canvas.height <= 0 || isSigEmpty(id)) return '';
     return pad.canvas.toDataURL('image/png');
 }
+
 function setSigFromDataUrl(id, dataUrl) {
     if (!dataUrl) return;
     const pad = sigPads[id];
     if (!pad) return;
+    ensureSigPadReady(id);
     const img = new Image();
     img.onload = function () {
         const rect = pad.canvas.getBoundingClientRect();
@@ -1449,10 +1601,14 @@ function setSigFromDataUrl(id, dataUrl) {
     };
     img.src = dataUrl;
 }
+
 function prepareSigImagesForPrint() {
     ['clientSig', 'staffSig'].forEach(id => {
         const img = document.getElementById(id + 'Img');
-        if (img) img.src = getSigDataUrl(id);
+        if (!img) return;
+        const url = isEsignOn(id) ? getSigDataUrl(id) : '';
+        img.src = url || '';
+        img.classList.toggle('has-sig', !!url);
     });
 }
 
@@ -1696,7 +1852,7 @@ function loadSavedIntakeRecord(recordId) {
     linkedAppId = record.linkedAppId || null;
 
     setVal('caseNo', record.caseNo || '');
-    lastAutoCaseNo = record.caseNo || ''; // prevent auto-overwrite
+    lastAutoCaseNo = record.caseNo || '';
     setVal('caseDate', record.caseDate || '');
     setVal('caseCategory', record.caseCategory || '');
     setVal('caseReferral', record.caseReferral || '');
@@ -1765,8 +1921,13 @@ function loadSavedIntakeRecord(recordId) {
         if (inputs[1]) inputs[1].value = actionRows[i]?.plan || '';
     }
 
-    if (record.clientSignature) setSigFromDataUrl('clientSig', record.clientSignature);
-    if (record.staffSignature) setSigFromDataUrl('staffSig', record.staffSignature);
+    /* Signatures — restore printed name + e-sign state */
+    setVal('clientSigName', record.clientPrintedName || '');
+    setVal('staffSigName', record.staffPrintedName || '');
+    setEsign('clientSig', !!record.clientEsign);
+    setEsign('staffSig', !!record.staffEsign);
+    if (record.clientEsign && record.clientSignature) setSigFromDataUrl('clientSig', record.clientSignature);
+    if (record.staffEsign && record.staffSignature) setSigFromDataUrl('staffSig', record.staffSignature);
 
     if (linkedAppId) selectPrefillApplicant(linkedAppId);
 }
@@ -1801,6 +1962,9 @@ function collectData() {
     }
     const schoolName = (linkedApp?.school || linkedApp?.schoolName || linkedApp?.school_name || '').toString().trim();
 
+    const clientEsign = isEsignOn('clientSig');
+    const staffEsign  = isEsignOn('staffSig');
+
     return {
         id: window.currentIntakeId || Date.now(),
         caseNo: document.getElementById('caseNo').value,
@@ -1828,8 +1992,13 @@ function collectData() {
         actionPlan: actionRows,
         school: schoolName,
         schoolName: schoolName,
-        clientSignature: getSigDataUrl('clientSig'),
-        staffSignature: getSigDataUrl('staffSig'),
+        /* Signatures */
+        clientEsign: clientEsign,
+        staffEsign: staffEsign,
+        clientPrintedName: document.getElementById('clientSigName')?.value || '',
+        staffPrintedName: document.getElementById('staffSigName')?.value || '',
+        clientSignature: clientEsign ? getSigDataUrl('clientSig') : '',
+        staffSignature: staffEsign ? getSigDataUrl('staffSig') : '',
         linkedAppId,
         savedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     };
@@ -1842,10 +2011,8 @@ function clearForm() {
     document.getElementById('iNationality').value = 'Filipino';
     document.getElementById('iOccup').value = 'Student';
     document.getElementById('caseReferral').value = 'Online Application';
-    // Reset case no
     lastAutoCaseNo = '';
     regenerateCaseNo(true);
-    // Reset editing state
     const wrap = document.getElementById('caseNoWrap');
     const caseInput = document.getElementById('caseNo');
     if (wrap && caseInput) {
@@ -1856,6 +2023,11 @@ function clearForm() {
     const tbody = document.getElementById('famTableBody');
     while (tbody.rows.length > 0) tbody.removeChild(tbody.lastChild);
     for (let i = 0; i < 5; i++) addFamRow();
+
+    const actionBody = document.getElementById('actionBody');
+    while (actionBody.rows.length > 0) actionBody.removeChild(actionBody.lastChild);
+    for (let i = 0; i < 3; i++) addActionRow();
+
     linkedAppId = null;
     currentIntakeId = null;
     const cb = document.getElementById('includeSpouse'); if (cb) { cb.checked = false; }
@@ -1864,17 +2036,32 @@ function clearForm() {
     if (searchInput) searchInput.value = '';
     const detail = document.getElementById('prefillDetail');
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
+
+    /* Reset signatures to default (printed name) mode */
+    setEsign('clientSig', false);
+    setEsign('staffSig', false);
     clearSig('clientSig');
     clearSig('staffSig');
 }
 
-function printIntakeSheet() {
-    // hide fully empty family rows in print to save space
-    document.querySelectorAll('#famTableBody tr').forEach(tr => {
-        const inputs = tr.querySelectorAll('input, select');
-        const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
-        tr.classList.toggle('fam-row-empty-print', !hasData);
+/* Mark empty rows so print can drop them (keeps at least one blank row) */
+function markEmptyRows(selector, cls) {
+    const rows = Array.from(document.querySelectorAll(selector + ' tr'));
+    if (!rows.length) return;
+    let anyData = false;
+    rows.forEach(tr => {
+        const fields = tr.querySelectorAll('input, select');
+        const has = Array.from(fields).some(f => String(f.value || '').trim() !== '');
+        tr.dataset.hasData = has ? '1' : '0';
+        if (has) anyData = true;
     });
+    if (!anyData) rows[0].dataset.hasData = '1';
+    rows.forEach(tr => tr.classList.toggle(cls, tr.dataset.hasData !== '1'));
+}
+
+function printIntakeSheet() {
+    markEmptyRows('#famTableBody', 'fam-row-empty-print');
+    markEmptyRows('#actionBody', 'action-row-empty-print');
     prepareSigImagesForPrint();
     setTimeout(() => window.print(), 30);
 }
