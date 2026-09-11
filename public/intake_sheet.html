@@ -639,12 +639,20 @@
         display:flex;
         justify-content:space-between;
         align-items:center;
+        gap:8px;
         margin-bottom:8px;
     }
     .sig-tools-label{
         font-size:.65rem;font-weight:700;
         text-transform:uppercase;letter-spacing:.08em;
         color:var(--muted);
+    }
+    .sig-tools-actions{
+        display:flex;
+        align-items:center;
+        justify-content:flex-end;
+        gap:6px;
+        flex-wrap:wrap;
     }
     .sig-pad-wrap{
         position:relative;
@@ -667,6 +675,9 @@
         cursor:crosshair;
         touch-action:none;
         display:block;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity .18s ease;
     }
     .sig-line{
         position:absolute;
@@ -675,11 +686,22 @@
         pointer-events:none;
     }
     .sig-hint{
+        display:none;
         font-size:.66rem;
         color:var(--muted-2);
         text-align:center;
         margin-top:6px;
         font-style:italic;
+    }
+    .sig-field.is-esign .sig-hint{
+        display:block;
+    }
+    .sig-pad-wrap.is-esign .sig-canvas{
+        opacity:1;
+        pointer-events:auto;
+    }
+    .sig-pad-wrap.is-esign .sig-line{
+        display:none;
     }
     .sig-label{
         font-size:.7rem;
@@ -1017,9 +1039,7 @@
         <div class="header-inner">
             <div class="brand-mark" aria-hidden="true">M</div>
             <div class="header-text">
-                <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
                 <h1>Intake Sheet</h1>
-                <div class="sub">Social Case Study Record · MEFAMDEV Angat, Bulacan Chapter</div>
             </div>
         </div>
     </div>
