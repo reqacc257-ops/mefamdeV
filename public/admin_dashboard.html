@@ -300,6 +300,7 @@
         /* ── Stat boxes ── */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; margin-bottom: 22px; }
         .stat-card {
+            --card-accent: var(--gold);
             background: var(--white); border-radius: var(--radius);
             padding: 18px 20px; box-shadow: var(--shadow-sm);
             border-top: 4px solid var(--gold); position: relative; overflow: hidden;
@@ -311,9 +312,10 @@
         }
         .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
         .stat-card:focus-visible { outline: none; box-shadow: var(--focus-ring), var(--shadow); }
-        .stat-card::after {
-            content: attr(data-icon); position: absolute; right: 14px; top: 14px;
-            font-size: 1.7rem; opacity: .15;
+        .stat-card .stat-icon {
+            position: absolute; right: 14px; top: 14px;
+            font-size: 1.35rem; line-height: 1; opacity: .18;
+            color: var(--card-accent);
         }
         .stat-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 8px; }
         .stat-value { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--navy); line-height: 1; }
@@ -1086,22 +1088,26 @@
 
             <!-- Director stats -->
             <div class="stats-grid" data-roles="director">
-                <button type="button" class="stat-card" data-icon="FAM" style="border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))">
+                <button type="button" class="stat-card" style="--card-accent:#1abc9c; border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))">
+                    <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-people-roof"></i></span>
                     <div class="stat-label">Beneficiary Families</div>
                     <div class="stat-value" id="dash-families">0</div>
                     <div class="stat-sub">Angat, Bulacan</div>
                 </button>
-                <button type="button" class="stat-card" data-icon="SCH" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))">
+                <button type="button" class="stat-card" style="--card-accent:#3498db; border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))">
+                    <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-user-graduate"></i></span>
                     <div class="stat-label">Active Scholars</div>
                     <div class="stat-value" id="dash-scholars">0</div>
                     <div class="stat-sub">Accepted applicants</div>
                 </button>
-                <button type="button" class="stat-card" data-icon="APP" style="border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))">
+                <button type="button" class="stat-card" style="--card-accent:#e67e22; border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))">
+                    <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-file-lines"></i></span>
                     <div class="stat-label">Pending Applications</div>
                     <div class="stat-value" id="dash-pending">0</div>
                     <div class="stat-sub">Needs review</div>
                 </button>
-                <button type="button" class="stat-card" data-icon="BUD" style="border-top-color:#8e44ad;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))">
+                <button type="button" class="stat-card" style="--card-accent:#8e44ad; border-top-color:#8e44ad;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))">
+                    <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
                     <div class="stat-label">Budget Remaining</div>
                     <div class="stat-value" id="dash-balance">₱0</div>
                     <div class="stat-sub">Current fund balance</div>
@@ -1110,23 +1116,23 @@
 
             <!-- Edu stats -->
             <div class="stats-grid" data-roles="edu">
-                <button type="button" class="stat-card" data-icon="SCH" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
-                <button type="button" class="stat-card" data-icon="ALR" style="border-top-color:#e74c3c;" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')"><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
-                <button type="button" class="stat-card" data-icon="RPT" style="border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#3498db; border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-user-graduate"></i></span><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c;" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-file-contract"></i></span><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
             </div>
 
             <!-- Finance stats -->
             <div class="stats-grid" data-roles="finance">
-                <button type="button" class="stat-card" data-icon="FAM" style="border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))"><div class="stat-label">Beneficiary Families</div><div class="stat-value" id="fin-families">0</div></button>
-                <button type="button" class="stat-card" data-icon="DIS" style="border-top-color:#27ae60;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><div class="stat-label">Stipends Disbursed</div><div class="stat-value" id="fin-stipends-dash">₱0</div></button>
-                <button type="button" class="stat-card" data-icon="REC" style="border-top-color:#e67e22;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><div class="stat-label">Pending Receipts</div><div class="stat-value">0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#1abc9c; border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-people-roof"></i></span><div class="stat-label">Beneficiary Families</div><div class="stat-value" id="fin-families">0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-money-bill-wave"></i></span><div class="stat-label">Stipends Disbursed</div><div class="stat-value" id="fin-stipends-dash">₱0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e67e22; border-top-color:#e67e22;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-receipt"></i></span><div class="stat-label">Pending Receipts</div><div class="stat-value">0</div></button>
             </div>
 
             <!-- Program stats -->
             <div class="stats-grid" data-roles="program">
-                <button type="button" class="stat-card" data-icon="APP" style="border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))"><div class="stat-label">New Applicants</div><div class="stat-value" id="prog-pending">0</div></button>
-                <button type="button" class="stat-card" data-icon="ATT" style="border-top-color:#27ae60;" onclick="nav('events', document.querySelector('.nav-item[onclick*=events]'))"><div class="stat-label">Avg. Formation Attendance</div><div class="stat-value" id="prog-formation-avg">0%</div></button>
-                <button type="button" class="stat-card" data-icon="ABS" style="border-top-color:#e74c3c;" onclick="nav('attendance', document.querySelector('.nav-item[onclick*=attendance]'))"><div class="stat-label">Absentee Alerts</div><div class="stat-value" id="prog-absentee">0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e67e22; border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-user-plus"></i></span><div class="stat-label">New Applicants</div><div class="stat-value" id="prog-pending">0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="nav('events', document.querySelector('.nav-item[onclick*=events]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span><div class="stat-label">Avg. Formation Attendance</div><div class="stat-value" id="prog-formation-avg">0%</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c;" onclick="nav('attendance', document.querySelector('.nav-item[onclick*=attendance]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-circle-exclamation"></i></span><div class="stat-label">Absentee Alerts</div><div class="stat-value" id="prog-absentee">0</div></button>
             </div>
 
             <!-- Charts -->
@@ -1508,10 +1514,10 @@
         ═══════════════════════════════════════════════ -->
         <div id="financials" class="page">
             <div class="stats-grid" style="margin-bottom:20px;">
-                <div class="stat-card" data-icon="BUD" style="border-top-color:#8e44ad; cursor:default;"><div class="stat-label">Total Fund Balance</div><div class="stat-value" id="fin-balance">₱0</div><div class="stat-sub">Available for disbursement</div></div>
-                <div class="stat-card" data-icon="DIS" style="border-top-color:#e74c3c; cursor:default;"><div class="stat-label">Total Disbursed</div><div class="stat-value" id="fin-disbursed">₱0</div><div class="stat-sub">All time</div></div>
-                <div class="stat-card" data-icon="ADD" style="border-top-color:#27ae60; cursor:default;"><div class="stat-label">Total Funds Added</div><div class="stat-value" id="fin-added">₱0</div><div class="stat-sub">All contributions</div></div>
-                <div class="stat-card" data-icon="SCH" style="border-top-color:#3498db; cursor:default;"><div class="stat-label">Active Scholars</div><div class="stat-value" id="fin-scholars">0</div><div class="stat-sub">Receiving stipends</div></div>
+                <div class="stat-card" style="--card-accent:#8e44ad; border-top-color:#8e44ad; cursor:default;"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span><div class="stat-label">Total Fund Balance</div><div class="stat-value" id="fin-balance">₱0</div><div class="stat-sub">Available for disbursement</div></div>
+                <div class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c; cursor:default;"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-hand-holding-dollar"></i></span><div class="stat-label">Total Disbursed</div><div class="stat-value" id="fin-disbursed">₱0</div><div class="stat-sub">All time</div></div>
+                <div class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60; cursor:default;"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-circle-plus"></i></span><div class="stat-label">Total Funds Added</div><div class="stat-value" id="fin-added">₱0</div><div class="stat-sub">All contributions</div></div>
+                <div class="stat-card" style="--card-accent:#3498db; border-top-color:#3498db; cursor:default;"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-user-graduate"></i></span><div class="stat-label">Active Scholars</div><div class="stat-value" id="fin-scholars">0</div><div class="stat-sub">Receiving stipends</div></div>
             </div>
 
             <div class="grid-2eq" style="align-items:start; margin-bottom:20px;">
