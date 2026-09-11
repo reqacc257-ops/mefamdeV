@@ -592,10 +592,10 @@
 
         <!-- ══ Toolbar ══ -->
         <div class="toolbar">
-            <a href="admin_dashboard.html" class="btn btn-ghost">← Dashboard</a>
+            <button type="button" class="btn btn-ghost" id="backBtn">← Back</button>
             <button type="button" class="btn btn-ghost" id="clearBtn">🗑 Clear Form</button>
             <button type="button" class="btn btn-navy" id="printBtn">🖨 Print</button>
-            <button type="button" class="btn btn-gold" id="saveBtn">💾 Save to Dashboard</button>
+            <button type="button" class="btn btn-gold" id="saveBtn">💾 Save Draft</button>
         </div>
 
     </div><!-- /doc-body -->
@@ -607,7 +607,7 @@
         <div class="modal-icon" aria-hidden="true">📝</div>
         <h2 id="exitModalTitle">May hindi pa naisave na pagbabago</h2>
         <p class="modal-text">
-            May mga bagong sagot na hindi pa naka-save sa dashboard.<br>
+            May mga bagong sagot na hindi pa naka-save sa form na ito.<br>
             Ano ang gusto mong gawin?
         </p>
         <div class="modal-actions">
@@ -1490,6 +1490,13 @@ function init() {
     $('saveBtn').addEventListener('click', saveAssessment);
     $('clearBtn').addEventListener('click', clearAll);
     $('printBtn').addEventListener('click', () => window.print());
+    $('backBtn').addEventListener('click', () => {
+        if (state.dirty) {
+            requestExit('admin_dashboard.html');
+            return;
+        }
+        window.location.href = 'admin_dashboard.html';
+    });
 
     ['metaFamily', 'metaBarangay', 'metaGabay', 'metaStudent', 'metaSY', 'narrativeAssessment']
         .forEach(id => {
@@ -1500,7 +1507,7 @@ function init() {
     // Wire up the custom exit modal
     bindExitModal();
 
-    // Intercept in-app navigation (Dashboard link, etc.)
+    // Intercept in-app navigation links to protect unsaved changes
     document.querySelectorAll('a[href]').forEach(a => {
         const href = a.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) return;
