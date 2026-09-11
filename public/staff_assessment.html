@@ -592,7 +592,6 @@
 
         <!-- ══ Toolbar ══ -->
         <div class="toolbar">
-            <button type="button" class="btn btn-ghost" id="backBtn">← Back</button>
             <button type="button" class="btn btn-ghost" id="clearBtn">🗑 Clear Form</button>
             <button type="button" class="btn btn-navy" id="printBtn">🖨 Print</button>
             <button type="button" class="btn btn-gold" id="saveBtn">💾 Save Draft</button>
@@ -1490,13 +1489,6 @@ function init() {
     $('saveBtn').addEventListener('click', saveAssessment);
     $('clearBtn').addEventListener('click', clearAll);
     $('printBtn').addEventListener('click', () => window.print());
-    $('backBtn').addEventListener('click', () => {
-        if (state.dirty) {
-            requestExit('admin_dashboard.html');
-            return;
-        }
-        window.location.href = 'admin_dashboard.html';
-    });
 
     ['metaFamily', 'metaBarangay', 'metaGabay', 'metaStudent', 'metaSY', 'narrativeAssessment']
         .forEach(id => {
