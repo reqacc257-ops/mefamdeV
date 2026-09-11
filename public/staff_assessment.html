@@ -146,6 +146,12 @@
     .instructions strong { color: var(--navy); }
     .instructions ul { margin: 6px 0 0 18px; }
 
+    /* Print-only condensed instruction (hidden on screen) */
+    .print-only-instr { display: none; }
+
+    /* Print-only signature block (hidden on screen) */
+    .print-signatures { display: none; }
+
     /* ── Indicator table ────────────────────────────────── */
     .indicator-table {
         border: 1.5px solid var(--border);
@@ -413,45 +419,273 @@
     .modal-btn-cancel       { background: #eef0f4; color: var(--text); }
     .modal-btn-cancel:hover { background: #e2e5ea; }
 
-    @media print { .modal-overlay { display: none !important; } }
-
-    /* ── Print ──────────────────────────────────────────── */
+    /* ═══════════════════════════════════════════════════════
+       PRINT — pure black & white, compact, one A4 page
+       ═══════════════════════════════════════════════════════ */
     @media print {
-        @page { margin: 12mm; }
+        @page {
+            size: A4 portrait;
+            margin: 9mm 10mm 8mm;
+        }
+
+        html, body {
+            background: #fff !important;
+            color: #000 !important;
+        }
+
         body {
-            background: #fff; padding: 0; font-size: 11.5pt;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 8.5pt;
+            line-height: 1.22;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
-        .prefill-bar, .toolbar, .toast-stack, .draft-bar, #resetAutoBtn { display: none !important; }
 
+        .shell { max-width: 100%; margin: 0; }
+
+        /* Hide everything interactive */
+        .toolbar,
+        .prefill-bar,
+        .draft-bar,
+        .toast-stack,
+        .modal-overlay,
+        .legend-pill,
+        #resetAutoBtn,
+        .instructions strong,
+        .instructions ul {
+            display: none !important;
+        }
+
+        .print-only-instr { display: block !important; }
+
+        /* ── Header ── */
         .doc-header {
-            background: #fff !important; color: #000 !important;
-            border-bottom: 2px solid #000; border-radius: 0;
+            background: #fff !important;
+            color: #000 !important;
+            border-bottom: 2px solid #000;
+            border-radius: 0;
+            padding: 0 0 5px;
+            text-align: center;
         }
-        .doc-header h1, .doc-header .org, .doc-header .sub { color: #000 !important; }
-        .doc-header::before { display: none; }
-        .legend-pill { display: none; }
+        .doc-header::before { display: none !important; }
+        .doc-header .org {
+            color: #000 !important; font-size: 6.8pt;
+            letter-spacing: .09em; margin-bottom: 1px;
+        }
+        .doc-header h1 { color: #000 !important; font-size: 15pt; margin: 0; line-height: 1.1; }
+        .doc-header .sub { color: #000 !important; font-size: 7.2pt; }
 
-        .doc-body { box-shadow: none; padding: 14px 0; border-radius: 0; }
+        .doc-body {
+            box-shadow: none !important;
+            border-radius: 0;
+            padding: 6px 0 0 !important;
+            background: #fff !important;
+        }
+
+        /* ── Meta fields → underlined blanks ── */
+        .meta-row { gap: 8px; margin-bottom: 5px; grid-template-columns: repeat(3, 1fr); }
+        .field { margin-bottom: 0; }
+        label.fl {
+            font-size: 6.4pt; color: #000 !important;
+            margin-bottom: 0; letter-spacing: .03em;
+        }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            border: 0 !important;
+            border-bottom: 1px solid #000 !important;
+            border-radius: 0 !important;
+            background: #fff !important;
+            color: #000 !important;
+            padding: 1px 2px !important;
+            font-size: 8pt !important;
+            box-shadow: none !important;
+        }
+
+        /* ── Instructions (condensed) ── */
+        .instructions {
+            background: #fff !important;
+            border: 0;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            border-radius: 0;
+            padding: 3px 0;
+            margin-bottom: 6px;
+            font-size: 7pt;
+            color: #000 !important;
+            line-height: 1.35;
+        }
+
+        /* ── Indicator table ── */
+        .indicator-table {
+            border: 1.5px solid #000;
+            border-radius: 0;
+            margin-bottom: 7px;
+        }
+        .category {
+            border-bottom: 1px solid #000;
+            break-inside: avoid; page-break-inside: avoid;
+        }
+        .category:last-child { border-bottom: 0; }
 
         .category-header {
-            background: #e8ecf1 !important; color: #000 !important;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            background: #fff !important;
+            color: #000 !important;
+            border-bottom: 1px solid #000;
+            padding: 2px 6px;
+            font-size: 7.4pt;
+            letter-spacing: .05em;
+            break-after: avoid; page-break-after: avoid;
         }
-        .indicator-row { break-inside: avoid; page-break-inside: avoid; }
-        .summary-panel { break-inside: avoid; page-break-inside: avoid; }
+        .category-header .cat-icon { font-size: 7.5pt; }
 
-        .toggle-btn { color: #ccc !important; }
-        .toggle-btn.check-active {
-            color: #1e7a41 !important; background: #e9f7ef !important;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        .indicator-row {
+            border-bottom: 1px solid #c9c9c9;
+            break-inside: avoid; page-break-inside: avoid;
         }
-        .toggle-btn.x-active {
-            color: #b3261e !important; background: #fdedeb !important;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        .indicator-row:last-child { border-bottom: 0; }
+        .indicator-row:hover { background: transparent !important; }
+
+        .ind-num {
+            width: 17px; flex: 0 0 17px;
+            font-size: 6.4pt; color: #000 !important;
+            padding: 2px 0;
         }
-        .result-above, .result-below, .result-unknown {
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        .ind-text {
+            padding: 2px 5px;
+            font-size: 7.8pt;
+            color: #000 !important;
+            border-left: 1px solid #c9c9c9;
+        }
+        .ind-text .ind-note { font-size: 6.6pt; color: #333 !important; }
+
+        .ind-score {
+            width: 38px; flex: 0 0 38px;
+            border-left: 1px solid #c9c9c9;
+        }
+
+        /* Only the chosen symbol prints — solid black, boxed */
+        .ind-score .toggle-btn { display: none; }
+        .ind-score .toggle-btn.check-active,
+        .ind-score .toggle-btn.x-active {
+            display: flex; align-items: center; justify-content: center;
+            flex: 1 1 100%;
+            font-size: 11pt;
+            font-weight: 700;
+            color: #000 !important;
+            background: #fff !important;
+            box-shadow: inset 0 0 0 1px #000;
+        }
+
+        .ind-no-count { background: #fff !important; }
+        .ind-no-count .ind-num,
+        .ind-no-count .ind-text,
+        .ind-no-count .ind-text strong { color: #000 !important; }
+
+        /* Sub-inputs become inline blanks */
+        .ind-subinput {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            margin: 1px 12px 0 0;
+        }
+        .ind-subinput .sub-label {
+            font-size: 6.6pt; color: #000 !important;
+            white-space: nowrap; font-style: normal;
+        }
+        .ind-subinput input {
+            flex: 0 0 auto;
+            width: 110px;
+            border: 0 !important;
+            border-bottom: 1px solid #000 !important;
+            border-radius: 0 !important;
+            padding: 0 3px !important;
+            font-size: 7.4pt !important;
+        }
+
+        /* ── Summary ── */
+        .summary-panel {
+            background: #fff !important;
+            border: 1.5px solid #000;
+            border-radius: 0;
+            padding: 5px 7px;
+            margin: 7px 0;
+            break-inside: avoid; page-break-inside: avoid;
+        }
+        .summary-panel h3 { font-size: 8.5pt; color: #000 !important; margin-bottom: 4px; }
+        .summary-grid { gap: 5px; margin-bottom: 5px; }
+        .sum-box { border: 1px solid #000; border-radius: 0; padding: 2px 4px; background: #fff !important; }
+        .sum-box .sum-val { font-size: 11.5pt; color: #000 !important; }
+        .sum-box .sum-label { font-size: 6.2pt; color: #000 !important; }
+
+        .assessment-result {
+            background: #fff !important;
+            color: #000 !important;
+            border: 1.5px solid #000 !important;
+            border-radius: 0;
+            padding: 3px 6px;
+            font-size: 8.4pt;
+            margin-top: 0;
+        }
+        .assessment-result small {
+            opacity: 1 !important;
+            color: #000 !important;
+            font-size: 6.8pt;
+        }
+
+        .threshold-notes {
+            background: #fff !important;
+            border: 1px solid #000;
+            border-radius: 0;
+            color: #000 !important;
+            padding: 3px 5px;
+            margin-top: 5px;
+            font-size: 6.8pt;
+            line-height: 1.4;
+        }
+
+        /* ── Final assessment ── */
+        .section-label { font-size: 6.8pt; color: #000 !important; margin-bottom: 2px; }
+        .final-options { gap: 8px; margin-bottom: 6px; }
+        .final-options label {
+            border: 1.5px solid #000;
+            border-radius: 0;
+            padding: 3px 10px;
+            font-size: 8pt;
+            background: #fff !important;
+            flex: 1 1 200px;
+        }
+        .final-options label.is-above,
+        .final-options label.is-below {
+            border-color: #000 !important;
+            background: #fff !important;
+        }
+        .final-options input { accent-color: #000; }
+
+        /* ── Narrative ── */
+        #narrativeAssessment {
+            border: 1.5px solid #000 !important;
+            border-radius: 0 !important;
+            min-height: 0;
+            height: 42px;
+            padding: 3px 5px !important;
+            font-size: 8pt !important;
+            resize: none;
+            overflow: hidden;
+        }
+
+        /* ── Signature lines ── */
+        .print-signatures {
+            display: flex !important;
+            gap: 36px;
+            margin-top: 12px;
+        }
+        .print-signatures .sig {
+            flex: 1 1 0;
+            border-top: 1px solid #000;
+            padding-top: 2px;
+            text-align: center;
+            font-size: 6.8pt;
+            color: #000;
         }
     }
 </style>
@@ -529,6 +763,10 @@
                 <li>Sa house visit, i-double check ang mga sagot. Gumamit ng ball pen.</li>
                 <li>Pindutin muli ang ✓ o ✕ upang <em>burahin</em> ang sagot.</li>
             </ul>
+            <p class="print-only-instr">
+                <strong>Panuto:</strong> Lagyan ng ✓ ang pahayag na totoo / positibong naglalarawan sa pamilya; ✕ kung kabaligtaran.
+                I-double check sa house visit gamit ang ball pen. (✓ = Positive · ✕ = Negative)
+            </p>
         </div>
 
         <!-- ══ Indicators (rendered by JS) ══ -->
@@ -588,6 +826,12 @@
             <label class="section-label" for="narrativeAssessment">Narrative Assessment</label>
             <textarea id="narrativeAssessment" rows="5"
                 placeholder="Ibigay ang buod o paliwanag ng pagtatasa ng pamilya..."></textarea>
+        </div>
+
+        <!-- ══ Print-only signatures ══ -->
+        <div class="print-signatures" aria-hidden="true">
+            <div class="sig">Lagda ng Gabay / Caseworker</div>
+            <div class="sig">Lagda ng Magulang / Mag-aaral</div>
         </div>
 
         <!-- ══ Toolbar ══ -->
