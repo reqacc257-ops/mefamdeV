@@ -619,96 +619,14 @@
         flex-wrap:wrap;
     }
 
-    /* ══ SIGNATURE SECTION (optional) ══ */
-    .sig-section{
-        margin-top:26px;
-        padding-top:22px;
-        border-top:1px dashed var(--line-2);
-    }
-
-    .sig-mode-bar{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:14px;
-        flex-wrap:wrap;
-        margin-bottom:18px;
-        padding:12px 16px;
-        background:linear-gradient(180deg,#fbfdff,#f5f9fd);
-        border:1px solid var(--line);
-        border-radius:var(--radius);
-        box-shadow:var(--shadow-xs);
-    }
-    .sig-mode-label{
-        display:flex;
-        align-items:center;
-        gap:9px;
-        font-size:.78rem;
-        font-weight:700;
-        color:var(--accent);
-        letter-spacing:.02em;
-    }
-    .sig-mode-label svg{
-        width:16px;height:16px;
-        stroke:var(--gold-2);fill:none;
-        stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
-    }
-    .sig-mode-switch{
-        display:inline-flex;
-        padding:3px;
-        background:#e8eef5;
-        border-radius:11px;
-        position:relative;
-    }
-    .sig-mode-opt{
-        position:relative;
-        z-index:1;
-        display:inline-flex;
-        align-items:center;
-        gap:7px;
-        padding:7px 16px;
-        border:0;
-        border-radius:8px;
-        background:transparent;
-        font-family:inherit;
-        font-size:.78rem;
-        font-weight:700;
-        color:var(--muted);
-        cursor:pointer;
-        transition:color .18s ease;
-        white-space:nowrap;
-    }
-    .sig-mode-opt svg{
-        width:13px;height:13px;
-        stroke:currentColor;fill:none;stroke-width:2.2;
-        stroke-linecap:round;stroke-linejoin:round;
-    }
-    .sig-mode-opt.active{
-        color:var(--accent);
-    }
-    .sig-mode-opt.active::before{
-        content:'';
-        position:absolute;
-        inset:0;
-        border-radius:8px;
-        background:#fff;
-        box-shadow:0 2px 6px -1px rgba(26,46,68,.14);
-        z-index:-1;
-    }
-    .sig-mode-opt:hover:not(.active){
-        color:var(--ink-2);
-    }
-    .sig-mode-hint{
-        font-size:.72rem;
-        color:var(--muted);
-        width:100%;
-    }
-
-    /* Print signature view (default) */
+    /* ── Signature ── */
     .sig-row{
         display:grid;
         grid-template-columns:1fr 1fr;
         gap:32px;
+        margin-top:26px;
+        padding-top:22px;
+        border-top:1px dashed var(--line-2);
     }
     .sig-field{
         background:linear-gradient(180deg,#fbfdff,#f5f9fd);
@@ -716,23 +634,45 @@
         border-radius:var(--radius);
         padding:14px 16px 12px;
         box-shadow:var(--shadow-xs);
-        transition:all .2s ease;
     }
-
-    /* When mode = print: show only a clean signature line */
-    .sig-field .sig-tools{display:none;}
-    .sig-field .sig-pad-wrap{
-        display:none;
+    .sig-tools{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:8px;
     }
-    .sig-field .print-sig-block{
+    .sig-tools-label{
+        font-size:.65rem;font-weight:700;
+        text-transform:uppercase;letter-spacing:.08em;
+        color:var(--muted);
+    }
+    .sig-pad-wrap{
+        position:relative;
+        height:94px;
+        margin-bottom:6px;
+        border-radius:var(--radius-sm);
+        overflow:hidden;
+        background:#fff;
+        border:1.5px dashed var(--line-2);
+        transition:border-color .18s ease, background .18s ease;
+    }
+    .sig-pad-wrap:focus-within,
+    .sig-pad-wrap:hover{
+        border-color:var(--gold);
+        background:#fffdf8;
+    }
+    canvas.sig-canvas{
+        position:absolute;inset:0;
+        width:100%;height:100%;
+        cursor:crosshair;
+        touch-action:none;
         display:block;
-        padding:44px 8px 8px;
-        text-align:center;
     }
-    .print-sig-line{
-        border-bottom:1.4px solid var(--ink-2);
-        height:34px;
-        margin:0 4px;
+    .sig-line{
+        position:absolute;
+        left:8%;right:8%;bottom:12px;
+        border-bottom:1px solid var(--line-2);
+        pointer-events:none;
     }
     .sig-hint{
         font-size:.66rem;
@@ -747,53 +687,8 @@
         text-transform:uppercase;
         letter-spacing:.06em;
         color:var(--accent);
-        margin-top:10px;
+        margin-top:8px;
         text-align:center;
-    }
-
-    /* When mode = digital: show canvas pads */
-    .sig-section[data-mode="digital"] .sig-field .sig-pad-wrap{
-        display:block;
-        position:relative;
-        height:94px;
-        margin-bottom:6px;
-        border-radius:var(--radius-sm);
-        overflow:hidden;
-        background:#fff;
-        border:1.5px dashed var(--line-2);
-        transition:border-color .18s ease, background .18s ease;
-    }
-    .sig-section[data-mode="digital"] .sig-field .sig-pad-wrap:focus-within,
-    .sig-section[data-mode="digital"] .sig-field .sig-pad-wrap:hover{
-        border-color:var(--gold);
-        background:#fffdf8;
-    }
-    .sig-section[data-mode="digital"] .sig-field .sig-tools{
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        margin-bottom:8px;
-    }
-    .sig-section[data-mode="digital"] .sig-field .print-sig-block{display:none;}
-    .sig-section[data-mode="digital"] .sig-hint{color:var(--muted);}
-
-    canvas.sig-canvas{
-        position:absolute;inset:0;
-        width:100%;height:100%;
-        cursor:crosshair;
-        touch-action:none;
-        display:block;
-    }
-    .sig-line{
-        position:absolute;
-        left:8%;right:8%;bottom:12px;
-        border-bottom:1px solid var(--line-2);
-        pointer-events:none;
-    }
-    .sig-tools-label{
-        font-size:.65rem;font-weight:700;
-        text-transform:uppercase;letter-spacing:.08em;
-        color:var(--muted);
     }
     .sig-print-img{display:none;max-height:60px;margin:0 auto;}
 
@@ -835,7 +730,6 @@
         .btn-add,
         .spouse-toggle-row,
         .btn,
-        .sig-mode-bar,
         .sig-tools,
         .case-no-actions,
         .auto-badge,
@@ -1040,16 +934,13 @@
             background:#fff !important;
         }
 
-        /* Signatures: always show print-style signature lines in print */
-        .sig-section{
+        .sig-row{
+            gap:18pt;
             margin-top:10pt;
             padding-top:8pt;
             border-top:.75pt dashed #999;
             break-inside:avoid;
             page-break-inside:avoid;
-        }
-        .sig-row{
-            gap:18pt;
             grid-template-columns:1fr 1fr;
         }
         .sig-field{
@@ -1061,29 +952,22 @@
             break-inside:avoid;
             page-break-inside:avoid;
         }
-        .sig-field .sig-pad-wrap{display:none !important;}
-        .sig-field .print-sig-block{
-            display:block !important;
-            padding:28pt 6pt 6pt;
-            text-align:center;
+        .sig-pad-wrap{
+            height:34pt;
+            border:1pt solid #000;
+            border-radius:0;
+            background:#fff !important;
         }
-        .print-sig-line{
-            border-bottom:1pt solid #000;
-            height:22pt;
-            margin:0 4pt;
-        }
+        canvas.sig-canvas{display:none !important;}
         .sig-print-img{
-            display:none !important;
-        }
-        /* If digital mode was on, we still show print signature in print — 
-           but if a digital signature exists, overlay it above the line */
-        .sig-section[data-has-client-sig="true"] #clientSigImg,
-        .sig-section[data-has-staff-sig="true"] #staffSigImg{
             display:block !important;
-            max-height:26pt;
-            margin:-24pt auto 0;
-            position:relative;
-            z-index:1;
+            max-height:28pt;
+            margin:0 auto 2pt;
+        }
+        .sig-line{
+            border-color:#000;
+            bottom:6pt;
+            left:8%;right:8%;
         }
         .sig-label{
             font-size:6.2pt;
@@ -1119,9 +1003,6 @@
         .meta-card{grid-template-columns:1fr;}
         .meta-card .field.span-2{grid-column:span 1;}
         .sig-row{grid-template-columns:1fr;gap:18px;}
-        .sig-mode-bar{flex-direction:column;align-items:flex-start;gap:10px;}
-        .sig-mode-switch{width:100%;}
-        .sig-mode-opt{flex:1;justify-content:center;}
         .toolbar{padding:12px 14px;gap:8px;}
         .toolbar .btn{flex:1 1 auto;justify-content:center;}
         .search-results{max-height:180px;}
@@ -1189,6 +1070,13 @@
             <div class="field span-2">
                 <label class="fl">Case Category</label>
                 <input type="text" id="caseCategory" placeholder="Educational Assistance">
+            </div>
+        </div>
+
+        <div class="meta-card" style="grid-template-columns:1fr;padding:14px 18px;">
+            <div class="field">
+                <label class="fl">Source of Referral</label>
+                <input type="text" id="caseReferral" value="Online Application">
             </div>
         </div>
 
@@ -1327,69 +1215,39 @@
             </div>
         </div>
 
-        <!-- ══ SIGNATURES (optional digital) ══ -->
-        <div class="sig-section" id="sigSection" data-mode="print">
-            <div class="sig-mode-bar">
-                <div class="sig-mode-label">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    Signature Method
-                </div>
-                <div class="sig-mode-switch" role="tablist" aria-label="Signature method">
-                    <button type="button" class="sig-mode-opt active" id="modePrint" data-mode="print" onclick="setSigMode('print')" role="tab" aria-selected="true">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                        Print Signature
-                    </button>
-                    <button type="button" class="sig-mode-opt" id="modeDigital" data-mode="digital" onclick="setSigMode('digital')" role="tab" aria-selected="false">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                        Digital Signature
+        <!-- ══ SIGNATURES ══ -->
+        <div class="sig-row">
+            <div class="sig-field">
+                <div class="sig-tools">
+                    <span class="sig-tools-label">Client</span>
+                    <button type="button" class="btn btn-add" onclick="clearSig('clientSig')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Clear
                     </button>
                 </div>
-                <div class="sig-mode-hint" id="sigModeHint">
-                    The client and interviewer will sign the printed copy after printing.
+                <div class="sig-pad-wrap">
+                    <canvas class="sig-canvas" id="clientSig"></canvas>
+                    <img class="sig-print-img" id="clientSigImg" alt="">
+                    <div class="sig-line"></div>
                 </div>
+                <div class="sig-hint">Sign above with mouse or finger</div>
+                <div class="sig-label">Client's Signature over Printed Name</div>
             </div>
-
-            <div class="sig-row">
-                <!-- Client signature -->
-                <div class="sig-field">
-                    <div class="sig-tools">
-                        <span class="sig-tools-label">Client</span>
-                        <button type="button" class="btn btn-add" onclick="clearSig('clientSig')">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            Clear
-                        </button>
-                    </div>
-                    <div class="sig-pad-wrap">
-                        <canvas class="sig-canvas" id="clientSig"></canvas>
-                        <div class="sig-line"></div>
-                    </div>
-                    <div class="print-sig-block">
-                        <div class="print-sig-line"></div>
-                        <img class="sig-print-img" id="clientSigImg" alt="">
-                    </div>
-                    <div class="sig-hint" id="clientSigHint">Sign above with mouse or finger</div>
-                    <div class="sig-label">Client's Signature over Printed Name</div>
+            <div class="sig-field">
+                <div class="sig-tools">
+                    <span class="sig-tools-label">Interviewer</span>
+                    <button type="button" class="btn btn-add" onclick="clearSig('staffSig')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Clear
+                    </button>
                 </div>
-                <!-- Staff signature -->
-                <div class="sig-field">
-                    <div class="sig-tools">
-                        <span class="sig-tools-label">Interviewer</span>
-                        <button type="button" class="btn btn-add" onclick="clearSig('staffSig')">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            Clear
-                        </button>
-                    </div>
-                    <div class="sig-pad-wrap">
-                        <canvas class="sig-canvas" id="staffSig"></canvas>
-                        <div class="sig-line"></div>
-                    </div>
-                    <div class="print-sig-block">
-                        <div class="print-sig-line"></div>
-                        <img class="sig-print-img" id="staffSigImg" alt="">
-                    </div>
-                    <div class="sig-hint" id="staffSigHint">Sign above with mouse or finger</div>
-                    <div class="sig-label">Name of Interviewer / Social Worker</div>
+                <div class="sig-pad-wrap">
+                    <canvas class="sig-canvas" id="staffSig"></canvas>
+                    <img class="sig-print-img" id="staffSigImg" alt="">
+                    <div class="sig-line"></div>
                 </div>
+                <div class="sig-hint">Sign above with mouse or finger</div>
+                <div class="sig-label">Name of Interviewer / Social Worker</div>
             </div>
         </div>
 
@@ -1415,7 +1273,6 @@
 <script>
 let linkedAppId = null;
 let currentIntakeId = null;
-let sigMode = 'print'; // 'print' | 'digital'
 
 /* ══════════════════════════════════════════
    AUTO CASE NUMBER
@@ -1446,6 +1303,7 @@ function generateCaseNo(dateStr) {
 function regenerateCaseNo(force) {
     const input = document.getElementById('caseNo');
     if (!input) return;
+    // If user has manually edited and this isn't a force, don't overwrite
     if (!force && input.value && input.value !== lastAutoCaseNo) return;
     const dateVal = document.getElementById('caseDate')?.value || '';
     const newNo = generateCaseNo(dateVal);
@@ -1472,42 +1330,6 @@ function toggleCaseNoEdit() {
     }
 }
 
-/* ══════════════════════════════════════════
-   SIGNATURE MODE
-   ══════════════════════════════════════════ */
-function setSigMode(mode) {
-    sigMode = mode === 'digital' ? 'digital' : 'print';
-    const section = document.getElementById('sigSection');
-    if (!section) return;
-    section.dataset.mode = sigMode;
-
-    const btnPrint = document.getElementById('modePrint');
-    const btnDigital = document.getElementById('modeDigital');
-    const hint = document.getElementById('sigModeHint');
-
-    const isDigital = sigMode === 'digital';
-    btnPrint.classList.toggle('active', !isDigital);
-    btnDigital.classList.toggle('active', isDigital);
-    btnPrint.setAttribute('aria-selected', !isDigital ? 'true' : 'false');
-    btnDigital.setAttribute('aria-selected', isDigital ? 'true' : 'false');
-
-    if (hint) {
-        hint.textContent = isDigital
-            ? 'The client and interviewer sign directly on this page using a mouse or touchscreen.'
-            : 'The client and interviewer will sign the printed copy after printing.';
-    }
-
-    document.querySelectorAll('.sig-hint').forEach(el => {
-        if (el.id === 'clientSigHint' || el.id === 'staffSigHint') {
-            el.textContent = isDigital
-                ? 'Sign above with mouse or finger'
-                : 'Signature line only — sign after printing';
-        }
-    });
-
-    try { localStorage.setItem('mefamdev_sig_mode', sigMode); } catch(e){}
-}
-
 /* ══════════════════════════════════════════ */
 
 window.onload = function () {
@@ -1520,10 +1342,6 @@ window.onload = function () {
     populatePrefill();
     initSigPad('clientSig');
     initSigPad('staffSig');
-
-    let savedMode = 'print';
-    try { savedMode = localStorage.getItem('mefamdev_sig_mode') || 'print'; } catch(e){}
-    setSigMode(savedMode);
 
     const params = new URLSearchParams(window.location.search);
     const recordId = params.get('record');
@@ -1587,7 +1405,6 @@ function clearSig(id) {
     pad.ctx.clearRect(0, 0, pad.canvas.width, pad.canvas.height);
     const img = document.getElementById(id + 'Img');
     if (img) img.src = '';
-    updateSigHasClass();
 }
 function isSigEmpty(id) {
     const pad = sigPads[id];
@@ -1610,22 +1427,14 @@ function setSigFromDataUrl(id, dataUrl) {
     img.onload = function () {
         const rect = pad.canvas.getBoundingClientRect();
         pad.ctx.drawImage(img, 0, 0, rect.width, rect.height);
-        updateSigHasClass();
     };
     img.src = dataUrl;
-}
-function updateSigHasClass() {
-    const section = document.getElementById('sigSection');
-    if (!section) return;
-    section.dataset.hasClientSig = isSigEmpty('clientSig') ? 'false' : 'true';
-    section.dataset.hasStaffSig = isSigEmpty('staffSig') ? 'false' : 'true';
 }
 function prepareSigImagesForPrint() {
     ['clientSig', 'staffSig'].forEach(id => {
         const img = document.getElementById(id + 'Img');
         if (img) img.src = getSigDataUrl(id);
     });
-    updateSigHasClass();
 }
 
 /* ── Family table ── */
@@ -1868,9 +1677,10 @@ function loadSavedIntakeRecord(recordId) {
     linkedAppId = record.linkedAppId || null;
 
     setVal('caseNo', record.caseNo || '');
-    lastAutoCaseNo = record.caseNo || '';
+    lastAutoCaseNo = record.caseNo || ''; // prevent auto-overwrite
     setVal('caseDate', record.caseDate || '');
     setVal('caseCategory', record.caseCategory || '');
+    setVal('caseReferral', record.caseReferral || '');
     setVal('iName', record.name || '');
     setVal('iNickname', record.nickname || '');
     setVal('iNationality', record.nationality || '');
@@ -1936,15 +1746,8 @@ function loadSavedIntakeRecord(recordId) {
         if (inputs[1]) inputs[1].value = actionRows[i]?.plan || '';
     }
 
-    const hasClientSig = !!record.clientSignature;
-    const hasStaffSig = !!record.staffSignature;
-    if (hasClientSig || hasStaffSig) {
-        setSigMode('digital');
-        if (hasClientSig) setSigFromDataUrl('clientSig', record.clientSignature);
-        if (hasStaffSig) setSigFromDataUrl('staffSig', record.staffSignature);
-    } else {
-        setSigMode('print');
-    }
+    if (record.clientSignature) setSigFromDataUrl('clientSig', record.clientSignature);
+    if (record.staffSignature) setSigFromDataUrl('staffSig', record.staffSignature);
 
     if (linkedAppId) selectPrefillApplicant(linkedAppId);
 }
@@ -1979,14 +1782,12 @@ function collectData() {
     }
     const schoolName = (linkedApp?.school || linkedApp?.schoolName || linkedApp?.school_name || '').toString().trim();
 
-    const clientSignature = sigMode === 'digital' ? getSigDataUrl('clientSig') : '';
-    const staffSignature = sigMode === 'digital' ? getSigDataUrl('staffSig') : '';
-
     return {
         id: window.currentIntakeId || Date.now(),
         caseNo: document.getElementById('caseNo').value,
         caseDate: document.getElementById('caseDate').value,
         caseCategory: document.getElementById('caseCategory').value,
+        caseReferral: document.getElementById('caseReferral').value,
         name: document.getElementById('iName').value,
         nickname: document.getElementById('iNickname').value,
         nationality: document.getElementById('iNationality').value,
@@ -2008,9 +1809,8 @@ function collectData() {
         actionPlan: actionRows,
         school: schoolName,
         schoolName: schoolName,
-        clientSignature,
-        staffSignature,
-        sigMode,
+        clientSignature: getSigDataUrl('clientSig'),
+        staffSignature: getSigDataUrl('staffSig'),
         linkedAppId,
         savedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     };
@@ -2022,8 +1822,11 @@ function clearForm() {
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('iNationality').value = 'Filipino';
     document.getElementById('iOccup').value = 'Student';
+    document.getElementById('caseReferral').value = 'Online Application';
+    // Reset case no
     lastAutoCaseNo = '';
     regenerateCaseNo(true);
+    // Reset editing state
     const wrap = document.getElementById('caseNoWrap');
     const caseInput = document.getElementById('caseNo');
     if (wrap && caseInput) {
@@ -2044,11 +1847,10 @@ function clearForm() {
     if (detail) { detail.style.display = 'none'; detail.innerHTML = ''; }
     clearSig('clientSig');
     clearSig('staffSig');
-
-    setSigMode(sigMode);
 }
 
 function printIntakeSheet() {
+    // hide fully empty family rows in print to save space
     document.querySelectorAll('#famTableBody tr').forEach(tr => {
         const inputs = tr.querySelectorAll('input, select');
         const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
@@ -2058,7 +1860,7 @@ function printIntakeSheet() {
     setTimeout(() => window.print(), 30);
 }
 
-/* ── Escape helper ── */
+/* ── Escape helper (safe for interpolation) ── */
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
