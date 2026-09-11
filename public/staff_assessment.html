@@ -350,6 +350,71 @@
         .final-options label { flex: 1 1 100%; }
     }
 
+    /* ── Exit modal ─────────────────────────────────────── */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 2000;
+        background: rgba(26, 46, 68, .55);
+        backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px;
+        opacity: 0; pointer-events: none;
+        transition: opacity .2s ease;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .modal-overlay[hidden] { display: none; }
+
+    .modal-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+        max-width: 440px; width: 100%;
+        padding: 28px 26px 22px;
+        text-align: center;
+        transform: translateY(12px) scale(.97);
+        transition: transform .25s cubic-bezier(.2, .9, .3, 1.2);
+    }
+    .modal-overlay.show .modal-card { transform: none; }
+
+    .modal-icon {
+        width: 64px; height: 64px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 14px;
+        font-size: 1.9rem; line-height: 1;
+        background: linear-gradient(135deg, #fdf0d5, #ffe9b8);
+        border: 2px solid #ffe082;
+    }
+
+    .modal-card h2 {
+        font-family: 'DM Serif Display', serif;
+        font-size: 1.15rem; color: var(--navy);
+        margin-bottom: 8px;
+    }
+
+    .modal-text {
+        font-size: .87rem; color: #555;
+        line-height: 1.6; margin-bottom: 20px;
+    }
+
+    .modal-actions { display: flex; flex-direction: column; gap: 9px; }
+
+    .modal-btn {
+        font: inherit; font-weight: 700; font-size: .87rem;
+        padding: 11px 18px; border-radius: 8px; cursor: pointer;
+        border: 1.5px solid transparent;
+        display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+        transition: .15s;
+    }
+    .modal-btn:focus-visible { outline: none; box-shadow: var(--focus); }
+
+    .modal-btn-save         { background: var(--gold); color: var(--navy); }
+    .modal-btn-save:hover   { background: #e09520; }
+    .modal-btn-discard      { background: #fff; color: #b3261e; border-color: #f0a89e; }
+    .modal-btn-discard:hover{ background: #fdedeb; }
+    .modal-btn-cancel       { background: #eef0f4; color: var(--text); }
+    .modal-btn-cancel:hover { background: #e2e5ea; }
+
+    @media print { .modal-overlay { display: none !important; } }
+
     /* ── Print ──────────────────────────────────────────── */
     @media print {
         @page { margin: 12mm; }
@@ -535,6 +600,23 @@
 
     </div><!-- /doc-body -->
 </div><!-- /shell -->
+
+<!-- ══ Exit modal ══ -->
+<div class="modal-overlay" id="exitModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+        <div class="modal-icon" aria-hidden="true">📝</div>
+        <h2 id="exitModalTitle">May hindi pa naisave na pagbabago</h2>
+        <p class="modal-text">
+            May mga bagong sagot na hindi pa naka-save sa dashboard.<br>
+            Ano ang gusto mong gawin?
+        </p>
+        <div class="modal-actions">
+            <button type="button" class="modal-btn modal-btn-save"    data-action="save-draft">💾 I-save bilang draft</button>
+            <button type="button" class="modal-btn modal-btn-discard" data-action="discard">🗑 Itapon at umalis</button>
+            <button type="button" class="modal-btn modal-btn-cancel"  data-action="stay">Manatili sa pahina</button>
+        </div>
+    </div>
+</div>
 
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
@@ -1266,7 +1348,83 @@ function offerDraft() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   11. INIT
+   11. EXIT MODAL — replaces the native confirm when leaving
+   ═══════════════════════════════════════════════════════════ */
+
+let exitResolver = null;
+
+function showExitModal() {
+    return new Promise(resolve => {
+        const modal = $('exitModal');
+        if (!modal) { resolve('stay'); return; }
+
+        exitResolver = resolve;
+        modal.hidden = false;
+        requestAnimationFrame(() => modal.classList.add('show'));
+
+        const stay = modal.querySelector('[data-action="stay"]');
+        if (stay) setTimeout(() => stay.focus(), 220);
+    });
+}
+
+function closeExitModal(action) {
+    const modal = $('exitModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    setTimeout(() => { modal.hidden = true; }, 220);
+
+    if (exitResolver) {
+        const fn = exitResolver;
+        exitResolver = null;
+        fn(action);
+    }
+}
+
+function bindExitModal() {
+    const modal = $('exitModal');
+    if (!modal) return;
+
+    modal.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => closeExitModal(btn.dataset.action));
+    });
+
+    modal.addEventListener('click', e => {
+        if (e.target === modal) closeExitModal('stay');
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !modal.hidden) {
+            e.preventDefault();
+            closeExitModal('stay');
+        }
+    });
+}
+
+async function requestExit(targetHref) {
+    if (!state.dirty) {
+        if (targetHref) window.location.href = targetHref;
+        return;
+    }
+
+    const action = await showExitModal();
+    if (action === 'stay') return;
+
+    clearTimeout(draftTimer);
+
+    if (action === 'save-draft') {
+        saveDraft();
+        toast('💾 Draft saved.', 'success', 2200);
+    } else if (action === 'discard') {
+        try { localStorage.removeItem(LS.draft); } catch (e) { /* ignore */ }
+    }
+
+    state.dirty = false;
+
+    if (targetHref) window.location.href = targetHref;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   12. INIT
    ═══════════════════════════════════════════════════════════ */
 
 function guardSession() {
@@ -1339,7 +1497,21 @@ function init() {
             if (el) el.addEventListener('input', markDirty);
         });
 
-    // Warn before leaving with unsaved work
+    // Wire up the custom exit modal
+    bindExitModal();
+
+    // Intercept in-app navigation (Dashboard link, etc.)
+    document.querySelectorAll('a[href]').forEach(a => {
+        const href = a.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) return;
+        a.addEventListener('click', e => {
+            if (!state.dirty) return;
+            e.preventDefault();
+            requestExit(href);
+        });
+    });
+
+    // Native fallback for tab-close / refresh (browser controls this text)
     window.addEventListener('beforeunload', e => {
         if (!state.dirty) return;
         e.preventDefault();
