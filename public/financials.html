@@ -163,15 +163,6 @@
     .btn-icon{padding:7px;border-radius:9px;line-height:0}
     .btn-icon svg{width:15px;height:15px}
 
-    /* ============ MODE TOGGLE ============ */
-    .mode-toggle{display:flex;gap:4px;padding:4px;background:#eef2f7;border-radius:11px;}
-    .mode-btn{padding:7px 13px;border:0;border-radius:8px;cursor:pointer;
-      font:inherit;font-size:.78rem;font-weight:700;color:#5d6e83;background:transparent;
-      transition:all .16s ease;display:inline-flex;align-items:center;gap:6px;}
-    .mode-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-    .mode-btn:hover{color:var(--navy)}
-    .mode-btn.is-active{background:#fff;color:var(--navy);box-shadow:var(--shadow-sm)}
-
     /* ============ PICKER ============ */
     .picker{position:relative}
     .picker-input-wrap{position:relative}
@@ -205,62 +196,119 @@
       color:#3d5878;background:#e7eef7;border:1px solid #d8e3f0;}
     .picker-empty{padding:22px 14px;text-align:center;font-size:.8rem;color:#93a3b6}
 
-    .selected-card{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;
-      background:#f5f9ff;border:1px solid #dbe7f6;animation:pickerIn .18s ease;}
-    .selected-card[hidden]{display:none}
-    .selected-card .picker-avatar{width:38px;height:38px;border-radius:11px;font-size:.9rem}
-    .selected-meta{min-width:0;flex:1 1 auto}
-    .selected-name{font-size:.88rem;font-weight:700;color:#16283c}
-    .selected-sub{font-size:.75rem;color:var(--muted)}
-    .selected-x{flex:0 0 auto;padding:6px 10px;border-radius:8px;cursor:pointer;
-      font:inherit;font-size:.72rem;font-weight:700;
-      color:#41556b;background:#fff;border:1px solid var(--border-strong);
-      transition:background .15s ease;}
-    .selected-x:hover{background:#eef2f7}
+    /* ============ SELECTED SCHOLARS LIST ============ */
+    .selected-scholars-wrap {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fbfcfe;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .selected-scholars-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #f3f7fc;
+      border-bottom: 1px solid var(--border);
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .selected-scholars-header .link-btn {
+      background: none; border: 0; cursor: pointer;
+      font: inherit; font-size: .75rem; font-weight: 700;
+      color: #2471a3; text-decoration: underline;
+      padding: 0;
+    }
+    .selected-scholars-header .link-btn:hover { color: var(--navy); }
+    .selected-scholars-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+      max-height: 190px;
+      overflow-y: auto;
+    }
+    .scholar-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      background: #fff;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      transition: box-shadow .15s ease;
+    }
+    .scholar-chip:hover {
+      box-shadow: var(--shadow-sm);
+    }
+    .scholar-chip .picker-avatar {
+      width: 28px; height: 28px; border-radius: 8px; font-size: .7rem;
+    }
+    .scholar-chip-info {
+      flex: 1 1 auto; min-width: 0;
+    }
+    .scholar-chip-name {
+      font-size: .82rem; font-weight: 700; color: #16283c;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .scholar-chip-sub {
+      font-size: .7rem; color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .scholar-chip-remove {
+      flex: 0 0 auto;
+      width: 24px; height: 24px;
+      display: grid; place-items: center;
+      border: 0; border-radius: 50%;
+      background: rgba(18,43,69,.06);
+      color: #6b7c93;
+      cursor: pointer; font-size: 14px; font-weight: 700;
+      transition: background .15s ease, color .15s ease;
+    }
+    .scholar-chip-remove:hover {
+      background: var(--red-soft); color: var(--red);
+    }
+    .scholar-chip-empty {
+      padding: 18px 14px;
+      text-align: center;
+      font-size: .78rem;
+      color: #93a3b6;
+      font-style: italic;
+    }
 
-    /* ============ MASS PICKER ============ */
-    .mass-wrap{display:flex;flex-direction:column;gap:11px;border:1px solid var(--border-strong);
-      border-radius:13px;background:#fbfcfe;overflow:hidden;}
-    .mass-toolbar{display:flex;gap:8px;align-items:center;padding:10px;
-      border-bottom:1px solid var(--border);background:#fff;}
-    .mass-toolbar input[type=search]{flex:1 1 auto;font-size:.83rem;padding:8px 11px}
-    .mass-toolbar .btn{padding:7px 11px;font-size:.74rem;border-radius:9px}
-    .mass-selectall{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;
-      padding:7px 11px;border-radius:9px;cursor:pointer;user-select:none;
-      font-size:.74rem;font-weight:700;color:#41556b;
-      background:#f2f5f9;border:1px solid var(--border);
-      transition:background .15s ease,color .15s ease,border-color .15s ease;}
-    .mass-selectall:hover{background:#e8eef6;color:var(--navy);border-color:#c8d5e4}
-    .mass-selectall input[type=checkbox]{
-      width:15px;height:15px;min-width:0;padding:0;margin:0;border-radius:4px;
-      accent-color:#1d4066;cursor:pointer;flex:0 0 auto;}
-    .mass-selectall input[type=checkbox]:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.4)}
-    .mass-selectall.is-disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
-    .mass-list{max-height:238px;overflow:auto;padding:6px;scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent}
-    .mass-list::-webkit-scrollbar{width:9px}
-    .mass-list::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
-    .mass-item{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;cursor:pointer;
-      transition:background .13s ease;position:relative;}
-    .mass-item:hover{background:#f2f7fd}
-    .mass-item.is-selected{background:rgba(245,166,35,.14)}
-    .mass-item input[type=checkbox]{flex:0 0 auto;width:17px;height:17px;min-width:0;padding:0;margin:0;
-      accent-color:#1d4066;cursor:pointer;border-radius:4px}
-    .mass-item .picker-avatar{width:30px;height:30px;border-radius:8px;font-size:.72rem}
-    .mass-item-main{min-width:0;flex:1 1 auto}
-    .mass-item-name{font-size:.83rem;font-weight:700;color:#16283c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .mass-item-sub{font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .mass-item-flag{flex:0 0 auto;font-size:.66rem;font-weight:700;padding:3px 8px;border-radius:999px;}
-    .mass-item-flag.dup{color:var(--amber);background:var(--amber-soft);border:1px solid #f8e2bd}
-    .mass-item-flag.ok{color:#3d5878;background:#e7eef7;border:1px solid #d8e3f0}
-    .mass-empty{padding:26px 18px;text-align:center;font-size:.8rem;color:#93a3b6;line-height:1.5}
-    .mass-summary{padding:11px 13px;border-top:1px solid var(--border);background:#f5f9ff;
-      display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-      font-size:.79rem;color:#41556b;}
-    .mass-summary .strong{font-weight:700;color:var(--navy)}
-    .mass-summary .pill{padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;
-      background:var(--navy);color:#fff;}
-    .mass-summary .pill.warn{background:#8a5b00}
-    .mass-summary .pill.danger{background:var(--red)}
+    /* ============ SUMMARY BOX ============ */
+    .summary-box {
+      background: linear-gradient(135deg, #f8f9fb, #f0f4ff);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .82rem;
+      color: #41556b;
+    }
+    .summary-row strong {
+      color: var(--navy);
+    }
+    .summary-row .pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      background: var(--navy);
+      color: #fff;
+    }
+    .summary-row .pill.warn { background: #8a5b00; }
+    .summary-row .pill.danger { background: var(--red); }
 
     /* ============ NOTES ============ */
     .inline-note{display:flex;align-items:flex-start;gap:7px;margin-top:7px;font-size:.76rem;line-height:1.45;}
@@ -418,8 +466,6 @@
       .tabs{width:100%;overflow-x:auto}
       .modal-actions{flex-direction:column-reverse}
       thead th,tbody td{padding:10px 11px}
-      .mass-toolbar{flex-wrap:wrap}
-      .mass-toolbar input[type=search]{flex:1 1 100%;order:3}
     }
     @media (max-width:400px){.stats-grid{grid-template-columns:1fr}}
 
@@ -538,53 +584,45 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
             Disburse Stipend
           </h2>
-          <div class="mode-toggle no-print" role="tablist" aria-label="Disbursement mode">
-            <button class="mode-btn is-active" type="button" data-mode="single" role="tab"
-                    aria-selected="true" aria-controls="singleMode">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Single
-            </button>
-            <button class="mode-btn" type="button" data-mode="mass" role="tab"
-                    aria-selected="false" aria-controls="massMode">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Mass
-            </button>
-          </div>
         </div>
 
-        <!-- SINGLE MODE -->
-        <div class="card-body" id="singleMode">
+        <div class="card-body">
+          <!-- Unified Search & Add -->
           <div class="field">
-            <label for="disbScholarSearch">Scholar</label>
+            <label for="disbScholarSearch">Search & Add Scholars</label>
             <div class="picker" id="scholarPicker">
               <div class="picker-input-wrap">
                 <input type="text" id="disbScholarSearch" class="picker-input"
                        role="combobox" aria-expanded="false" aria-controls="scholarList"
                        aria-autocomplete="list" autocomplete="off"
-                       placeholder="Type a name, school, or grade…">
-                <button type="button" class="picker-clear" id="scholarClear" hidden aria-label="Clear selected scholar">×</button>
+                       placeholder="Type a name, school, or grade to add…">
+                <button type="button" class="picker-clear" id="scholarClear" hidden aria-label="Clear search">×</button>
               </div>
               <div class="picker-panel" id="scholarPanel" hidden>
                 <div class="picker-list" id="scholarList" role="listbox" aria-label="Matching scholars"></div>
                 <p class="picker-empty" id="scholarEmpty" hidden>No accepted scholar matches that search.</p>
               </div>
             </div>
-            <div class="selected-card" id="selectedScholarCard" hidden>
-              <span class="picker-avatar" id="selAvatar">–</span>
-              <span class="selected-meta">
-                <span class="selected-name" id="selName">—</span>
-                <span class="selected-sub" id="selSub">—</span>
-              </span>
-              <button type="button" class="selected-x" id="selChange">Change</button>
+          </div>
+
+          <!-- Selected Scholars List -->
+          <div class="selected-scholars-wrap" id="selectedScholarsWrap">
+            <div class="selected-scholars-header">
+              <span>Selected Scholars (<span id="selectedCount">0</span>)</span>
+              <button type="button" class="link-btn" id="clearAllScholars">Clear all</button>
+            </div>
+            <div class="selected-scholars-list" id="selectedScholarsList">
+              <div class="scholar-chip-empty" id="scholarChipEmpty">No scholars selected yet. Search above to add.</div>
             </div>
           </div>
 
+          <!-- Amount -->
           <div class="field">
-            <label for="disbAmount">Amount (₱)</label>
+            <label for="disbAmount">Amount per scholar (₱)</label>
             <input type="number" id="disbAmount" value="3000" min="1" step="0.01" inputmode="decimal">
             <div class="chips-row" style="margin-top:8px">
               <button type="button" class="mini-chip" data-amount="1500">₱1,500</button>
-              <button type="button" class="mini-chip" data-amount="3000">₱3,000</button>
+              <button type="button" class="mini-chip is-on" data-amount="3000">₱3,000</button>
               <button type="button" class="mini-chip" data-amount="5000">₱5,000</button>
               <button type="button" class="mini-chip" data-amount="7500">₱7,500</button>
             </div>
@@ -594,6 +632,7 @@
             </div>
           </div>
 
+          <!-- Period -->
           <div class="field">
             <label for="disbPeriod">Period / Month</label>
             <input type="text" id="disbPeriod" placeholder="e.g. March 2026" autocomplete="off">
@@ -602,57 +641,28 @@
               <button type="button" class="mini-chip" id="periodLast">Last month</button>
             </div>
           </div>
-        </div>
 
-        <!-- MASS MODE -->
-        <div class="card-body" id="massMode" hidden>
-          <div class="field">
-            <label for="massSearch">Scholars</label>
-            <div class="mass-wrap">
-              <div class="mass-toolbar">
-                <label class="mass-selectall" id="massSelectAllLabel" title="Select all matching scholars">
-                  <input type="checkbox" id="massSelectAll">
-                  <span>All</span>
-                </label>
-                <input type="search" id="massSearch" placeholder="Filter by name, school, or grade…" autocomplete="off">
-                <button class="btn btn-ghost" type="button" id="massNone">Clear</button>
-              </div>
-              <div class="mass-list" id="massList"></div>
-              <div class="mass-summary" aria-live="polite">
-                <span id="massSelectedText"><b class="strong">0</b> selected</span>
-                <span id="massTotalText" class="strong">Total: ₱0.00</span>
-                <span id="massBalancePill" class="pill">Remaining: ₱0.00</span>
-              </div>
+          <!-- Summary Box -->
+          <div class="summary-box" id="summaryBox" hidden>
+            <div class="summary-row">
+              <span>Scholars selected</span>
+              <strong id="summaryCount">0</strong>
             </div>
-            <div class="inline-note warn" id="massNote" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span id="massNoteText"></span>
+            <div class="summary-row">
+              <span>Total to release</span>
+              <strong id="summaryTotal">₱0.00</strong>
             </div>
-          </div>
-
-          <div class="row-2">
-            <div class="field">
-              <label for="massAmount">Amount per scholar (₱)</label>
-              <input type="number" id="massAmount" value="3000" min="1" step="0.01" inputmode="decimal">
+            <div class="summary-row">
+              <span>Balance after release</span>
+              <span class="pill" id="summaryBalancePill">₱0.00</span>
             </div>
-            <div class="field">
-              <label for="massPeriod">Period / Month</label>
-              <input type="text" id="massPeriod" placeholder="e.g. March 2026" autocomplete="off">
-            </div>
-          </div>
-          <div class="chips-row" style="margin-top:-4px">
-            <button type="button" class="mini-chip" data-mass-amount="1500">₱1,500</button>
-            <button type="button" class="mini-chip" data-mass-amount="3000">₱3,000</button>
-            <button type="button" class="mini-chip" data-mass-amount="5000">₱5,000</button>
-            <button type="button" class="mini-chip" data-mass-amount="7500">₱7,500</button>
-            <button type="button" class="mini-chip" id="massPeriodNow">This month</button>
           </div>
         </div>
 
         <div class="card-foot">
-          <button class="btn btn-gold btn-full" id="disburseBtn" type="button">
+          <button class="btn btn-gold btn-full" id="disburseBtn" type="button" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            <span id="disburseBtnLabel">Release stipend</span>
+            <span id="disburseBtnLabel">Release Stipends</span>
           </button>
         </div>
       </div>
@@ -771,12 +781,9 @@
         apps: [],
         fundLog: [],
         disbursements: [],
-        selectedScholar: null,
+        selectedScholars: new Map(), // id -> scholar object
         pickerIndex: -1,
         pickerMatches: [],
-        massQuery: '',
-        massSelected: new Set(),      // scholar ids
-        disburseMode: 'single',
         tab: 'all',
         search: '',
         from: '',
@@ -1033,60 +1040,22 @@
       }
 
       /* =========================================================
-         DISBURSE BUTTON LABEL
-         The selected-count lives in exactly ONE place — the mass
-         summary line. The button only states the action.
-         ========================================================= */
-      function updateDisburseUI() {
-        const n = state.massSelected.size;
-        const label = document.getElementById('disburseBtnLabel');
-        if (state.disburseMode === 'mass') {
-          label.textContent = n === 0
-            ? 'Release selected stipends'
-            : `Release ${n} stipend${n === 1 ? '' : 's'}`;
-        } else {
-          label.textContent = 'Release stipend';
-        }
-      }
-
-      /* =========================================================
-         MODE TOGGLE
-         ========================================================= */
-      function switchMode(mode) {
-        if (mode === state.disburseMode) return;
-        state.disburseMode = mode;
-        document.querySelectorAll('.mode-btn').forEach(b => {
-          const on = b.dataset.mode === mode;
-          b.classList.toggle('is-active', on);
-          b.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-        document.getElementById('singleMode').hidden = mode !== 'single';
-        document.getElementById('massMode').hidden = mode !== 'mass';
-
-        if (mode === 'mass') {
-          refreshMassList();
-          updateMassSummary();
-        }
-        updateAmountNote();
-        updateDisburseUI();
-      }
-      document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
-      });
-
-      /* =========================================================
-         SINGLE PICKER
+         UNIFIED SCHOLAR SEARCH & SELECTION
          ========================================================= */
       const pickerInput = document.getElementById('disbScholarSearch');
       const pickerPanel = document.getElementById('scholarPanel');
       const pickerList = document.getElementById('scholarList');
       const pickerEmpty = document.getElementById('scholarEmpty');
       const pickerClear = document.getElementById('scholarClear');
-      const selectedCard = document.getElementById('selectedScholarCard');
+      const selectedScholarsWrap = document.getElementById('selectedScholarsWrap');
+      const selectedScholarsList = document.getElementById('selectedScholarsList');
+      const scholarChipEmpty = document.getElementById('scholarChipEmpty');
+      const selectedCountEl = document.getElementById('selectedCount');
+      const clearAllScholarsBtn = document.getElementById('clearAllScholars');
 
       function scholarMatches(query) {
         const q = String(query || '').trim().toLowerCase();
-        const list = acceptedScholars();
+        const list = acceptedScholars().filter(app => !state.selectedScholars.has(String(app.id)));
         if (!q) return list.slice(0, 40);
         return list.filter(app => {
           const hay = [app.name, app.school, app.grade, app.reference, app.referenceNumber, app.barangay]
@@ -1094,6 +1063,7 @@
           return hay.includes(q);
         }).slice(0, 40);
       }
+
       function openPicker() {
         if (!pickerPanel.hidden) return;
         pickerPanel.hidden = false;
@@ -1116,13 +1086,12 @@
         pickerEmpty.hidden = true;
         pickerList.innerHTML = state.pickerMatches.map((app, i) => {
           const past = history.get(String(app.id)) || [];
-          const selected = state.selectedScholar && String(state.selectedScholar.id) === String(app.id);
           const sub = [app.school || 'School not listed', app.grade ? `Grade ${app.grade}` : null, app.barangay]
             .filter(Boolean).join(' · ');
           const tag = past.length ? `${past.length} stipend${past.length === 1 ? '' : 's'}` : 'No stipends yet';
           return `
-            <div class="picker-option${selected ? ' is-selected' : ''}${i === state.pickerIndex ? ' is-active' : ''}"
-                 role="option" aria-selected="${selected}" data-index="${i}" data-id="${escapeHtml(app.id)}">
+            <div class="picker-option${i === state.pickerIndex ? ' is-active' : ''}"
+                 role="option" aria-selected="false" data-index="${i}" data-id="${escapeHtml(app.id)}">
               <span class="picker-avatar">${escapeHtml(initials(app.name))}</span>
               <span class="picker-main">
                 <span class="picker-name">${escapeHtml(app.name || 'Unnamed scholar')}</span>
@@ -1132,35 +1101,121 @@
             </div>`;
         }).join('');
       }
-      function selectScholar(app) {
-        state.selectedScholar = app || null;
-        if (app) {
-          pickerInput.value = app.name || '';
-          pickerClear.hidden = false;
-          selectedCard.hidden = false;
-          document.getElementById('selAvatar').textContent = initials(app.name);
-          document.getElementById('selName').textContent = app.name || 'Unnamed scholar';
-          const past = stipendHistoryByScholar().get(String(app.id)) || [];
-          const sub = [
-            app.school || 'School not listed',
-            app.grade ? `Grade ${app.grade}` : null,
-            past.length ? `${past.length} prior stipend${past.length === 1 ? '' : 's'}` : 'No prior stipends'
-          ].filter(Boolean).join(' · ');
-          document.getElementById('selSub').textContent = sub;
-        } else {
-          pickerClear.hidden = true;
-          selectedCard.hidden = true;
-        }
-        closePicker();
-        updateAmountNote();
-      }
-      function clearScholar() {
-        state.selectedScholar = null;
+
+      function addScholar(app) {
+        if (!app) return;
+        state.selectedScholars.set(String(app.id), app);
+        renderSelectedScholars();
         pickerInput.value = '';
         pickerClear.hidden = true;
-        selectedCard.hidden = true;
-        updateAmountNote();
+        closePicker();
+        pickerInput.focus();
+        updateDisburseSummary();
+        updateDisburseUI();
       }
+
+      function removeScholar(id) {
+        state.selectedScholars.delete(String(id));
+        renderSelectedScholars();
+        updateDisburseSummary();
+        updateDisburseUI();
+      }
+
+      function renderSelectedScholars() {
+        const scholars = [...state.selectedScholars.values()];
+        selectedCountEl.textContent = scholars.length;
+
+        if (!scholars.length) {
+          scholarChipEmpty.hidden = false;
+          selectedScholarsList.innerHTML = ''; // clear previous chips
+          selectedScholarsList.appendChild(scholarChipEmpty);
+          return;
+        }
+
+        scholarChipEmpty.hidden = true;
+        // Remove the empty placeholder if it exists
+        if (scholarChipEmpty.parentNode === selectedScholarsList) {
+          selectedScholarsList.removeChild(scholarChipEmpty);
+        }
+
+        // Rebuild the list
+        selectedScholarsList.innerHTML = scholars.map(s => {
+          const sub = [s.school || 'School not listed', s.grade ? `Grade ${s.grade}` : null]
+            .filter(Boolean).join(' · ');
+          return `
+            <div class="scholar-chip" data-id="${escapeHtml(s.id)}">
+              <span class="picker-avatar">${escapeHtml(initials(s.name))}</span>
+              <span class="scholar-chip-info">
+                <span class="scholar-chip-name">${escapeHtml(s.name || 'Unnamed scholar')}</span>
+                <span class="scholar-chip-sub">${escapeHtml(sub)}</span>
+              </span>
+              <button type="button" class="scholar-chip-remove" data-remove-id="${escapeHtml(s.id)}" title="Remove scholar">✕</button>
+            </div>`;
+        }).join('');
+      }
+
+      // Event listeners for the picker
+      pickerInput.addEventListener('focus', openPicker);
+      pickerInput.addEventListener('input', () => {
+        state.pickerIndex = -1;
+        openPicker();
+        refreshPickerList();
+      });
+      pickerInput.addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (pickerPanel.hidden) openPicker();
+          highlightPickerIndex(state.pickerIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          highlightPickerIndex(state.pickerIndex - 1);
+        } else if (e.key === 'Enter') {
+          if (!pickerPanel.hidden && state.pickerIndex >= 0) {
+            e.preventDefault();
+            const app = state.pickerMatches[state.pickerIndex];
+            if (app) addScholar(app);
+          }
+        } else if (e.key === 'Escape') {
+          closePicker();
+        }
+      });
+      pickerList.addEventListener('mousedown', e => {
+        const option = e.target.closest('.picker-option');
+        if (!option) return;
+        e.preventDefault();
+        const app = state.pickerMatches[Number(option.dataset.index)];
+        if (app) addScholar(app);
+      });
+      pickerClear.addEventListener('click', () => {
+        pickerInput.value = '';
+        pickerClear.hidden = true;
+        refreshPickerList();
+        pickerInput.focus();
+      });
+      pickerInput.addEventListener('input', () => {
+        pickerClear.hidden = !pickerInput.value.trim();
+      });
+      document.addEventListener('click', e => {
+        if (!e.target.closest('#scholarPicker')) closePicker();
+      });
+
+      // Remove scholar chip
+      selectedScholarsList.addEventListener('click', e => {
+        const removeBtn = e.target.closest('[data-remove-id]');
+        if (removeBtn) {
+          removeScholar(removeBtn.dataset.removeId);
+        }
+      });
+
+      // Clear all scholars
+      clearAllScholarsBtn.addEventListener('click', () => {
+        state.selectedScholars.clear();
+        renderSelectedScholars();
+        updateDisburseSummary();
+        updateDisburseUI();
+        pickerInput.focus();
+      });
+
       function highlightPickerIndex(next) {
         if (!state.pickerMatches.length) return;
         const max = state.pickerMatches.length - 1;
@@ -1171,268 +1226,221 @@
           if (on) el.scrollIntoView({ block: 'nearest' });
         });
       }
-      pickerInput.addEventListener('focus', openPicker);
-      pickerInput.addEventListener('input', () => {
-        if (state.selectedScholar && pickerInput.value.trim() !== (state.selectedScholar.name || '').trim()) {
-          state.selectedScholar = null;
-          selectedCard.hidden = true;
-          pickerClear.hidden = !pickerInput.value.trim();
-        }
-        state.pickerIndex = -1;
-        openPicker();
-        refreshPickerList();
-        updateAmountNote();
-      });
-      pickerInput.addEventListener('keydown', e => {
-        if (e.key === 'ArrowDown') { e.preventDefault(); if (pickerPanel.hidden) openPicker(); highlightPickerIndex(state.pickerIndex + 1); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); highlightPickerIndex(state.pickerIndex - 1); }
-        else if (e.key === 'Enter') {
-          if (!pickerPanel.hidden && state.pickerIndex >= 0) {
-            e.preventDefault();
-            const app = state.pickerMatches[state.pickerIndex];
-            if (app) selectScholar(app);
-          }
-        } else if (e.key === 'Escape') closePicker();
-      });
-      pickerList.addEventListener('mousedown', e => {
-        const option = e.target.closest('.picker-option');
-        if (!option) return;
-        e.preventDefault();
-        const app = state.pickerMatches[Number(option.dataset.index)];
-        if (app) selectScholar(app);
-      });
-      pickerClear.addEventListener('click', () => { clearScholar(); pickerInput.focus(); });
-      document.getElementById('selChange').addEventListener('click', () => {
-        clearScholar(); pickerInput.focus(); openPicker();
-      });
-      document.addEventListener('click', e => {
-        if (!e.target.closest('#scholarPicker')) closePicker();
-      });
 
       /* =========================================================
-         MASS PICKER
+         DISBURSE SUMMARY & BUTTON
          ========================================================= */
-      const massList = document.getElementById('massList');
-      const massSearch = document.getElementById('massSearch');
-      const massSelectAllBox = document.getElementById('massSelectAll');
-      const massSelectAllLabel = document.getElementById('massSelectAllLabel');
+      const disbAmountInput = document.getElementById('disbAmount');
+      const disbPeriodInput = document.getElementById('disbPeriod');
+      const summaryBox = document.getElementById('summaryBox');
+      const summaryCount = document.getElementById('summaryCount');
+      const summaryTotal = document.getElementById('summaryTotal');
+      const summaryBalancePill = document.getElementById('summaryBalancePill');
+      const amountNote = document.getElementById('amountNote');
+      const amountNoteText = document.getElementById('amountNoteText');
+      const disburseBtn = document.getElementById('disburseBtn');
+      const disburseBtnLabel = document.getElementById('disburseBtnLabel');
 
-      function massMatches() {
-        const q = state.massQuery.trim().toLowerCase();
-        const list = acceptedScholars();
-        if (!q) return list;
-        return list.filter(app => {
-          const hay = [app.name, app.school, app.grade, app.reference, app.barangay]
-            .filter(Boolean).join(' ').toLowerCase();
-          return hay.includes(q);
-        });
-      }
-
-      /** Keeps the "All" checkbox in sync with what's actually visible. */
-      function updateMassSelectAll() {
-        if (!massSelectAllBox) return;
-        const matches = massMatches();
-        const total = matches.length;
-        const selected = matches.filter(a => state.massSelected.has(String(a.id))).length;
-        massSelectAllBox.disabled = total === 0;
-        massSelectAllBox.checked = total > 0 && selected === total;
-        massSelectAllBox.indeterminate = selected > 0 && selected < total;
-        massSelectAllLabel.classList.toggle('is-disabled', total === 0);
-      }
-
-      function refreshMassList() {
-        const history = stipendHistoryByScholar();
-        const period = document.getElementById('massPeriod').value.trim().toLowerCase();
-        const matches = massMatches();
-
-        if (!matches.length) {
-          massList.innerHTML = `<div class="mass-empty">${
-            acceptedScholars().length
-              ? 'No accepted scholar matches that filter.'
-              : 'No accepted scholars yet — approve applications first.'
-          }</div>`;
-          updateMassSelectAll();
-          return;
-        }
-
-        massList.innerHTML = matches.map(app => {
-          const id = String(app.id);
-          const past = history.get(id) || [];
-          const selected = state.massSelected.has(id);
-          const sub = [app.school || 'School not listed', app.grade ? `Grade ${app.grade}` : null, app.barangay]
-            .filter(Boolean).join(' · ');
-          let flag = `<span class="mass-item-flag ok">${past.length ? past.length + ' prior' : 'New'}</span>`;
-          if (period) {
-            const dup = past.some(p => String(p.period || '').trim().toLowerCase() === period);
-            if (dup) flag = '<span class="mass-item-flag dup">Already released</span>';
-          }
-          return `
-            <label class="mass-item${selected ? ' is-selected' : ''}" data-id="${escapeHtml(id)}">
-              <input type="checkbox" ${selected ? 'checked' : ''} data-mass-check="${escapeHtml(id)}">
-              <span class="picker-avatar">${escapeHtml(initials(app.name))}</span>
-              <span class="mass-item-main">
-                <span class="mass-item-name">${escapeHtml(app.name || 'Unnamed scholar')}</span>
-                <span class="mass-item-sub">${escapeHtml(sub)}</span>
-              </span>
-              ${flag}
-            </label>`;
-        }).join('');
-
-        updateMassSelectAll();
-      }
-
-      massList.addEventListener('change', e => {
-        const box = e.target.closest('input[data-mass-check]');
-        if (!box) return;
-        const id = box.dataset.massCheck;
-        if (box.checked) state.massSelected.add(id);
-        else state.massSelected.delete(id);
-        const item = box.closest('.mass-item');
-        if (item) item.classList.toggle('is-selected', box.checked);
-        updateMassSelectAll();
-        updateMassSummary();
-        updateDisburseUI();
-      });
-
-      massSelectAllBox.addEventListener('change', e => {
-        const matches = massMatches();
-        if (e.target.checked) matches.forEach(a => state.massSelected.add(String(a.id)));
-        else matches.forEach(a => state.massSelected.delete(String(a.id)));
-        refreshMassList();
-        updateMassSummary();
-        updateDisburseUI();
-      });
-
-      massSearch.addEventListener('input', debounce(e => {
-        state.massQuery = e.target.value;
-        refreshMassList();
-      }, 130));
-
-      document.getElementById('massNone').addEventListener('click', () => {
-        state.massSelected.clear();
-        refreshMassList();
-        updateMassSummary();
-        updateDisburseUI();
-      });
-
-      document.querySelectorAll('[data-mass-amount]').forEach(chip => {
-        chip.addEventListener('click', () => {
-          document.getElementById('massAmount').value = chip.dataset.massAmount;
-          document.querySelectorAll('[data-mass-amount]').forEach(c => c.classList.toggle('is-on', c === chip));
-          updateMassSummary();
-          updateDisburseUI();
-        });
-      });
-      document.getElementById('massPeriodNow').addEventListener('click', () => {
-        document.getElementById('massPeriod').value = monthLabel(0);
-        refreshMassList();
-        updateMassSummary();
-      });
-
-      ['massAmount', 'massPeriod'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => {
-          if (id === 'massPeriod') refreshMassList();
-          updateMassSummary();
-          updateDisburseUI();
-        });
-      });
-
-      function massTotal() {
-        const n = state.massSelected.size;
-        const amount = Number(document.getElementById('massAmount').value) || 0;
-        return n * amount;
-      }
-      function updateMassSummary() {
-        const n = state.massSelected.size;
-        const amount = Number(document.getElementById('massAmount').value) || 0;
-        const total = massTotal();
+      function updateDisburseSummary() {
+        const n = state.selectedScholars.size;
+        const amount = Number(disbAmountInput.value) || 0;
+        const total = n * amount;
         const { balance } = totals();
         const after = balance - total;
 
-        document.getElementById('massSelectedText').innerHTML =
-          `<b class="strong">${n}</b> selected`;
-        document.getElementById('massTotalText').innerHTML =
-          `Total: <b>${escapeHtml(peso(total))}</b>`;
-
-        const pill = document.getElementById('massBalancePill');
-        pill.textContent = `Remaining: ${peso(after)}`;
-        pill.className = 'pill' + (after < 0 ? ' danger' : after < LOW_BALANCE_THRESHOLD ? ' warn' : '');
-
-        const note = document.getElementById('massNote');
-        const noteText = document.getElementById('massNoteText');
-        const period = document.getElementById('massPeriod').value.trim();
-
-        const history = stipendHistoryByScholar();
-        let dupCount = 0;
-        if (period) {
-          state.massSelected.forEach(id => {
-            const list = history.get(String(id)) || [];
-            if (list.some(p => String(p.period || '').trim().toLowerCase() === period.toLowerCase())) dupCount++;
-          });
-        }
-
-        if (n === 0) { note.hidden = true; }
-        else if (after < 0) {
-          note.hidden = false;
-          note.className = 'inline-note danger';
-          noteText.innerHTML = `Total exceeds available balance of <b>${escapeHtml(peso(balance))}</b> — you'll overdraw by <b>${escapeHtml(peso(-after))}</b>.`;
-        } else if (dupCount > 0) {
-          note.hidden = false;
-          note.className = 'inline-note warn';
-          noteText.innerHTML = `<b>${dupCount}</b> selected scholar${dupCount === 1 ? ' has' : 's have'} already received a stipend for <b>${escapeHtml(period)}</b>.`;
+        if (n === 0) {
+          summaryBox.hidden = true;
+          amountNote.hidden = true;
         } else {
-          note.hidden = false;
-          note.className = 'inline-note ok';
-          noteText.innerHTML = `Ready to release <b>${escapeHtml(peso(total))}</b> across <b>${n}</b> scholar${n === 1 ? '' : 's'}. Balance after: <b>${escapeHtml(peso(after))}</b>.`;
+          summaryBox.hidden = false;
+          summaryCount.textContent = n;
+          summaryTotal.textContent = peso(total);
+          summaryBalancePill.textContent = peso(after);
+          summaryBalancePill.className = 'pill' + (after < 0 ? ' danger' : after < LOW_BALANCE_THRESHOLD ? ' warn' : '');
+
+          // Amount note logic
+          if (amount <= 0) {
+            amountNote.hidden = true;
+          } else if (balance <= 0) {
+            amountNote.hidden = false;
+            amountNote.className = 'inline-note danger';
+            amountNoteText.innerHTML = `No funds are available. Balance is <b>${escapeHtml(peso(balance))}</b>.`;
+          } else if (total > balance) {
+            amountNote.hidden = false;
+            amountNote.className = 'inline-note warn';
+            amountNoteText.innerHTML = `Total exceeds the available balance of <b>${escapeHtml(peso(balance))}</b> — overdraw by <b>${escapeHtml(peso(total - balance))}</b>.`;
+          } else {
+            amountNote.hidden = false;
+            amountNote.className = 'inline-note ok';
+            amountNoteText.innerHTML = `Ready to release <b>${escapeHtml(peso(total))}</b> across <b>${n}</b> scholar${n === 1 ? '' : 's'}.`;
+          }
         }
+        updateDisburseUI();
       }
 
-      /* =========================================================
-         SINGLE AMOUNT NOTE
-         ========================================================= */
-      const disbAmountInput = document.getElementById('disbAmount');
-      const amountNote = document.getElementById('amountNote');
-      const amountNoteText = document.getElementById('amountNoteText');
-
-      function updateAmountNote() {
-        if (state.disburseMode === 'mass') return;
-        const amount = Number(disbAmountInput.value) || 0;
-        const { balance } = totals();
-        if (!amount || amount <= 0) { amountNote.hidden = true; return; }
-        if (balance <= 0) {
-          amountNote.hidden = false;
-          amountNote.className = 'inline-note danger';
-          amountNoteText.innerHTML = `No funds are available. Balance is <b>${escapeHtml(peso(balance))}</b>.`;
-          return;
-        }
-        if (amount > balance) {
-          amountNote.hidden = false;
-          amountNote.className = 'inline-note warn';
-          amountNoteText.innerHTML = `Exceeds the available balance of <b>${escapeHtml(peso(balance))}</b> — overdraw by <b>${escapeHtml(peso(amount - balance))}</b>.`;
-          return;
-        }
-        amountNote.hidden = false;
-        amountNote.className = 'inline-note ok';
-        amountNoteText.innerHTML = `Balance after release: <b>${escapeHtml(peso(balance - amount))}</b>.`;
+      function updateDisburseUI() {
+        const n = state.selectedScholars.size;
+        disburseBtn.disabled = n === 0;
+        disburseBtnLabel.textContent = n === 0
+          ? 'Release Stipends'
+          : `Release ${n} Stipend${n === 1 ? '' : 's'}`;
       }
+
+      // Amount input changes
       disbAmountInput.addEventListener('input', () => {
         document.querySelectorAll('[data-amount]').forEach(chip => {
           chip.classList.toggle('is-on', Number(chip.dataset.amount) === Number(disbAmountInput.value));
         });
-        updateAmountNote();
+        updateDisburseSummary();
       });
+
+      // Quick amount chips
       document.querySelectorAll('[data-amount]').forEach(chip => {
         chip.addEventListener('click', () => {
           disbAmountInput.value = chip.dataset.amount;
           disbAmountInput.dispatchEvent(new Event('input'));
         });
       });
+
+      // Period quick chips
       document.getElementById('periodNow').addEventListener('click', () => {
-        document.getElementById('disbPeriod').value = monthLabel(0);
+        disbPeriodInput.value = monthLabel(0);
       });
       document.getElementById('periodLast').addEventListener('click', () => {
-        document.getElementById('disbPeriod').value = monthLabel(-1);
+        disbPeriodInput.value = monthLabel(-1);
       });
+
+      /* =========================================================
+         DISBURSE ACTION
+         ========================================================= */
+      async function disburseStipends() {
+        const scholars = [...state.selectedScholars.values()];
+        const amount = Number(disbAmountInput.value) || 0;
+        const period = disbPeriodInput.value.trim();
+
+        if (!scholars.length) {
+          return toast('Please add at least one scholar first.', 'warn');
+        }
+        if (!amount || amount <= 0) {
+          markInvalid(disbAmountInput);
+          return toast('Please enter a valid amount.', 'warn');
+        }
+        if (!period) {
+          markInvalid(disbPeriodInput);
+          return toast('Please enter the stipend period or month.', 'warn');
+        }
+
+        const total = amount * scholars.length;
+        const { balance } = totals();
+        const after = balance - total;
+
+        const history = stipendHistoryByScholar();
+        const dupes = scholars.filter(s => {
+          const list = history.get(String(s.id)) || [];
+          return list.some(p => String(p.period || '').trim().toLowerCase() === period.toLowerCase());
+        });
+
+        const previewList = scholars.slice(0, 30).map(s =>
+          `<li><span>${escapeHtml(s.name || '—')}</span><span>${escapeHtml(peso(amount))}</span></li>`
+        ).join('');
+        const extra = scholars.length > 30 ? `<li><span>…and ${scholars.length - 30} more</span><span></span></li>` : '';
+
+        let warning = '';
+        if (dupes.length) {
+          warning += `<p style="color:#7a4e00"><b>⚠ ${dupes.length}</b> scholar${dupes.length === 1 ? ' has' : 's have'} already received a stipend for <b>${escapeHtml(period)}</b>.</p>`;
+        }
+        if (after < 0) {
+          warning += `<p style="color:#8b241c"><b>⚠ This will overdraw the fund by ${escapeHtml(peso(-after))}.</b> Balance after: ${escapeHtml(peso(after))}.</p>`;
+        }
+
+        const confirmTitle = scholars.length === 1
+          ? `Release stipend to ${scholars[0].name}?`
+          : `Release to ${scholars.length} scholars?`;
+
+        const ok = await confirmDialog({
+          title: confirmTitle,
+          tone: after < 0 ? 'danger' : dupes.length ? 'warn' : 'ok',
+          confirmText: `Release ${peso(total)}`,
+          body: `
+            <p>You are about to release a stipend of <b>${escapeHtml(peso(amount))}</b> to <b>${scholars.length}</b> scholar${scholars.length === 1 ? '' : 's'} for <b>${escapeHtml(period)}</b>.</p>
+            <div class="modal-kv"><span>Total to release</span><span>${escapeHtml(peso(total))}</span></div>
+            <div class="modal-kv"><span>Current balance</span><span>${escapeHtml(peso(balance))}</span></div>
+            <div class="modal-kv"><span>Balance after</span><span style="color:${after < 0 ? 'var(--red)' : 'var(--green)'}">${escapeHtml(peso(after))}</span></div>
+            ${warning}
+            <ul class="preview-list">${previewList}${extra}</ul>
+          `
+        });
+        if (!ok) return;
+
+        disburseBtn.disabled = true;
+        disburseBtnLabel.textContent = `Releasing 0 / ${scholars.length}…`;
+
+        const batch = batchRef();
+        const succeeded = [];
+        const failed = [];
+
+        for (let i = 0; i < scholars.length; i++) {
+          const s = scholars[i];
+          try {
+            const result = await MefamAPI.disburseStipend(Number(s.id), amount, period);
+            if (result && result.ok !== false) {
+              succeeded.push({
+                scholar: s,
+                entry: {
+                  id: result?.id || result?.disbursement?.id,
+                  scholarId: s.id,
+                  scholarName: s.name,
+                  amount, period,
+                  date: result?.date || todayISO(),
+                  batchId: batch
+                }
+              });
+            } else {
+              failed.push({ scholar: s, error: result?.error || 'Unknown error' });
+            }
+          } catch (err) {
+            failed.push({ scholar: s, error: err.message || 'Request failed' });
+          }
+          disburseBtnLabel.textContent = `Releasing ${i + 1} / ${scholars.length}…`;
+        }
+
+        disburseBtn.disabled = false;
+
+        state.selectedScholars.clear();
+        renderSelectedScholars();
+        await loadData({ silent: true });
+        updateDisburseSummary();
+        updateDisburseUI();
+
+        const okCount = succeeded.length;
+        const failCount = failed.length;
+        const totalReleased = amount * okCount;
+
+        if (failCount === 0) {
+          toast(`Released ${peso(totalReleased)} to ${okCount} scholar${okCount === 1 ? '' : 's'} · Batch ${batch}.`,
+            'success', 9000, {
+              label: `Print ${okCount} receipt${okCount === 1 ? '' : 's'}`,
+              duration: 12000,
+              onClick: () => {
+                const html = succeeded.map(s => buildReceiptHTML(s.entry, s.scholar)).join('');
+                openPrintWindow(`${okCount} Stipend Receipts`, html);
+              }
+            });
+        } else {
+          toast(`Released ${okCount} of ${scholars.length}. ${failCount} failed — check console for details.`,
+            'warn', 9000, {
+              label: 'Print receipts',
+              duration: 12000,
+              onClick: () => {
+                const html = succeeded.map(s => buildReceiptHTML(s.entry, s.scholar)).join('');
+                openPrintWindow(`${okCount} Stipend Receipts`, html);
+              }
+            });
+          console.warn('Mass disburse failures:', failed);
+        }
+      }
+
+      disburseBtn.addEventListener('click', disburseStipends);
 
       /* =========================================================
          LEDGER RENDER
@@ -1887,24 +1895,19 @@
           state.fundLog = Array.isArray(fundLog) ? fundLog : [];
           state.disbursements = Array.isArray(disbursements) ? disbursements : [];
 
-          if (state.selectedScholar) {
-            const fresh = state.apps.find(a => String(a.id) === String(state.selectedScholar.id));
-            if (fresh) selectScholar(fresh);
-            else clearScholar();
-          }
-          // Prune any mass selections that are no longer accepted
+          // Prune selected scholars that are no longer accepted
           const validIds = new Set(state.apps.filter(a => a.status === 'Accepted').map(a => String(a.id)));
-          [...state.massSelected].forEach(id => { if (!validIds.has(id)) state.massSelected.delete(id); });
+          [...state.selectedScholars.keys()].forEach(id => {
+            if (!validIds.has(id)) state.selectedScholars.delete(id);
+          });
+          renderSelectedScholars();
 
           renderStats();
           renderLedger();
-          refreshPickerList();
-          if (state.disburseMode === 'mass') { refreshMassList(); updateMassSummary(); }
-          updateAmountNote();
-          updateDisburseUI();
+          updateDisburseSummary();
         } catch (error) {
           console.error('Failed to load financials data:', error);
-          toast('Unable to load financial data right now.', 'error');
+          if (!silent) toast('Unable to load financial data right now.', 'error');
         }
       }
 
@@ -1963,7 +1966,7 @@
       }
 
       /* =========================================================
-         ACTIONS
+         ADD FUNDS ACTION
          ========================================================= */
       async function addFunds() {
         const sourceEl = document.getElementById('fundSource');
@@ -1994,196 +1997,9 @@
         } finally { btn.disabled = false; }
       }
 
-      async function disburseSingle() {
-        const amountEl = disbAmountInput;
-        const periodEl = document.getElementById('disbPeriod');
-        const period = periodEl.value.trim();
-        const amount = Number(amountEl.value);
-
-        if (!state.selectedScholar) { pickerInput.focus(); openPicker(); return toast('Please select a scholar first.', 'warn'); }
-        if (!amount || amount <= 0) { markInvalid(amountEl); return toast('Please enter a valid amount.', 'warn'); }
-        if (!period) { markInvalid(periodEl); return toast('Please enter the stipend period or month.', 'warn'); }
-
-        const { balance } = totals();
-        const scholar = state.selectedScholar;
-
-        const samePeriod = state.disbursements.find(entry => {
-          const id = String(entry.scholarId ?? entry.scholar_id ?? entry.appId ?? entry.app_id ?? '');
-          return id === String(scholar.id) && String(entry.period || '').trim().toLowerCase() === period.toLowerCase();
-        });
-        if (samePeriod) {
-          const ok = await confirmDialog({
-            title: 'Duplicate period detected', tone: 'warn', confirmText: 'Release anyway',
-            body: `<p><b>${escapeHtml(scholar.name || 'This scholar')}</b> already has a stipend recorded for <b>${escapeHtml(period)}</b>.</p>
-                   <div class="modal-kv"><span>Existing release</span><span>${escapeHtml(peso(samePeriod.amount))}</span></div>
-                   <p style="margin-top:10px">Release another stipend for the same period?</p>`
-          });
-          if (!ok) return;
-        }
-
-        if (amount > balance) {
-          const ok = await confirmDialog({
-            title: balance <= 0 ? 'No funds available' : 'This will overdraw the fund',
-            tone: 'danger', confirmText: 'Release anyway',
-            body: `<p>Available balance is <b>${escapeHtml(peso(balance))}</b> but this release is <b>${escapeHtml(peso(amount))}</b>.</p>
-                   <div class="modal-kv"><span>Shortfall</span><span>${escapeHtml(peso(amount - balance))}</span></div>
-                   <p style="margin-top:10px">The ledger balance will go negative. Continue?</p>`
-          });
-          if (!ok) return;
-        }
-
-        const btn = document.getElementById('disburseBtn');
-        btn.disabled = true;
-        try {
-          const result = await MefamAPI.disburseStipend(Number(scholar.id), amount, period);
-          if (!result || result.ok === false) throw new Error(result?.error || 'Unable to release the stipend.');
-
-          const scholarName = scholar.name || 'Scholar';
-          clearScholar();
-          amountEl.value = '3000';
-          periodEl.value = '';
-          amountEl.dispatchEvent(new Event('input'));
-
-          await loadData({ silent: true });
-
-          const newEntry = {
-            id: result?.id || result?.disbursement?.id,
-            scholarId: scholar.id,
-            scholarName,
-            amount, period,
-            date: result?.date || todayISO()
-          };
-          toast(`Released ${peso(amount)} to ${scholarName} for ${period}.`, 'success', 7000, {
-            label: 'Receipt', duration: 8000,
-            onClick: () => openPrintWindow('Stipend Receipt', buildReceiptHTML(newEntry, scholar))
-          });
-        } catch (error) {
-          console.error('Failed to disburse stipend:', error);
-          toast(error.message || 'Unable to release the stipend right now.', 'error');
-        } finally { btn.disabled = false; }
-      }
-
-      async function disburseMass() {
-        const amountEl = document.getElementById('massAmount');
-        const periodEl = document.getElementById('massPeriod');
-        const amount = Number(amountEl.value);
-        const period = periodEl.value.trim();
-        const ids = [...state.massSelected];
-
-        if (!ids.length) return toast('Select at least one scholar.', 'warn');
-        if (!amount || amount <= 0) { markInvalid(amountEl); return toast('Please enter a valid amount.', 'warn'); }
-        if (!period) { markInvalid(periodEl); return toast('Please enter the stipend period or month.', 'warn'); }
-
-        const total = amount * ids.length;
-        const { balance } = totals();
-        const after = balance - total;
-
-        const scholars = ids.map(id => scholarById(id)).filter(Boolean);
-
-        const history = stipendHistoryByScholar();
-        const dupes = scholars.filter(s => {
-          const list = history.get(String(s.id)) || [];
-          return list.some(p => String(p.period || '').trim().toLowerCase() === period.toLowerCase());
-        });
-
-        const previewList = scholars.slice(0, 30).map(s =>
-          `<li><span>${escapeHtml(s.name || '—')}</span><span>${escapeHtml(peso(amount))}</span></li>`
-        ).join('');
-        const extra = scholars.length > 30 ? `<li><span>…and ${scholars.length - 30} more</span><span></span></li>` : '';
-
-        let warning = '';
-        if (dupes.length) {
-          warning += `<p style="color:#7a4e00"><b>⚠ ${dupes.length}</b> scholar${dupes.length === 1 ? ' has' : 's have'} already received a stipend for <b>${escapeHtml(period)}</b>.</p>`;
-        }
-        if (after < 0) {
-          warning += `<p style="color:#8b241c"><b>⚠ This will overdraw the fund by ${escapeHtml(peso(-after))}.</b> Balance after: ${escapeHtml(peso(after))}.</p>`;
-        }
-
-        const ok = await confirmDialog({
-          title: `Release to ${scholars.length} scholar${scholars.length === 1 ? '' : 's'}?`,
-          tone: after < 0 ? 'danger' : dupes.length ? 'warn' : 'ok',
-          confirmText: `Release ${peso(total)}`,
-          body: `
-            <p>You are about to release a stipend of <b>${escapeHtml(peso(amount))}</b> to <b>${scholars.length}</b> scholar${scholars.length === 1 ? '' : 's'} for <b>${escapeHtml(period)}</b>.</p>
-            <div class="modal-kv"><span>Total to release</span><span>${escapeHtml(peso(total))}</span></div>
-            <div class="modal-kv"><span>Current balance</span><span>${escapeHtml(peso(balance))}</span></div>
-            <div class="modal-kv"><span>Balance after</span><span style="color:${after < 0 ? 'var(--red)' : 'var(--green)'}">${escapeHtml(peso(after))}</span></div>
-            ${warning}
-            <ul class="preview-list">${previewList}${extra}</ul>
-          `
-        });
-        if (!ok) return;
-
-        const btn = document.getElementById('disburseBtn');
-        btn.disabled = true;
-        document.getElementById('disburseBtnLabel').textContent = `Releasing 0 / ${scholars.length}…`;
-
-        const batch = batchRef();
-        const succeeded = [];
-        const failed = [];
-
-        for (let i = 0; i < scholars.length; i++) {
-          const s = scholars[i];
-          try {
-            const result = await MefamAPI.disburseStipend(Number(s.id), amount, period);
-            if (result && result.ok !== false) {
-              succeeded.push({
-                scholar: s,
-                entry: {
-                  id: result?.id || result?.disbursement?.id,
-                  scholarId: s.id,
-                  scholarName: s.name,
-                  amount, period,
-                  date: result?.date || todayISO(),
-                  batchId: batch
-                }
-              });
-            } else {
-              failed.push({ scholar: s, error: result?.error || 'Unknown error' });
-            }
-          } catch (err) {
-            failed.push({ scholar: s, error: err.message || 'Request failed' });
-          }
-          document.getElementById('disburseBtnLabel').textContent = `Releasing ${i + 1} / ${scholars.length}…`;
-        }
-
-        btn.disabled = false;
-
-        state.massSelected.clear();
-        await loadData({ silent: true });
-        refreshMassList();
-        updateMassSummary();
-        updateDisburseUI();
-
-        const okCount = succeeded.length;
-        const failCount = failed.length;
-        const totalReleased = amount * okCount;
-
-        if (failCount === 0) {
-          toast(`Released ${peso(totalReleased)} to ${okCount} scholar${okCount === 1 ? '' : 's'} · Batch ${batch}.`,
-            'success', 9000, {
-              label: `Print ${okCount} receipt${okCount === 1 ? '' : 's'}`,
-              duration: 12000,
-              onClick: () => {
-                const html = succeeded.map(s => buildReceiptHTML(s.entry, s.scholar)).join('');
-                openPrintWindow(`${okCount} Stipend Receipts`, html);
-              }
-            });
-        } else {
-          toast(`Released ${okCount} of ${scholars.length}. ${failCount} failed — check console for details.`,
-            'warn', 9000, {
-              label: 'Print receipts',
-              duration: 12000,
-              onClick: () => {
-                const html = succeeded.map(s => buildReceiptHTML(s.entry, s.scholar)).join('');
-                openPrintWindow(`${okCount} Stipend Receipts`, html);
-              }
-            });
-          console.warn('Mass disburse failures:', failed);
-        }
-      }
-
-      /* ---------- Delete with undo ---------- */
+      /* =========================================================
+         DELETE WITH UNDO
+         ========================================================= */
       ledgerBody.addEventListener('click', async e => {
         const printBtn = e.target.closest('[data-print-receipt]');
         if (printBtn) { printReceiptForUid(printBtn.dataset.printReceipt); return; }
@@ -2255,13 +2071,8 @@
 
         document.getElementById('fundDate').value = todayISO();
         document.getElementById('disbPeriod').value = monthLabel(0);
-        document.getElementById('massPeriod').value = monthLabel(0);
 
         document.getElementById('addFundsBtn').addEventListener('click', addFunds);
-        document.getElementById('disburseBtn').addEventListener('click', () => {
-          if (state.disburseMode === 'mass') disburseMass();
-          else disburseSingle();
-        });
 
         ['fundSource', 'fundAmount', 'fundDate', 'fundNotes'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
@@ -2270,12 +2081,7 @@
         });
         ['disbAmount', 'disbPeriod'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); disburseSingle(); }
-          });
-        });
-        ['massAmount', 'massPeriod'].forEach(id => {
-          document.getElementById(id).addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); disburseMass(); }
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); disburseStipends(); }
           });
         });
 
@@ -2286,20 +2092,22 @@
           if (!active || !active.closest) return;
           if (active.closest('#disburseCard')) {
             e.preventDefault();
-            if (state.disburseMode === 'mass') disburseMass(); else disburseSingle();
+            disburseStipends();
           } else if (active.closest('#fundsCard')) {
             e.preventDefault();
             addFunds();
           }
         });
 
+        // Initial UI sync
         disbAmountInput.dispatchEvent(new Event('input'));
+        updateDisburseUI();
 
         await loadData();
       });
 
       // Expose for debugging
-      window.__mefamFinancials = { state, buildReceiptHTML, receiptNo, pesoInWords, switchMode };
+      window.__mefamFinancials = { state, buildReceiptHTML, receiptNo, pesoInWords };
 
     })();
   </script>
