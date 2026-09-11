@@ -9,33 +9,22 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --navy:#122b45;
-      --navy-2:#1d4066;
-      --navy-3:#0b1c2e;
-      --gold:#f5a623;
-      --gold-2:#e08c0b;
-      --bg:#eef2f7;
-      --surface:#fff;
-      --border:#e3e9f1;
-      --border-strong:#d3dce7;
-      --text:#1f2d3d;
-      --muted:#6b7c93;
-      --red:#b3261e;
-      --red-soft:#fdeceb;
-      --green:#0f7a4a;
-      --green-soft:#e5f6ee;
-      --amber:#95610a;
-      --amber-soft:#fff3df;
-      --teal:#0d8f78;
+      --navy:#122b45;--navy-2:#1d4066;--navy-3:#0b1c2e;
+      --gold:#f5a623;--gold-2:#e08c0b;
+      --bg:#eef2f7;--surface:#fff;
+      --border:#e3e9f1;--border-strong:#d3dce7;
+      --text:#1f2d3d;--muted:#6b7c93;
+      --red:#b3261e;--red-soft:#fdeceb;
+      --green:#0f7a4a;--green-soft:#e5f6ee;
+      --amber:#95610a;--amber-soft:#fff3df;
+      --teal:#0d8f78;--teal-soft:#e3f6f2;
       --radius:16px;
       --shadow-sm:0 1px 2px rgba(16,38,64,.06),0 1px 3px rgba(16,38,64,.05);
       --shadow-md:0 4px 18px -4px rgba(16,38,64,.10),0 1px 3px rgba(16,38,64,.05);
       --shadow-lg:0 22px 45px -18px rgba(16,38,64,.35);
     }
-
     *,*::before,*::after{box-sizing:border-box}
     html{-webkit-text-size-adjust:100%}
-
     body{
       margin:0;min-height:100vh;
       font-family:'DM Sans',system-ui,-apple-system,sans-serif;
@@ -48,64 +37,38 @@
     }
 
     /* ============ APP BAR ============ */
-    .appbar{
-      position:relative;color:#fff;
+    .appbar{position:relative;color:#fff;
       background:linear-gradient(135deg,#0a1a2b 0%,#16324f 52%,#1e4670 100%);
-      overflow:hidden;isolation:isolate;
-    }
-    .appbar::after{
-      content:'';position:absolute;inset:0;z-index:-1;
+      overflow:hidden;isolation:isolate;}
+    .appbar::after{content:'';position:absolute;inset:0;z-index:-1;
       background:
         radial-gradient(620px 260px at 86% -20%, rgba(245,166,35,.32), transparent 68%),
-        radial-gradient(420px 220px at 12% 120%, rgba(96,165,250,.16), transparent 70%);
-    }
-    .appbar::before{
-      content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
-      background:linear-gradient(90deg,var(--gold-2),#ffd479 40%,var(--gold) 70%,var(--gold-2));
-    }
-    .appbar-inner{
-      position:relative;z-index:1;max-width:1360px;margin:0 auto;
-      padding:22px 24px;
-      display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;
-    }
+        radial-gradient(420px 220px at 12% 120%, rgba(96,165,250,.16), transparent 70%);}
+    .appbar::before{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;
+      background:linear-gradient(90deg,var(--gold-2),#ffd479 40%,var(--gold) 70%,var(--gold-2));}
+    .appbar-inner{position:relative;z-index:1;max-width:1360px;margin:0 auto;
+      padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;}
     .brand{display:flex;align-items:center;gap:15px;min-width:0}
-    .brand-mark{
-      width:48px;height:48px;border-radius:14px;flex:0 0 auto;
-      display:grid;place-items:center;
-      font-family:'DM Serif Display',serif;font-size:25px;line-height:1;color:#12283f;
+    .brand-mark{width:48px;height:48px;border-radius:14px;flex:0 0 auto;
+      display:grid;place-items:center;font-family:'DM Serif Display',serif;font-size:25px;line-height:1;color:#12283f;
       background:linear-gradient(140deg,#ffe0a3,#f5a623 55%,#d98508);
-      box-shadow:0 10px 24px -8px rgba(245,166,35,.75), inset 0 1px 0 rgba(255,255,255,.7);
-    }
-    .brand-org{
-      display:block;font-size:.66rem;font-weight:700;letter-spacing:.2em;
-      text-transform:uppercase;color:rgba(255,255,255,.58);
-    }
-    h1{
-      margin:3px 0 0;font-family:'DM Serif Display',serif;font-weight:400;
-      font-size:1.65rem;letter-spacing:.01em;color:#fff;
-    }
+      box-shadow:0 10px 24px -8px rgba(245,166,35,.75), inset 0 1px 0 rgba(255,255,255,.7);}
+    .brand-org{display:block;font-size:.66rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.58);}
+    h1{margin:3px 0 0;font-family:'DM Serif Display',serif;font-weight:400;font-size:1.65rem;letter-spacing:.01em;color:#fff;}
     .appbar-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
     .tagline{margin:0;max-width:320px;color:rgba(255,255,255,.68);font-size:.83rem;line-height:1.45}
-    .back{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:10px 16px;border-radius:11px;
+    .back{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:11px;
       font-size:.82rem;font-weight:600;text-decoration:none;color:#fff;
       background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
-      transition:background .2s ease,transform .2s ease,border-color .2s ease;
-    }
+      transition:background .2s ease,transform .2s ease,border-color .2s ease;}
     .back:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);transform:translateX(-2px)}
 
     /* ============ LAYOUT ============ */
     .page{max-width:1360px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:22px}
 
     /* ============ BANNER ============ */
-    .banner{
-      display:flex;align-items:flex-start;gap:11px;
-      padding:14px 16px;border-radius:14px;
-      font-size:.85rem;line-height:1.5;
-      border:1px solid;
-      animation:bannerIn .28s cubic-bezier(.2,.8,.3,1);
-    }
+    .banner{display:flex;align-items:flex-start;gap:11px;padding:14px 16px;border-radius:14px;
+      font-size:.85rem;line-height:1.5;border:1px solid;animation:bannerIn .28s cubic-bezier(.2,.8,.3,1);}
     @keyframes bannerIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
     .banner[hidden]{display:none}
     .banner svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -114,126 +77,80 @@
     .banner--danger{color:#8b241c;background:var(--red-soft);border-color:#f6cfcb}
 
     /* ============ STATS ============ */
-    .stats-grid{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
-      gap:16px;
-    }
-    .stat-card{
-      position:relative;
-      background:var(--surface);border:1px solid var(--border);
-      border-radius:var(--radius);box-shadow:var(--shadow-md);
-      padding:19px 20px;display:flex;flex-direction:column;gap:7px;
-      overflow:hidden;
-    }
-    .stat-card::before{
-      content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
-      background:var(--navy);
-    }
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;}
+    .stat-card{position:relative;background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--radius);box-shadow:var(--shadow-md);padding:19px 20px;
+      display:flex;flex-direction:column;gap:7px;overflow:hidden;}
+    .stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--navy);}
     .stat-card.is-balance::before{background:linear-gradient(180deg,var(--gold),var(--gold-2))}
     .stat-card.is-in::before{background:linear-gradient(180deg,#18b283,#0f7a4a)}
     .stat-card.is-out::before{background:linear-gradient(180deg,#d9534f,#b3261e)}
     .stat-card.is-scholars::before{background:linear-gradient(180deg,#3b82f6,#1d4066)}
-    .stat-card.is-danger::before{background:linear-gradient(180deg,#d9534f,#8b241c)}
     .stat-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .stat-icon{
-      width:38px;height:38px;border-radius:11px;flex:0 0 auto;
-      display:grid;place-items:center;
-      background:rgba(18,43,69,.07);color:var(--navy);
-    }
+    .stat-icon{width:38px;height:38px;border-radius:11px;flex:0 0 auto;display:grid;place-items:center;
+      background:rgba(18,43,69,.07);color:var(--navy);}
     .stat-icon svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-    .stat-label{
-      font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;
-      color:var(--muted);font-weight:700;
-    }
-    .stat-value{
-      font-family:'DM Serif Display',serif;font-size:1.95rem;line-height:1.1;
-      color:var(--navy);word-break:break-word;
-    }
+    .stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;}
+    .stat-value{font-family:'DM Serif Display',serif;font-size:1.95rem;line-height:1.1;color:var(--navy);word-break:break-word;}
     .stat-value.neg{color:var(--red)}
     .stat-sub{font-size:.77rem;color:var(--muted)}
     .stat-sub strong{color:#41556b;font-weight:700}
 
     /* ============ CARDS ============ */
-    .grid-2eq{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:20px}
-    .card{
-      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-      box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden;
-    }
-    .card-head{
-      display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    .grid-2eq{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+    .grid-2eq + .grid-2eq{margin-top:0}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden;}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
       padding:15px 20px;border-bottom:1px solid var(--border);
-      background:linear-gradient(180deg,#fcfdff,#f7fafd);
-    }
-    .card-title{
-      margin:0;font-size:.92rem;font-weight:700;color:var(--navy);
-      display:flex;align-items:center;gap:8px;
-    }
+      background:linear-gradient(180deg,#fcfdff,#f7fafd);}
+    .card-title{margin:0;font-size:.92rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;}
     .card-title svg{width:16px;height:16px;stroke:var(--gold-2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .card-title small{font-weight:500;color:var(--muted);font-size:.74rem}
     .card-body{padding:19px 20px;display:flex;flex-direction:column;gap:13px}
     .card-foot{padding:14px 20px;border-top:1px solid var(--border);background:#fbfcfe}
 
     .field{min-width:0}
-    .field > label{
-      display:block;margin-bottom:7px;font-size:.69rem;font-weight:700;
-      letter-spacing:.07em;text-transform:uppercase;color:#5d6e83;
-    }
-    input,select{
-      width:100%;min-width:0;padding:10px 12px;
-      font:inherit;font-size:.86rem;color:var(--text);background:#fff;
-      border:1px solid var(--border-strong);border-radius:11px;
-      transition:border-color .18s ease,box-shadow .18s ease;
-    }
+    .field > label{display:block;margin-bottom:7px;font-size:.69rem;font-weight:700;
+      letter-spacing:.07em;text-transform:uppercase;color:#5d6e83;}
+    input,select{width:100%;min-width:0;padding:10px 12px;font:inherit;font-size:.86rem;
+      color:var(--text);background:#fff;border:1px solid var(--border-strong);border-radius:11px;
+      transition:border-color .18s ease,box-shadow .18s ease;}
     input::placeholder{color:#a9b6c6}
     input:hover,select:hover{border-color:#b9c7d8}
-    input:focus,select:focus{
-      outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,166,35,.17);
-    }
+    input:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,166,35,.17);}
     input[type=number]{font-variant-numeric:tabular-nums}
-    select{
-      appearance:none;-webkit-appearance:none;padding-right:34px;cursor:pointer;
+    select{appearance:none;-webkit-appearance:none;padding-right:34px;cursor:pointer;
       background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7c93' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
-      background-repeat:no-repeat;background-position:right 11px center;background-size:12px;
-    }
+      background-repeat:no-repeat;background-position:right 11px center;background-size:12px;}
     .row-2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
     @media (max-width:480px){.row-2{grid-template-columns:1fr}}
 
-    /* ============ QUICK CHIPS ============ */
+    /* ============ MINI CHIPS ============ */
     .chips-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:-4px}
-    .mini-chip{
-      padding:6px 11px;border-radius:999px;cursor:pointer;
-      font:inherit;font-size:.75rem;font-weight:700;
-      color:#41556b;background:#f3f6fa;border:1px solid var(--border);
-      transition:all .16s ease;
-    }
+    .mini-chip{padding:6px 11px;border-radius:999px;cursor:pointer;font:inherit;font-size:.75rem;font-weight:700;
+      color:#41556b;background:#f3f6fa;border:1px solid var(--border);transition:all .16s ease;}
     .mini-chip:hover{background:#e8eef6;color:var(--navy);border-color:#c8d5e4;transform:translateY(-1px)}
     .mini-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.35)}
     .mini-chip.is-on{background:var(--navy);color:#fff;border-color:var(--navy)}
 
     /* ============ BUTTONS ============ */
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:11px 18px;border:0;border-radius:11px;
-      font:inherit;font-size:.85rem;font-weight:700;letter-spacing:.01em;
-      cursor:pointer;white-space:nowrap;
-      transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease,border-color .15s ease;
-    }
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:11px 18px;border:0;border-radius:11px;font:inherit;font-size:.85rem;font-weight:700;
+      letter-spacing:.01em;cursor:pointer;white-space:nowrap;
+      transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease,border-color .15s ease;}
     .btn svg{width:15px;height:15px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
     .btn:hover:not(:disabled){transform:translateY(-1px)}
     .btn:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(245,166,35,.32)}
     .btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important;box-shadow:none !important}
     .btn-full{width:100%}
     .btn-sm{padding:8px 13px;font-size:.79rem;border-radius:9px}
-    .btn-gold{
-      color:#3d2700;
-      background:linear-gradient(135deg,#ffcc6d,#f5a623 58%,#e08c0b);
-      box-shadow:0 9px 20px -9px rgba(224,140,11,.95);
-    }
+    .btn-xs{padding:6px 10px;font-size:.73rem;border-radius:8px}
+    .btn-gold{color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623 58%,#e08c0b);
+      box-shadow:0 9px 20px -9px rgba(224,140,11,.95);}
     .btn-gold:hover:not(:disabled){box-shadow:0 13px 26px -9px rgba(224,140,11,1)}
-    .btn-teal{
-      color:#fff;background:linear-gradient(135deg,#16a085,#0d8f78);
-      box-shadow:0 9px 20px -9px rgba(13,143,120,.9);
-    }
+    .btn-teal{color:#fff;background:linear-gradient(135deg,#16a085,#0d8f78);
+      box-shadow:0 9px 20px -9px rgba(13,143,120,.9);}
     .btn-teal:hover:not(:disabled){box-shadow:0 13px 26px -9px rgba(13,143,120,1)}
     .btn-ghost{color:#41556b;background:#f2f5f9;border:1px solid var(--border)}
     .btn-ghost:hover:not(:disabled){background:#e8eef6;color:var(--navy);border-color:#c8d5e4}
@@ -242,145 +159,135 @@
     .btn-icon{padding:7px;border-radius:9px;line-height:0}
     .btn-icon svg{width:15px;height:15px}
 
-    /* ============ SCHOLAR PICKER (combobox) ============ */
+    /* ============ MODE TOGGLE ============ */
+    .mode-toggle{display:flex;gap:4px;padding:4px;background:#eef2f7;border-radius:11px;}
+    .mode-btn{padding:7px 13px;border:0;border-radius:8px;cursor:pointer;
+      font:inherit;font-size:.78rem;font-weight:700;color:#5d6e83;background:transparent;
+      transition:all .16s ease;display:inline-flex;align-items:center;gap:6px;}
+    .mode-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    .mode-btn:hover{color:var(--navy)}
+    .mode-btn.is-active{background:#fff;color:var(--navy);box-shadow:var(--shadow-sm)}
+
+    /* ============ PICKER ============ */
     .picker{position:relative}
     .picker-input-wrap{position:relative}
     .picker-input{padding-right:38px}
-    .picker-clear{
-      position:absolute;right:9px;top:50%;transform:translateY(-50%);
+    .picker-clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);
       width:22px;height:22px;padding:0;border:0;border-radius:50%;
       display:grid;place-items:center;cursor:pointer;
       background:rgba(18,43,69,.08);color:#41556b;
       font:inherit;font-size:14px;line-height:1;font-weight:700;
-      transition:background .15s ease;
-    }
+      transition:background .15s ease;}
     .picker-clear:hover{background:rgba(18,43,69,.2)}
     .picker-clear[hidden]{display:none}
-
-    .picker-panel{
-      position:absolute;z-index:90;top:calc(100% + 6px);left:0;right:0;
+    .picker-panel{position:absolute;z-index:90;top:calc(100% + 6px);left:0;right:0;
       background:#fff;border:1px solid var(--border-strong);border-radius:13px;
-      box-shadow:var(--shadow-lg);overflow:hidden;
-      animation:pickerIn .14s cubic-bezier(.2,.8,.3,1);
-    }
+      box-shadow:var(--shadow-lg);overflow:hidden;animation:pickerIn .14s cubic-bezier(.2,.8,.3,1);}
     @keyframes pickerIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
     .picker-panel[hidden]{display:none}
     .picker-list{max-height:246px;overflow:auto;padding:6px;scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent}
     .picker-list::-webkit-scrollbar{width:9px}
     .picker-list::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
-    .picker-option{
-      display:flex;align-items:center;gap:11px;
-      padding:9px 10px;border-radius:9px;cursor:pointer;
-      transition:background .13s ease;
-    }
+    .picker-option{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;
+      transition:background .13s ease;}
     .picker-option:hover,.picker-option.is-active{background:#f2f7fd}
     .picker-option.is-selected{background:rgba(245,166,35,.12)}
-    .picker-avatar{
-      width:32px;height:32px;border-radius:9px;flex:0 0 auto;
-      display:grid;place-items:center;
-      font-size:.78rem;font-weight:700;color:#fff;
-      background:linear-gradient(135deg,#245075,#16324f);
-    }
+    .picker-avatar{width:32px;height:32px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;
+      font-size:.78rem;font-weight:700;color:#fff;background:linear-gradient(135deg,#245075,#16324f);}
     .picker-main{min-width:0;flex:1 1 auto}
-    .picker-name{
-      font-size:.85rem;font-weight:700;color:#16283c;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .picker-sub{
-      font-size:.73rem;color:var(--muted);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .picker-tag{
-      flex:0 0 auto;padding:3px 9px;border-radius:999px;
-      font-size:.68rem;font-weight:700;
-      color:#3d5878;background:#e7eef7;border:1px solid #d8e3f0;
-    }
+    .picker-name{font-size:.85rem;font-weight:700;color:#16283c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .picker-sub{font-size:.73rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .picker-tag{flex:0 0 auto;padding:3px 9px;border-radius:999px;font-size:.68rem;font-weight:700;
+      color:#3d5878;background:#e7eef7;border:1px solid #d8e3f0;}
     .picker-empty{padding:22px 14px;text-align:center;font-size:.8rem;color:#93a3b6}
 
-    .selected-card{
-      display:flex;align-items:center;gap:12px;
-      padding:11px 13px;border-radius:12px;
-      background:#f5f9ff;border:1px solid #dbe7f6;
-      animation:pickerIn .18s ease;
-    }
+    .selected-card{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;
+      background:#f5f9ff;border:1px solid #dbe7f6;animation:pickerIn .18s ease;}
     .selected-card[hidden]{display:none}
     .selected-card .picker-avatar{width:38px;height:38px;border-radius:11px;font-size:.9rem}
     .selected-meta{min-width:0;flex:1 1 auto}
     .selected-name{font-size:.88rem;font-weight:700;color:#16283c}
     .selected-sub{font-size:.75rem;color:var(--muted)}
-    .selected-x{
-      flex:0 0 auto;padding:6px 10px;border-radius:8px;cursor:pointer;
+    .selected-x{flex:0 0 auto;padding:6px 10px;border-radius:8px;cursor:pointer;
       font:inherit;font-size:.72rem;font-weight:700;
       color:#41556b;background:#fff;border:1px solid var(--border-strong);
-      transition:background .15s ease;
-    }
+      transition:background .15s ease;}
     .selected-x:hover{background:#eef2f7}
 
-    .inline-note{
-      display:flex;align-items:flex-start;gap:7px;
-      margin-top:7px;font-size:.76rem;line-height:1.45;
-    }
+    /* ============ MASS PICKER ============ */
+    .mass-wrap{display:flex;flex-direction:column;gap:11px;border:1px solid var(--border-strong);
+      border-radius:13px;background:#fbfcfe;overflow:hidden;}
+    .mass-toolbar{display:flex;gap:8px;align-items:center;padding:10px;
+      border-bottom:1px solid var(--border);background:#fff;}
+    .mass-toolbar input{flex:1 1 auto;font-size:.83rem;padding:8px 11px}
+    .mass-toolbar .btn{padding:7px 11px;font-size:.74rem;border-radius:9px}
+    .mass-list{max-height:238px;overflow:auto;padding:6px;scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent}
+    .mass-list::-webkit-scrollbar{width:9px}
+    .mass-list::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
+    .mass-item{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;cursor:pointer;
+      transition:background .13s ease;position:relative;}
+    .mass-item:hover{background:#f2f7fd}
+    .mass-item.is-selected{background:rgba(245,166,35,.14)}
+    .mass-item input[type=checkbox]{flex:0 0 auto;width:17px;height:17px;accent-color:#1d4066;cursor:pointer}
+    .mass-item .picker-avatar{width:30px;height:30px;border-radius:8px;font-size:.72rem}
+    .mass-item-main{min-width:0;flex:1 1 auto}
+    .mass-item-name{font-size:.83rem;font-weight:700;color:#16283c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .mass-item-sub{font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .mass-item-flag{flex:0 0 auto;font-size:.66rem;font-weight:700;padding:3px 8px;border-radius:999px;}
+    .mass-item-flag.dup{color:var(--amber);background:var(--amber-soft);border:1px solid #f8e2bd}
+    .mass-item-flag.ok{color:#3d5878;background:#e7eef7;border:1px solid #d8e3f0}
+    .mass-empty{padding:22px;text-align:center;font-size:.8rem;color:#93a3b6}
+    .mass-summary{padding:10px 13px;border-top:1px solid var(--border);background:#f5f9ff;
+      display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      font-size:.79rem;color:#41556b;}
+    .mass-summary .strong{font-weight:700;color:var(--navy)}
+    .mass-summary .pill{margin-left:6px;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:700;
+      background:var(--navy);color:#fff;}
+    .mass-summary .pill.warn{background:#8a5b00}
+    .mass-summary .pill.danger{background:var(--red)}
+
+    /* ============ NOTES ============ */
+    .inline-note{display:flex;align-items:flex-start;gap:7px;margin-top:7px;font-size:.76rem;line-height:1.45;}
     .inline-note svg{width:14px;height:14px;flex:0 0 auto;margin-top:1px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .inline-note[hidden]{display:none}
     .inline-note.warn{color:#8a5b00}
     .inline-note.danger{color:var(--red)}
     .inline-note.ok{color:var(--green)}
 
-    /* ============ LEDGER TOOLBAR ============ */
+    /* ============ TABS & TOOLBAR ============ */
     .tabs{display:flex;gap:5px;padding:4px;background:#eef2f7;border-radius:11px}
-    .tab{
-      padding:7px 14px;border:0;border-radius:8px;cursor:pointer;
+    .tab{padding:7px 14px;border:0;border-radius:8px;cursor:pointer;
       font:inherit;font-size:.79rem;font-weight:700;color:#5d6e83;background:transparent;
-      transition:all .16s ease;white-space:nowrap;
-    }
+      transition:all .16s ease;white-space:nowrap;}
     .tab:hover{color:var(--navy)}
     .tab.is-active{background:#fff;color:var(--navy);box-shadow:var(--shadow-sm)}
-    .tab .tab-count{
-      display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
-      font-size:.68rem;background:rgba(18,43,69,.09);color:#41556b;
-    }
+    .tab .tab-count{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+      font-size:.68rem;background:rgba(18,43,69,.09);color:#41556b;}
     .tab.is-active .tab-count{background:rgba(245,166,35,.22);color:#7a4e00}
 
-    .toolbar{
-      display:grid;grid-template-columns:minmax(180px,1.6fr) repeat(auto-fit,minmax(130px,1fr));
-      gap:11px;align-items:end;
-      padding:15px 20px;border-bottom:1px solid var(--border);
-      background:linear-gradient(180deg,#fcfdff,#f8fbfe);
-    }
+    .toolbar{display:grid;grid-template-columns:minmax(180px,1.6fr) repeat(auto-fit,minmax(130px,1fr));
+      gap:11px;align-items:end;padding:15px 20px;border-bottom:1px solid var(--border);
+      background:linear-gradient(180deg,#fcfdff,#f8fbfe);}
     .toolbar .field > label{font-size:.66rem}
-    .toolbar-actions{
-      display:flex;gap:8px;flex-wrap:wrap;
-      padding:12px 20px;border-bottom:1px solid var(--border);
-      background:#fbfcfe;
-    }
+    .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px;
+      border-bottom:1px solid var(--border);background:#fbfcfe;}
 
     /* ============ TABLE ============ */
     .table-wrap{overflow:auto;scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent}
     .table-wrap::-webkit-scrollbar{width:10px;height:10px}
     .table-wrap::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
     .table-wrap::-webkit-scrollbar-thumb:hover{background:#b2c1d3}
-
     table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem}
-    thead th{
-      position:sticky;top:0;z-index:2;
-      padding:11px 14px;text-align:left;white-space:nowrap;
+    thead th{position:sticky;top:0;z-index:2;padding:11px 14px;text-align:left;white-space:nowrap;
       font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-      color:#5d6e83;background:#f5f8fc;border-bottom:1px solid var(--border-strong);
-    }
+      color:#5d6e83;background:#f5f8fc;border-bottom:1px solid var(--border-strong);}
     thead th.sortable{cursor:pointer;user-select:none;transition:color .15s ease,background .15s ease}
     thead th.sortable:hover{color:var(--navy);background:#eef4fb}
-    thead th .sort-ind{
-      display:inline-block;margin-left:5px;font-size:.6rem;
-      color:#aab8c9;vertical-align:1px;
-    }
+    thead th .sort-ind{display:inline-block;margin-left:5px;font-size:.6rem;color:#aab8c9;vertical-align:1px;}
     thead th.is-sorted{color:var(--navy)}
     thead th.is-sorted .sort-ind{color:var(--gold-2)}
     .th-num,td.num{text-align:right;font-variant-numeric:tabular-nums}
-
-    tbody td{
-      padding:11px 14px;vertical-align:middle;color:#33465b;
-      border-bottom:1px solid #f0f4f9;
-    }
+    tbody td{padding:11px 14px;vertical-align:middle;color:#33465b;border-bottom:1px solid #f0f4f9;}
     tbody tr{transition:background .14s ease}
     tbody tr:hover{background:#f8fbff}
     tbody tr:last-child td{border-bottom:0}
@@ -389,129 +296,89 @@
     td.num.out{color:var(--red)}
     td.balance{font-weight:700;color:var(--navy);white-space:nowrap}
     td.balance.neg{color:var(--red)}
-
     .cell-strong{font-weight:700;color:#16283c}
     .cell-sub{font-size:.74rem;color:var(--muted);margin-top:2px}
     .cell-date{font-size:.8rem;white-space:nowrap;color:#41556b}
+    .cell-ref{font-family:'DM Mono','Courier New',monospace;font-size:.72rem;color:#5d6e83;
+      background:#f2f5f9;padding:2px 6px;border-radius:5px;border:1px solid var(--border);white-space:nowrap}
+    .row-actions{display:flex;gap:5px;justify-content:flex-end}
 
-    .badge{
-      display:inline-block;padding:3px 10px;border-radius:999px;
-      font-size:.71rem;font-weight:700;white-space:nowrap;
-      color:#5b6b7f;background:#eef2f7;border:1px solid rgba(0,0,0,.04);
-    }
+    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.71rem;font-weight:700;
+      white-space:nowrap;color:#5b6b7f;background:#eef2f7;border:1px solid rgba(0,0,0,.04);}
     .badge-in{color:var(--green);background:var(--green-soft);border-color:#cdebdd}
     .badge-out{color:var(--red);background:var(--red-soft);border-color:#f8d5d2}
     .badge-warn{color:var(--amber);background:var(--amber-soft);border-color:#f8e2bd}
+    .badge-batch{color:#4a3a78;background:#eee6fb;border-color:#ddd0f4}
 
-    .empty-state{
-      padding:0;
-    }
-    .empty-inner{
-      display:flex;flex-direction:column;align-items:center;gap:8px;
-      padding:56px 24px;text-align:center;
-    }
+    .empty-state{padding:0}
+    .empty-inner{display:flex;flex-direction:column;align-items:center;gap:8px;padding:56px 24px;text-align:center;}
     .empty-inner svg{width:38px;height:38px;stroke:#bcc9d9;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
     .empty-inner p{margin:0;font-size:.9rem;font-weight:700;color:#5b6b7f}
     .empty-inner span{font-size:.79rem;color:#93a3b6}
 
     /* ============ PAGER ============ */
-    .pager{
-      display:flex;align-items:center;justify-content:space-between;
-      gap:14px;flex-wrap:wrap;
-      padding:13px 20px;border-top:1px solid var(--border);background:#fbfcfe;
-    }
+    .pager{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      padding:13px 20px;border-top:1px solid var(--border);background:#fbfcfe;}
     .pager[hidden]{display:none}
     .pager-info{font-size:.78rem;color:var(--muted);font-weight:600}
     .pager-info strong{color:var(--navy)}
     .pager-btns{display:flex;gap:6px;align-items:center}
-    .pager-btn{
-      min-width:33px;height:33px;padding:0 10px;border-radius:9px;cursor:pointer;
-      font:inherit;font-size:.79rem;font-weight:700;
-      color:#41556b;background:#fff;border:1px solid var(--border-strong);
-      transition:all .15s ease;
-    }
+    .pager-btn{min-width:33px;height:33px;padding:0 10px;border-radius:9px;cursor:pointer;
+      font:inherit;font-size:.79rem;font-weight:700;color:#41556b;background:#fff;
+      border:1px solid var(--border-strong);transition:all .15s ease;}
     .pager-btn:hover:not(:disabled){background:#eef4fb;color:var(--navy);border-color:#c8d5e4}
     .pager-btn:disabled{opacity:.4;cursor:not-allowed}
     .pager-btn.is-active{background:var(--navy);color:#fff;border-color:var(--navy)}
 
     /* ============ MODAL ============ */
-    .overlay{
-      position:fixed;inset:0;z-index:500;
-      display:grid;place-items:center;padding:20px;
-      background:rgba(11,28,46,.52);
-      backdrop-filter:blur(3px);
-      animation:ovIn .18s ease;
-    }
+    .overlay{position:fixed;inset:0;z-index:500;display:grid;place-items:center;padding:20px;
+      background:rgba(11,28,46,.52);backdrop-filter:blur(3px);animation:ovIn .18s ease;}
     @keyframes ovIn{from{opacity:0}to{opacity:1}}
     .overlay[hidden]{display:none}
-    .modal{
-      width:100%;max-width:430px;
-      background:#fff;border-radius:18px;
-      box-shadow:var(--shadow-lg);
-      overflow:hidden;
-      animation:modalIn .24s cubic-bezier(.2,.8,.3,1);
-    }
+    .modal{width:100%;max-width:480px;background:#fff;border-radius:18px;
+      box-shadow:var(--shadow-lg);overflow:hidden;animation:modalIn .24s cubic-bezier(.2,.8,.3,1);}
     @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
-    .modal-head{
-      display:flex;align-items:center;gap:12px;
-      padding:19px 22px 0;
-    }
-    .modal-icon{
-      width:40px;height:40px;border-radius:12px;flex:0 0 auto;
-      display:grid;place-items:center;
-      background:var(--amber-soft);color:var(--amber);
-    }
+    .modal-head{display:flex;align-items:center;gap:12px;padding:19px 22px 0;}
+    .modal-icon{width:40px;height:40px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;
+      background:var(--amber-soft);color:var(--amber);}
     .modal-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .modal-icon.danger{background:var(--red-soft);color:var(--red)}
     .modal-icon.ok{background:var(--green-soft);color:var(--green)}
     .modal h3{margin:0;font-size:1.02rem;font-weight:700;color:var(--navy)}
-    .modal-body{padding:12px 22px 4px;font-size:.86rem;line-height:1.55;color:#41556b}
+    .modal-body{padding:12px 22px 4px;font-size:.86rem;line-height:1.55;color:#41556b;
+      max-height:56vh;overflow:auto;}
     .modal-body p{margin:0 0 9px}
     .modal-body p:last-child{margin-bottom:0}
-    .modal-kv{
-      display:flex;justify-content:space-between;gap:14px;
-      padding:8px 12px;border-radius:9px;background:#f6f9fc;
-      border:1px solid var(--border);font-size:.82rem;
-    }
+    .modal-kv{display:flex;justify-content:space-between;gap:14px;padding:8px 12px;border-radius:9px;
+      background:#f6f9fc;border:1px solid var(--border);font-size:.82rem;}
     .modal-kv + .modal-kv{margin-top:6px}
     .modal-kv span:first-child{color:var(--muted)}
     .modal-kv span:last-child{font-weight:700;color:var(--navy);text-align:right}
-    .modal-actions{
-      display:flex;gap:9px;padding:18px 22px 20px;
-    }
+    .modal-actions{display:flex;gap:9px;padding:18px 22px 20px;}
     .modal-actions .btn{flex:1 1 auto}
+    .preview-list{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#f8fbfe;
+      border:1px solid var(--border);max-height:200px;overflow:auto;font-size:.79rem;}
+    .preview-list li{list-style:none;padding:4px 0;display:flex;justify-content:space-between;gap:10px;
+      border-bottom:1px dashed var(--border);}
+    .preview-list li:last-child{border-bottom:0}
+    .preview-list b{color:var(--navy)}
 
     /* ============ TOAST ============ */
-    .toast-stack{
-      position:fixed;right:20px;bottom:20px;z-index:900;
-      display:flex;flex-direction:column;gap:10px;
-      max-width:min(380px,calc(100vw - 40px));
-    }
-    .toast{
-      display:flex;align-items:center;gap:12px;
-      background:var(--navy);color:#fff;
-      padding:12px 14px;border-radius:11px;
-      font-size:.85rem;line-height:1.45;
-      border-left:4px solid var(--gold);
-      box-shadow:0 10px 30px rgba(0,0,0,.26);
-      opacity:0;transform:translateY(12px);
-      transition:opacity .22s ease,transform .22s ease;
-    }
+    .toast-stack{position:fixed;right:20px;bottom:20px;z-index:900;
+      display:flex;flex-direction:column;gap:10px;max-width:min(380px,calc(100vw - 40px));}
+    .toast{display:flex;align-items:center;gap:12px;background:var(--navy);color:#fff;
+      padding:12px 14px;border-radius:11px;font-size:.85rem;line-height:1.45;
+      border-left:4px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.26);
+      opacity:0;transform:translateY(12px);transition:opacity .22s ease,transform .22s ease;}
     .toast.show{opacity:1;transform:none}
     .toast-msg{flex:1 1 auto;min-width:0}
     .toast-success{border-left-color:#2ecc8f}
     .toast-error{border-left-color:#e5544b}
     .toast-warn{border-left-color:var(--gold)}
-    .toast-action{
-      flex:0 0 auto;padding:6px 11px;border:0;border-radius:8px;cursor:pointer;
+    .toast-action{flex:0 0 auto;padding:6px 11px;border:0;border-radius:8px;cursor:pointer;
       font:inherit;font-size:.76rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase;
-      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);
-      transition:transform .15s ease;
-    }
+      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);transition:transform .15s ease;}
     .toast-action:hover{transform:translateY(-1px)}
-
-    /* ============ PRINT-ONLY ============ */
-    .print-only{display:none}
 
     /* ============ RESPONSIVE ============ */
     @media (max-width:900px){
@@ -535,11 +402,8 @@
       .modal-actions{flex-direction:column-reverse}
       thead th,tbody td{padding:10px 11px}
     }
-    @media (max-width:400px){
-      .stats-grid{grid-template-columns:1fr}
-    }
+    @media (max-width:400px){.stats-grid{grid-template-columns:1fr}}
 
-    /* ============ PRINT ============ */
     @media print{
       body{background:#fff}
       .appbar,.no-print,.toast-stack,.overlay{display:none !important}
@@ -560,7 +424,7 @@
         </div>
       </div>
       <div class="appbar-right">
-        <p class="tagline">Track funds, disbursements, and stipend activity across the system.</p>
+        <p class="tagline">Track funds, disburse stipends, and issue receipts across the system.</p>
         <a class="back" href="admin_dashboard.html">← Dashboard</a>
       </div>
     </div>
@@ -568,7 +432,6 @@
 
   <main class="page">
 
-    <!-- Low / negative balance notice -->
     <div class="banner banner--warn" id="balanceBanner" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       <span id="balanceBannerText"></span>
@@ -576,7 +439,7 @@
 
     <!-- ============ STATS ============ -->
     <section class="stats-grid" aria-label="Financial summary">
-      <div class="stat-card is-balance" id="cardBalance">
+      <div class="stat-card is-balance">
         <div class="stat-head">
           <span class="stat-label">Available Balance</span>
           <span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
@@ -584,7 +447,6 @@
         <div class="stat-value" id="fin-balance">₱0.00</div>
         <div class="stat-sub" id="fin-balance-sub">Ready for disbursement</div>
       </div>
-
       <div class="stat-card is-in">
         <div class="stat-head">
           <span class="stat-label">Total Contributions</span>
@@ -593,7 +455,6 @@
         <div class="stat-value" id="fin-added">₱0.00</div>
         <div class="stat-sub" id="fin-added-sub">No entries yet</div>
       </div>
-
       <div class="stat-card is-out">
         <div class="stat-head">
           <span class="stat-label">Total Disbursed</span>
@@ -602,7 +463,6 @@
         <div class="stat-value" id="fin-disbursed">₱0.00</div>
         <div class="stat-sub" id="fin-disbursed-sub">No stipends released</div>
       </div>
-
       <div class="stat-card is-scholars">
         <div class="stat-head">
           <span class="stat-label">Active Scholars</span>
@@ -629,7 +489,6 @@
             <label for="fundSource">Source / Donor</label>
             <input type="text" id="fundSource" placeholder="e.g. Donor name, church, NGO, internal budget" autocomplete="off">
           </div>
-
           <div class="row-2">
             <div class="field">
               <label for="fundAmount">Amount (₱)</label>
@@ -640,7 +499,6 @@
               <input type="date" id="fundDate">
             </div>
           </div>
-
           <div class="field">
             <label for="fundNotes">Notes <span style="text-transform:none;letter-spacing:0;font-weight:500;color:#a9b6c6">(optional)</span></label>
             <input type="text" id="fundNotes" placeholder="Reference number, batch, remarks…" autocomplete="off">
@@ -661,9 +519,20 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
             Disburse Stipend
           </h2>
-          <span class="badge" id="availableBadge">Available ₱0.00</span>
+          <div class="mode-toggle no-print" role="tablist" aria-label="Disbursement mode">
+            <button class="mode-btn is-active" type="button" data-mode="single" role="tab" aria-selected="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Single
+            </button>
+            <button class="mode-btn" type="button" data-mode="mass" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Mass
+            </button>
+          </div>
         </div>
-        <div class="card-body">
+
+        <!-- SINGLE MODE -->
+        <div class="card-body" id="singleMode">
           <div class="field">
             <label for="disbScholarSearch">Scholar</label>
             <div class="picker" id="scholarPicker">
@@ -713,10 +582,54 @@
             </div>
           </div>
         </div>
+
+        <!-- MASS MODE -->
+        <div class="card-body" id="massMode" hidden>
+          <div class="field">
+            <label>Scholars <span class="strong" id="massCount" style="color:var(--navy);font-weight:700"></span></label>
+            <div class="mass-wrap">
+              <div class="mass-toolbar">
+                <input type="search" id="massSearch" placeholder="Filter by name, school, or grade…" autocomplete="off">
+                <button class="btn btn-ghost" type="button" id="massAll">All</button>
+                <button class="btn btn-ghost" type="button" id="massNone">Clear</button>
+              </div>
+              <div class="mass-list" id="massList"></div>
+              <div class="mass-summary">
+                <span id="massSelectedText">0 selected</span>
+                <span id="massTotalText" class="strong">Total: ₱0.00</span>
+                <span id="massBalancePill" class="pill">Remaining after: ₱0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label for="massAmount">Amount per scholar (₱)</label>
+              <input type="number" id="massAmount" value="3000" min="1" step="0.01" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="massPeriod">Period / Month</label>
+              <input type="text" id="massPeriod" placeholder="e.g. March 2026" autocomplete="off">
+            </div>
+          </div>
+          <div class="chips-row" style="margin-top:-4px">
+            <button type="button" class="mini-chip" data-mass-amount="1500">₱1,500</button>
+            <button type="button" class="mini-chip" data-mass-amount="3000">₱3,000</button>
+            <button type="button" class="mini-chip" data-mass-amount="5000">₱5,000</button>
+            <button type="button" class="mini-chip" data-mass-amount="7500">₱7,500</button>
+            <button type="button" class="mini-chip" id="massPeriodNow">This month</button>
+          </div>
+
+          <div class="inline-note warn" id="massNote" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span id="massNoteText"></span>
+          </div>
+        </div>
+
         <div class="card-foot">
           <button class="btn btn-gold btn-full" id="disburseBtn" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Release stipend
+            <span id="disburseBtnLabel">Release stipend</span>
           </button>
         </div>
       </div>
@@ -740,7 +653,7 @@
       <div class="toolbar no-print">
         <div class="field">
           <label for="ledgerSearch">Search</label>
-          <input type="search" id="ledgerSearch" placeholder="Source, scholar, notes, period…" autocomplete="off">
+          <input type="search" id="ledgerSearch" placeholder="Source, scholar, notes, batch, period…" autocomplete="off">
         </div>
         <div class="field">
           <label for="ledgerFrom">From</label>
@@ -771,6 +684,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           Print statement
         </button>
+        <button class="btn btn-ghost btn-sm" type="button" id="printAllReceiptsBtn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v20l2-1 2 1 2-1 2 1 2-1 2 1V2z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          Print receipts
+        </button>
         <button class="btn btn-ghost btn-sm" type="button" id="clearFiltersBtn">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.4-4.4L3 8"/></svg>
           Reset filters
@@ -786,7 +703,7 @@
               <th class="sortable" data-sort="party">Details <span class="sort-ind">↕</span></th>
               <th class="th-num sortable" data-sort="amount">Amount <span class="sort-ind">↕</span></th>
               <th class="th-num">Balance</th>
-              <th class="no-print" style="width:64px"></th>
+              <th class="no-print" style="width:110px"></th>
             </tr>
           </thead>
           <tbody id="ledgerBody"></tbody>
@@ -834,119 +751,157 @@
         selectedScholar: null,
         pickerIndex: -1,
         pickerMatches: [],
+        massQuery: '',
+        massSelected: new Set(),      // scholar ids
+        disburseMode: 'single',
         tab: 'all',
         search: '',
         from: '',
         to: '',
         sort: 'date-desc',
         page: 1,
-        perPage: 12,
-        loading: true
+        perPage: 12
       };
 
       const LOW_BALANCE_THRESHOLD = 5000;
+      const ORG_NAME = 'Fr. Marie Eugene Family Development Foundation, Inc.';
+      const ORG_SHORT = 'MEFAMDEV';
 
       /* =========================================================
-         SMALL UTILITIES
+         UTILITIES
          ========================================================= */
       function escapeHtml(value) {
         return String(value ?? '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
       }
-
       function peso(value, decimals = 2) {
         const n = Number(value || 0);
         const sign = n < 0 ? '−' : '';
         return `${sign}₱${Math.abs(n).toLocaleString('en-PH', {
-          minimumFractionDigits: decimals,
-          maximumFractionDigits: decimals
+          minimumFractionDigits: decimals, maximumFractionDigits: decimals
         })}`;
       }
-
       function initials(name) {
         const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
         if (!parts.length) return '–';
         if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
       }
-
-      /** Parse a date-ish value into a timestamp; 0 when unknown. */
       function ts(value) {
         if (!value) return 0;
         const t = Date.parse(value);
         return Number.isNaN(t) ? 0 : t;
       }
-
-      /** Render a date string in a friendlier form, falling back to raw text. */
       function prettyDate(value) {
         const raw = String(value || '').trim();
         if (!raw) return '—';
         const t = Date.parse(raw);
         if (Number.isNaN(t)) return raw;
-        return new Date(t).toLocaleDateString('en-PH', {
-          year: 'numeric', month: 'short', day: 'numeric'
-        });
+        return new Date(t).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
       }
-
+      function todayISO() {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      }
       function monthLabel(offset = 0) {
         const d = new Date();
         d.setDate(1);
         d.setMonth(d.getMonth() + offset);
         return d.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
       }
-
-      function todayISO() {
-        const d = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-      }
-
       function debounce(fn, wait = 180) {
         let t;
-        return (...args) => {
-          clearTimeout(t);
-          t = setTimeout(() => fn(...args), wait);
-        };
+        return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), wait); };
+      }
+
+      /* ---------- Amount in words (Philippine peso) ---------- */
+      function numberToWords(n) {
+        n = Math.floor(Math.abs(Number(n) || 0));
+        if (n === 0) return 'Zero';
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        const scales = ['', 'Thousand', 'Million', 'Billion'];
+
+        function chunk(num) {
+          let s = '';
+          const h = Math.floor(num / 100);
+          const r = num % 100;
+          if (h) s += ones[h] + ' Hundred';
+          if (r) {
+            if (s) s += ' ';
+            if (r < 10) s += ones[r];
+            else if (r < 20) s += teens[r - 10];
+            else {
+              const t = Math.floor(r / 10), o = r % 10;
+              s += tens[t] + (o ? ' ' + ones[o] : '');
+            }
+          }
+          return s;
+        }
+
+        const parts = [];
+        let i = 0;
+        while (n > 0) {
+          const c = n % 1000;
+          if (c) parts.unshift(chunk(c) + (scales[i] ? ' ' + scales[i] : ''));
+          n = Math.floor(n / 1000);
+          i++;
+        }
+        return parts.join(' ');
+      }
+      function pesoInWords(amount) {
+        const n = Math.abs(Number(amount) || 0);
+        const pesos = Math.floor(n);
+        const cents = Math.round((n - pesos) * 100);
+        let s = numberToWords(pesos) + ' Peso' + (pesos === 1 ? '' : 's');
+        if (cents > 0) s += ' and ' + String(cents).padStart(2, '0') + '/100';
+        return s + ' Only';
+      }
+
+      /** Generate a stable receipt number for a disbursement. */
+      function receiptNo(entry, fallbackSeed = '') {
+        const year = new Date().getFullYear();
+        if (entry && entry.id) return `MEF-${year}-${String(entry.id).padStart(5, '0')}`;
+        const seed = String(fallbackSeed || Date.now()).replace(/\D/g, '').slice(-6);
+        return `MEF-${year}-${seed.padStart(5, '0')}`;
+      }
+
+      /** Generate a batch reference like B-20260315-AB12. */
+      function batchRef() {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+        const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+        return `B-${stamp}-${rand}`;
       }
 
       /* =========================================================
-         TOASTS (with optional action button)
+         TOASTS
          ========================================================= */
       const toastStack = document.getElementById('toastStack');
-
       function toast(message, type = 'success', duration = 3000, action = null) {
         if (!toastStack) return;
         const item = document.createElement('div');
         item.className = `toast toast-${type}`;
-
         const msg = document.createElement('span');
         msg.className = 'toast-msg';
         msg.textContent = message;
         item.appendChild(msg);
-
         let timer;
-
         if (action) {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'toast-action';
           btn.textContent = action.label;
-          btn.addEventListener('click', () => {
-            clearTimeout(timer);
-            remove();
-            action.onClick();
-          });
+          btn.addEventListener('click', () => { clearTimeout(timer); remove(); action.onClick(); });
           item.appendChild(btn);
           duration = action.duration || 7000;
         }
-
         toastStack.appendChild(item);
         requestAnimationFrame(() => item.classList.add('show'));
-
         function remove() {
           item.classList.remove('show');
           setTimeout(() => item.remove(), 220);
@@ -955,7 +910,7 @@
       }
 
       /* =========================================================
-         MODAL CONFIRM
+         MODAL
          ========================================================= */
       const overlay = document.getElementById('overlay');
       const modalTitle = document.getElementById('modalTitle');
@@ -963,39 +918,31 @@
       const modalIcon = document.getElementById('modalIcon');
       const modalCancel = document.getElementById('modalCancel');
       const modalConfirm = document.getElementById('modalConfirm');
-
       const ICONS = {
         warn: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
         danger: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
         ok: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'
       };
-
       let modalResolve = null;
-
       function confirmDialog({ title, body, confirmText = 'Confirm', tone = 'warn' }) {
         return new Promise(resolve => {
           modalResolve = resolve;
-
           modalTitle.textContent = title;
           modalBody.innerHTML = body;
           modalConfirm.textContent = confirmText;
           modalIcon.className = 'modal-icon' + (tone === 'danger' ? ' danger' : tone === 'ok' ? ' ok' : '');
           modalIcon.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[tone] || ICONS.warn}</svg>`;
-
           modalConfirm.className = 'btn ' + (tone === 'danger' ? 'btn-danger' : 'btn-gold');
-
           overlay.hidden = false;
           modalConfirm.focus();
         });
       }
-
       function closeModal(result) {
         overlay.hidden = true;
         const fn = modalResolve;
         modalResolve = null;
         if (fn) fn(result);
       }
-
       modalCancel.addEventListener('click', () => closeModal(false));
       modalConfirm.addEventListener('click', () => closeModal(true));
       overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(false); });
@@ -1008,68 +955,45 @@
          ========================================================= */
       function requireStaffSession() {
         const session = MefamAPI.getSession?.() || null;
-        if (!session || session.type !== 'staff') {
-          window.location.href = 'index.html';
-          return false;
-        }
+        if (!session || session.type !== 'staff') { window.location.href = 'index.html'; return false; }
         return true;
       }
 
       /* =========================================================
          DERIVED DATA
          ========================================================= */
-      /** All ledger rows, with a running balance computed chronologically. */
       function buildLedgerRows() {
         const rows = [];
-
         state.fundLog.forEach(entry => {
           rows.push({
-            uid: `f-${entry.id}`,
-            rawId: entry.id,
-            kind: 'contribution',
-            date: entry.date || '',
-            ts: ts(entry.date),
+            uid: `f-${entry.id}`, rawId: entry.id, kind: 'contribution',
+            date: entry.date || '', ts: ts(entry.date),
             party: entry.source || 'Unknown source',
-            notes: entry.notes || '',
-            period: '',
-            amount: Number(entry.amount) || 0,
-            raw: entry
+            notes: entry.notes || '', period: '', batch: '',
+            amount: Number(entry.amount) || 0, raw: entry
           });
         });
-
         state.disbursements.forEach(entry => {
           rows.push({
-            uid: `d-${entry.id}`,
-            rawId: entry.id,
-            kind: 'disbursement',
-            date: entry.date || '',
-            ts: ts(entry.date),
+            uid: `d-${entry.id}`, rawId: entry.id, kind: 'disbursement',
+            date: entry.date || '', ts: ts(entry.date),
             party: entry.scholarName || entry.scholar_name || 'Unknown scholar',
-            notes: entry.notes || '',
-            period: entry.period || '',
-            amount: -(Number(entry.amount) || 0),
-            raw: entry
+            notes: entry.notes || '', period: entry.period || '',
+            batch: entry.batchId || entry.batch_id || '',
+            scholarId: entry.scholarId ?? entry.scholar_id ?? entry.appId ?? entry.app_id,
+            amount: -(Number(entry.amount) || 0), raw: entry
           });
         });
-
-        // Running balance: chronological, ties broken by id.
         const chronological = [...rows].sort((a, b) => (a.ts - b.ts) || (a.rawId - b.rawId));
         let running = 0;
-        chronological.forEach(row => {
-          running += row.amount;
-          row.balance = running;
-        });
-
+        chronological.forEach(row => { running += row.amount; row.balance = running; });
         return rows;
       }
-
       function totals() {
-        const added = state.fundLog.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-        const disbursed = state.disbursements.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-        return { added, disbursed, balance: added - disbursed };
+        const added = state.fundLog.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const disb = state.disbursements.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        return { added, disbursed: disb, balance: added - disb };
       }
-
-      /** Disbursements grouped by scholar id, for picker badges + duplicate checks. */
       function stipendHistoryByScholar() {
         const map = new Map();
         state.disbursements.forEach(entry => {
@@ -1080,56 +1004,48 @@
         });
         return map;
       }
+      function acceptedScholars() {
+        return state.apps.filter(app => app.status === 'Accepted');
+      }
+      /** Map scholarId -> scholar app record, for quick lookups. */
+      function scholarById(id) {
+        return state.apps.find(a => String(a.id) === String(id)) || null;
+      }
 
       /* =========================================================
-         RENDER — STATS
+         STATS
          ========================================================= */
       function renderStats() {
         const { added, disbursed, balance } = totals();
-        const accepted = state.apps.filter(app => app.status === 'Accepted');
+        const accepted = acceptedScholars();
 
         const balanceEl = document.getElementById('fin-balance');
         balanceEl.textContent = peso(balance);
         balanceEl.classList.toggle('neg', balance < 0);
-
         document.getElementById('fin-added').textContent = peso(added);
         document.getElementById('fin-disbursed').textContent = peso(disbursed);
         document.getElementById('fin-scholars').textContent = String(accepted.length);
 
-        // Sub-lines
         const pctRemaining = added > 0 ? Math.round((balance / added) * 100) : 0;
-        document.getElementById('fin-balance-sub').innerHTML =
-          added > 0
-            ? `<strong>${Math.max(pctRemaining, 0)}%</strong> of contributions remain`
-            : 'No contributions recorded yet';
-
-        document.getElementById('fin-added-sub').innerHTML =
-          state.fundLog.length
-            ? `<strong>${state.fundLog.length}</strong> ${state.fundLog.length === 1 ? 'entry' : 'entries'} on record`
-            : 'No entries yet';
-
-        document.getElementById('fin-disbursed-sub').innerHTML =
-          state.disbursements.length
-            ? `<strong>${state.disbursements.length}</strong> ${state.disbursements.length === 1 ? 'stipend' : 'stipends'} released`
-            : 'No stipends released';
-
+        document.getElementById('fin-balance-sub').innerHTML = added > 0
+          ? `<strong>${Math.max(pctRemaining, 0)}%</strong> of contributions remain`
+          : 'No contributions recorded yet';
+        document.getElementById('fin-added-sub').innerHTML = state.fundLog.length
+          ? `<strong>${state.fundLog.length}</strong> ${state.fundLog.length === 1 ? 'entry' : 'entries'} on record`
+          : 'No entries yet';
+        document.getElementById('fin-disbursed-sub').innerHTML = state.disbursements.length
+          ? `<strong>${state.disbursements.length}</strong> ${state.disbursements.length === 1 ? 'stipend' : 'stipends'} released`
+          : 'No stipends released';
         document.getElementById('fin-scholars-sub').innerHTML =
           accepted.length && disbursed > 0
             ? `Avg <strong>${peso(disbursed / accepted.length, 0)}</strong> per scholar`
             : 'Accepted scholars';
 
-        // Available badge in the disburse form
-        const badge = document.getElementById('availableBadge');
-        badge.textContent = `Available ${peso(balance)}`;
-        badge.className = 'badge ' + (balance < 0 ? 'badge-out' : balance < LOW_BALANCE_THRESHOLD ? 'badge-warn' : 'badge-in');
-
         renderBalanceBanner(balance);
       }
-
       function renderBalanceBanner(balance) {
         const banner = document.getElementById('balanceBanner');
         const text = document.getElementById('balanceBannerText');
-
         if (balance < 0) {
           banner.hidden = false;
           banner.className = 'banner banner--danger';
@@ -1137,14 +1053,40 @@
         } else if (balance < LOW_BALANCE_THRESHOLD && (state.fundLog.length || state.disbursements.length)) {
           banner.hidden = false;
           banner.className = 'banner banner--warn';
-          text.innerHTML = `<b>Low fund balance (${escapeHtml(peso(balance))}).</b> Only ${escapeHtml(peso(balance))} remains available — consider adding contributions before the next release.`;
+          text.innerHTML = `<b>Low fund balance (${escapeHtml(peso(balance))}).</b> Consider adding contributions before the next release.`;
         } else {
           banner.hidden = true;
         }
       }
 
       /* =========================================================
-         SCHOLAR PICKER
+         MODE TOGGLE
+         ========================================================= */
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.mode;
+          if (mode === state.disburseMode) return;
+          state.disburseMode = mode;
+          document.querySelectorAll('.mode-btn').forEach(b => {
+            const on = b === btn;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+          });
+          document.getElementById('singleMode').hidden = mode !== 'single';
+          document.getElementById('massMode').hidden = mode !== 'mass';
+          document.getElementById('disburseBtnLabel').textContent =
+            mode === 'mass' ? 'Release selected stipends' : 'Release stipend';
+
+          if (mode === 'mass') {
+            refreshMassList();
+            updateMassSummary();
+          }
+          updateAmountNote();
+        });
+      });
+
+      /* =========================================================
+         SINGLE PICKER
          ========================================================= */
       const pickerInput = document.getElementById('disbScholarSearch');
       const pickerPanel = document.getElementById('scholarPanel');
@@ -1153,53 +1095,42 @@
       const pickerClear = document.getElementById('scholarClear');
       const selectedCard = document.getElementById('selectedScholarCard');
 
-      function acceptedScholars() {
-        return state.apps.filter(app => app.status === 'Accepted');
-      }
-
       function scholarMatches(query) {
         const q = String(query || '').trim().toLowerCase();
         const list = acceptedScholars();
         if (!q) return list.slice(0, 40);
         return list.filter(app => {
-          const haystack = [app.name, app.school, app.grade, app.reference, app.referenceNumber, app.barangay]
+          const hay = [app.name, app.school, app.grade, app.reference, app.referenceNumber, app.barangay]
             .filter(Boolean).join(' ').toLowerCase();
-          return haystack.includes(q);
+          return hay.includes(q);
         }).slice(0, 40);
       }
-
       function openPicker() {
         if (!pickerPanel.hidden) return;
         pickerPanel.hidden = false;
         pickerInput.setAttribute('aria-expanded', 'true');
         refreshPickerList();
       }
-
       function closePicker() {
         pickerPanel.hidden = true;
         pickerInput.setAttribute('aria-expanded', 'false');
         state.pickerIndex = -1;
       }
-
       function refreshPickerList() {
         const history = stipendHistoryByScholar();
         state.pickerMatches = scholarMatches(pickerInput.value);
-
         if (!state.pickerMatches.length) {
           pickerList.innerHTML = '';
           pickerEmpty.hidden = false;
           return;
         }
         pickerEmpty.hidden = true;
-
         pickerList.innerHTML = state.pickerMatches.map((app, i) => {
           const past = history.get(String(app.id)) || [];
           const selected = state.selectedScholar && String(state.selectedScholar.id) === String(app.id);
           const sub = [app.school || 'School not listed', app.grade ? `Grade ${app.grade}` : null, app.barangay]
             .filter(Boolean).join(' · ');
-          const tag = past.length
-            ? `${past.length} stipend${past.length === 1 ? '' : 's'}`
-            : 'No stipends yet';
+          const tag = past.length ? `${past.length} stipend${past.length === 1 ? '' : 's'}` : 'No stipends yet';
           return `
             <div class="picker-option${selected ? ' is-selected' : ''}${i === state.pickerIndex ? ' is-active' : ''}"
                  role="option" aria-selected="${selected}" data-index="${i}" data-id="${escapeHtml(app.id)}">
@@ -1212,7 +1143,6 @@
             </div>`;
         }).join('');
       }
-
       function selectScholar(app) {
         state.selectedScholar = app || null;
         if (app) {
@@ -1235,7 +1165,6 @@
         closePicker();
         updateAmountNote();
       }
-
       function clearScholar() {
         state.selectedScholar = null;
         pickerInput.value = '';
@@ -1243,23 +1172,18 @@
         selectedCard.hidden = true;
         updateAmountNote();
       }
-
       function highlightPickerIndex(next) {
         if (!state.pickerMatches.length) return;
         const max = state.pickerMatches.length - 1;
         state.pickerIndex = next < 0 ? max : next > max ? 0 : next;
-
         pickerList.querySelectorAll('.picker-option').forEach(el => {
           const on = Number(el.dataset.index) === state.pickerIndex;
           el.classList.toggle('is-active', on);
           if (on) el.scrollIntoView({ block: 'nearest' });
         });
       }
-
-      // Events
       pickerInput.addEventListener('focus', openPicker);
       pickerInput.addEventListener('input', () => {
-        // typing invalidates any prior selection unless it still matches
         if (state.selectedScholar && pickerInput.value.trim() !== (state.selectedScholar.name || '').trim()) {
           state.selectedScholar = null;
           selectedCard.hidden = true;
@@ -1270,26 +1194,17 @@
         refreshPickerList();
         updateAmountNote();
       });
-
       pickerInput.addEventListener('keydown', e => {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (pickerPanel.hidden) openPicker();
-          highlightPickerIndex(state.pickerIndex + 1);
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          highlightPickerIndex(state.pickerIndex - 1);
-        } else if (e.key === 'Enter') {
+        if (e.key === 'ArrowDown') { e.preventDefault(); if (pickerPanel.hidden) openPicker(); highlightPickerIndex(state.pickerIndex + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); highlightPickerIndex(state.pickerIndex - 1); }
+        else if (e.key === 'Enter') {
           if (!pickerPanel.hidden && state.pickerIndex >= 0) {
             e.preventDefault();
             const app = state.pickerMatches[state.pickerIndex];
             if (app) selectScholar(app);
           }
-        } else if (e.key === 'Escape') {
-          closePicker();
-        }
+        } else if (e.key === 'Escape') closePicker();
       });
-
       pickerList.addEventListener('mousedown', e => {
         const option = e.target.closest('.picker-option');
         if (!option) return;
@@ -1297,71 +1212,203 @@
         const app = state.pickerMatches[Number(option.dataset.index)];
         if (app) selectScholar(app);
       });
-
-      pickerClear.addEventListener('click', () => {
-        clearScholar();
-        pickerInput.focus();
-      });
-
+      pickerClear.addEventListener('click', () => { clearScholar(); pickerInput.focus(); });
       document.getElementById('selChange').addEventListener('click', () => {
-        clearScholar();
-        pickerInput.focus();
-        openPicker();
+        clearScholar(); pickerInput.focus(); openPicker();
       });
-
       document.addEventListener('click', e => {
         if (!e.target.closest('#scholarPicker')) closePicker();
       });
 
       /* =========================================================
-         AMOUNT / PERIOD HELPERS
+         MASS PICKER
+         ========================================================= */
+      const massList = document.getElementById('massList');
+      const massSearch = document.getElementById('massSearch');
+
+      function massMatches() {
+        const q = state.massQuery.trim().toLowerCase();
+        const list = acceptedScholars();
+        if (!q) return list;
+        return list.filter(app => {
+          const hay = [app.name, app.school, app.grade, app.reference, app.barangay]
+            .filter(Boolean).join(' ').toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      function refreshMassList() {
+        const history = stipendHistoryByScholar();
+        const period = document.getElementById('massPeriod').value.trim().toLowerCase();
+        const matches = massMatches();
+
+        if (!matches.length) {
+          massList.innerHTML = '<div class="mass-empty">No accepted scholar matches that filter.</div>';
+          return;
+        }
+        massList.innerHTML = matches.map(app => {
+          const id = String(app.id);
+          const past = history.get(id) || [];
+          const selected = state.massSelected.has(id);
+          const sub = [app.school || 'School not listed', app.grade ? `Grade ${app.grade}` : null, app.barangay]
+            .filter(Boolean).join(' · ');
+          let flag = `<span class="mass-item-flag ok">${past.length ? past.length + ' prior' : 'New'}</span>`;
+          if (period) {
+            const dup = past.some(p => String(p.period || '').trim().toLowerCase() === period);
+            if (dup) flag = '<span class="mass-item-flag dup">Already released</span>';
+          }
+          return `
+            <label class="mass-item${selected ? ' is-selected' : ''}" data-id="${escapeHtml(id)}">
+              <input type="checkbox" ${selected ? 'checked' : ''} data-mass-check="${escapeHtml(id)}">
+              <span class="picker-avatar">${escapeHtml(initials(app.name))}</span>
+              <span class="mass-item-main">
+                <span class="mass-item-name">${escapeHtml(app.name || 'Unnamed scholar')}</span>
+                <span class="mass-item-sub">${escapeHtml(sub)}</span>
+              </span>
+              ${flag}
+            </label>`;
+        }).join('');
+      }
+
+      massList.addEventListener('change', e => {
+        const box = e.target.closest('input[data-mass-check]');
+        if (!box) return;
+        const id = box.dataset.massCheck;
+        if (box.checked) state.massSelected.add(id);
+        else state.massSelected.delete(id);
+        const item = box.closest('.mass-item');
+        if (item) item.classList.toggle('is-selected', box.checked);
+        updateMassSummary();
+      });
+
+      massSearch.addEventListener('input', debounce(e => {
+        state.massQuery = e.target.value;
+        refreshMassList();
+      }, 130));
+
+      document.getElementById('massAll').addEventListener('click', () => {
+        massMatches().forEach(app => state.massSelected.add(String(app.id)));
+        refreshMassList();
+        updateMassSummary();
+      });
+      document.getElementById('massNone').addEventListener('click', () => {
+        state.massSelected.clear();
+        refreshMassList();
+        updateMassSummary();
+      });
+
+      document.querySelectorAll('[data-mass-amount]').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.getElementById('massAmount').value = chip.dataset.massAmount;
+          document.querySelectorAll('[data-mass-amount]').forEach(c => c.classList.toggle('is-on', c === chip));
+          updateMassSummary();
+        });
+      });
+      document.getElementById('massPeriodNow').addEventListener('click', () => {
+        document.getElementById('massPeriod').value = monthLabel(0);
+        refreshMassList();
+        updateMassSummary();
+      });
+
+      ['massAmount', 'massPeriod'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          if (id === 'massPeriod') refreshMassList();
+          updateMassSummary();
+        });
+      });
+
+      function massTotal() {
+        const n = state.massSelected.size;
+        const amount = Number(document.getElementById('massAmount').value) || 0;
+        return n * amount;
+      }
+      function updateMassSummary() {
+        const n = state.massSelected.size;
+        const amount = Number(document.getElementById('massAmount').value) || 0;
+        const total = massTotal();
+        const { balance } = totals();
+        const after = balance - total;
+
+        document.getElementById('massCount').textContent = n ? `· ${n} selected` : '';
+        document.getElementById('massSelectedText').innerHTML =
+          `<b class="strong">${n}</b> scholar${n === 1 ? '' : 's'} selected`;
+        document.getElementById('massTotalText').innerHTML =
+          `Total: <b>${escapeHtml(peso(total))}</b>`;
+
+        const pill = document.getElementById('massBalancePill');
+        pill.textContent = `Remaining after: ${peso(after)}`;
+        pill.className = 'pill' + (after < 0 ? ' danger' : after < LOW_BALANCE_THRESHOLD ? ' warn' : '');
+
+        // Inline note
+        const note = document.getElementById('massNote');
+        const noteText = document.getElementById('massNoteText');
+        const period = document.getElementById('massPeriod').value.trim();
+
+        // Count duplicates
+        const history = stipendHistoryByScholar();
+        let dupCount = 0;
+        if (period) {
+          state.massSelected.forEach(id => {
+            const list = history.get(String(id)) || [];
+            if (list.some(p => String(p.period || '').trim().toLowerCase() === period.toLowerCase())) dupCount++;
+          });
+        }
+
+        if (n === 0) { note.hidden = true; }
+        else if (after < 0) {
+          note.hidden = false;
+          note.className = 'inline-note danger';
+          noteText.innerHTML = `Total exceeds available balance of <b>${escapeHtml(peso(balance))}</b> — you'll overdraw by <b>${escapeHtml(peso(-after))}</b>.`;
+        } else if (dupCount > 0) {
+          note.hidden = false;
+          note.className = 'inline-note warn';
+          noteText.innerHTML = `<b>${dupCount}</b> selected scholar${dupCount === 1 ? ' has' : 's have'} already received a stipend for <b>${escapeHtml(period)}</b>.`;
+        } else {
+          note.hidden = false;
+          note.className = 'inline-note ok';
+          noteText.innerHTML = `Ready to release <b>${escapeHtml(peso(total))}</b> across <b>${n}</b> scholar${n === 1 ? '' : 's'}. Balance after: <b>${escapeHtml(peso(after))}</b>.`;
+        }
+      }
+
+      /* =========================================================
+         SINGLE AMOUNT NOTE
          ========================================================= */
       const disbAmountInput = document.getElementById('disbAmount');
       const amountNote = document.getElementById('amountNote');
       const amountNoteText = document.getElementById('amountNoteText');
 
       function updateAmountNote() {
+        if (state.disburseMode === 'mass') return;
         const amount = Number(disbAmountInput.value) || 0;
         const { balance } = totals();
-
-        if (!amount || amount <= 0) {
-          amountNote.hidden = true;
-          return;
-        }
-
+        if (!amount || amount <= 0) { amountNote.hidden = true; return; }
         if (balance <= 0) {
           amountNote.hidden = false;
           amountNote.className = 'inline-note danger';
           amountNoteText.innerHTML = `No funds are available. Balance is <b>${escapeHtml(peso(balance))}</b>.`;
           return;
         }
-
         if (amount > balance) {
           amountNote.hidden = false;
           amountNote.className = 'inline-note warn';
-          amountNoteText.innerHTML = `This exceeds the available balance of <b>${escapeHtml(peso(balance))}</b> — it will overdraw by <b>${escapeHtml(peso(amount - balance))}</b>.`;
+          amountNoteText.innerHTML = `Exceeds the available balance of <b>${escapeHtml(peso(balance))}</b> — overdraw by <b>${escapeHtml(peso(amount - balance))}</b>.`;
           return;
         }
-
         amountNote.hidden = false;
         amountNote.className = 'inline-note ok';
         amountNoteText.innerHTML = `Balance after release: <b>${escapeHtml(peso(balance - amount))}</b>.`;
       }
-
       disbAmountInput.addEventListener('input', () => {
         document.querySelectorAll('[data-amount]').forEach(chip => {
           chip.classList.toggle('is-on', Number(chip.dataset.amount) === Number(disbAmountInput.value));
         });
         updateAmountNote();
       });
-
       document.querySelectorAll('[data-amount]').forEach(chip => {
         chip.addEventListener('click', () => {
           disbAmountInput.value = chip.dataset.amount;
           disbAmountInput.dispatchEvent(new Event('input'));
         });
       });
-
       document.getElementById('periodNow').addEventListener('click', () => {
         document.getElementById('disbPeriod').value = monthLabel(0);
       });
@@ -1370,7 +1417,7 @@
       });
 
       /* =========================================================
-         RENDER — LEDGER
+         LEDGER RENDER
          ========================================================= */
       const ledgerBody = document.getElementById('ledgerBody');
 
@@ -1378,39 +1425,29 @@
         const all = buildLedgerRows();
         const q = state.search.trim().toLowerCase();
         const fromTs = state.from ? ts(state.from) : 0;
-        // include the whole "to" day
         const toTs = state.to ? ts(state.to) + 86399999 : Infinity;
-
         let rows = all.filter(row => {
           if (state.tab !== 'all' && row.kind !== state.tab) return false;
           if (row.ts && fromTs && row.ts < fromTs) return false;
           if (row.ts && toTs !== Infinity && row.ts > toTs) return false;
           if (!row.ts && (fromTs || toTs !== Infinity)) return false;
           if (q) {
-            const haystack = [row.party, row.notes, row.period, row.date].filter(Boolean).join(' ').toLowerCase();
-            if (!haystack.includes(q)) return false;
+            const hay = [row.party, row.notes, row.period, row.date, row.batch].filter(Boolean).join(' ').toLowerCase();
+            if (!hay.includes(q)) return false;
           }
           return true;
         });
-
-        rows = sortRows(rows, state.sort);
-        return rows;
+        return sortRows(rows, state.sort);
       }
-
       function sortRows(rows, mode) {
         const copy = [...rows];
         switch (mode) {
-          case 'date-asc':
-            return copy.sort((a, b) => (a.ts - b.ts) || (a.rawId - b.rawId));
-          case 'amount-desc':
-            return copy.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
-          case 'amount-asc':
-            return copy.sort((a, b) => Math.abs(a.amount) - Math.abs(b.amount));
-          case 'party-asc':
-            return copy.sort((a, b) => String(a.party).localeCompare(String(b.party), undefined, { sensitivity: 'base' }));
+          case 'date-asc': return copy.sort((a, b) => (a.ts - b.ts) || (a.rawId - b.rawId));
+          case 'amount-desc': return copy.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+          case 'amount-asc': return copy.sort((a, b) => Math.abs(a.amount) - Math.abs(b.amount));
+          case 'party-asc': return copy.sort((a, b) => String(a.party).localeCompare(String(b.party), undefined, { sensitivity: 'base' }));
           case 'date-desc':
-          default:
-            return copy.sort((a, b) => (b.ts - a.ts) || (b.rawId - a.rawId));
+          default: return copy.sort((a, b) => (b.ts - a.ts) || (b.rawId - a.rawId));
         }
       }
 
@@ -1426,13 +1463,11 @@
         const start = (state.page - 1) * state.perPage;
         const pageRows = rows.slice(start, start + state.perPage);
 
-        // Subtitle: what's currently on screen
         const shownIn = rows.filter(r => r.kind === 'contribution').reduce((s, r) => s + r.amount, 0);
         const shownOut = rows.filter(r => r.kind === 'disbursement').reduce((s, r) => s + Math.abs(r.amount), 0);
-        document.getElementById('ledgerSubtitle').textContent =
-          rows.length
-            ? `${rows.length} shown · +${peso(shownIn, 0)} in · −${peso(shownOut, 0)} out`
-            : '';
+        document.getElementById('ledgerSubtitle').textContent = rows.length
+          ? `${rows.length} shown · +${peso(shownIn, 0)} in · −${peso(shownOut, 0)} out`
+          : '';
 
         if (!pageRows.length) {
           ledgerBody.innerHTML = `
@@ -1453,21 +1488,29 @@
             ? `<div class="cell-strong">${escapeHtml(row.party)}</div><div class="cell-sub">${escapeHtml(row.period)}${row.notes ? ' · ' + escapeHtml(row.notes) : ''}</div>`
             : `<div class="cell-strong">${escapeHtml(row.party)}</div>${row.notes ? `<div class="cell-sub">${escapeHtml(row.notes)}</div>` : ''}`;
 
+          const refChip = !isIn
+            ? `<div class="cell-sub" style="margin-top:4px"><span class="cell-ref">${escapeHtml(receiptNo(row.raw, row.rawId))}</span>${row.batch ? ` <span class="cell-ref" style="background:#eee6fb;border-color:#ddd0f4;color:#4a3a78">${escapeHtml(row.batch)}</span>` : ''}</div>`
+            : '';
+
+          const actions = !isIn
+            ? `<button class="btn btn-ghost btn-icon" type="button" data-print-receipt="${escapeHtml(row.uid)}" title="Print receipt" aria-label="Print receipt">
+                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v20l2-1 2 1 2-1 2 1 2-1 2 1V2z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+               </button>
+               <button class="btn btn-danger btn-icon" type="button" data-delete="${escapeHtml(row.uid)}" title="Delete" aria-label="Delete">
+                 <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+               </button>`
+            : `<button class="btn btn-danger btn-icon" type="button" data-delete="${escapeHtml(row.uid)}" title="Delete" aria-label="Delete">
+                 <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+               </button>`;
+
           return `
             <tr data-uid="${escapeHtml(row.uid)}">
               <td class="cell-date">${escapeHtml(prettyDate(row.date))}</td>
               <td><span class="badge ${isIn ? 'badge-in' : 'badge-out'}">${isIn ? 'Contribution' : 'Stipend'}</span></td>
-              <td>${details}</td>
+              <td>${details}${refChip}</td>
               <td class="num ${isIn ? 'in' : 'out'}">${isIn ? '+' : '−'}${escapeHtml(peso(Math.abs(row.amount)))}</td>
               <td class="balance${row.balance < 0 ? ' neg' : ''}">${escapeHtml(peso(row.balance))}</td>
-              <td class="no-print">
-                <button class="btn btn-danger btn-icon" type="button"
-                        data-delete="${escapeHtml(row.uid)}"
-                        title="Delete this ${isIn ? 'contribution' : 'disbursement'}"
-                        aria-label="Delete this ${isIn ? 'contribution' : 'disbursement'}">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </button>
-              </td>
+              <td class="no-print"><div class="row-actions">${actions}</div></td>
             </tr>`;
         }).join('');
 
@@ -1478,19 +1521,14 @@
         const pager = document.getElementById('ledgerPager');
         if (totalPages <= 1) { pager.hidden = true; return; }
         pager.hidden = false;
-
         document.getElementById('pagerInfo').innerHTML =
           `Showing <strong>${start + 1}–${start + count}</strong> of <strong>${total}</strong>`;
-
         const btns = [];
         btns.push(`<button class="pager-btn" type="button" data-page="prev" ${state.page === 1 ? 'disabled' : ''}>‹</button>`);
-
-        // windowed page numbers
         const windowSize = 5;
         let from = Math.max(1, state.page - Math.floor(windowSize / 2));
         let to = Math.min(totalPages, from + windowSize - 1);
         from = Math.max(1, to - windowSize + 1);
-
         if (from > 1) {
           btns.push(`<button class="pager-btn" type="button" data-page="1">1</button>`);
           if (from > 2) btns.push(`<span class="pager-info">…</span>`);
@@ -1503,62 +1541,42 @@
           btns.push(`<button class="pager-btn" type="button" data-page="${totalPages}">${totalPages}</button>`);
         }
         btns.push(`<button class="pager-btn" type="button" data-page="next" ${state.page === totalPages ? 'disabled' : ''}>›</button>`);
-
         document.getElementById('pagerBtns').innerHTML = btns.join('');
       }
-
       document.getElementById('pagerBtns').addEventListener('click', e => {
         const btn = e.target.closest('[data-page]');
         if (!btn || btn.disabled) return;
         const value = btn.dataset.page;
         const rows = filteredRows();
         const totalPages = Math.max(1, Math.ceil(rows.length / state.perPage));
-
         if (value === 'prev') state.page = Math.max(1, state.page - 1);
         else if (value === 'next') state.page = Math.min(totalPages, state.page + 1);
         else state.page = Number(value) || 1;
-
         renderLedger();
         document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
 
-      /* ---------- Ledger toolbar wiring ---------- */
       document.getElementById('ledgerSearch').addEventListener('input', debounce(e => {
-        state.search = e.target.value;
-        state.page = 1;
-        renderLedger();
+        state.search = e.target.value; state.page = 1; renderLedger();
       }, 160));
-
       document.getElementById('ledgerFrom').addEventListener('change', e => {
-        state.from = e.target.value;
-        state.page = 1;
-        renderLedger();
+        state.from = e.target.value; state.page = 1; renderLedger();
       });
-
       document.getElementById('ledgerTo').addEventListener('change', e => {
-        state.to = e.target.value;
-        state.page = 1;
-        renderLedger();
+        state.to = e.target.value; state.page = 1; renderLedger();
       });
-
       document.getElementById('ledgerSort').addEventListener('change', e => {
-        state.sort = e.target.value;
-        state.page = 1;
-        renderLedger();
+        state.sort = e.target.value; state.page = 1; renderLedger();
       });
-
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
           document.querySelectorAll('.tab').forEach(t => {
             t.classList.toggle('is-active', t === tab);
             t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
           });
-          state.tab = tab.dataset.tab;
-          state.page = 1;
-          renderLedger();
+          state.tab = tab.dataset.tab; state.page = 1; renderLedger();
         });
       });
-
       document.querySelectorAll('thead th.sortable').forEach(th => {
         th.addEventListener('click', () => {
           const key = th.dataset.sort;
@@ -1569,18 +1587,15 @@
           }[key];
           state.sort = next;
           document.getElementById('ledgerSort').value = next;
-
           document.querySelectorAll('thead th.sortable').forEach(h => {
             h.classList.toggle('is-sorted', h === th);
             const ind = h.querySelector('.sort-ind');
             if (ind) ind.textContent = h === th ? (next.endsWith('asc') ? '↑' : '↓') : '↕';
           });
-
           state.page = 1;
           renderLedger();
         });
       });
-
       document.getElementById('clearFiltersBtn').addEventListener('click', () => {
         state.search = ''; state.from = ''; state.to = ''; state.sort = 'date-desc'; state.page = 1;
         document.getElementById('ledgerSearch').value = '';
@@ -1596,50 +1611,181 @@
       });
 
       /* =========================================================
-         EXPORT + PRINT
+         RECEIPT PRINTING
+         ========================================================= */
+      const RECEIPT_STYLE = `
+        @page { size: A5 portrait; margin: 12mm; }
+        *{box-sizing:border-box}
+        body{font-family:Arial,Helvetica,sans-serif;color:#111;font-size:11px;margin:0;background:#fff}
+        .receipt{width:100%;max-width:520px;margin:0 auto;padding:18px 20px;border:1.5px solid #333;border-radius:10px;page-break-after:always;position:relative}
+        .receipt:last-child{page-break-after:auto}
+        .hdr{text-align:center;border-bottom:1.5px solid #333;padding-bottom:10px;margin-bottom:14px}
+        .hdr .org{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#444}
+        .hdr .name{font-size:15px;font-weight:700;margin:3px 0 1px;letter-spacing:.02em}
+        .hdr .sub{font-size:9px;color:#666}
+        .title{text-align:center;font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin:14px 0 12px}
+        .ref{display:flex;justify-content:space-between;font-size:10px;color:#333;margin-bottom:12px}
+        .ref b{font-family:'DM Mono','Courier New',monospace;font-size:11px}
+        .amount-box{background:#f5f5f5;border:1px solid #ccc;border-radius:6px;padding:12px 14px;margin-bottom:14px;text-align:center}
+        .amount-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#555}
+        .amount-box .amt{font-size:24px;font-weight:800;margin:4px 0 2px;letter-spacing:.01em}
+        .amount-box .words{font-size:10px;color:#333;font-style:italic}
+        .statement{font-size:11px;line-height:1.7;margin-bottom:16px}
+        .statement b{background:#f5f5f5;padding:1px 4px;border-radius:3px}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-bottom:16px;font-size:10.5px}
+        .grid .item{border-bottom:1px dotted #999;padding-bottom:4px}
+        .grid .item .lbl{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#666;display:block}
+        .grid .item .val{font-weight:700;color:#111;font-size:11px}
+        .sigs{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:34px;font-size:9.5px;text-align:center}
+        .sigs .sig .line{border-top:1px solid #111;padding-top:4px;margin-top:36px}
+        .sigs .sig .name{font-weight:700;font-size:10px;color:#111}
+        .sigs .sig .role{color:#666;font-size:9px}
+        .sigs-3{grid-template-columns:1fr 1fr 1fr;gap:22px}
+        .foot{margin-top:20px;text-align:center;font-size:8.5px;color:#888;border-top:1px dashed #ccc;padding-top:8px}
+        .watermark{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%) rotate(-18deg);font-size:68px;font-weight:800;color:rgba(18,43,69,.05);letter-spacing:.14em;pointer-events:none;white-space:nowrap;z-index:0}
+        .receipt > * {position:relative;z-index:1}
+      `;
+
+      function buildReceiptHTML(entry, scholarHint) {
+        const amount = Math.abs(Number(entry.amount) || 0);
+        const scholarName = entry.scholarName || entry.scholar_name ||
+          scholarHint?.name || scholarById(entry.scholarId ?? entry.scholar_id ?? entry.appId ?? entry.app_id)?.name ||
+          'Scholar';
+        const scholar = scholarHint || scholarById(entry.scholarId ?? entry.scholar_id ?? entry.appId ?? entry.app_id) || {};
+        const school = scholar.school || entry.school || '—';
+        const grade = scholar.grade || entry.grade || '—';
+        const refNo = receiptNo(entry, entry.id || entry.scholarId || scholarName);
+        const batch = entry.batchId || entry.batch_id || '';
+        const dateStr = prettyDate(entry.date) || new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+        const period = entry.period || '—';
+        const words = pesoInWords(amount);
+
+        return `
+          <section class="receipt">
+            <div class="watermark">${escapeHtml(ORG_SHORT)}</div>
+            <div class="hdr">
+              <div class="org">${escapeHtml(ORG_NAME)}</div>
+              <div class="name">STIPEND RECEIPT</div>
+              <div class="sub">Official acknowledgement of educational assistance</div>
+            </div>
+
+            <div class="ref">
+              <span>Receipt No. <b>${escapeHtml(refNo)}</b></span>
+              <span>Date: <b>${escapeHtml(dateStr)}</b></span>
+            </div>
+            ${batch ? `<div class="ref"><span>Batch: <b>${escapeHtml(batch)}</b></span><span>Period: <b>${escapeHtml(period)}</b></span></div>` : ''}
+
+            <div class="amount-box">
+              <div class="lbl">Amount received</div>
+              <div class="amt">${escapeHtml(peso(amount))}</div>
+              <div class="words">${escapeHtml(words)}</div>
+            </div>
+
+            <p class="statement">
+              Received from <b>${escapeHtml(ORG_SHORT)}</b> the amount of <b>${escapeHtml(words)}</b>
+              (${escapeHtml(peso(amount))}), representing educational stipend assistance for the period of
+              <b>${escapeHtml(period)}</b>.
+            </p>
+
+            <div class="grid">
+              <div class="item"><span class="lbl">Scholar name</span><span class="val">${escapeHtml(scholarName)}</span></div>
+              <div class="item"><span class="lbl">Grade level</span><span class="val">${escapeHtml(grade)}</span></div>
+              <div class="item"><span class="lbl">School</span><span class="val">${escapeHtml(school)}</span></div>
+              <div class="item"><span class="lbl">Barangay</span><span class="val">${escapeHtml(scholar.barangay || '—')}</span></div>
+            </div>
+
+            <div class="sigs">
+              <div class="sig">
+                <div class="line"></div>
+                <div class="name">${escapeHtml(scholarName)}</div>
+                <div class="role">Scholar / Recipient</div>
+              </div>
+              <div class="sig">
+                <div class="line"></div>
+                <div class="name">Releasing Officer</div>
+                <div class="role">MEFAMDEV Staff</div>
+              </div>
+            </div>
+
+            <div class="sigs sigs-3" style="margin-top:22px">
+              <div class="sig"><div class="line"></div><div class="role">Parent / Guardian</div></div>
+              <div class="sig"><div class="line"></div><div class="role">Witness</div></div>
+              <div class="sig"><div class="line"></div><div class="role">Date received</div></div>
+            </div>
+
+            <div class="foot">
+              This receipt is computer-generated by ${escapeHtml(ORG_SHORT)} Financials. Keep this copy for your records.
+            </div>
+          </section>`;
+      }
+
+      function openPrintWindow(title, bodyHtml) {
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+          <style>${RECEIPT_STYLE}</style></head><body>${bodyHtml}</body></html>`;
+        const win = window.open('', '_blank');
+        if (!win) { toast('Allow popups to print receipts.', 'error'); return null; }
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        setTimeout(() => { try { win.print(); } catch (e) { /* ignore */ } }, 400);
+        return win;
+      }
+
+      function printReceiptForUid(uid) {
+        const row = buildLedgerRows().find(r => r.uid === uid);
+        if (!row || row.kind !== 'disbursement') {
+          return toast('Receipt is only available for disbursements.', 'warn');
+        }
+        openPrintWindow('Stipend Receipt', buildReceiptHTML(row.raw));
+      }
+
+      document.getElementById('printAllReceiptsBtn').addEventListener('click', () => {
+        const rows = filteredRows().filter(r => r.kind === 'disbursement');
+        if (!rows.length) return toast('No disbursements match the current filters.', 'warn');
+        if (rows.length > 60) {
+          return toast(`That's ${rows.length} receipts — narrow the filters first.`, 'warn');
+        }
+        const html = rows.map(r => buildReceiptHTML(r.raw)).join('');
+        openPrintWindow(`${rows.length} Stipend Receipts`, html);
+      });
+
+      /* =========================================================
+         EXPORT / STATEMENT PRINT
          ========================================================= */
       document.getElementById('exportCsvBtn').addEventListener('click', () => {
         const rows = filteredRows();
         if (!rows.length) return toast('Nothing to export with the current filters.', 'warn');
-
-        const header = ['Date', 'Type', 'Name / Source', 'Period / Notes', 'Amount', 'Balance'];
+        const header = ['Date', 'Type', 'Name / Source', 'Period / Notes', 'Receipt No.', 'Batch', 'Amount', 'Balance'];
         const lines = [header];
-
         rows.forEach(row => {
           lines.push([
             row.date || '',
             row.kind === 'contribution' ? 'Contribution' : 'Disbursement',
             row.party,
             [row.period, row.notes].filter(Boolean).join(' | '),
+            row.kind === 'disbursement' ? receiptNo(row.raw, row.rawId) : '',
+            row.batch || '',
             row.amount.toFixed(2),
             Number(row.balance || 0).toFixed(2)
           ]);
         });
-
-        const csv = lines.map(line =>
-          line.map(cell => {
-            const s = String(cell ?? '');
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-          }).join(',')
-        ).join('\r\n');
-
+        const csv = lines.map(line => line.map(cell => {
+          const s = String(cell ?? '');
+          return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        }).join(',')).join('\r\n');
         const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `mefamdev-financials-${todayISO()}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
-
         toast(`Exported ${rows.length} ${rows.length === 1 ? 'row' : 'rows'}.`, 'success');
       });
 
       document.getElementById('printLedgerBtn').addEventListener('click', () => {
         const rows = filteredRows();
         if (!rows.length) return toast('Nothing to print with the current filters.', 'warn');
-
         const { added, disbursed, balance } = totals();
         const shownIn = rows.filter(r => r.kind === 'contribution').reduce((s, r) => s + r.amount, 0);
         const shownOut = rows.filter(r => r.kind === 'disbursement').reduce((s, r) => s + Math.abs(r.amount), 0);
@@ -1648,7 +1794,7 @@
           <tr>
             <td>${escapeHtml(prettyDate(row.date))}</td>
             <td>${row.kind === 'contribution' ? 'Contribution' : 'Stipend'}</td>
-            <td>${escapeHtml(row.party)}${row.period ? ` <em>(${escapeHtml(row.period)})</em>` : ''}${row.notes ? `<br><small>${escapeHtml(row.notes)}</small>` : ''}</td>
+            <td>${escapeHtml(row.party)}${row.period ? ` <em>(${escapeHtml(row.period)})</em>` : ''}${row.notes ? `<br><small>${escapeHtml(row.notes)}</small>` : ''}${row.batch ? `<br><small>Batch ${escapeHtml(row.batch)}</small>` : ''}</td>
             <td class="r">${row.kind === 'contribution' ? '+' : '−'}${escapeHtml(peso(Math.abs(row.amount)))}</td>
             <td class="r">${escapeHtml(peso(row.balance))}</td>
           </tr>`).join('');
@@ -1679,16 +1825,14 @@
             tr{page-break-inside:avoid}
             .foot{margin-top:16px;font-size:9px;color:#666;text-align:center}
           </style></head><body>
-          <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
+          <div class="org">${escapeHtml(ORG_NAME)}</div>
           <h1>Financial Statement</h1>
           <div class="meta">Generated ${escapeHtml(new Date().toLocaleString())}${filterBits.length ? ' · ' + escapeHtml(filterBits.join(' · ')) : ''}</div>
-
           <div class="summary">
             <div class="box"><div class="lbl">Available balance</div><div class="val">${escapeHtml(peso(balance))}</div></div>
             <div class="box"><div class="lbl">Total contributions</div><div class="val">${escapeHtml(peso(added))}</div></div>
             <div class="box"><div class="lbl">Total disbursed</div><div class="val">${escapeHtml(peso(disbursed))}</div></div>
           </div>
-
           <h2>Transactions (${rows.length})</h2>
           <table>
             <thead><tr><th>Date</th><th>Type</th><th>Details</th><th class="r">Amount</th><th class="r">Balance</th></tr></thead>
@@ -1701,10 +1845,8 @@
               </tr>
             </tfoot>
           </table>
-
-          <div class="foot">MEFAMDEV Financials · This statement reflects the filters applied at the time of printing.</div>
+          <div class="foot">${escapeHtml(ORG_SHORT)} Financials · This statement reflects the filters applied at the time of printing.</div>
           </body></html>`;
-
         const win = window.open('', '_blank');
         if (!win) return toast('Allow popups to print the statement.', 'error');
         win.document.write(html);
@@ -1714,53 +1856,52 @@
       });
 
       /* =========================================================
-         DATA LOADING
+         DATA LOAD
          ========================================================= */
       async function loadData({ silent = false } = {}) {
-        if (!silent) state.loading = true;
         try {
           const [apps, fundLog, disbursements] = await Promise.all([
             Promise.resolve(MefamAPI.getApplications?.() || []),
             Promise.resolve(MefamAPI.getFundLog?.() || []),
             Promise.resolve(MefamAPI.getDisbursements?.() || [])
           ]);
-
           state.apps = Array.isArray(apps) ? apps : [];
           state.fundLog = Array.isArray(fundLog) ? fundLog : [];
           state.disbursements = Array.isArray(disbursements) ? disbursements : [];
 
-          // Re-resolve the selected scholar against fresh data
           if (state.selectedScholar) {
             const fresh = state.apps.find(a => String(a.id) === String(state.selectedScholar.id));
             if (fresh) selectScholar(fresh);
             else clearScholar();
           }
+          // Prune any mass selections that are no longer accepted
+          const validIds = new Set(state.apps.filter(a => a.status === 'Accepted').map(a => String(a.id)));
+          [...state.massSelected].forEach(id => { if (!validIds.has(id)) state.massSelected.delete(id); });
 
           renderStats();
           renderLedger();
           refreshPickerList();
+          if (state.disburseMode === 'mass') { refreshMassList(); updateMassSummary(); }
           updateAmountNote();
         } catch (error) {
           console.error('Failed to load financials data:', error);
           toast('Unable to load financial data right now.', 'error');
-        } finally {
-          state.loading = false;
         }
       }
 
       /* =========================================================
-         ACTIONS
+         VALIDATION HELPERS
          ========================================================= */
       function markInvalid(el) {
         el.style.borderColor = 'var(--red)';
         el.style.boxShadow = '0 0 0 4px rgba(179,38,30,.15)';
         el.focus();
-        setTimeout(() => {
-          el.style.borderColor = '';
-          el.style.boxShadow = '';
-        }, 1800);
+        setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1800);
       }
 
+      /* =========================================================
+         ACTIONS
+         ========================================================= */
       async function addFunds() {
         const sourceEl = document.getElementById('fundSource');
         const amountEl = document.getElementById('fundAmount');
@@ -1778,55 +1919,38 @@
 
         const btn = document.getElementById('addFundsBtn');
         btn.disabled = true;
-
         try {
           const result = await MefamAPI.addFunds(source, amount, date, notes);
           if (!result || result.ok === false) throw new Error(result?.error || 'Unable to add funds.');
-
-          sourceEl.value = '';
-          amountEl.value = '';
-          dateEl.value = todayISO();
-          notesEl.value = '';
-
+          sourceEl.value = ''; amountEl.value = ''; dateEl.value = todayISO(); notesEl.value = '';
           await loadData({ silent: true });
           toast(`Added ${peso(amount)} from ${source}.`, 'success');
         } catch (error) {
           console.error('Failed to add funds:', error);
           toast(error.message || 'Unable to add the fund entry right now.', 'error');
-        } finally {
-          btn.disabled = false;
-        }
+        } finally { btn.disabled = false; }
       }
 
-      async function disburseStipend() {
+      async function disburseSingle() {
         const amountEl = disbAmountInput;
         const periodEl = document.getElementById('disbPeriod');
         const period = periodEl.value.trim();
         const amount = Number(amountEl.value);
 
-        if (!state.selectedScholar) {
-          pickerInput.focus();
-          openPicker();
-          return toast('Please select a scholar first.', 'warn');
-        }
+        if (!state.selectedScholar) { pickerInput.focus(); openPicker(); return toast('Please select a scholar first.', 'warn'); }
         if (!amount || amount <= 0) { markInvalid(amountEl); return toast('Please enter a valid amount.', 'warn'); }
         if (!period) { markInvalid(periodEl); return toast('Please enter the stipend period or month.', 'warn'); }
 
         const { balance } = totals();
         const scholar = state.selectedScholar;
 
-        // Duplicate-period check
         const samePeriod = state.disbursements.find(entry => {
           const id = String(entry.scholarId ?? entry.scholar_id ?? entry.appId ?? entry.app_id ?? '');
-          return id === String(scholar.id)
-            && String(entry.period || '').trim().toLowerCase() === period.toLowerCase();
+          return id === String(scholar.id) && String(entry.period || '').trim().toLowerCase() === period.toLowerCase();
         });
-
         if (samePeriod) {
           const ok = await confirmDialog({
-            title: 'Duplicate period detected',
-            tone: 'warn',
-            confirmText: 'Release anyway',
+            title: 'Duplicate period detected', tone: 'warn', confirmText: 'Release anyway',
             body: `<p><b>${escapeHtml(scholar.name || 'This scholar')}</b> already has a stipend recorded for <b>${escapeHtml(period)}</b>.</p>
                    <div class="modal-kv"><span>Existing release</span><span>${escapeHtml(peso(samePeriod.amount))}</span></div>
                    <p style="margin-top:10px">Release another stipend for the same period?</p>`
@@ -1834,12 +1958,10 @@
           if (!ok) return;
         }
 
-        // Overdraft check
         if (amount > balance) {
           const ok = await confirmDialog({
             title: balance <= 0 ? 'No funds available' : 'This will overdraw the fund',
-            tone: 'danger',
-            confirmText: 'Release anyway',
+            tone: 'danger', confirmText: 'Release anyway',
             body: `<p>Available balance is <b>${escapeHtml(peso(balance))}</b> but this release is <b>${escapeHtml(peso(amount))}</b>.</p>
                    <div class="modal-kv"><span>Shortfall</span><span>${escapeHtml(peso(amount - balance))}</span></div>
                    <p style="margin-top:10px">The ledger balance will go negative. Continue?</p>`
@@ -1849,7 +1971,6 @@
 
         const btn = document.getElementById('disburseBtn');
         btn.disabled = true;
-
         try {
           const result = await MefamAPI.disburseStipend(Number(scholar.id), amount, period);
           if (!result || result.ok === false) throw new Error(result?.error || 'Unable to release the stipend.');
@@ -1861,21 +1982,155 @@
           amountEl.dispatchEvent(new Event('input'));
 
           await loadData({ silent: true });
-          toast(`Released ${peso(amount)} to ${scholarName} for ${period}.`, 'success');
+
+          const newEntry = {
+            id: result?.id || result?.disbursement?.id,
+            scholarId: scholar.id,
+            scholarName,
+            amount, period,
+            date: result?.date || todayISO()
+          };
+          toast(`Released ${peso(amount)} to ${scholarName} for ${period}.`, 'success', 7000, {
+            label: 'Receipt', duration: 8000,
+            onClick: () => openPrintWindow('Stipend Receipt', buildReceiptHTML(newEntry, scholar))
+          });
         } catch (error) {
           console.error('Failed to disburse stipend:', error);
           toast(error.message || 'Unable to release the stipend right now.', 'error');
-        } finally {
-          btn.disabled = false;
+        } finally { btn.disabled = false; }
+      }
+
+      async function disburseMass() {
+        const amountEl = document.getElementById('massAmount');
+        const periodEl = document.getElementById('massPeriod');
+        const amount = Number(amountEl.value);
+        const period = periodEl.value.trim();
+        const ids = [...state.massSelected];
+
+        if (!ids.length) return toast('Select at least one scholar.', 'warn');
+        if (!amount || amount <= 0) { markInvalid(amountEl); return toast('Please enter a valid amount.', 'warn'); }
+        if (!period) { markInvalid(periodEl); return toast('Please enter the stipend period or month.', 'warn'); }
+
+        const total = amount * ids.length;
+        const { balance } = totals();
+        const after = balance - total;
+
+        const scholars = ids.map(id => scholarById(id)).filter(Boolean);
+
+        // Duplicate detection
+        const history = stipendHistoryByScholar();
+        const dupes = scholars.filter(s => {
+          const list = history.get(String(s.id)) || [];
+          return list.some(p => String(p.period || '').trim().toLowerCase() === period.toLowerCase());
+        });
+
+        // Preview
+        const previewList = scholars.slice(0, 30).map(s =>
+          `<li><span>${escapeHtml(s.name || '—')}</span><span>${escapeHtml(peso(amount))}</span></li>`
+        ).join('');
+        const extra = scholars.length > 30 ? `<li><span>…and ${scholars.length - 30} more</span><span></span></li>` : '';
+
+        let warning = '';
+        if (dupes.length) {
+          warning += `<p style="color:#7a4e00"><b>⚠ ${dupes.length}</b> scholar${dupes.length === 1 ? ' has' : 's have'} already received a stipend for <b>${escapeHtml(period)}</b>.</p>`;
+        }
+        if (after < 0) {
+          warning += `<p style="color:#8b241c"><b>⚠ This will overdraw the fund by ${escapeHtml(peso(-after))}.</b> Balance after: ${escapeHtml(peso(after))}.</p>`;
+        }
+
+        const ok = await confirmDialog({
+          title: `Release to ${scholars.length} scholar${scholars.length === 1 ? '' : 's'}?`,
+          tone: after < 0 ? 'danger' : dupes.length ? 'warn' : 'ok',
+          confirmText: `Release ${peso(total)}`,
+          body: `
+            <p>You are about to release a stipend of <b>${escapeHtml(peso(amount))}</b> to <b>${scholars.length}</b> scholar${scholars.length === 1 ? '' : 's'} for <b>${escapeHtml(period)}</b>.</p>
+            <div class="modal-kv"><span>Total to release</span><span>${escapeHtml(peso(total))}</span></div>
+            <div class="modal-kv"><span>Current balance</span><span>${escapeHtml(peso(balance))}</span></div>
+            <div class="modal-kv"><span>Balance after</span><span style="color:${after < 0 ? 'var(--red)' : 'var(--green)'}">${escapeHtml(peso(after))}</span></div>
+            ${warning}
+            <ul class="preview-list">${previewList}${extra}</ul>
+          `
+        });
+        if (!ok) return;
+
+        const btn = document.getElementById('disburseBtn');
+        btn.disabled = true;
+        btn.querySelector('#disburseBtnLabel').textContent = `Releasing 0 / ${scholars.length}…`;
+
+        const batch = batchRef();
+        const succeeded = [];
+        const failed = [];
+
+        for (let i = 0; i < scholars.length; i++) {
+          const s = scholars[i];
+          try {
+            const result = await MefamAPI.disburseStipend(Number(s.id), amount, period);
+            if (result && result.ok !== false) {
+              succeeded.push({
+                scholar: s,
+                entry: {
+                  id: result?.id || result?.disbursement?.id,
+                  scholarId: s.id,
+                  scholarName: s.name,
+                  amount, period,
+                  date: result?.date || todayISO(),
+                  batchId: batch
+                }
+              });
+            } else {
+              failed.push({ scholar: s, error: result?.error || 'Unknown error' });
+            }
+          } catch (err) {
+            failed.push({ scholar: s, error: err.message || 'Request failed' });
+          }
+          btn.querySelector('#disburseBtnLabel').textContent = `Releasing ${i + 1} / ${scholars.length}…`;
+        }
+
+        btn.disabled = false;
+        btn.querySelector('#disburseBtnLabel').textContent = 'Release selected stipends';
+
+        state.massSelected.clear();
+        await loadData({ silent: true });
+        refreshMassList();
+        updateMassSummary();
+
+        const okCount = succeeded.length;
+        const failCount = failed.length;
+        const totalReleased = amount * okCount;
+
+        if (failCount === 0) {
+          toast(`Released ${peso(totalReleased)} to ${okCount} scholar${okCount === 1 ? '' : 's'} · Batch ${batch}.`,
+            'success', 9000, {
+              label: `Print ${okCount} receipt${okCount === 1 ? '' : 's'}`,
+              duration: 12000,
+              onClick: () => {
+                const html = succeeded.map(s => buildReceiptHTML(s.entry, s.scholar)).join('');
+                openPrintWindow(`${okCount} Stipend Receipts`, html);
+              }
+            });
+        } else {
+          toast(`Released ${okCount} of ${scholars.length}. ${failCount} failed — check console for details.`,
+            'warn', 9000, {
+              label: 'Print receipts',
+              duration: 12000,
+              onClick: () => {
+                const html = succeeded.map(s => buildReceiptHTML(s.entry, s.scholar)).join('');
+                openPrintWindow(`${okCount} Stipend Receipts`, html);
+              }
+            });
+          console.warn('Mass disburse failures:', failed);
         }
       }
 
-      /* ---------- Deletion with undo ---------- */
+      /* ---------- Delete with undo ---------- */
       ledgerBody.addEventListener('click', async e => {
-        const btn = e.target.closest('[data-delete]');
-        if (!btn) return;
+        const printBtn = e.target.closest('[data-print-receipt]');
+        if (printBtn) { printReceiptForUid(printBtn.dataset.printReceipt); return; }
 
-        const uid = btn.dataset.delete;
+        const delBtn = e.target.closest('[data-delete]');
+        if (!delBtn) return;
+
+        const uid = delBtn.dataset.delete;
         const row = buildLedgerRows().find(r => r.uid === uid);
         if (!row) return;
 
@@ -1883,8 +2138,7 @@
 
         const ok = await confirmDialog({
           title: isContribution ? 'Delete contribution?' : 'Delete disbursement?',
-          tone: 'danger',
-          confirmText: 'Delete',
+          tone: 'danger', confirmText: 'Delete',
           body: `
             <p>This will permanently remove the entry from the ledger.</p>
             <div class="modal-kv"><span>${isContribution ? 'Source' : 'Scholar'}</span><span>${escapeHtml(row.party)}</span></div>
@@ -1895,43 +2149,40 @@
         });
         if (!ok) return;
 
-        btn.disabled = true;
-
+        delBtn.disabled = true;
         try {
           const result = isContribution
             ? await MefamAPI.deleteFunds(row.rawId)
             : await MefamAPI.deleteDisbursement(row.rawId);
-
           if (!result || result.ok === false) throw new Error(result?.error || 'Unable to delete the entry.');
 
           await loadData({ silent: true });
 
-          const label = isContribution ? 'Contribution' : 'Disbursement';
-          toast(`${label} of ${peso(Math.abs(row.amount))} deleted.`, 'warn', 7000, {
-            label: 'Undo',
-            duration: 8000,
-            onClick: async () => {
-              try {
-                const undoResult = isContribution
-                  ? await MefamAPI.addFunds(row.raw.source, Math.abs(row.amount), row.raw.date, row.raw.notes || '')
-                  : await MefamAPI.disburseStipend(
-                      Number(row.raw.scholarId ?? row.raw.scholar_id ?? row.raw.appId ?? row.raw.app_id),
-                      Math.abs(row.amount),
-                      row.raw.period || ''
-                    );
-                if (!undoResult || undoResult.ok === false) throw new Error(undoResult?.error || 'Undo failed.');
-                await loadData({ silent: true });
-                toast('Entry restored.', 'success');
-              } catch (err) {
-                console.error('Undo failed:', err);
-                toast(err.message || 'Could not restore that entry.', 'error');
+          toast(`${isContribution ? 'Contribution' : 'Disbursement'} of ${peso(Math.abs(row.amount))} deleted.`,
+            'warn', 7000, {
+              label: 'Undo', duration: 8000,
+              onClick: async () => {
+                try {
+                  const undoResult = isContribution
+                    ? await MefamAPI.addFunds(row.raw.source, Math.abs(row.amount), row.raw.date, row.raw.notes || '')
+                    : await MefamAPI.disburseStipend(
+                        Number(row.raw.scholarId ?? row.raw.scholar_id ?? row.raw.appId ?? row.raw.app_id),
+                        Math.abs(row.amount),
+                        row.raw.period || ''
+                      );
+                  if (!undoResult || undoResult.ok === false) throw new Error(undoResult?.error || 'Undo failed.');
+                  await loadData({ silent: true });
+                  toast('Entry restored.', 'success');
+                } catch (err) {
+                  console.error('Undo failed:', err);
+                  toast(err.message || 'Could not restore that entry.', 'error');
+                }
               }
-            }
-          });
+            });
         } catch (error) {
           console.error('Failed to delete entry:', error);
           toast(error.message || 'Unable to delete the entry right now.', 'error');
-          btn.disabled = false;
+          delBtn.disabled = false;
         }
       });
 
@@ -1941,36 +2192,39 @@
       document.addEventListener('DOMContentLoaded', async () => {
         if (!requireStaffSession()) return;
 
-        // Seed the date field with today
         document.getElementById('fundDate').value = todayISO();
-
-        // Seed the period field with the current month
         document.getElementById('disbPeriod').value = monthLabel(0);
+        document.getElementById('massPeriod').value = monthLabel(0);
 
-        // Buttons
         document.getElementById('addFundsBtn').addEventListener('click', addFunds);
-        document.getElementById('disburseBtn').addEventListener('click', disburseStipend);
+        document.getElementById('disburseBtn').addEventListener('click', () => {
+          if (state.disburseMode === 'mass') disburseMass();
+          else disburseSingle();
+        });
 
-        // Enter-to-submit on the fund form
         ['fundSource', 'fundAmount', 'fundDate', 'fundNotes'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); addFunds(); }
           });
         });
-
-        // Enter-to-submit on the disburse form (except the picker itself)
         ['disbAmount', 'disbPeriod'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); disburseStipend(); }
+            if (e.key === 'Enter') { e.preventDefault(); disburseSingle(); }
+          });
+        });
+        ['massAmount', 'massPeriod'].forEach(id => {
+          document.getElementById(id).addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); disburseMass(); }
           });
         });
 
-        // Normalize the amount chip highlight on load
         disbAmountInput.dispatchEvent(new Event('input'));
 
-        // Go
         await loadData();
       });
+
+      // Expose for debugging
+      window.__mefamFinancials = { state, buildReceiptHTML, receiptNo, pesoInWords };
 
     })();
   </script>
