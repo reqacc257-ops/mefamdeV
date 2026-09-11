@@ -3135,26 +3135,8 @@ function openAssessment(appId) {
     openToolModal(url, '📝 Staff Assessment');
 }
 function openToolModal(url, title) {
-    const toolPath = String(url || '').split('?')[0];
-    if (toolPath === 'student_grade_card.html' && window.matchMedia('(max-width: 640px)').matches) {
-        window.open(url, '_blank');
-        return;
-    }
-    const modal = document.getElementById('toolModal');
-    const frame = document.getElementById('toolModalFrame');
-    const titleEl = document.getElementById('toolModalTitle');
-    if (!modal || !frame) return;
-    if (titleEl) titleEl.textContent = title || 'Staff Form';
-    frame.src = url;
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-
-    if (url.includes('staff_assessment.html') || url.includes('intake_sheet.html')) {
-        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-        frame.onload = function() {
-            frame.contentWindow.postMessage({ type: 'prefill-applicants', applicants: apps }, '*');
-        };
-    }
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
 }
 function closeToolModal() {
     const modal = document.getElementById('toolModal');
