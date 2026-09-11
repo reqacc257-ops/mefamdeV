@@ -1015,7 +1015,7 @@
                 <button type="button" class="nav-item" onclick="nav('family',this)" data-roles="director,finance">
                     <span class="nav-icon" aria-hidden="true">👨‍👩‍👧</span> Family Records
                 </button>
-                <button type="button" class="nav-item" onclick="nav('financials',this)" data-roles="director,finance">
+                <button type="button" class="nav-item" onclick="window.location.href='financials.html'" data-roles="director,finance">
                     <span class="nav-icon" aria-hidden="true">💰</span> Financials
                 </button>
                 <button type="button" class="nav-item" onclick="nav('comms',this)" data-roles="director,program">
@@ -1094,7 +1094,7 @@
                     <div class="stat-value" id="dash-pending">0</div>
                     <div class="stat-sub">Needs review</div>
                 </button>
-                <button type="button" class="stat-card" style="--card-accent:#8e44ad; border-top-color:#8e44ad;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))">
+                <button type="button" class="stat-card" style="--card-accent:#8e44ad; border-top-color:#8e44ad;" onclick="window.location.href='financials.html'">
                     <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
                     <div class="stat-label">Budget Remaining</div>
                     <div class="stat-value" id="dash-balance">₱0</div>
@@ -1112,8 +1112,8 @@
             <!-- Finance stats -->
             <div class="stats-grid" data-roles="finance">
                 <button type="button" class="stat-card" style="--card-accent:#1abc9c; border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-people-roof"></i></span><div class="stat-label">Beneficiary Families</div><div class="stat-value" id="fin-families">0</div></button>
-                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-money-bill-wave"></i></span><div class="stat-label">Stipends Disbursed</div><div class="stat-value" id="fin-stipends-dash">₱0</div></button>
-                <button type="button" class="stat-card" style="--card-accent:#e67e22; border-top-color:#e67e22;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-receipt"></i></span><div class="stat-label">Pending Receipts</div><div class="stat-value">0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="window.location.href='financials.html'"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-money-bill-wave"></i></span><div class="stat-label">Stipends Disbursed</div><div class="stat-value" id="fin-stipends-dash">₱0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e67e22; border-top-color:#e67e22;" onclick="window.location.href='financials.html'"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-receipt"></i></span><div class="stat-label">Pending Receipts</div><div class="stat-value">0</div></button>
             </div>
 
             <!-- Program stats -->
