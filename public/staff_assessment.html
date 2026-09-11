@@ -63,14 +63,15 @@
         overflow:hidden;
     }
 
-    /* ══ HEADER ══ */
+    /* ══ HEADER (no logo, compact) ══ */
     .doc-header{
         position:relative;
-        padding:22px 28px 20px;
+        padding:18px 28px 16px;
         background:linear-gradient(135deg, #0e1f33 0%, #1a2e44 45%, #234160 100%);
         color:#fff;
         isolation:isolate;
         overflow:hidden;
+        text-align:center;
     }
     .doc-header::before{
         content:'';
@@ -84,48 +85,25 @@
         position:absolute;left:0;right:0;bottom:0;height:3px;
         background:linear-gradient(90deg, var(--gold-2), #ffd479 45%, var(--gold) 75%, var(--gold-2));
     }
-    .header-inner{
-        display:flex;align-items:center;gap:18px;
-    }
-    .brand-mark{
-        flex:0 0 auto;
-        width:52px;height:52px;border-radius:14px;
-        display:grid;place-items:center;
-        font-family:Georgia, 'Times New Roman', serif;
-        font-size:26px;line-height:1;
-        color:#12283f;
-        background:linear-gradient(140deg,#ffe0a3,#f5a623 55%,#d98508);
-        box-shadow:0 10px 26px -8px rgba(245,166,35,.7), inset 0 1px 0 rgba(255,255,255,.7);
-    }
-    .header-text{flex:1;min-width:0;}
     .doc-header .org{
-        font-size:.68rem;
+        font-size:.66rem;
         letter-spacing:.16em;
         text-transform:uppercase;
-        color:rgba(255,255,255,.6);
+        color:rgba(255,255,255,.62);
         font-weight:600;
     }
     .doc-header h1{
         font-family:Georgia, 'Times New Roman', serif;
         font-weight:400;
-        font-size:1.55rem;
-        letter-spacing:.005em;
+        font-size:1.7rem;
+        letter-spacing:.01em;
         color:#fff;
-        margin:3px 0 3px;
-        line-height:1.15;
+        margin:4px 0 3px;
+        line-height:1.1;
     }
     .doc-header .sub{
-        font-size:.78rem;
-        color:rgba(255,255,255,.72);
-    }
-    .header-chip{
-        flex:0 0 auto;
-        padding:7px 14px;border-radius:999px;
-        font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
-        color:#1a2e44;
-        background:linear-gradient(135deg,#ffe0a3,#f5a623);
-        box-shadow:0 6px 18px -8px rgba(245,166,35,.9);
-        white-space:nowrap;
+        font-size:.76rem;
+        color:rgba(255,255,255,.7);
     }
 
     /* ══ BODY ══ */
@@ -446,7 +424,6 @@
 
     /* ── Family table ── */
     .table-wrap{
-        overflow-x:auto;
         margin-top:6px;
         border:1px solid var(--line);
         border-radius:var(--radius-sm);
@@ -457,20 +434,21 @@
         border-collapse:separate;
         border-spacing:0;
         font-size:.74rem;
-        min-width:740px;
+        table-layout:fixed;
     }
     .fam-table thead th{
         background:linear-gradient(180deg,#f1f5f9,#e8eef5);
         color:var(--ink-2);
         border-bottom:1.5px solid var(--line-2);
-        padding:9px 8px;
+        padding:8px 5px;
         font-weight:700;
         text-align:left;
         white-space:nowrap;
-        font-size:.62rem;
+        font-size:.6rem;
         text-transform:uppercase;
-        letter-spacing:.06em;
-        position:sticky;top:0;z-index:1;
+        letter-spacing:.05em;
+        overflow:hidden;
+        text-overflow:ellipsis;
     }
     .fam-table thead th:first-child{border-top-left-radius:var(--radius-sm);}
     .fam-table thead th:last-child{border-top-right-radius:var(--radius-sm);}
@@ -483,7 +461,7 @@
     }
     .fam-table tbody tr:last-child td{border-bottom:0;}
     .fam-table td input,.fam-table td select{
-        padding:6px 8px;
+        padding:6px 6px;
         border:1px solid transparent;
         border-radius:5px;
         font-size:.76rem;
@@ -506,7 +484,6 @@
         font-size:.7rem;
         font-weight:600;
         text-align:center;
-        width:28px;
     }
 
     /* ── Action table ── */
@@ -519,11 +496,12 @@
         border:1px solid var(--line);
         border-radius:var(--radius-sm);
         overflow:hidden;
+        table-layout:fixed;
     }
     .action-table thead th{
         background:linear-gradient(180deg,#f1f5f9,#e8eef5);
         color:var(--ink-2);
-        padding:9px 10px;
+        padding:8px 10px;
         font-size:.62rem;
         font-weight:700;
         text-transform:uppercase;
@@ -619,7 +597,7 @@
         flex-wrap:wrap;
     }
 
-    /* ══ SIGNATURE SECTION (optional) ══ */
+    /* ══ SIGNATURE SECTION ══ */
     .sig-section{
         margin-top:26px;
         padding-top:22px;
@@ -704,7 +682,6 @@
         width:100%;
     }
 
-    /* Print signature view (default) */
     .sig-row{
         display:grid;
         grid-template-columns:1fr 1fr;
@@ -719,7 +696,6 @@
         transition:all .2s ease;
     }
 
-    /* When mode = print: show only a clean signature line */
     .sig-field .sig-tools{display:none;}
     .sig-field .sig-pad-wrap{
         display:none;
@@ -751,7 +727,6 @@
         text-align:center;
     }
 
-    /* When mode = digital: show canvas pads */
     .sig-section[data-mode="digital"] .sig-field .sig-pad-wrap{
         display:block;
         position:relative;
@@ -814,22 +789,34 @@
         box-shadow:0 -8px 24px -12px rgba(26,46,68,.15);
     }
 
-    /* ══ PRINT ══ */
-    @page{ size:A4; margin:8mm 10mm; }
+    /* ══════════════════════════════════════════
+       PRINT — single page A4, no scroll, no logo
+       ══════════════════════════════════════════ */
+    @page{ size:A4; margin:6mm 8mm; }
+
     @media print{
         html,body{
             background:#fff !important;
             color:#000 !important;
-            font-size:8pt;
-            line-height:1.15;
-            padding:0;margin:0;
+            font-size:7.4pt;
+            line-height:1.18;
+            padding:0;
+            margin:0;
+            width:100%;
+            zoom:1;
         }
         .shell{
             max-width:100%;
+            width:100%;
             border:none;
             border-radius:0;
             box-shadow:none;
+            overflow:visible;
+            page-break-inside:avoid;
+            break-inside:avoid;
         }
+
+        /* Hide screen-only stuff */
         .prefill-bar,
         .toolbar,
         .btn-add,
@@ -839,13 +826,15 @@
         .sig-tools,
         .case-no-actions,
         .auto-badge,
-        .sig-hint{display:none !important;}
+        .sig-hint,
+        .header-chip{display:none !important;}
 
         input,select,textarea{
             border:1px solid #000 !important;
             background:#fff !important;
             color:#000 !important;
             box-shadow:none !important;
+            border-radius:1pt !important;
         }
         input[readonly]{
             background:#f5f5f5 !important;
@@ -853,73 +842,81 @@
             print-color-adjust:exact;
         }
 
+        /* ── Compact header, no logo ── */
         .doc-header{
             background:#fff !important;
             color:#000 !important;
             border-bottom:1.5pt solid #000;
-            padding:0 0 5pt;
-            margin-bottom:6pt;
+            padding:0 0 3pt;
+            margin:0 0 5pt;
+            text-align:center;
             break-after:avoid;
             page-break-after:avoid;
         }
         .doc-header::before,
         .doc-header::after{display:none !important;}
-        .brand-mark{
-            width:26pt;height:26pt;
-            font-size:13pt;
-            border-radius:6pt;
-            background:#eee !important;
+        .doc-header .org{
+            font-size:5.6pt;
             color:#000 !important;
-            box-shadow:none !important;
-            border:1pt solid #000;
+            letter-spacing:.14em;
+            margin-bottom:1pt;
         }
-        .doc-header .org{font-size:6.5pt;color:#000 !important;letter-spacing:.1em;}
-        .doc-header h1{color:#000 !important;font-size:12pt;margin:1pt 0;}
-        .doc-header .sub{font-size:6.8pt;color:#000 !important;}
-        .header-chip{
-            background:#eee !important;
+        .doc-header h1{
             color:#000 !important;
-            border:1pt solid #000;
-            box-shadow:none !important;
-            font-size:6pt;
-            padding:2pt 6pt;
+            font-size:14pt;
+            margin:0 0 1pt;
+            line-height:1;
+        }
+        .doc-header .sub{
+            font-size:5.8pt;
+            color:#000 !important;
         }
 
         .doc-body{padding:0;}
 
+        /* ── Meta row ── */
         .meta-card{
             background:#fff !important;
             border:1pt solid #000;
-            padding:4pt 6pt;
-            gap:4pt;
-            margin-bottom:5pt;
+            padding:3pt 5pt;
+            gap:5pt;
+            margin:0 0 5pt;
             box-shadow:none !important;
             border-radius:0;
+            grid-template-columns:1.2fr 1fr 1.6fr;
         }
+        .meta-card .field.span-2{grid-column:auto;}
+        .meta-card .field{margin-bottom:0;}
 
+        /* ── Sections ── */
         .section{
             background:#fff !important;
             border:.75pt solid #999;
             border-radius:0;
-            padding:5pt 6pt 4pt;
-            margin-bottom:6pt;
+            padding:4pt 5pt 3pt;
+            margin:0 0 4pt;
             box-shadow:none !important;
+            break-inside:avoid;
+            page-break-inside:avoid;
         }
         .section:hover{box-shadow:none !important;}
+        .section:last-of-type{margin-bottom:3pt;}
+
         .section-title{
-            font-size:7.6pt;
+            font-size:7pt;
             color:#000 !important;
-            margin-bottom:4pt;
-            padding-bottom:3pt;
-            border-bottom:1pt solid #000;
+            margin:0 0 3pt;
+            padding:0 0 2pt;
+            border-bottom:.75pt solid #000;
             break-after:avoid;
             page-break-after:avoid;
+            letter-spacing:.03em;
         }
         .section-title::after{display:none !important;}
         .section-title .num{
-            width:12pt;height:12pt;
-            font-size:6pt;
-            border-radius:3pt;
+            width:11pt;height:11pt;
+            font-size:5.6pt;
+            border-radius:2pt;
             background:#000 !important;
             color:#fff !important;
             box-shadow:none !important;
@@ -927,33 +924,42 @@
             print-color-adjust:exact;
         }
 
+        /* ── Fields ── */
         .field{
-            margin-bottom:2.5pt;
+            margin:0 0 2pt;
             break-inside:avoid;
             page-break-inside:avoid;
         }
         label.fl{
             color:#000 !important;
-            font-size:5.6pt;
-            margin-bottom:0.5pt;
+            font-size:5.2pt;
+            margin-bottom:0.3pt;
+            letter-spacing:.03em;
+            font-weight:700;
         }
         input[type="text"],input[type="date"],input[type="number"],select{
-            padding:1pt 3pt;
-            font-size:7.2pt;
-            height:13pt;
+            padding:0.8pt 2.5pt;
+            font-size:6.8pt;
+            height:11pt;
+            line-height:1;
         }
         textarea{
-            font-size:7.2pt;
-            min-height:28pt;
-            padding:2pt 4pt;
+            font-size:6.8pt;
+            min-height:20pt;
+            padding:1.5pt 3pt;
+            line-height:1.2;
+            resize:none;
         }
 
-        .g2,.g3,.g4{gap:4pt;}
-        .meta-card{grid-template-columns:repeat(4, 1fr);}
+        .g2,.g3,.g4{gap:3pt;}
+        .g2{margin-bottom:0;}
+        .g3{margin-bottom:0;}
+        .g4{margin-bottom:0;}
 
+        /* ── Subsection (spouse) ── */
         .subsection{
-            border:1pt solid #000;
-            padding:3pt 5pt;
+            border:.75pt solid #000;
+            padding:2pt 4pt;
             margin-top:2pt;
             background:#fff !important;
             border-radius:0;
@@ -961,30 +967,37 @@
             page-break-inside:avoid;
         }
         .subsection-title{
-            font-size:6.2pt;
-            margin-bottom:3pt;
-            padding-left:4pt;
-            border-left:2pt solid #000;
+            font-size:5.8pt;
+            margin-bottom:2pt;
+            padding-left:3pt;
+            border-left:1.5pt solid #000;
             color:#000 !important;
         }
 
+        /* ── Family table — full width, no scroll ── */
         .table-wrap{
-            border:1pt solid #000;
+            border:.75pt solid #000;
             border-radius:0;
             background:#fff;
+            overflow:visible;
+            width:100%;
         }
         table.fam-table{
-            font-size:6.2pt;
-            min-width:0;
+            font-size:6pt;
+            width:100%;
+            table-layout:fixed;
         }
         .fam-table thead{display:table-header-group;}
         .fam-table thead th{
-            background:#eee !important;
+            background:#e8e8e8 !important;
             color:#000 !important;
-            border:1pt solid #000;
-            padding:1.5pt 3pt;
-            font-size:5.6pt;
+            border:.75pt solid #000;
+            padding:1pt 2pt;
+            font-size:5.4pt;
             border-radius:0 !important;
+            letter-spacing:.02em;
+            white-space:normal;
+            line-height:1.05;
             -webkit-print-color-adjust:exact;
             print-color-adjust:exact;
         }
@@ -993,33 +1006,39 @@
             page-break-inside:avoid;
         }
         .fam-table tbody td{
-            border:.75pt solid #999;
+            border:.5pt solid #999;
             padding:0 1pt;
-            border-bottom:.75pt solid #999;
+            border-bottom:.5pt solid #999;
         }
-        .fam-table tbody tr:last-child td{border-bottom:.75pt solid #999;}
+        .fam-table tbody tr:last-child td{border-bottom:.5pt solid #999;}
         .fam-table td input,
         .fam-table td select{
-            padding:1pt 2pt;
-            font-size:6.2pt;
+            padding:0.6pt 1.5pt;
+            font-size:6pt;
             border:none !important;
             background:#fff !important;
+            height:10pt;
+            line-height:1;
         }
-        .row-num{font-size:5.6pt;}
+        .row-num{font-size:5.4pt;}
 
+        /* ── Action table ── */
         table.action-table{
-            font-size:6.8pt;
-            border:1pt solid #000;
+            font-size:6.4pt;
+            border:.75pt solid #000;
             border-radius:0;
             overflow:visible;
+            width:100%;
+            table-layout:fixed;
         }
         .action-table thead{display:table-header-group;}
         .action-table thead th{
-            background:#eee !important;
+            background:#e8e8e8 !important;
             color:#000 !important;
-            padding:2pt 4pt;
-            font-size:5.8pt;
-            border:1pt solid #000;
+            padding:1.2pt 3pt;
+            font-size:5.4pt;
+            border:.75pt solid #000;
+            letter-spacing:.02em;
             -webkit-print-color-adjust:exact;
             print-color-adjust:exact;
         }
@@ -1028,35 +1047,37 @@
             page-break-inside:avoid;
         }
         .action-table tbody td{
-            border:.75pt solid #999;
-            padding:0.5pt;
-            border-bottom:.75pt solid #999;
+            border:.5pt solid #999;
+            padding:0.4pt;
+            border-bottom:.5pt solid #999;
         }
-        .action-table tbody tr:last-child td{border-bottom:.75pt solid #999;}
+        .action-table tbody tr:last-child td{border-bottom:.5pt solid #999;}
         .action-table td input{
-            font-size:6.8pt;
-            padding:1pt 3pt;
+            font-size:6.4pt;
+            padding:0.6pt 2pt;
             border:none !important;
             background:#fff !important;
+            height:10pt;
+            line-height:1;
         }
 
-        /* Signatures: always show print-style signature lines in print */
+        /* ── Signatures ── */
         .sig-section{
-            margin-top:10pt;
-            padding-top:8pt;
-            border-top:.75pt dashed #999;
+            margin-top:6pt;
+            padding-top:5pt;
+            border-top:.5pt dashed #999;
             break-inside:avoid;
             page-break-inside:avoid;
         }
         .sig-row{
-            gap:18pt;
+            gap:14pt;
             grid-template-columns:1fr 1fr;
         }
         .sig-field{
             background:#fff !important;
-            border:1pt solid #000;
+            border:.75pt solid #000;
             border-radius:0;
-            padding:5pt 6pt;
+            padding:3pt 5pt 4pt;
             box-shadow:none !important;
             break-inside:avoid;
             page-break-inside:avoid;
@@ -1064,41 +1085,41 @@
         .sig-field .sig-pad-wrap{display:none !important;}
         .sig-field .print-sig-block{
             display:block !important;
-            padding:28pt 6pt 6pt;
+            padding:22pt 4pt 2pt;
             text-align:center;
         }
         .print-sig-line{
             border-bottom:1pt solid #000;
-            height:22pt;
-            margin:0 4pt;
+            height:16pt;
+            margin:0 3pt;
         }
         .sig-print-img{
             display:none !important;
         }
-        /* If digital mode was on, we still show print signature in print — 
-           but if a digital signature exists, overlay it above the line */
+        /* If digital signature exists, overlay it above the line */
         .sig-section[data-has-client-sig="true"] #clientSigImg,
         .sig-section[data-has-staff-sig="true"] #staffSigImg{
             display:block !important;
-            max-height:26pt;
-            margin:-24pt auto 0;
+            max-height:20pt;
+            margin:-18pt auto 0;
             position:relative;
             z-index:1;
         }
         .sig-label{
-            font-size:6.2pt;
-            margin-top:2pt;
+            font-size:5.8pt;
+            margin-top:1pt;
             color:#000 !important;
+            letter-spacing:.03em;
         }
 
         tr.fam-row-empty-print{display:none;}
 
-        /* Auto case number visual */
+        /* Case number visual */
         .case-no-wrap input{
-            font-size:7.4pt !important;
-            padding-right:3pt !important;
+            font-size:7pt !important;
+            padding-right:2pt !important;
+            padding-left:2pt !important;
         }
-        .meta-card .field{margin-bottom:0;}
     }
 
     /* ══ RESPONSIVE ══ */
@@ -1108,10 +1129,8 @@
     }
     @media (max-width:640px){
         body{padding:14px 10px 60px;}
-        .doc-header{padding:18px 18px 16px;}
-        .doc-header h1{font-size:1.24rem;}
-        .brand-mark{width:44px;height:44px;font-size:22px;border-radius:12px;}
-        .header-chip{display:none;}
+        .doc-header{padding:16px 18px 14px;}
+        .doc-header h1{font-size:1.35rem;}
         .doc-body{padding:18px 14px 6px;}
         .section{padding:14px 14px 12px;}
         .meta-card{padding:14px;gap:10px;}
@@ -1131,17 +1150,11 @@
 <body>
 <div class="shell">
 
-    <!-- ══ HEADER ══ -->
+    <!-- ══ HEADER (no logo) ══ -->
     <div class="doc-header">
-        <div class="header-inner">
-            <div class="brand-mark" aria-hidden="true">M</div>
-            <div class="header-text">
-                <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
-                <h1>Intake Sheet</h1>
-                <div class="sub">Social Case Study Record · MEFAMDEV Angat, Bulacan Chapter</div>
-            </div>
-            <div class="header-chip">Case Study</div>
-        </div>
+        <div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div>
+        <h1>Intake Sheet</h1>
+        <div class="sub">Social Case Study Record · MEFAMDEV Angat, Bulacan Chapter</div>
     </div>
 
     <div class="doc-body">
@@ -1266,17 +1279,28 @@
             <div class="section-title"><span class="num">II</span> Family Composition</div>
             <div class="table-wrap">
                 <table class="fam-table">
+                    <colgroup>
+                        <col style="width:4%;">
+                        <col style="width:24%;">
+                        <col style="width:6%;">
+                        <col style="width:8%;">
+                        <col style="width:13%;">
+                        <col style="width:11%;">
+                        <col style="width:12%;">
+                        <col style="width:12%;">
+                        <col style="width:10%;">
+                    </colgroup>
                     <thead>
                         <tr>
-                            <th style="width:28px;">#</th>
-                            <th style="min-width:150px;">Name</th>
-                            <th style="min-width:44px;">Age</th>
-                            <th style="min-width:70px;">Sex</th>
-                            <th style="min-width:100px;">Rel. to Client</th>
-                            <th style="min-width:90px;">Civil Status</th>
-                            <th style="min-width:100px;">Educ. Attainment</th>
-                            <th style="min-width:100px;">Occupation</th>
-                            <th style="min-width:80px;">Income</th>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Sex</th>
+                            <th>Rel. to Client</th>
+                            <th>Civil Status</th>
+                            <th>Educ. Attainment</th>
+                            <th>Occupation</th>
+                            <th>Income</th>
                         </tr>
                     </thead>
                     <tbody id="famTableBody"></tbody>
@@ -1297,26 +1321,30 @@
         <!-- ══ III. PROBLEM PRESENTED ══ -->
         <div class="section">
             <div class="section-title"><span class="num">III</span> Problem Presented</div>
-            <textarea id="sProblem" rows="3" placeholder="Describe the presenting problem or need of the client..."></textarea>
+            <textarea id="sProblem" rows="2" placeholder="Describe the presenting problem or need of the client..."></textarea>
         </div>
 
         <!-- ══ IV. BACKGROUND ══ -->
         <div class="section">
             <div class="section-title"><span class="num">IV</span> Background Information on the Stated Problem</div>
-            <textarea id="sBackground" rows="3" placeholder="Provide background details relevant to the stated problem..."></textarea>
+            <textarea id="sBackground" rows="2" placeholder="Provide background details relevant to the stated problem..."></textarea>
         </div>
 
         <!-- ══ V. ASSESSMENT ══ -->
         <div class="section">
             <div class="section-title"><span class="num">V</span> Social Worker's Assessment of the Problem</div>
-            <textarea id="sAssessment" rows="3" placeholder="Social Worker's professional assessment and analysis..."></textarea>
+            <textarea id="sAssessment" rows="2" placeholder="Social Worker's professional assessment and analysis..."></textarea>
         </div>
 
         <!-- ══ VI. ACTION PLAN ══ -->
         <div class="section">
             <div class="section-title"><span class="num">VI</span> Social Worker's Intervention Action Plan</div>
             <table class="action-table" id="actionTable">
-                <thead><tr><th style="width:35%;">Services</th><th>Specific Activities / Plan of Action</th></tr></thead>
+                <colgroup>
+                    <col style="width:35%;">
+                    <col style="width:65%;">
+                </colgroup>
+                <thead><tr><th>Services</th><th>Specific Activities / Plan of Action</th></tr></thead>
                 <tbody id="actionBody"></tbody>
             </table>
             <div class="btn-row">
@@ -1327,7 +1355,7 @@
             </div>
         </div>
 
-        <!-- ══ SIGNATURES (optional digital) ══ -->
+        <!-- ══ SIGNATURES ══ -->
         <div class="sig-section" id="sigSection" data-mode="print">
             <div class="sig-mode-bar">
                 <div class="sig-mode-label">
@@ -1350,7 +1378,6 @@
             </div>
 
             <div class="sig-row">
-                <!-- Client signature -->
                 <div class="sig-field">
                     <div class="sig-tools">
                         <span class="sig-tools-label">Client</span>
@@ -1370,7 +1397,6 @@
                     <div class="sig-hint" id="clientSigHint">Sign above with mouse or finger</div>
                     <div class="sig-label">Client's Signature over Printed Name</div>
                 </div>
-                <!-- Staff signature -->
                 <div class="sig-field">
                     <div class="sig-tools">
                         <span class="sig-tools-label">Interviewer</span>
@@ -1415,12 +1441,11 @@
 <script>
 let linkedAppId = null;
 let currentIntakeId = null;
-let sigMode = 'print'; // 'print' | 'digital'
+let sigMode = 'print';
 
 /* ══════════════════════════════════════════
    AUTO CASE NUMBER
    Format: MEF-MMDDYYYY-###
-   Example: MEF-09112026-001
    ══════════════════════════════════════════ */
 let lastAutoCaseNo = '';
 
