@@ -259,27 +259,6 @@
         .user-info .user-role { font-size: .72rem; color: #6b7c93; }
         .dropdown-arrow { font-size: .7rem; color: #aaa; margin-left: 4px; }
 
-        .role-dropdown {
-            position: absolute; top: calc(100% + 8px); right: 0;
-            background: var(--white); border: 1px solid var(--border);
-            border-radius: var(--radius); box-shadow: var(--shadow);
-            width: 260px; display: none; flex-direction: column; overflow: hidden; z-index: 500;
-        }
-        .role-dropdown.open { display: flex; animation: fadeDown .15s ease; }
-        @keyframes fadeDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-        .role-option {
-            padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
-            cursor: pointer; transition: background .15s;
-            text-align: left; background: transparent; border-left: 0; border-right: 0; border-top: 0;
-            font-family: inherit;
-            width: 100%;
-        }
-        .role-option:last-child { border-bottom: none; }
-        .role-option:hover { background: #f7f9ff; }
-        .role-option:focus-visible { outline: none; background: #f0f6ff; box-shadow: inset 0 0 0 2px var(--gold); }
-        .role-option strong { display: block; font-size: .87rem; color: var(--text); }
-        .role-option small { color: var(--text-muted); font-size: .76rem; }
-        .role-option.current { background: var(--gold-light); border-left: 3px solid var(--gold); }
 
         /* ── Pages ── */
         .content-area {
@@ -692,7 +671,6 @@
         .delete-confirm-name.visible { display: block; }
         .delete-modal .modal-footer .btn-danger { background: #dc2626; color: #fff; }
         .director-only .user-pill { pointer-events: none; }
-        .director-only .role-dropdown { display: none !important; }
 
         /* Intake sheet */
         .intake-header { text-align: center; padding: 20px; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
@@ -1084,37 +1062,14 @@
                 <kbd id="cmdkHintKey">⌘K</kbd>
             </button>
 
-            <span class="sync-indicator" id="syncIndicator" title="Auto-refreshing every 5 seconds">
-                <span class="sync-dot" aria-hidden="true"></span>
-                <span id="syncLabel">Live</span>
-            </span>
-
-            <!-- Role switcher -->
-            <button type="button" class="user-pill" onclick="toggleRoleMenu(event)" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+            <!-- Logged-in account -->
+            <div class="user-pill" aria-label="Logged in account">
                 <div class="avatar" id="user-avatar">DR</div>
                 <div class="user-info">
                     <div class="user-name" id="user-name">Director Name</div>
                     <div class="user-role" id="user-role">Primary Social Worker</div>
                 </div>
-                <span class="dropdown-arrow" aria-hidden="true">▾</span>
-                <div class="role-dropdown" id="roleMenu" role="menu">
-                    <button type="button" class="role-option current" onclick="switchRole('director','Director Name','Primary Social Worker','DR')" role="menuitem">
-                        <strong>Director</strong><small>Full Access</small>
-                    </button>
-                    <button type="button" class="role-option" onclick="switchRole('edu','Edu Staff Name','Education Social Worker','ED')" role="menuitem">
-                        <strong>Education Social Worker</strong><small>Academics &amp; Profiles</small>
-                    </button>
-                    <button type="button" class="role-option" onclick="switchRole('finance','Finance Name','Finance Officer','FN')" role="menuitem">
-                        <strong>Finance Officer</strong><small>Budgets &amp; Beneficiaries</small>
-                    </button>
-                    <button type="button" class="role-option" onclick="switchRole('program','Coordinator Name','Program Coordinator','PC')" role="menuitem">
-                        <strong>Program Coordinator</strong><small>Formation &amp; Intake</small>
-                    </button>
-                    <button type="button" class="role-option" onclick="adminLogout()" style="color:#e74c3c;border-top:2px solid #f0f0f0;" role="menuitem">
-                        <strong style="color:#e74c3c;">&#128682; Sign Out</strong><small>Return to login page</small>
-                    </button>
-                </div>
-            </button>
+            </div>
             <button type="button" onclick="adminLogout()" class="btn btn-ghost" style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;padding:7px 14px;" aria-label="Logout">
                 &#128682; Logout
             </button>
@@ -1131,22 +1086,22 @@
 
             <!-- Director stats -->
             <div class="stats-grid" data-roles="director">
-                <button type="button" class="stat-card" data-icon="🏠" style="border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))">
+                <button type="button" class="stat-card" data-icon="FAM" style="border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))">
                     <div class="stat-label">Beneficiary Families</div>
                     <div class="stat-value" id="dash-families">0</div>
                     <div class="stat-sub">Angat, Bulacan</div>
                 </button>
-                <button type="button" class="stat-card" data-icon="🎓" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))">
+                <button type="button" class="stat-card" data-icon="SCH" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))">
                     <div class="stat-label">Active Scholars</div>
                     <div class="stat-value" id="dash-scholars">0</div>
                     <div class="stat-sub">Accepted applicants</div>
                 </button>
-                <button type="button" class="stat-card" data-icon="📥" style="border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))">
+                <button type="button" class="stat-card" data-icon="APP" style="border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))">
                     <div class="stat-label">Pending Applications</div>
                     <div class="stat-value" id="dash-pending">0</div>
                     <div class="stat-sub">Needs review</div>
                 </button>
-                <button type="button" class="stat-card" data-icon="💰" style="border-top-color:#8e44ad;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))">
+                <button type="button" class="stat-card" data-icon="BUD" style="border-top-color:#8e44ad;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))">
                     <div class="stat-label">Budget Remaining</div>
                     <div class="stat-value" id="dash-balance">₱0</div>
                     <div class="stat-sub">Current fund balance</div>
@@ -1155,23 +1110,23 @@
 
             <!-- Edu stats -->
             <div class="stats-grid" data-roles="edu">
-                <button type="button" class="stat-card" data-icon="🎓" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
-                <button type="button" class="stat-card" data-icon="⚠️" style="border-top-color:#e74c3c;" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')"><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
-                <button type="button" class="stat-card" data-icon="📋" style="border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
+                <button type="button" class="stat-card" data-icon="SCH" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
+                <button type="button" class="stat-card" data-icon="ALR" style="border-top-color:#e74c3c;" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')"><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
+                <button type="button" class="stat-card" data-icon="RPT" style="border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
             </div>
 
             <!-- Finance stats -->
             <div class="stats-grid" data-roles="finance">
-                <button type="button" class="stat-card" data-icon="🏠" style="border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))"><div class="stat-label">Beneficiary Families</div><div class="stat-value" id="fin-families">0</div></button>
-                <button type="button" class="stat-card" data-icon="💵" style="border-top-color:#27ae60;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><div class="stat-label">Stipends Disbursed</div><div class="stat-value" id="fin-stipends-dash">₱0</div></button>
-                <button type="button" class="stat-card" data-icon="🧾" style="border-top-color:#e67e22;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><div class="stat-label">Pending Receipts</div><div class="stat-value">0</div></button>
+                <button type="button" class="stat-card" data-icon="FAM" style="border-top-color:#1abc9c;" onclick="nav('family', document.querySelector('.nav-item[onclick*=family]'))"><div class="stat-label">Beneficiary Families</div><div class="stat-value" id="fin-families">0</div></button>
+                <button type="button" class="stat-card" data-icon="DIS" style="border-top-color:#27ae60;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><div class="stat-label">Stipends Disbursed</div><div class="stat-value" id="fin-stipends-dash">₱0</div></button>
+                <button type="button" class="stat-card" data-icon="REC" style="border-top-color:#e67e22;" onclick="nav('financials', document.querySelector('.nav-item[onclick*=financials]'))"><div class="stat-label">Pending Receipts</div><div class="stat-value">0</div></button>
             </div>
 
             <!-- Program stats -->
             <div class="stats-grid" data-roles="program">
-                <button type="button" class="stat-card" data-icon="📥" style="border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))"><div class="stat-label">New Applicants</div><div class="stat-value" id="prog-pending">0</div></button>
-                <button type="button" class="stat-card" data-icon="🕊️" style="border-top-color:#27ae60;" onclick="nav('events', document.querySelector('.nav-item[onclick*=events]'))"><div class="stat-label">Avg. Formation Attendance</div><div class="stat-value" id="prog-formation-avg">0%</div></button>
-                <button type="button" class="stat-card" data-icon="🚨" style="border-top-color:#e74c3c;" onclick="nav('attendance', document.querySelector('.nav-item[onclick*=attendance]'))"><div class="stat-label">Absentee Alerts</div><div class="stat-value" id="prog-absentee">0</div></button>
+                <button type="button" class="stat-card" data-icon="APP" style="border-top-color:#e67e22;" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))"><div class="stat-label">New Applicants</div><div class="stat-value" id="prog-pending">0</div></button>
+                <button type="button" class="stat-card" data-icon="ATT" style="border-top-color:#27ae60;" onclick="nav('events', document.querySelector('.nav-item[onclick*=events]'))"><div class="stat-label">Avg. Formation Attendance</div><div class="stat-value" id="prog-formation-avg">0%</div></button>
+                <button type="button" class="stat-card" data-icon="ABS" style="border-top-color:#e74c3c;" onclick="nav('attendance', document.querySelector('.nav-item[onclick*=attendance]'))"><div class="stat-label">Absentee Alerts</div><div class="stat-value" id="prog-absentee">0</div></button>
             </div>
 
             <!-- Charts -->
@@ -1553,10 +1508,10 @@
         ═══════════════════════════════════════════════ -->
         <div id="financials" class="page">
             <div class="stats-grid" style="margin-bottom:20px;">
-                <div class="stat-card" data-icon="💰" style="border-top-color:#8e44ad; cursor:default;"><div class="stat-label">Total Fund Balance</div><div class="stat-value" id="fin-balance">₱0</div><div class="stat-sub">Available for disbursement</div></div>
-                <div class="stat-card" data-icon="💸" style="border-top-color:#e74c3c; cursor:default;"><div class="stat-label">Total Disbursed</div><div class="stat-value" id="fin-disbursed">₱0</div><div class="stat-sub">All time</div></div>
-                <div class="stat-card" data-icon="🏦" style="border-top-color:#27ae60; cursor:default;"><div class="stat-label">Total Funds Added</div><div class="stat-value" id="fin-added">₱0</div><div class="stat-sub">All contributions</div></div>
-                <div class="stat-card" data-icon="🎓" style="border-top-color:#3498db; cursor:default;"><div class="stat-label">Active Scholars</div><div class="stat-value" id="fin-scholars">0</div><div class="stat-sub">Receiving stipends</div></div>
+                <div class="stat-card" data-icon="BUD" style="border-top-color:#8e44ad; cursor:default;"><div class="stat-label">Total Fund Balance</div><div class="stat-value" id="fin-balance">₱0</div><div class="stat-sub">Available for disbursement</div></div>
+                <div class="stat-card" data-icon="DIS" style="border-top-color:#e74c3c; cursor:default;"><div class="stat-label">Total Disbursed</div><div class="stat-value" id="fin-disbursed">₱0</div><div class="stat-sub">All time</div></div>
+                <div class="stat-card" data-icon="ADD" style="border-top-color:#27ae60; cursor:default;"><div class="stat-label">Total Funds Added</div><div class="stat-value" id="fin-added">₱0</div><div class="stat-sub">All contributions</div></div>
+                <div class="stat-card" data-icon="SCH" style="border-top-color:#3498db; cursor:default;"><div class="stat-label">Active Scholars</div><div class="stat-value" id="fin-scholars">0</div><div class="stat-sub">Receiving stipends</div></div>
             </div>
 
             <div class="grid-2eq" style="align-items:start; margin-bottom:20px;">
@@ -2655,12 +2610,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user-avatar').innerText = session.initials || '??';
     loadStaffProfile(session);
 
-    // Highlight correct role option
-    document.querySelectorAll('.role-option').forEach(o => {
-        o.classList.remove('current');
-        if (o.getAttribute('onclick') && o.getAttribute('onclick').includes(`'${currentRole}'`)) o.classList.add('current');
-    });
-
     applyRBAC();
     document.body.classList.remove('auth-pending');
     loadSystemSettings();
@@ -2676,25 +2625,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     loadAllData().then(() => enableSortableTables());
     setInterval(() => { loadAllData(); }, 5000);
-
-    // Update the live sync indicator every second
-    setInterval(() => {
-        const el = document.getElementById('syncLabel');
-        if (!el) return;
-        el.textContent = 'Live';
-    }, 1000);
-
-    // Close role dropdown on outside click
-    document.addEventListener('click', e => {
-        if (!e.target.closest('.user-pill')) {
-            const menu = document.getElementById('roleMenu');
-            if (menu) {
-                menu.classList.remove('open');
-                const trigger = menu.closest('.user-pill');
-                if (trigger) trigger.setAttribute('aria-expanded', 'false');
-            }
-        }
-    });
 
     window.addEventListener('resize', () => {
         if (window.innerWidth > 900) closeSidebar();
@@ -2891,30 +2821,8 @@ function removeStaffProfilePhoto() {
 }
 
 /* ══════════════════════════════════════
-   ROLE SYSTEM
+   ROLE-BASED ACCESS
 ══════════════════════════════════════ */
-function toggleRoleMenu(e) {
-    e.stopPropagation();
-    const menu = document.getElementById('roleMenu');
-    const pill = e.currentTarget;
-    const isOpen = menu.classList.toggle('open');
-    pill.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-}
-
-function switchRole(role, name, roleTitle, initials) {
-    currentRole = role;
-    document.getElementById('user-name').innerText = name;
-    document.getElementById('user-role').innerText = roleTitle;
-    document.getElementById('user-avatar').innerText = initials;
-    document.getElementById('roleMenu').classList.remove('open');
-
-    document.querySelectorAll('.role-option').forEach(o => o.classList.remove('current'));
-    event.target.closest('.role-option')?.classList.add('current');
-
-    applyRBAC();
-    document.querySelector('.nav-item[onclick*="dashboard"]')?.click();
-}
-
 function applyRBAC() {
     document.querySelectorAll('[data-roles]').forEach(el => {
         const allowed = el.getAttribute('data-roles').split(',');
