@@ -420,7 +420,7 @@
     .modal-btn-cancel:hover { background: #e2e5ea; }
 
     /* ═══════════════════════════════════════════════════════
-       PRINT — pure black & white, compact, one A4 page
+       PRINT — full CMYK/Color mode, compact one A4 page
        ═══════════════════════════════════════════════════════ */
     @media print {
         @page {
@@ -429,11 +429,9 @@
         }
 
         html, body {
+            /* Removed black/white overrides to allow CMYK colors */
             background: #fff !important;
-            color: #000 !important;
-        }
-
-        body {
+            color: var(--text) !important;
             margin: 0 !important;
             padding: 0 !important;
             font-size: 8.5pt;
@@ -461,20 +459,21 @@
 
         /* ── Header ── */
         .doc-header {
-            background: #fff !important;
-            color: #000 !important;
-            border-bottom: 2px solid #000;
+            background: var(--navy) !important; /* CMYK Navy */
+            color: #fff !important;
+            border-bottom: 2px solid var(--gold);
             border-radius: 0;
             padding: 0 0 5px;
             text-align: center;
         }
         .doc-header::before { display: none !important; }
         .doc-header .org {
-            color: #000 !important; font-size: 6.8pt;
+            color: rgba(255, 255, 255, 0.7) !important; 
+            font-size: 6.8pt;
             letter-spacing: .09em; margin-bottom: 1px;
         }
-        .doc-header h1 { color: #000 !important; font-size: 15pt; margin: 0; line-height: 1.1; }
-        .doc-header .sub { color: #000 !important; font-size: 7.2pt; }
+        .doc-header h1 { color: #fff !important; font-size: 15pt; margin: 0; line-height: 1.1; }
+        .doc-header .sub { color: rgba(255, 255, 255, 0.6) !important; font-size: 7.2pt; }
 
         .doc-body {
             box-shadow: none !important;
@@ -487,15 +486,15 @@
         .meta-row { gap: 8px; margin-bottom: 5px; grid-template-columns: repeat(3, 1fr); }
         .field { margin-bottom: 0; }
         label.fl {
-            font-size: 6.4pt; color: #000 !important;
+            font-size: 6.4pt; color: var(--text-muted) !important;
             margin-bottom: 0; letter-spacing: .03em;
         }
         input[type="text"], input[type="date"], input[type="number"], select, textarea {
             border: 0 !important;
-            border-bottom: 1px solid #000 !important;
+            border-bottom: 1px solid var(--border) !important;
             border-radius: 0 !important;
             background: #fff !important;
-            color: #000 !important;
+            color: var(--text) !important;
             padding: 1px 2px !important;
             font-size: 8pt !important;
             box-shadow: none !important;
@@ -505,32 +504,32 @@
         .instructions {
             background: #fff !important;
             border: 0;
-            border-top: 1px solid #000;
-            border-bottom: 1px solid #000;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
             border-radius: 0;
             padding: 3px 0;
             margin-bottom: 6px;
             font-size: 7pt;
-            color: #000 !important;
+            color: var(--text) !important;
             line-height: 1.35;
         }
 
         /* ── Indicator table ── */
         .indicator-table {
-            border: 1.5px solid #000;
+            border: 1.5px solid var(--navy);
             border-radius: 0;
             margin-bottom: 7px;
         }
         .category {
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid var(--navy);
             break-inside: avoid; page-break-inside: avoid;
         }
         .category:last-child { border-bottom: 0; }
 
         .category-header {
-            background: #fff !important;
-            color: #000 !important;
-            border-bottom: 1px solid #000;
+            background: linear-gradient(90deg, var(--navy) 0%, var(--navy2) 100%) !important; /* CMYK Navy */
+            color: #fff !important;
+            border-bottom: 1px solid var(--navy);
             padding: 2px 6px;
             font-size: 7.4pt;
             letter-spacing: .05em;
@@ -539,7 +538,7 @@
         .category-header .cat-icon { font-size: 7.5pt; }
 
         .indicator-row {
-            border-bottom: 1px solid #c9c9c9;
+            border-bottom: 1px solid var(--border);
             break-inside: avoid; page-break-inside: avoid;
         }
         .indicator-row:last-child { border-bottom: 0; }
@@ -547,23 +546,23 @@
 
         .ind-num {
             width: 17px; flex: 0 0 17px;
-            font-size: 6.4pt; color: #000 !important;
+            font-size: 6.4pt; color: var(--text-muted) !important;
             padding: 2px 0;
         }
         .ind-text {
             padding: 2px 5px;
             font-size: 7.8pt;
-            color: #000 !important;
-            border-left: 1px solid #c9c9c9;
+            color: var(--text) !important;
+            border-left: 1px solid var(--border);
         }
-        .ind-text .ind-note { font-size: 6.6pt; color: #333 !important; }
+        .ind-text .ind-note { font-size: 6.6pt; color: var(--text-muted) !important; }
 
         .ind-score {
             width: 38px; flex: 0 0 38px;
-            border-left: 1px solid #c9c9c9;
+            border-left: 1px solid var(--border);
         }
 
-        /* Only the chosen symbol prints — solid black, boxed */
+        /* Keep the chosen symbol with its CMYK color */
         .ind-score .toggle-btn { display: none; }
         .ind-score .toggle-btn.check-active,
         .ind-score .toggle-btn.x-active {
@@ -571,15 +570,23 @@
             flex: 1 1 100%;
             font-size: 11pt;
             font-weight: 700;
-            color: #000 !important;
-            background: #fff !important;
-            box-shadow: inset 0 0 0 1px #000;
+            border-radius: 0;
+        }
+        .ind-score .toggle-btn.check-active {
+            color: var(--green) !important;
+            background: rgba(39, 174, 96, 0.1) !important;
+            box-shadow: inset 0 0 0 1px var(--green);
+        }
+        .ind-score .toggle-btn.x-active {
+            color: var(--red) !important;
+            background: rgba(231, 76, 60, 0.1) !important;
+            box-shadow: inset 0 0 0 1px var(--red);
         }
 
-        .ind-no-count { background: #fff !important; }
+        .ind-no-count { background: #fafbfc !important; }
         .ind-no-count .ind-num,
         .ind-no-count .ind-text,
-        .ind-no-count .ind-text strong { color: #000 !important; }
+        .ind-no-count .ind-text strong { color: var(--purple) !important; }
 
         /* Sub-inputs become inline blanks */
         .ind-subinput {
@@ -589,14 +596,14 @@
             margin: 1px 12px 0 0;
         }
         .ind-subinput .sub-label {
-            font-size: 6.6pt; color: #000 !important;
+            font-size: 6.6pt; color: var(--text-muted) !important;
             white-space: nowrap; font-style: normal;
         }
         .ind-subinput input {
             flex: 0 0 auto;
             width: 110px;
             border: 0 !important;
-            border-bottom: 1px solid #000 !important;
+            border-bottom: 1px solid var(--border) !important;
             border-radius: 0 !important;
             padding: 0 3px !important;
             font-size: 7.4pt !important;
@@ -604,39 +611,52 @@
 
         /* ── Summary ── */
         .summary-panel {
-            background: #fff !important;
-            border: 1.5px solid #000;
+            background: linear-gradient(135deg, #f8f9fb, #f0f4ff) !important; /* CMYK light tint */
+            border: 1.5px solid var(--border);
             border-radius: 0;
             padding: 5px 7px;
             margin: 7px 0;
             break-inside: avoid; page-break-inside: avoid;
         }
-        .summary-panel h3 { font-size: 8.5pt; color: #000 !important; margin-bottom: 4px; }
+        .summary-panel h3 { font-size: 8.5pt; color: var(--navy) !important; margin-bottom: 4px; }
         .summary-grid { gap: 5px; margin-bottom: 5px; }
-        .sum-box { border: 1px solid #000; border-radius: 0; padding: 2px 4px; background: #fff !important; }
-        .sum-box .sum-val { font-size: 11.5pt; color: #000 !important; }
-        .sum-box .sum-label { font-size: 6.2pt; color: #000 !important; }
+        .sum-box { 
+            border: 1px solid var(--border); 
+            border-radius: 0; 
+            padding: 2px 4px; 
+            background: #fff !important; 
+        }
+        .sum-box .sum-val { font-size: 11.5pt; color: var(--navy) !important; }
+        .sum-box .sum-label { font-size: 6.2pt; color: var(--text-muted) !important; }
 
         .assessment-result {
-            background: #fff !important;
-            color: #000 !important;
-            border: 1.5px solid #000 !important;
             border-radius: 0;
             padding: 3px 6px;
             font-size: 8.4pt;
             margin-top: 0;
+            border-width: 1.5px !important;
+        }
+        .assessment-result.result-below {
+            background: #fdedeb !important;
+            color: #922b21 !important;
+            border-color: #f0a89e !important;
+        }
+        .assessment-result.result-above {
+            background: #e9f7ef !important;
+            color: #1a6935 !important;
+            border-color: #a3d9b3 !important;
         }
         .assessment-result small {
             opacity: 1 !important;
-            color: #000 !important;
+            color: inherit !important;
             font-size: 6.8pt;
         }
 
         .threshold-notes {
-            background: #fff !important;
-            border: 1px solid #000;
+            background: #fff8e6 !important;
+            border: 1px solid #ffe082 !important;
             border-radius: 0;
-            color: #000 !important;
+            color: #7a5a00 !important;
             padding: 3px 5px;
             margin-top: 5px;
             font-size: 6.8pt;
@@ -644,26 +664,29 @@
         }
 
         /* ── Final assessment ── */
-        .section-label { font-size: 6.8pt; color: #000 !important; margin-bottom: 2px; }
+        .section-label { font-size: 6.8pt; color: var(--text-muted) !important; margin-bottom: 2px; }
         .final-options { gap: 8px; margin-bottom: 6px; }
         .final-options label {
-            border: 1.5px solid #000;
+            border: 1.5px solid var(--border);
             border-radius: 0;
             padding: 3px 10px;
             font-size: 8pt;
             background: #fff !important;
             flex: 1 1 200px;
         }
-        .final-options label.is-above,
-        .final-options label.is-below {
-            border-color: #000 !important;
-            background: #fff !important;
+        .final-options label.is-above {
+            border-color: var(--green) !important;
+            background: #f0fff8 !important;
         }
-        .final-options input { accent-color: #000; }
+        .final-options label.is-below {
+            border-color: var(--red) !important;
+            background: #fff5f5 !important;
+        }
+        .final-options input { accent-color: var(--green); }
 
         /* ── Narrative ── */
         #narrativeAssessment {
-            border: 1.5px solid #000 !important;
+            border: 1.5px solid var(--border) !important;
             border-radius: 0 !important;
             min-height: 0;
             height: 42px;
@@ -681,11 +704,11 @@
         }
         .print-signatures .sig {
             flex: 1 1 0;
-            border-top: 1px solid #000;
+            border-top: 1px solid var(--navy);
             padding-top: 2px;
             text-align: center;
             font-size: 6.8pt;
-            color: #000;
+            color: var(--navy);
         }
     }
 </style>
