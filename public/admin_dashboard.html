@@ -3159,7 +3159,10 @@ function openToolModal(url, title) {
 function closeToolModal() {
     const modal = document.getElementById('toolModal');
     const frame = document.getElementById('toolModalFrame');
-    if (frame) frame.src = 'about:blank';
+    if (frame) {
+        frame.removeAttribute('src');
+        frame.onload = null;
+    }
     if (modal) modal.classList.remove('open');
     document.body.style.overflow = '';
 }
