@@ -6,6 +6,7 @@
     <title>MEFAMDEV-Life Admin System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwUEQ1H+L3j3W2z2r8nT3t3g5Qn9hC5J9YQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
         :root {
@@ -141,8 +142,15 @@
         .nav-item:hover { background: rgba(255,255,255,.08); color: #fff; transform: translateX(2px); }
         .nav-item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
         .nav-item.active { background: var(--gold); color: var(--navy); font-weight: 700; box-shadow: 0 4px 14px rgba(245,166,35,.25); }
-        .nav-item.active .nav-icon { opacity: 1; }
-        .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+        .nav-item.active .nav-icon { opacity: 1; background: rgba(26,46,68,.12); color: var(--navy); }
+        .nav-icon {
+            width: 22px; height: 22px; border-radius: 6px;
+            display: grid; place-items: center;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
+            color: #fff; font-size: .64rem; font-weight: 700; letter-spacing: .04em;
+            flex-shrink: 0; font-family: 'DM Sans', sans-serif;
+        }
         .nav-badge {
             margin-left: auto; background: var(--red); color: #fff;
             font-size: .65rem; font-weight: 700; padding: 2px 7px;
@@ -856,8 +864,10 @@
         .cmdk-item-icon {
             width: 30px; height: 30px; border-radius: 8px;
             background: #f4f6f9;
+            border: 1px solid var(--border);
             display: grid; place-items: center;
-            font-size: .95rem;
+            font-size: .7rem; font-weight: 700; letter-spacing: .03em;
+            color: var(--navy);
             flex-shrink: 0;
         }
         .cmdk-item.active .cmdk-item-icon { background: #fff; }
@@ -975,7 +985,7 @@
             </button>
             <div class="nav-group-items">
                 <button type="button" class="nav-item active" onclick="nav('dashboard',this)" data-roles="director,edu,finance,program">
-                    <span class="nav-icon" aria-hidden="true">📊</span> Dashboard
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-chart-column"></i></span> Dashboard
                 </button>
             </div>
         </div>
@@ -988,41 +998,41 @@
             </button>
             <div class="nav-group-items">
                 <button type="button" class="nav-item" onclick="nav('submitted-apps',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">📥</span> Submitted Apps <span class="nav-badge" id="nav-badge">0</span>
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-file-lines"></i></span> Applications Received <span class="nav-badge" id="nav-badge">0</span>
                 </button>
                 <button type="button" class="nav-item" onclick="nav('pipeline',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">📋</span> Applicant Pipeline
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-diagram-project"></i></span> Application Pipeline
                 </button>
                 <button type="button" class="nav-item" onclick="openAssessment(null)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">📝</span> Staff Assessment
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-clipboard-list"></i></span> Assessment Form
                 </button>
                 <button type="button" class="nav-item" onclick="nav('saved-records',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">🗂️</span> Saved Records
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-folder-open"></i></span> Saved Forms
                 </button>
                 <button type="button" class="nav-item" onclick="nav('events',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">🕊️</span> Spiritual Formation
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-church"></i></span> Spiritual Formation
                 </button>
             </div>
         </div>
 
-        <!-- Academic -->
+        <!-- School & Grades -->
         <div class="nav-group" data-group="academic">
             <button type="button" class="nav-group-header" onclick="toggleNavGroup(this)" aria-expanded="true" data-roles="director,edu">
-                <span class="nav-section-label">Academic</span>
+                <span class="nav-section-label">School &amp; Grades</span>
                 <span class="nav-group-chevron" aria-hidden="true">▸</span>
             </button>
             <div class="nav-group-items">
                 <button type="button" class="nav-item" onclick="nav('profiles',this)" data-roles="director,edu">
-                    <span class="nav-icon" aria-hidden="true">🎓</span> Scholar Profiles
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user-graduate"></i></span> Scholar Records
                 </button>
-                <button type="button" class="nav-item" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')" data-roles="director,edu" title="Open Report Cards">
-                    <span class="nav-icon" aria-hidden="true">📄</span> Report Cards
+                <button type="button" class="nav-item" onclick="openToolModal('student_grade_card.html', '📄 Student Report Cards')" data-roles="director,edu" title="Open Student Report Cards">
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-file-signature"></i></span> Student Report Cards
                 </button>
-                <button type="button" class="nav-item" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')" data-roles="director,edu" title="Open Grade Register">
-                    <span class="nav-icon" aria-hidden="true">📊</span> Grade Register
+                <button type="button" class="nav-item" onclick="openToolModal('grade_tracking.html', '📊 Grade Book')" data-roles="director,edu" title="Open Grade Book">
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-book-open-reader"></i></span> Grade Book
                 </button>
                 <button type="button" class="nav-item" onclick="nav('attendance',this)" data-roles="director,edu,program">
-                    <span class="nav-icon" aria-hidden="true">📅</span> Attendance Alerts
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span> Attendance Updates
                 </button>
             </div>
         </div>
@@ -1035,22 +1045,22 @@
             </button>
             <div class="nav-group-items">
                 <button type="button" class="nav-item" onclick="nav('family',this)" data-roles="director,finance">
-                    <span class="nav-icon" aria-hidden="true">👨‍👩‍👧</span> Beneficiary Families
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-people-roof"></i></span> Family Records
                 </button>
                 <button type="button" class="nav-item" onclick="nav('financials',this)" data-roles="director,finance">
-                    <span class="nav-icon" aria-hidden="true">💰</span> Financials
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span> Financials
                 </button>
                 <button type="button" class="nav-item" onclick="nav('comms',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">📢</span> Communications
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-bullhorn"></i></span> Announcements
                 </button>
                 <button type="button" class="nav-item" onclick="window.location.href='mass_print.html'" data-roles="director,edu,finance,program">
-                    <span class="nav-icon" aria-hidden="true">🖨️</span> Mass Print Center
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-print"></i></span> Print Center
                 </button>
                 <button type="button" class="nav-item" onclick="nav('settings',this)" data-roles="director">
-                    <span class="nav-icon" aria-hidden="true">⚙️</span> Settings
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-gear"></i></span> Settings
                 </button>
                 <button type="button" class="nav-item" onclick="nav('my-profile',this)" data-roles="director,edu,finance,program">
-                    <span class="nav-icon" aria-hidden="true">👤</span> My Profile
+                    <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span> My Account
                 </button>
             </div>
         </div>
@@ -1069,7 +1079,7 @@
         <div class="topbar-right">
 
             <button type="button" class="cmdk-trigger" onclick="openCommandPalette()" aria-label="Open command palette">
-                <span class="cmdk-icon" aria-hidden="true">🔍</span>
+                <span class="cmdk-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
                 <span>Search or jump to…</span>
                 <kbd id="cmdkHintKey">⌘K</kbd>
             </button>
@@ -2158,7 +2168,7 @@
 <div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCommandPalette()">
     <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command palette">
         <div class="cmdk-input-wrap">
-            <span class="cmdk-input-icon" aria-hidden="true">🔍</span>
+            <span class="cmdk-input-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
             <input type="text" class="cmdk-input" id="cmdkInput" placeholder="Search scholars, applications, pages, actions…" autocomplete="off" spellcheck="false">
             <span class="cmdk-hint">ESC</span>
         </div>
@@ -2352,27 +2362,27 @@ function enableSortableTables() {
    COMMAND PALETTE
 ══════════════════════════════════════════════════ */
 const CMDK_PAGES = [
-    { icon: '📊', title: 'Dashboard', sub: 'Overview and stats', action: () => nav('dashboard', document.querySelector('.nav-item[onclick*=dashboard]')) },
-    { icon: '📥', title: 'Submitted Applications', sub: 'Incoming digital applications', action: () => nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]')) },
-    { icon: '📋', title: 'Applicant Pipeline', sub: 'Kanban of applications', action: () => nav('pipeline', document.querySelector('.nav-item[onclick*=pipeline]')) },
-    { icon: '🗂️', title: 'Saved Records', sub: 'Intake sheets & assessments', action: () => nav('saved-records', document.querySelector('.nav-item[onclick*=saved]')) },
-    { icon: '🕊️', title: 'Spiritual Formation', sub: 'Formation events', action: () => nav('events', document.querySelector('.nav-item[onclick*=events]')) },
-    { icon: '🎓', title: 'Scholar Profiles', sub: 'Browse scholar records', action: () => nav('profiles', document.querySelector('.nav-item[onclick*=profiles]')) },
-    { icon: '📄', title: 'Report Cards', sub: 'View and print student report cards', action: () => openToolModal('student_grade_card.html', '📄 Report Cards') },
-    { icon: '📊', title: 'Grade Register', sub: 'Enter and monitor scholar grades', action: () => openToolModal('grade_tracking.html', '📊 Grade Register') },
-    { icon: '📅', title: 'Attendance Alerts', sub: 'Formation absence tracking', action: () => nav('attendance', document.querySelector('.nav-item[onclick*=attendance]')) },
-    { icon: '👨‍👩‍👧', title: 'Beneficiary Families', sub: 'Family records', action: () => nav('family', document.querySelector('.nav-item[onclick*=family]')) },
-    { icon: '💰', title: 'Financials', sub: 'Funds & disbursements', action: () => nav('financials', document.querySelector('.nav-item[onclick*=financials]')) },
-    { icon: '📢', title: 'Communications', sub: 'Announcements', action: () => nav('comms', document.querySelector('.nav-item[onclick*=comms]')) },
-    { icon: '🖨️', title: 'Mass Print Center', sub: 'Batch printing', action: () => window.location.href = 'mass_print.html' },
-    { icon: '⚙️', title: 'Settings', sub: 'System configuration', action: () => nav('settings', document.querySelector('.nav-item[onclick*=settings]')) },
-    { icon: '👤', title: 'My Profile', sub: 'Your account', action: () => nav('my-profile', document.querySelector('.nav-item[onclick*=profile]')) },
+    { icon: '<i class="fa-solid fa-chart-column"></i>', title: 'Dashboard', sub: 'Overview and stats', action: () => nav('dashboard', document.querySelector('.nav-item[onclick*=dashboard]')) },
+    { icon: '<i class="fa-solid fa-file-lines"></i>', title: 'Applications Received', sub: 'Incoming digital applications', action: () => nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]')) },
+    { icon: '<i class="fa-solid fa-diagram-project"></i>', title: 'Application Pipeline', sub: 'Track applications step by step', action: () => nav('pipeline', document.querySelector('.nav-item[onclick*=pipeline]')) },
+    { icon: '<i class="fa-solid fa-folder-open"></i>', title: 'Saved Forms', sub: 'Intake sheets & assessments', action: () => nav('saved-records', document.querySelector('.nav-item[onclick*=saved]')) },
+    { icon: '<i class="fa-solid fa-church"></i>', title: 'Spiritual Formation', sub: 'Formation events', action: () => nav('events', document.querySelector('.nav-item[onclick*=events]')) },
+    { icon: '<i class="fa-solid fa-user-graduate"></i>', title: 'Scholar Records', sub: 'Browse scholar records', action: () => nav('profiles', document.querySelector('.nav-item[onclick*=profiles]')) },
+    { icon: '<i class="fa-solid fa-file-signature"></i>', title: 'Student Report Cards', sub: 'View and print student report cards', action: () => openToolModal('student_grade_card.html', '📄 Student Report Cards') },
+    { icon: '<i class="fa-solid fa-book-open-reader"></i>', title: 'Grade Book', sub: 'Enter and monitor scholar grades', action: () => openToolModal('grade_tracking.html', '📊 Grade Book') },
+    { icon: '<i class="fa-solid fa-calendar-check"></i>', title: 'Attendance Updates', sub: 'Formation absence tracking', action: () => nav('attendance', document.querySelector('.nav-item[onclick*=attendance]')) },
+    { icon: '<i class="fa-solid fa-people-roof"></i>', title: 'Family Records', sub: 'Family records', action: () => nav('family', document.querySelector('.nav-item[onclick*=family]')) },
+    { icon: '<i class="fa-solid fa-wallet"></i>', title: 'Financials', sub: 'Funds & disbursements', action: () => nav('financials', document.querySelector('.nav-item[onclick*=financials]')) },
+    { icon: '<i class="fa-solid fa-bullhorn"></i>', title: 'Announcements', sub: 'Announcements', action: () => nav('comms', document.querySelector('.nav-item[onclick*=comms]')) },
+    { icon: '<i class="fa-solid fa-print"></i>', title: 'Print Center', sub: 'Batch printing', action: () => window.location.href = 'mass_print.html' },
+    { icon: '<i class="fa-solid fa-gear"></i>', title: 'Settings', sub: 'System configuration', action: () => nav('settings', document.querySelector('.nav-item[onclick*=settings]')) },
+    { icon: '<i class="fa-solid fa-user"></i>', title: 'My Account', sub: 'Your account', action: () => nav('my-profile', document.querySelector('.nav-item[onclick*=profile]')) },
 ];
 
 const CMDK_ACTIONS = [
-    { icon: '📝', title: 'New Staff Assessment', sub: 'Open blank assessment form', action: () => openAssessment(null) },
-    { icon: '🔄', title: 'Refresh Data', sub: 'Reload all dashboard data', action: () => loadAllData(true) },
-    { icon: '🚪', title: 'Sign Out', sub: 'Log out of the admin system', action: () => adminLogout() },
+    { icon: '<i class="fa-solid fa-file-pen"></i>', title: 'New Staff Assessment', sub: 'Open blank assessment form', action: () => openAssessment(null) },
+    { icon: '<i class="fa-solid fa-rotate-right"></i>', title: 'Refresh Data', sub: 'Reload all dashboard data', action: () => loadAllData(true) },
+    { icon: '<i class="fa-solid fa-right-from-bracket"></i>', title: 'Sign Out', sub: 'Log out of the admin system', action: () => adminLogout() },
 ];
 
 let cmdkItems = [];
