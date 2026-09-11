@@ -1146,8 +1146,8 @@
             <!-- Edu stats -->
             <div class="stats-grid" data-roles="edu">
                 <button type="button" class="stat-card" data-icon="🎓" style="border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
-                <button type="button" class="stat-card" data-icon="⚠️" style="border-top-color:#e74c3c;" onclick="nav('grades', document.querySelector('.nav-item[onclick*=grades]'))"><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
-                <button type="button" class="stat-card" data-icon="📋" style="border-top-color:#27ae60;" onclick="nav('report-cards', document.querySelector('.nav-item[onclick*=report]'))"><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
+                <button type="button" class="stat-card" data-icon="⚠️" style="border-top-color:#e74c3c;" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')"><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
+                <button type="button" class="stat-card" data-icon="📋" style="border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
             </div>
 
             <!-- Finance stats -->
@@ -2358,6 +2358,8 @@ const CMDK_PAGES = [
     { icon: '🗂️', title: 'Saved Records', sub: 'Intake sheets & assessments', action: () => nav('saved-records', document.querySelector('.nav-item[onclick*=saved]')) },
     { icon: '🕊️', title: 'Spiritual Formation', sub: 'Formation events', action: () => nav('events', document.querySelector('.nav-item[onclick*=events]')) },
     { icon: '🎓', title: 'Scholar Profiles', sub: 'Browse scholar records', action: () => nav('profiles', document.querySelector('.nav-item[onclick*=profiles]')) },
+    { icon: '📄', title: 'Report Cards', sub: 'View and print student report cards', action: () => openToolModal('student_grade_card.html', '📄 Report Cards') },
+    { icon: '📊', title: 'Grade Register', sub: 'Enter and monitor scholar grades', action: () => openToolModal('grade_tracking.html', '📊 Grade Register') },
     { icon: '📅', title: 'Attendance Alerts', sub: 'Formation absence tracking', action: () => nav('attendance', document.querySelector('.nav-item[onclick*=attendance]')) },
     { icon: '👨‍👩‍👧', title: 'Beneficiary Families', sub: 'Family records', action: () => nav('family', document.querySelector('.nav-item[onclick*=family]')) },
     { icon: '💰', title: 'Financials', sub: 'Funds & disbursements', action: () => nav('financials', document.querySelector('.nav-item[onclick*=financials]')) },
@@ -3210,7 +3212,8 @@ function openAssessment(appId) {
     openToolModal(url, '📝 Staff Assessment');
 }
 function openToolModal(url, title) {
-    if (url === 'student_grade_card.html' && window.matchMedia('(max-width: 640px)').matches) {
+    const toolPath = String(url || '').split('?')[0];
+    if (toolPath === 'student_grade_card.html' && window.matchMedia('(max-width: 640px)').matches) {
         window.open(url, '_blank');
         return;
     }
