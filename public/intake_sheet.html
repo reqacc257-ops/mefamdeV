@@ -1192,13 +1192,6 @@
             </div>
         </div>
 
-        <div class="meta-card" style="grid-template-columns:1fr;padding:14px 18px;">
-            <div class="field">
-                <label class="fl">Source of Referral</label>
-                <input type="text" id="caseReferral" value="Online Application">
-            </div>
-        </div>
-
         <!-- ══ I. IDENTIFYING INFORMATION ══ -->
         <div class="section">
             <div class="section-title"><span class="num">I</span> Identifying Information</div>
@@ -1504,7 +1497,6 @@ function setSigMode(mode) {
             : 'The client and interviewer will sign the printed copy after printing.';
     }
 
-    // Update hint text on each field
     document.querySelectorAll('.sig-hint').forEach(el => {
         if (el.id === 'clientSigHint' || el.id === 'staffSigHint') {
             el.textContent = isDigital
@@ -1513,7 +1505,6 @@ function setSigMode(mode) {
         }
     });
 
-    // Persist preference
     try { localStorage.setItem('mefamdev_sig_mode', sigMode); } catch(e){}
 }
 
@@ -1530,7 +1521,6 @@ window.onload = function () {
     initSigPad('clientSig');
     initSigPad('staffSig');
 
-    // Restore saved signature mode preference (default = print)
     let savedMode = 'print';
     try { savedMode = localStorage.getItem('mefamdev_sig_mode') || 'print'; } catch(e){}
     setSigMode(savedMode);
@@ -1631,7 +1621,6 @@ function updateSigHasClass() {
     section.dataset.hasStaffSig = isSigEmpty('staffSig') ? 'false' : 'true';
 }
 function prepareSigImagesForPrint() {
-    // Only overlay digital signatures if they actually exist
     ['clientSig', 'staffSig'].forEach(id => {
         const img = document.getElementById(id + 'Img');
         if (img) img.src = getSigDataUrl(id);
@@ -1882,7 +1871,6 @@ function loadSavedIntakeRecord(recordId) {
     lastAutoCaseNo = record.caseNo || '';
     setVal('caseDate', record.caseDate || '');
     setVal('caseCategory', record.caseCategory || '');
-    setVal('caseReferral', record.caseReferral || '');
     setVal('iName', record.name || '');
     setVal('iNickname', record.nickname || '');
     setVal('iNationality', record.nationality || '');
@@ -1948,8 +1936,6 @@ function loadSavedIntakeRecord(recordId) {
         if (inputs[1]) inputs[1].value = actionRows[i]?.plan || '';
     }
 
-    // Restore signatures if present, and switch to digital mode automatically if the
-    // saved record contains digital signatures — otherwise stay on print mode.
     const hasClientSig = !!record.clientSignature;
     const hasStaffSig = !!record.staffSignature;
     if (hasClientSig || hasStaffSig) {
@@ -1993,7 +1979,6 @@ function collectData() {
     }
     const schoolName = (linkedApp?.school || linkedApp?.schoolName || linkedApp?.school_name || '').toString().trim();
 
-    // Only capture signature data when in digital mode
     const clientSignature = sigMode === 'digital' ? getSigDataUrl('clientSig') : '';
     const staffSignature = sigMode === 'digital' ? getSigDataUrl('staffSig') : '';
 
@@ -2002,7 +1987,6 @@ function collectData() {
         caseNo: document.getElementById('caseNo').value,
         caseDate: document.getElementById('caseDate').value,
         caseCategory: document.getElementById('caseCategory').value,
-        caseReferral: document.getElementById('caseReferral').value,
         name: document.getElementById('iName').value,
         nickname: document.getElementById('iNickname').value,
         nationality: document.getElementById('iNationality').value,
@@ -2038,7 +2022,6 @@ function clearForm() {
     document.getElementById('caseDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('iNationality').value = 'Filipino';
     document.getElementById('iOccup').value = 'Student';
-    document.getElementById('caseReferral').value = 'Online Application';
     lastAutoCaseNo = '';
     regenerateCaseNo(true);
     const wrap = document.getElementById('caseNoWrap');
@@ -2062,12 +2045,10 @@ function clearForm() {
     clearSig('clientSig');
     clearSig('staffSig');
 
-    // Keep the user's preferred signature mode rather than resetting it
     setSigMode(sigMode);
 }
 
 function printIntakeSheet() {
-    // hide fully empty family rows in print to save space
     document.querySelectorAll('#famTableBody tr').forEach(tr => {
         const inputs = tr.querySelectorAll('input, select');
         const hasData = Array.from(inputs).some(i => i.value && i.value.trim() !== '');
@@ -2077,7 +2058,7 @@ function printIntakeSheet() {
     setTimeout(() => window.print(), 30);
 }
 
-/* ── Escape helper (safe for interpolation) ── */
+/* ── Escape helper ── */
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
