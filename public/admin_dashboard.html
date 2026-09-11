@@ -2460,10 +2460,17 @@ function openToolModal(url, title) {
     const frame = document.getElementById('toolModalFrame');
     const titleEl = document.getElementById('toolModalTitle');
     if (!modal || !frame) return;
-    const resolvedTitle = title || 'Staff Tool';
+    const isIntakeSheet = String(url).includes('intake_sheet.html');
+    const isStaffAssessment = String(url).includes('staff_assessment.html');
+    const resolvedTitle = isIntakeSheet
+        ? '📝 Intake Sheet'
+        : isStaffAssessment
+            ? '📝 Staff Assessment'
+            : (title || 'Staff Tool');
     if (titleEl) titleEl.textContent = resolvedTitle;
     frame.title = resolvedTitle.replace(/^[^\w]+/, '').trim() || 'Staff tool';
-    frame.src = url;
+    const cacheBustedUrl = `${url}${String(url).includes('?') ? '&' : '?'}_ui=${Date.now()}`;
+    frame.src = cacheBustedUrl;
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
     
