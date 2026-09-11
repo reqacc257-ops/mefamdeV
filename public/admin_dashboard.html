@@ -127,7 +127,18 @@
             transform: rotate(90deg);
         }
         .nav-group.collapsed .nav-group-chevron { transform: rotate(0deg); }
-        .nav-group.collapsed .nav-group-items { display: none; }
+        .nav-group-items {
+            overflow: hidden;
+            max-height: 2400px;
+            opacity: 1;
+            transition: max-height .28s ease, opacity .18s ease, margin .18s ease, padding .18s ease;
+        }
+        .nav-group.collapsed .nav-group-items {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            padding-top: 0;
+        }
 
         .nav-item {
             display: flex; align-items: center; gap: 11px;

@@ -35,6 +35,7 @@
         var(--bg);
       background-attachment:fixed;
     }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
     /* ============ APP BAR ============ */
     .appbar{position:relative;color:#fff;
@@ -64,7 +65,7 @@
     .back:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);transform:translateX(-2px)}
 
     /* ============ LAYOUT ============ */
-    .page{max-width:1360px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:22px}
+    .page{max-width:1360px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:22px;animation:fadeUp .28s ease}
 
     /* ============ BANNER ============ */
     .banner{display:flex;align-items:flex-start;gap:11px;padding:14px 16px;border-radius:14px;
@@ -80,7 +81,9 @@
     .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;}
     .stat-card{position:relative;background:var(--surface);border:1px solid var(--border);
       border-radius:var(--radius);box-shadow:var(--shadow-md);padding:19px 20px;
-      display:flex;flex-direction:column;gap:7px;overflow:hidden;}
+      display:flex;flex-direction:column;gap:7px;overflow:hidden;
+      transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
     .stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--navy);}
     .stat-card.is-balance::before{background:linear-gradient(180deg,var(--gold),var(--gold-2))}
     .stat-card.is-in::before{background:linear-gradient(180deg,#18b283,#0f7a4a)}
@@ -100,7 +103,9 @@
     .grid-2eq{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
     .grid-2eq + .grid-2eq{margin-top:0}
     .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-      box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden;}
+      box-shadow:var(--shadow-md);display:flex;flex-direction:column;overflow:hidden;
+      transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
+    .card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
     .card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
       padding:15px 20px;border-bottom:1px solid var(--border);
       background:linear-gradient(180deg,#fcfdff,#f7fafd);}
@@ -167,6 +172,19 @@
     .mode-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
     .mode-btn:hover{color:var(--navy)}
     .mode-btn.is-active{background:#fff;color:var(--navy);box-shadow:var(--shadow-sm)}
+    /* badge showing mass selection count — visible from either mode */
+    .mode-badge{
+      display:inline-grid;place-items:center;
+      min-width:18px;height:18px;padding:0 5px;
+      border-radius:999px;
+      font-size:.68rem;font-weight:800;line-height:1;
+      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);
+      box-shadow:0 3px 8px -3px rgba(224,140,11,.85);
+      animation:badgePop .22s cubic-bezier(.2,.8,.3,1);
+    }
+    .mode-badge[hidden]{display:none}
+    .mode-btn.is-active .mode-badge{background:linear-gradient(135deg,#ffe0a3,#f5a623)}
+    @keyframes badgePop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
 
     /* ============ PICKER ============ */
     .picker{position:relative}
@@ -253,6 +271,7 @@
     .inline-note.warn{color:#8a5b00}
     .inline-note.danger{color:var(--red)}
     .inline-note.ok{color:var(--green)}
+    .inline-note.info{color:#1d4066}
 
     /* ============ TABS & TOOLBAR ============ */
     .tabs{display:flex;gap:5px;padding:4px;background:#eef2f7;border-radius:11px}
@@ -527,6 +546,7 @@
             <button class="mode-btn" type="button" data-mode="mass" role="tab" aria-selected="false">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Mass
+              <span class="mode-badge" id="massBadge" hidden aria-hidden="true">0</span>
             </button>
           </div>
         </div>
@@ -555,6 +575,10 @@
                 <span class="selected-sub" id="selSub">—</span>
               </span>
               <button type="button" class="selected-x" id="selChange">Change</button>
+            </div>
+            <div class="inline-note info" id="massPendingNote" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span id="massPendingText"></span>
             </div>
           </div>
 
@@ -861,7 +885,6 @@
         return s + ' Only';
       }
 
-      /** Generate a stable receipt number for a disbursement. */
       function receiptNo(entry, fallbackSeed = '') {
         const year = new Date().getFullYear();
         if (entry && entry.id) return `MEF-${year}-${String(entry.id).padStart(5, '0')}`;
@@ -869,7 +892,6 @@
         return `MEF-${year}-${seed.padStart(5, '0')}`;
       }
 
-      /** Generate a batch reference like B-20260315-AB12. */
       function batchRef() {
         const d = new Date();
         const pad = n => String(n).padStart(2, '0');
@@ -1007,82 +1029,97 @@
       function acceptedScholars() {
         return state.apps.filter(app => app.status === 'Accepted');
       }
-      /** Map scholarId -> scholar app record, for quick lookups. */
       function scholarById(id) {
         return state.apps.find(a => String(a.id) === String(id)) || null;
       }
 
       /* =========================================================
-         STATS
+         UNIFIED UI SYNC
+         Keeps the mode badge, disburse button label, inline notes,
+         and mass summary all in sync — so switching modes is never
+         ambiguous.
          ========================================================= */
-      function renderStats() {
-        const { added, disbursed, balance } = totals();
-        const accepted = acceptedScholars();
+      function updateDisburseUI() {
+        const n = state.massSelected.size;
+        const badge = document.getElementById('massBadge');
+        const label = document.getElementById('disburseBtnLabel');
+        const massNote = document.getElementById('massPendingNote');
+        const massNoteText = document.getElementById('massPendingText');
 
-        const balanceEl = document.getElementById('fin-balance');
-        balanceEl.textContent = peso(balance);
-        balanceEl.classList.toggle('neg', balance < 0);
-        document.getElementById('fin-added').textContent = peso(added);
-        document.getElementById('fin-disbursed').textContent = peso(disbursed);
-        document.getElementById('fin-scholars').textContent = String(accepted.length);
-
-        const pctRemaining = added > 0 ? Math.round((balance / added) * 100) : 0;
-        document.getElementById('fin-balance-sub').innerHTML = added > 0
-          ? `<strong>${Math.max(pctRemaining, 0)}%</strong> of contributions remain`
-          : 'No contributions recorded yet';
-        document.getElementById('fin-added-sub').innerHTML = state.fundLog.length
-          ? `<strong>${state.fundLog.length}</strong> ${state.fundLog.length === 1 ? 'entry' : 'entries'} on record`
-          : 'No entries yet';
-        document.getElementById('fin-disbursed-sub').innerHTML = state.disbursements.length
-          ? `<strong>${state.disbursements.length}</strong> ${state.disbursements.length === 1 ? 'stipend' : 'stipends'} released`
-          : 'No stipends released';
-        document.getElementById('fin-scholars-sub').innerHTML =
-          accepted.length && disbursed > 0
-            ? `Avg <strong>${peso(disbursed / accepted.length, 0)}</strong> per scholar`
-            : 'Accepted scholars';
-
-        renderBalanceBanner(balance);
-      }
-      function renderBalanceBanner(balance) {
-        const banner = document.getElementById('balanceBanner');
-        const text = document.getElementById('balanceBannerText');
-        if (balance < 0) {
-          banner.hidden = false;
-          banner.className = 'banner banner--danger';
-          text.innerHTML = `<b>Fund balance is negative (${escapeHtml(peso(balance))}).</b> More has been disbursed than contributed — review the ledger and add missing contributions.`;
-        } else if (balance < LOW_BALANCE_THRESHOLD && (state.fundLog.length || state.disbursements.length)) {
-          banner.hidden = false;
-          banner.className = 'banner banner--warn';
-          text.innerHTML = `<b>Low fund balance (${escapeHtml(peso(balance))}).</b> Consider adding contributions before the next release.`;
+        // ---- Mass mode badge (visible from both modes) ----
+        if (n > 0) {
+          if (badge.textContent !== String(n)) {
+            badge.textContent = String(n);
+            badge.hidden = false;
+            // re-trigger animation
+            badge.style.animation = 'none';
+            void badge.offsetWidth;
+            badge.style.animation = '';
+          }
         } else {
-          banner.hidden = true;
+          badge.hidden = true;
+          badge.textContent = '0';
+        }
+
+        // ---- Disburse button label ----
+        if (state.disburseMode === 'mass') {
+          if (n === 0) {
+            label.textContent = 'Release selected stipends';
+          } else {
+            const amount = Number(document.getElementById('massAmount').value) || 0;
+            const total = amount * n;
+            label.textContent = `Release ${n} stipend${n === 1 ? '' : 's'} · ${peso(total, 0)}`;
+          }
+        } else {
+          label.textContent = 'Release stipend';
+        }
+
+        // ---- "You have N pending in mass" note inside single mode ----
+        if (state.disburseMode === 'single' && n > 0) {
+          massNote.hidden = false;
+          massNoteText.innerHTML =
+            `You have <b>${n}</b> scholar${n === 1 ? '' : 's'} selected in <b>Mass</b> mode. ` +
+            `<a href="#" id="jumpToMass" style="color:#1d4066;font-weight:700;text-decoration:underline">Open Mass</a> ` +
+            `or <a href="#" id="clearMassFromSingle" style="color:var(--red);font-weight:700;text-decoration:underline">clear</a>.`;
+          const jump = document.getElementById('jumpToMass');
+          const clr = document.getElementById('clearMassFromSingle');
+          if (jump) jump.onclick = e => { e.preventDefault(); switchMode('mass'); };
+          if (clr) clr.onclick = e => {
+            e.preventDefault();
+            state.massSelected.clear();
+            refreshMassList();
+            updateDisburseUI();
+            toast('Mass selection cleared.', 'success', 2000);
+          };
+        } else {
+          massNote.hidden = true;
+          massNoteText.innerHTML = '';
         }
       }
 
       /* =========================================================
          MODE TOGGLE
          ========================================================= */
-      document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const mode = btn.dataset.mode;
-          if (mode === state.disburseMode) return;
-          state.disburseMode = mode;
-          document.querySelectorAll('.mode-btn').forEach(b => {
-            const on = b === btn;
-            b.classList.toggle('is-active', on);
-            b.setAttribute('aria-selected', on ? 'true' : 'false');
-          });
-          document.getElementById('singleMode').hidden = mode !== 'single';
-          document.getElementById('massMode').hidden = mode !== 'mass';
-          document.getElementById('disburseBtnLabel').textContent =
-            mode === 'mass' ? 'Release selected stipends' : 'Release stipend';
-
-          if (mode === 'mass') {
-            refreshMassList();
-            updateMassSummary();
-          }
-          updateAmountNote();
+      function switchMode(mode) {
+        if (mode === state.disburseMode) return;
+        state.disburseMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => {
+          const on = b.dataset.mode === mode;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-selected', on ? 'true' : 'false');
         });
+        document.getElementById('singleMode').hidden = mode !== 'single';
+        document.getElementById('massMode').hidden = mode !== 'mass';
+
+        if (mode === 'mass') {
+          refreshMassList();
+          updateMassSummary();
+        }
+        updateAmountNote();
+        updateDisburseUI();
+      }
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
       });
 
       /* =========================================================
@@ -1278,6 +1315,7 @@
         const item = box.closest('.mass-item');
         if (item) item.classList.toggle('is-selected', box.checked);
         updateMassSummary();
+        updateDisburseUI();
       });
 
       massSearch.addEventListener('input', debounce(e => {
@@ -1289,11 +1327,13 @@
         massMatches().forEach(app => state.massSelected.add(String(app.id)));
         refreshMassList();
         updateMassSummary();
+        updateDisburseUI();
       });
       document.getElementById('massNone').addEventListener('click', () => {
         state.massSelected.clear();
         refreshMassList();
         updateMassSummary();
+        updateDisburseUI();
       });
 
       document.querySelectorAll('[data-mass-amount]').forEach(chip => {
@@ -1301,6 +1341,7 @@
           document.getElementById('massAmount').value = chip.dataset.massAmount;
           document.querySelectorAll('[data-mass-amount]').forEach(c => c.classList.toggle('is-on', c === chip));
           updateMassSummary();
+          updateDisburseUI();
         });
       });
       document.getElementById('massPeriodNow').addEventListener('click', () => {
@@ -1313,6 +1354,7 @@
         document.getElementById(id).addEventListener('input', () => {
           if (id === 'massPeriod') refreshMassList();
           updateMassSummary();
+          updateDisburseUI();
         });
       });
 
@@ -1338,12 +1380,10 @@
         pill.textContent = `Remaining after: ${peso(after)}`;
         pill.className = 'pill' + (after < 0 ? ' danger' : after < LOW_BALANCE_THRESHOLD ? ' warn' : '');
 
-        // Inline note
         const note = document.getElementById('massNote');
         const noteText = document.getElementById('massNoteText');
         const period = document.getElementById('massPeriod').value.trim();
 
-        // Count duplicates
         const history = stipendHistoryByScholar();
         let dupCount = 0;
         if (period) {
@@ -1883,6 +1923,7 @@
           refreshPickerList();
           if (state.disburseMode === 'mass') { refreshMassList(); updateMassSummary(); }
           updateAmountNote();
+          updateDisburseUI();
         } catch (error) {
           console.error('Failed to load financials data:', error);
           toast('Unable to load financial data right now.', 'error');
@@ -2017,14 +2058,12 @@
 
         const scholars = ids.map(id => scholarById(id)).filter(Boolean);
 
-        // Duplicate detection
         const history = stipendHistoryByScholar();
         const dupes = scholars.filter(s => {
           const list = history.get(String(s.id)) || [];
           return list.some(p => String(p.period || '').trim().toLowerCase() === period.toLowerCase());
         });
 
-        // Preview
         const previewList = scholars.slice(0, 30).map(s =>
           `<li><span>${escapeHtml(s.name || '—')}</span><span>${escapeHtml(peso(amount))}</span></li>`
         ).join('');
@@ -2055,7 +2094,7 @@
 
         const btn = document.getElementById('disburseBtn');
         btn.disabled = true;
-        btn.querySelector('#disburseBtnLabel').textContent = `Releasing 0 / ${scholars.length}…`;
+        document.getElementById('disburseBtnLabel').textContent = `Releasing 0 / ${scholars.length}…`;
 
         const batch = batchRef();
         const succeeded = [];
@@ -2083,16 +2122,16 @@
           } catch (err) {
             failed.push({ scholar: s, error: err.message || 'Request failed' });
           }
-          btn.querySelector('#disburseBtnLabel').textContent = `Releasing ${i + 1} / ${scholars.length}…`;
+          document.getElementById('disburseBtnLabel').textContent = `Releasing ${i + 1} / ${scholars.length}…`;
         }
 
         btn.disabled = false;
-        btn.querySelector('#disburseBtnLabel').textContent = 'Release selected stipends';
 
         state.massSelected.clear();
         await loadData({ silent: true });
         refreshMassList();
         updateMassSummary();
+        updateDisburseUI();
 
         const okCount = succeeded.length;
         const failCount = failed.length;
@@ -2224,7 +2263,7 @@
       });
 
       // Expose for debugging
-      window.__mefamFinancials = { state, buildReceiptHTML, receiptNo, pesoInWords };
+      window.__mefamFinancials = { state, buildReceiptHTML, receiptNo, pesoInWords, switchMode };
 
     })();
   </script>
