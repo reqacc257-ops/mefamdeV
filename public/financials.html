@@ -172,19 +172,6 @@
     .mode-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
     .mode-btn:hover{color:var(--navy)}
     .mode-btn.is-active{background:#fff;color:var(--navy);box-shadow:var(--shadow-sm)}
-    /* badge showing mass selection count — visible from either mode */
-    .mode-badge{
-      display:inline-grid;place-items:center;
-      min-width:18px;height:18px;padding:0 5px;
-      border-radius:999px;
-      font-size:.68rem;font-weight:800;line-height:1;
-      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);
-      box-shadow:0 3px 8px -3px rgba(224,140,11,.85);
-      animation:badgePop .22s cubic-bezier(.2,.8,.3,1);
-    }
-    .mode-badge[hidden]{display:none}
-    .mode-btn.is-active .mode-badge{background:linear-gradient(135deg,#ffe0a3,#f5a623)}
-    @keyframes badgePop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
 
     /* ============ PICKER ============ */
     .picker{position:relative}
@@ -237,8 +224,19 @@
       border-radius:13px;background:#fbfcfe;overflow:hidden;}
     .mass-toolbar{display:flex;gap:8px;align-items:center;padding:10px;
       border-bottom:1px solid var(--border);background:#fff;}
-    .mass-toolbar input{flex:1 1 auto;font-size:.83rem;padding:8px 11px}
+    .mass-toolbar input[type=search]{flex:1 1 auto;font-size:.83rem;padding:8px 11px}
     .mass-toolbar .btn{padding:7px 11px;font-size:.74rem;border-radius:9px}
+    .mass-selectall{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;
+      padding:7px 11px;border-radius:9px;cursor:pointer;user-select:none;
+      font-size:.74rem;font-weight:700;color:#41556b;
+      background:#f2f5f9;border:1px solid var(--border);
+      transition:background .15s ease,color .15s ease,border-color .15s ease;}
+    .mass-selectall:hover{background:#e8eef6;color:var(--navy);border-color:#c8d5e4}
+    .mass-selectall input[type=checkbox]{
+      width:15px;height:15px;min-width:0;padding:0;margin:0;border-radius:4px;
+      accent-color:#1d4066;cursor:pointer;flex:0 0 auto;}
+    .mass-selectall input[type=checkbox]:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.4)}
+    .mass-selectall.is-disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
     .mass-list{max-height:238px;overflow:auto;padding:6px;scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent}
     .mass-list::-webkit-scrollbar{width:9px}
     .mass-list::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
@@ -246,7 +244,8 @@
       transition:background .13s ease;position:relative;}
     .mass-item:hover{background:#f2f7fd}
     .mass-item.is-selected{background:rgba(245,166,35,.14)}
-    .mass-item input[type=checkbox]{flex:0 0 auto;width:17px;height:17px;accent-color:#1d4066;cursor:pointer}
+    .mass-item input[type=checkbox]{flex:0 0 auto;width:17px;height:17px;min-width:0;padding:0;margin:0;
+      accent-color:#1d4066;cursor:pointer;border-radius:4px}
     .mass-item .picker-avatar{width:30px;height:30px;border-radius:8px;font-size:.72rem}
     .mass-item-main{min-width:0;flex:1 1 auto}
     .mass-item-name{font-size:.83rem;font-weight:700;color:#16283c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -254,12 +253,12 @@
     .mass-item-flag{flex:0 0 auto;font-size:.66rem;font-weight:700;padding:3px 8px;border-radius:999px;}
     .mass-item-flag.dup{color:var(--amber);background:var(--amber-soft);border:1px solid #f8e2bd}
     .mass-item-flag.ok{color:#3d5878;background:#e7eef7;border:1px solid #d8e3f0}
-    .mass-empty{padding:22px;text-align:center;font-size:.8rem;color:#93a3b6}
-    .mass-summary{padding:10px 13px;border-top:1px solid var(--border);background:#f5f9ff;
+    .mass-empty{padding:26px 18px;text-align:center;font-size:.8rem;color:#93a3b6;line-height:1.5}
+    .mass-summary{padding:11px 13px;border-top:1px solid var(--border);background:#f5f9ff;
       display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
       font-size:.79rem;color:#41556b;}
     .mass-summary .strong{font-weight:700;color:var(--navy)}
-    .mass-summary .pill{margin-left:6px;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:700;
+    .mass-summary .pill{padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;
       background:var(--navy);color:#fff;}
     .mass-summary .pill.warn{background:#8a5b00}
     .mass-summary .pill.danger{background:var(--red)}
@@ -420,6 +419,8 @@
       .tabs{width:100%;overflow-x:auto}
       .modal-actions{flex-direction:column-reverse}
       thead th,tbody td{padding:10px 11px}
+      .mass-toolbar{flex-wrap:wrap}
+      .mass-toolbar input[type=search]{flex:1 1 100%;order:3}
     }
     @media (max-width:400px){.stats-grid{grid-template-columns:1fr}}
 
@@ -496,7 +497,7 @@
     <section class="grid-2eq">
 
       <!-- ADD FUNDS -->
-      <div class="card">
+      <div class="card" id="fundsCard">
         <div class="card-head">
           <h2 class="card-title">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -532,21 +533,22 @@
       </div>
 
       <!-- DISBURSE -->
-      <div class="card">
+      <div class="card" id="disburseCard">
         <div class="card-head">
           <h2 class="card-title">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
             Disburse Stipend
           </h2>
           <div class="mode-toggle no-print" role="tablist" aria-label="Disbursement mode">
-            <button class="mode-btn is-active" type="button" data-mode="single" role="tab" aria-selected="true">
+            <button class="mode-btn is-active" type="button" data-mode="single" role="tab"
+                    aria-selected="true" aria-controls="singleMode">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               Single
             </button>
-            <button class="mode-btn" type="button" data-mode="mass" role="tab" aria-selected="false">
+            <button class="mode-btn" type="button" data-mode="mass" role="tab"
+                    aria-selected="false" aria-controls="massMode">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Mass
-              <span class="mode-badge" id="massBadge" hidden aria-hidden="true">0</span>
             </button>
           </div>
         </div>
@@ -575,10 +577,6 @@
                 <span class="selected-sub" id="selSub">—</span>
               </span>
               <button type="button" class="selected-x" id="selChange">Change</button>
-            </div>
-            <div class="inline-note info" id="massPendingNote" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span id="massPendingText"></span>
             </div>
           </div>
 
@@ -610,19 +608,26 @@
         <!-- MASS MODE -->
         <div class="card-body" id="massMode" hidden>
           <div class="field">
-            <label>Scholars <span class="strong" id="massCount" style="color:var(--navy);font-weight:700"></span></label>
+            <label for="massSearch">Scholars</label>
             <div class="mass-wrap">
               <div class="mass-toolbar">
+                <label class="mass-selectall" id="massSelectAllLabel" title="Select all matching scholars">
+                  <input type="checkbox" id="massSelectAll">
+                  <span>All</span>
+                </label>
                 <input type="search" id="massSearch" placeholder="Filter by name, school, or grade…" autocomplete="off">
-                <button class="btn btn-ghost" type="button" id="massAll">All</button>
                 <button class="btn btn-ghost" type="button" id="massNone">Clear</button>
               </div>
               <div class="mass-list" id="massList"></div>
-              <div class="mass-summary">
-                <span id="massSelectedText">0 selected</span>
+              <div class="mass-summary" aria-live="polite">
+                <span id="massSelectedText"><b class="strong">0</b> selected</span>
                 <span id="massTotalText" class="strong">Total: ₱0.00</span>
-                <span id="massBalancePill" class="pill">Remaining after: ₱0.00</span>
+                <span id="massBalancePill" class="pill">Remaining: ₱0.00</span>
               </div>
+            </div>
+            <div class="inline-note warn" id="massNote" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span id="massNoteText"></span>
             </div>
           </div>
 
@@ -642,11 +647,6 @@
             <button type="button" class="mini-chip" data-mass-amount="5000">₱5,000</button>
             <button type="button" class="mini-chip" data-mass-amount="7500">₱7,500</button>
             <button type="button" class="mini-chip" id="massPeriodNow">This month</button>
-          </div>
-
-          <div class="inline-note warn" id="massNote" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span id="massNoteText"></span>
           </div>
         </div>
 
@@ -1034,66 +1034,19 @@
       }
 
       /* =========================================================
-         UNIFIED UI SYNC
-         Keeps the mode badge, disburse button label, inline notes,
-         and mass summary all in sync — so switching modes is never
-         ambiguous.
+         DISBURSE BUTTON LABEL
+         The selected-count lives in exactly ONE place — the mass
+         summary line. The button only states the action.
          ========================================================= */
       function updateDisburseUI() {
         const n = state.massSelected.size;
-        const badge = document.getElementById('massBadge');
         const label = document.getElementById('disburseBtnLabel');
-        const massNote = document.getElementById('massPendingNote');
-        const massNoteText = document.getElementById('massPendingText');
-
-        // ---- Mass mode badge (visible from both modes) ----
-        if (n > 0) {
-          if (badge.textContent !== String(n)) {
-            badge.textContent = String(n);
-            badge.hidden = false;
-            // re-trigger animation
-            badge.style.animation = 'none';
-            void badge.offsetWidth;
-            badge.style.animation = '';
-          }
-        } else {
-          badge.hidden = true;
-          badge.textContent = '0';
-        }
-
-        // ---- Disburse button label ----
         if (state.disburseMode === 'mass') {
-          if (n === 0) {
-            label.textContent = 'Release selected stipends';
-          } else {
-            const amount = Number(document.getElementById('massAmount').value) || 0;
-            const total = amount * n;
-            label.textContent = `Release ${n} stipend${n === 1 ? '' : 's'} · ${peso(total, 0)}`;
-          }
+          label.textContent = n === 0
+            ? 'Release selected stipends'
+            : `Release ${n} stipend${n === 1 ? '' : 's'}`;
         } else {
           label.textContent = 'Release stipend';
-        }
-
-        // ---- "You have N pending in mass" note inside single mode ----
-        if (state.disburseMode === 'single' && n > 0) {
-          massNote.hidden = false;
-          massNoteText.innerHTML =
-            `You have <b>${n}</b> scholar${n === 1 ? '' : 's'} selected in <b>Mass</b> mode. ` +
-            `<a href="#" id="jumpToMass" style="color:#1d4066;font-weight:700;text-decoration:underline">Open Mass</a> ` +
-            `or <a href="#" id="clearMassFromSingle" style="color:var(--red);font-weight:700;text-decoration:underline">clear</a>.`;
-          const jump = document.getElementById('jumpToMass');
-          const clr = document.getElementById('clearMassFromSingle');
-          if (jump) jump.onclick = e => { e.preventDefault(); switchMode('mass'); };
-          if (clr) clr.onclick = e => {
-            e.preventDefault();
-            state.massSelected.clear();
-            refreshMassList();
-            updateDisburseUI();
-            toast('Mass selection cleared.', 'success', 2000);
-          };
-        } else {
-          massNote.hidden = true;
-          massNoteText.innerHTML = '';
         }
       }
 
@@ -1262,6 +1215,8 @@
          ========================================================= */
       const massList = document.getElementById('massList');
       const massSearch = document.getElementById('massSearch');
+      const massSelectAllBox = document.getElementById('massSelectAll');
+      const massSelectAllLabel = document.getElementById('massSelectAllLabel');
 
       function massMatches() {
         const q = state.massQuery.trim().toLowerCase();
@@ -1273,15 +1228,34 @@
           return hay.includes(q);
         });
       }
+
+      /** Keeps the "All" checkbox in sync with what's actually visible. */
+      function updateMassSelectAll() {
+        if (!massSelectAllBox) return;
+        const matches = massMatches();
+        const total = matches.length;
+        const selected = matches.filter(a => state.massSelected.has(String(a.id))).length;
+        massSelectAllBox.disabled = total === 0;
+        massSelectAllBox.checked = total > 0 && selected === total;
+        massSelectAllBox.indeterminate = selected > 0 && selected < total;
+        massSelectAllLabel.classList.toggle('is-disabled', total === 0);
+      }
+
       function refreshMassList() {
         const history = stipendHistoryByScholar();
         const period = document.getElementById('massPeriod').value.trim().toLowerCase();
         const matches = massMatches();
 
         if (!matches.length) {
-          massList.innerHTML = '<div class="mass-empty">No accepted scholar matches that filter.</div>';
+          massList.innerHTML = `<div class="mass-empty">${
+            acceptedScholars().length
+              ? 'No accepted scholar matches that filter.'
+              : 'No accepted scholars yet — approve applications first.'
+          }</div>`;
+          updateMassSelectAll();
           return;
         }
+
         massList.innerHTML = matches.map(app => {
           const id = String(app.id);
           const past = history.get(id) || [];
@@ -1304,6 +1278,8 @@
               ${flag}
             </label>`;
         }).join('');
+
+        updateMassSelectAll();
       }
 
       massList.addEventListener('change', e => {
@@ -1314,6 +1290,16 @@
         else state.massSelected.delete(id);
         const item = box.closest('.mass-item');
         if (item) item.classList.toggle('is-selected', box.checked);
+        updateMassSelectAll();
+        updateMassSummary();
+        updateDisburseUI();
+      });
+
+      massSelectAllBox.addEventListener('change', e => {
+        const matches = massMatches();
+        if (e.target.checked) matches.forEach(a => state.massSelected.add(String(a.id)));
+        else matches.forEach(a => state.massSelected.delete(String(a.id)));
+        refreshMassList();
         updateMassSummary();
         updateDisburseUI();
       });
@@ -1323,12 +1309,6 @@
         refreshMassList();
       }, 130));
 
-      document.getElementById('massAll').addEventListener('click', () => {
-        massMatches().forEach(app => state.massSelected.add(String(app.id)));
-        refreshMassList();
-        updateMassSummary();
-        updateDisburseUI();
-      });
       document.getElementById('massNone').addEventListener('click', () => {
         state.massSelected.clear();
         refreshMassList();
@@ -1370,14 +1350,13 @@
         const { balance } = totals();
         const after = balance - total;
 
-        document.getElementById('massCount').textContent = n ? `· ${n} selected` : '';
         document.getElementById('massSelectedText').innerHTML =
-          `<b class="strong">${n}</b> scholar${n === 1 ? '' : 's'} selected`;
+          `<b class="strong">${n}</b> selected`;
         document.getElementById('massTotalText').innerHTML =
           `Total: <b>${escapeHtml(peso(total))}</b>`;
 
         const pill = document.getElementById('massBalancePill');
-        pill.textContent = `Remaining after: ${peso(after)}`;
+        pill.textContent = `Remaining: ${peso(after)}`;
         pill.className = 'pill' + (after < 0 ? ' danger' : after < LOW_BALANCE_THRESHOLD ? ' warn' : '');
 
         const note = document.getElementById('massNote');
@@ -1931,6 +1910,50 @@
       }
 
       /* =========================================================
+         STATS
+         ========================================================= */
+      function renderStats() {
+        const { added, disbursed, balance } = totals();
+        const scholars = acceptedScholars().length;
+
+        const balanceEl = document.getElementById('fin-balance');
+        balanceEl.textContent = peso(balance);
+        balanceEl.classList.toggle('neg', balance < 0);
+        document.getElementById('fin-balance-sub').innerHTML = balance < 0
+          ? `Overdrawn by <strong>${escapeHtml(peso(-balance))}</strong>`
+          : balance < LOW_BALANCE_THRESHOLD
+            ? 'Running low — consider adding funds'
+            : 'Ready for disbursement';
+
+        document.getElementById('fin-added').textContent = peso(added);
+        document.getElementById('fin-added-sub').innerHTML = state.fundLog.length
+          ? `<strong>${state.fundLog.length}</strong> contribution${state.fundLog.length === 1 ? '' : 's'} on record`
+          : 'No entries yet';
+
+        document.getElementById('fin-disbursed').textContent = peso(disbursed);
+        document.getElementById('fin-disbursed-sub').innerHTML = state.disbursements.length
+          ? `<strong>${state.disbursements.length}</strong> stipend${state.disbursements.length === 1 ? '' : 's'} released`
+          : 'No stipends released';
+
+        document.getElementById('fin-scholars').textContent = scholars;
+        document.getElementById('fin-scholars-sub').textContent = scholars === 1 ? 'Accepted scholar' : 'Accepted scholars';
+
+        const banner = document.getElementById('balanceBanner');
+        const bannerText = document.getElementById('balanceBannerText');
+        if (balance < 0) {
+          banner.hidden = false;
+          banner.className = 'banner banner--danger';
+          bannerText.innerHTML = `<b>Negative balance.</b> The fund is overdrawn by <b>${escapeHtml(peso(-balance))}</b>. Add contributions to restore it.`;
+        } else if (balance < LOW_BALANCE_THRESHOLD && (state.fundLog.length || state.disbursements.length)) {
+          banner.hidden = false;
+          banner.className = 'banner banner--warn';
+          bannerText.innerHTML = `<b>Low balance.</b> Only <b>${escapeHtml(peso(balance))}</b> remains available for disbursement.`;
+        } else {
+          banner.hidden = true;
+        }
+      }
+
+      /* =========================================================
          VALIDATION HELPERS
          ========================================================= */
       function markInvalid(el) {
@@ -2243,18 +2266,32 @@
 
         ['fundSource', 'fundAmount', 'fundDate', 'fundNotes'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); addFunds(); }
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); addFunds(); }
           });
         });
         ['disbAmount', 'disbPeriod'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); disburseSingle(); }
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); disburseSingle(); }
           });
         });
         ['massAmount', 'massPeriod'].forEach(id => {
           document.getElementById(id).addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); disburseMass(); }
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); disburseMass(); }
           });
+        });
+
+        // Ctrl/Cmd + Enter submits whichever form holds focus.
+        document.addEventListener('keydown', e => {
+          if (!(e.ctrlKey || e.metaKey) || e.key !== 'Enter') return;
+          const active = document.activeElement;
+          if (!active || !active.closest) return;
+          if (active.closest('#disburseCard')) {
+            e.preventDefault();
+            if (state.disburseMode === 'mass') disburseMass(); else disburseSingle();
+          } else if (active.closest('#fundsCard')) {
+            e.preventDefault();
+            addFunds();
+          }
         });
 
         disbAmountInput.dispatchEvent(new Event('input'));
