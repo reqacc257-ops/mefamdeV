@@ -210,7 +210,7 @@ const REPORT_CARD_STYLES = `
   .rc-info-cell .rc-lbl { font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
   .rc-info-cell .rc-val { font-size: .9rem; font-weight: 600; color: var(--text); }
 
-  .rc-table-wrap { padding: 24px 28px 8px; }
+  .rc-table-wrap { padding: 24px 28px 8px; overflow-x: auto; }
   table.rc-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
   table.rc-table caption { text-align: left; font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
   table.rc-table th, table.rc-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: center; }
@@ -238,10 +238,21 @@ const REPORT_CARD_STYLES = `
   .rc-sign .rc-sign-name { font-weight: 700; font-size: .85rem; color: var(--text); }
 
   @media (max-width: 700px) {
+    .rc-card { margin: 10px 0; }
+    .rc-head { padding: 18px 16px 14px; }
+    .rc-head .rc-org { font-size: .64rem; }
+    .rc-head .rc-title { font-size: 1.2rem; }
+    .rc-head .rc-sub { font-size: .74rem; }
     .rc-info { grid-template-columns: repeat(2, 1fr); }
-    table.rc-table { font-size: .72rem; }
+    .rc-info-cell { padding: 10px 12px; }
+    .rc-info-cell .rc-lbl { font-size: .58rem; }
+    .rc-info-cell .rc-val { font-size: .82rem; }
+    .rc-table-wrap { padding: 12px 10px 4px; }
+    table.rc-table { font-size: .68rem; }
+    table.rc-table th, table.rc-table td { padding: 6px 5px; }
     table.rc-table td.rc-sub { padding-left: 14px; }
-    .rc-footer { grid-template-columns: 1fr; }
+    .rc-legend { padding: 6px 12px 14px; }
+    .rc-footer { grid-template-columns: 1fr; padding: 14px 16px 18px; }
   }
 
   @media print {
