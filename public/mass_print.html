@@ -121,6 +121,10 @@
       box-shadow:var(--shadow-md);
       overflow:hidden;
     }
+    /* the setup panel must let multi-select menus escape its bounds */
+    .panel--menu{overflow:visible}
+    .panel--menu > .panel-head:first-child{border-radius:var(--radius) var(--radius) 0 0}
+
     .panel-head{
       display:flex;align-items:center;justify-content:space-between;
       gap:16px;flex-wrap:wrap;
@@ -179,11 +183,12 @@
     /* ============ FILTERS ============ */
     .controls{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
       gap:15px;
+      align-items:start;
     }
     .field{min-width:0}
-    .field label{
+    .field > label{
       display:block;margin-bottom:7px;
       font-size:.69rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
       color:#5d6e83;
@@ -211,6 +216,117 @@
       background-size:13px;
       cursor:pointer;
     }
+
+    /* ---------- MULTI-SELECT CHECKLIST ---------- */
+    .ms{position:relative}
+    .ms-trigger{
+      width:100%;min-width:0;
+      display:flex;align-items:center;gap:9px;
+      padding:10px 12px;
+      font:inherit;font-size:.86rem;color:var(--text);
+      background:#fff;border:1px solid var(--border-strong);border-radius:11px;
+      cursor:pointer;text-align:left;
+      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+    }
+    .ms-trigger:hover{border-color:#b9c7d8}
+    .ms-trigger:focus-visible{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,166,35,.17)}
+    .ms-trigger[aria-expanded="true"]{border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,166,35,.17)}
+    .ms-value{
+      flex:1 1 auto;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .ms-value.is-placeholder{color:#a9b6c6}
+    .ms-badge{
+      flex:0 0 auto;display:inline-grid;place-items:center;
+      min-width:19px;height:19px;padding:0 5px;
+      border-radius:999px;font-size:.68rem;font-weight:700;
+      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);
+    }
+    .ms-badge[hidden]{display:none}
+    .ms-chev{
+      width:13px;height:13px;flex:0 0 auto;
+      stroke:#6b7c93;fill:none;stroke-width:2.6;
+      stroke-linecap:round;stroke-linejoin:round;
+      transition:transform .2s ease;
+    }
+    .ms-trigger[aria-expanded="true"] .ms-chev{transform:rotate(180deg)}
+
+    .ms-panel{
+      position:absolute;z-index:80;top:calc(100% + 6px);left:0;right:0;
+      min-width:220px;padding:9px;
+      background:#fff;border:1px solid var(--border-strong);border-radius:13px;
+      box-shadow:var(--shadow-lg);
+      animation:msIn .14s cubic-bezier(.2,.8,.3,1);
+    }
+    .ms-panel[hidden]{display:none}
+    @keyframes msIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+
+    .ms-search{
+      width:100%;margin-bottom:8px;
+      padding:8px 11px;font-size:.82rem;border-radius:9px;
+    }
+    .ms-actions{display:flex;gap:6px;margin-bottom:7px}
+    .ms-actions button{
+      flex:1 1 auto;padding:6px 8px;border-radius:8px;cursor:pointer;
+      font:inherit;font-size:.71rem;font-weight:700;letter-spacing:.02em;
+      color:#41556b;background:#f2f5f9;border:1px solid var(--border);
+      transition:background .16s ease,color .16s ease,border-color .16s ease;
+    }
+    .ms-actions button:hover{background:#e8eef6;color:var(--navy);border-color:#c8d5e4}
+
+    .ms-options{
+      max-height:216px;overflow:auto;
+      display:flex;flex-direction:column;gap:1px;
+      scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent;
+    }
+    .ms-options::-webkit-scrollbar{width:9px}
+    .ms-options::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
+    .ms-option{
+      display:flex;align-items:center;gap:9px;
+      padding:7px 8px;border-radius:8px;cursor:pointer;
+      font-size:.83rem;color:#33465b;
+      transition:background .14s ease;
+    }
+    .ms-option:hover{background:#f5f9ff}
+    .ms-option input[type=checkbox]{flex:0 0 auto}
+    .ms-option span{
+      min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .ms-empty{
+      margin:0;padding:14px 8px;text-align:center;
+      font-size:.78rem;color:#93a3b6;
+    }
+    .ms-empty[hidden]{display:none}
+
+    /* ---------- ACTIVE FILTER PILLS ---------- */
+    .active-filters{
+      display:flex;flex-wrap:wrap;gap:7px;align-items:center;
+      margin-top:15px;
+    }
+    .active-filters[hidden]{display:none}
+    .af-pill{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:5px 7px 5px 11px;border-radius:999px;
+      font-size:.75rem;font-weight:600;color:#2c4664;
+      background:#eaf1fa;border:1px solid #d7e3f1;
+      max-width:260px;
+    }
+    .af-pill > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .af-pill button{
+      flex:0 0 auto;display:grid;place-items:center;
+      width:16px;height:16px;padding:0;border:0;border-radius:50%;
+      cursor:pointer;background:rgba(18,43,69,.10);color:#2c4664;
+      font:inherit;font-size:12px;line-height:1;font-weight:700;
+      transition:background .15s ease;
+    }
+    .af-pill button:hover{background:rgba(18,43,69,.24)}
+    .af-clear{
+      padding:5px 11px;border-radius:999px;cursor:pointer;
+      font:inherit;font-size:.75rem;font-weight:700;
+      color:var(--red);background:#fdeceb;border:1px solid #f8d5d2;
+      transition:background .15s ease;
+    }
+    .af-clear:hover{background:#fbdcd9}
 
     .hint{
       display:flex;align-items:flex-start;gap:8px;
@@ -403,6 +519,7 @@
       .count{width:100%;text-align:left;padding:0}
       .controls{grid-template-columns:1fr}
       .chip{font-size:.78rem;padding:8px 12px}
+      .ms-options{max-height:190px}
     }
 
     /* ============ PRINT ============ */
@@ -436,7 +553,7 @@
   <main class="page">
 
     <!-- ============ SETUP ============ -->
-    <section class="panel no-print">
+    <section class="panel panel--menu no-print">
 
       <div class="panel-head">
         <div>
@@ -489,9 +606,7 @@
           </button>
         </div>
 
-        <p class="format-note" id="formatNote">
-          <strong>Report cards</strong> create a polished academic card for each selected student, ready to print or share.
-        </p>
+        <p class="format-note" id="formatNote"></p>
 
         <select id="printType" class="sr-only" tabindex="-1" aria-hidden="true" onchange="changePrintType()">
           <option value="intake">Intake sheets</option>
@@ -510,7 +625,7 @@
       <div class="panel-head">
         <div>
           <h2>Filters</h2>
-          <p>Narrow the list before selecting records.</p>
+          <p>Tick as many values as you need — the list narrows as you go.</p>
         </div>
         <button class="btn btn-ghost btn-sm" type="button" onclick="resetFilters()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.4-4.4L3 8"/></svg>
@@ -520,39 +635,54 @@
 
       <div class="panel-body">
         <div class="controls">
-          <div class="field">
-            <label for="statusFilter">Status</label>
-            <select id="statusFilter" onchange="renderRows()"><option value="">All statuses</option></select>
+
+          <div class="field" id="field-status">
+            <label id="lbl-status">Status</label>
+            <div class="ms" id="ms-status"></div>
           </div>
-          <div class="field">
-            <label for="gradeFilter">Grade / level</label>
-            <select id="gradeFilter" onchange="renderRows()"><option value="">All grades</option></select>
+
+          <div class="field" id="field-grade">
+            <label id="lbl-grade">Grade / level</label>
+            <div class="ms" id="ms-grade"></div>
           </div>
-          <div class="field">
-            <label for="barangayFilter">Barangay</label>
-            <select id="barangayFilter" onchange="renderRows()"><option value="">All barangays</option></select>
+
+          <div class="field" id="field-barangay">
+            <label id="lbl-barangay">Barangay</label>
+            <div class="ms" id="ms-barangay"></div>
           </div>
-          <div class="field">
-            <label for="schoolFilter">School</label>
-            <select id="schoolFilter" onchange="renderRows()"><option value="">All schools</option></select>
+
+          <div class="field" id="field-school">
+            <label id="lbl-school">School</label>
+            <div class="ms" id="ms-school"></div>
           </div>
+
+          <div class="field" id="field-program" style="display:none">
+            <label id="lbl-program">Program / strand</label>
+            <div class="ms" id="ms-program"></div>
+          </div>
+
           <div class="field">
             <label for="schoolYearFilter">School year</label>
             <input id="schoolYearFilter" placeholder="e.g. 2026-2027" oninput="renderRows()">
           </div>
+
           <div class="field">
             <label for="searchFilter">Search</label>
             <input id="searchFilter" placeholder="Name, family, reference..." oninput="renderRows()">
           </div>
+
           <div class="field" id="eventFilterWrap" style="display:none">
             <label for="eventFilter">Formation event</label>
             <select id="eventFilter" onchange="renderRows()"><option value="">Select event</option></select>
           </div>
+
         </div>
+
+        <div class="active-filters" id="activeFilters" hidden></div>
 
         <p class="hint">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span>Combine grade and barangay to print a specific group. Records are automatically sorted by grade, barangay, then name.</span>
+          <span>Tick several grades at once (for example <strong>Grade 4</strong> + <strong>Grade 5</strong>), or pick a single school / program to print just that group — e.g. all IT students. Records are sorted by grade, barangay, then name.</span>
         </p>
       </div>
     </section>
@@ -604,9 +734,33 @@
     const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {} };
     let visibleRecords = [];
 
+    /* ---------- Multi-select filter configuration ---------- */
+    const FILTER_META = {
+      status:   { all: 'All statuses',  search: 'Search statuses…'  },
+      grade:    { all: 'All grades',    search: 'Search grades…'    },
+      barangay: { all: 'All barangays', search: 'Search barangays…' },
+      school:   { all: 'All schools',   search: 'Search schools…'   },
+      program:  { all: 'All programs',  search: 'Search programs…'  }
+    };
+    const msState = {};
+
+    const TYPE_NOTES = {
+      intake:        '<strong>Intake sheets</strong> print one full page per case, with signature lines for the social worker and supervisor.',
+      assessment:    '<strong>Staff assessments</strong> print one page per assessment with notes and sign-off lines.',
+      applications:  '<strong>Applications</strong> print as a compact register table — handy for endorsement meetings.',
+      formation:     '<strong>Formation attendance</strong> prints a sign-in sheet for the chosen event. Pick the event under filters.',
+      directory:     '<strong>Scholar directory</strong> prints a single roster table of all accepted scholars.',
+      'report-card': '<strong>Report cards</strong> create a polished academic card for each selected student, ready to print or share.',
+      families:      '<strong>Beneficiary families</strong> print as a family register with guardian and benefit details.',
+      alerts:        '<strong>Formation alerts</strong> list scholars flagged for follow-up, together with the reason.',
+      announcements: '<strong>Announcements</strong> print as a register with subject, target, and full message text.',
+      financials:    '<strong>Financial registers</strong> combine contributions and disbursements into one ledger table.'
+    };
+
     document.addEventListener('DOMContentLoaded', async () => {
       const session = MefamAPI.getSession();
       if (!session || session.type !== 'staff') { window.location.href = 'index.html'; return; }
+      initMultiSelects();
       bindTypeChips();
       await loadPrintData();
     });
@@ -629,6 +783,168 @@
         chip.classList.toggle('is-active', active);
         chip.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
+    }
+
+    /* =========================================================
+       MULTI-SELECT CHECKLIST COMPONENT
+       ========================================================= */
+    function initMultiSelects() {
+      Object.keys(FILTER_META).forEach(key => {
+        msState[key] = { options: [], selected: new Set(), query: '' };
+
+        const host = document.getElementById('ms-' + key);
+        if (!host) return;
+
+        host.innerHTML = `
+          <button type="button" class="ms-trigger" aria-haspopup="true" aria-expanded="false" aria-labelledby="lbl-${key}">
+            <span class="ms-value is-placeholder"></span>
+            <span class="ms-badge" hidden></span>
+            <svg class="ms-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ms-panel" hidden>
+            <input type="search" class="ms-search" placeholder="${escapeHtml(FILTER_META[key].search)}" aria-label="${escapeHtml(FILTER_META[key].search)}">
+            <div class="ms-actions">
+              <button type="button" data-ms-action="all">Select all</button>
+              <button type="button" data-ms-action="none">Clear</button>
+            </div>
+            <div class="ms-options" role="group" aria-label="${escapeHtml(FILTER_META[key].all)}"></div>
+            <p class="ms-empty" hidden>No matching options</p>
+          </div>`;
+
+        const trigger = host.querySelector('.ms-trigger');
+        const panel = host.querySelector('.ms-panel');
+        const search = host.querySelector('.ms-search');
+        const list = host.querySelector('.ms-options');
+
+        trigger.addEventListener('click', () => {
+          const wasOpen = trigger.getAttribute('aria-expanded') === 'true';
+          closeAllMultiSelects();
+          if (wasOpen) return;
+          trigger.setAttribute('aria-expanded', 'true');
+          panel.hidden = false;
+          search.value = '';
+          msState[key].query = '';
+          renderMultiSelectOptions(key);
+          search.focus();
+        });
+
+        search.addEventListener('input', () => {
+          msState[key].query = search.value;
+          renderMultiSelectOptions(key);
+        });
+
+        list.addEventListener('change', event => {
+          const box = event.target.closest('input[type="checkbox"]');
+          if (!box) return;
+          if (box.checked) msState[key].selected.add(box.value);
+          else msState[key].selected.delete(box.value);
+          updateMultiSelectLabel(key);
+          renderRows();
+        });
+
+        host.querySelector('[data-ms-action="all"]').addEventListener('click', () => {
+          visibleMultiSelectOptions(key).forEach(value => msState[key].selected.add(value));
+          renderMultiSelectOptions(key);
+          updateMultiSelectLabel(key);
+          renderRows();
+        });
+
+        host.querySelector('[data-ms-action="none"]').addEventListener('click', () => {
+          msState[key].selected.clear();
+          renderMultiSelectOptions(key);
+          updateMultiSelectLabel(key);
+          renderRows();
+        });
+      });
+
+      document.addEventListener('click', event => {
+        if (!event.target.closest('.ms')) closeAllMultiSelects();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeAllMultiSelects();
+      });
+
+      document.getElementById('activeFilters').addEventListener('click', event => {
+        if (event.target.closest('[data-clear-all]')) { resetFilters(); return; }
+        const btn = event.target.closest('[data-remove-key]');
+        if (!btn) return;
+        const key = btn.dataset.removeKey;
+        const value = btn.dataset.removeValue;
+        if (key === 'schoolYearFilter' || key === 'searchFilter') {
+          document.getElementById(key).value = '';
+        } else if (msState[key]) {
+          msState[key].selected.delete(value);
+          updateMultiSelectLabel(key);
+          renderMultiSelectOptions(key);
+        }
+        renderRows();
+      });
+    }
+
+    function closeAllMultiSelects() {
+      document.querySelectorAll('.ms-trigger[aria-expanded="true"]').forEach(trigger => {
+        trigger.setAttribute('aria-expanded', 'false');
+        const panel = trigger.parentElement.querySelector('.ms-panel');
+        if (panel) panel.hidden = true;
+      });
+    }
+
+    function visibleMultiSelectOptions(key) {
+      const st = msState[key];
+      const q = st.query.trim().toLowerCase();
+      if (!q) return st.options;
+      return st.options.filter(value => value.toLowerCase().includes(q));
+    }
+
+    function renderMultiSelectOptions(key) {
+      const st = msState[key];
+      const host = document.getElementById('ms-' + key);
+      if (!host) return;
+      const list = host.querySelector('.ms-options');
+      const empty = host.querySelector('.ms-empty');
+      const visible = visibleMultiSelectOptions(key);
+
+      empty.hidden = visible.length > 0;
+      list.innerHTML = visible.map(value => {
+        const checked = st.selected.has(value) ? ' checked' : '';
+        return `<label class="ms-option"><input type="checkbox" value="${escapeHtml(value)}"${checked}><span>${escapeHtml(value)}</span></label>`;
+      }).join('');
+    }
+
+    function updateMultiSelectLabel(key) {
+      const st = msState[key];
+      const host = document.getElementById('ms-' + key);
+      if (!host) return;
+      const valueEl = host.querySelector('.ms-value');
+      const badge = host.querySelector('.ms-badge');
+      const count = st.selected.size;
+
+      if (!count) {
+        valueEl.textContent = FILTER_META[key].all;
+        valueEl.classList.add('is-placeholder');
+        badge.hidden = true;
+        return;
+      }
+
+      const values = [...st.selected];
+      valueEl.textContent = values.length <= 2 ? values.join(' + ') : `${values.length} selected`;
+      valueEl.classList.remove('is-placeholder');
+      badge.hidden = false;
+      badge.textContent = values.length;
+    }
+
+    function setMultiSelectOptions(key, values) {
+      const st = msState[key];
+      if (!st) return;
+      st.options = values;
+      // drop anything that no longer exists in this report type
+      [...st.selected].forEach(value => { if (!values.includes(value)) st.selected.delete(value); });
+
+      const field = document.getElementById('field-' + key);
+      if (field) field.style.display = values.length ? '' : 'none';
+
+      renderMultiSelectOptions(key);
+      updateMultiSelectLabel(key);
     }
 
     /* ---------- Data loading ---------- */
@@ -663,59 +979,107 @@
     function changePrintType() {
       const type = document.getElementById('printType').value;
       document.getElementById('eventFilterWrap').style.display = type === 'formation' ? '' : 'none';
+      document.getElementById('formatNote').innerHTML = TYPE_NOTES[type] || '';
       syncTypeChips();
       populateFilters();
       renderRows();
     }
 
     function resetFilters() {
-      ['statusFilter', 'gradeFilter', 'barangayFilter', 'schoolFilter', 'schoolYearFilter', 'searchFilter'].forEach(id => {
+      Object.keys(FILTER_META).forEach(key => {
+        msState[key].selected.clear();
+        msState[key].query = '';
+        updateMultiSelectLabel(key);
+        renderMultiSelectOptions(key);
+      });
+      ['schoolYearFilter', 'searchFilter'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      closeAllMultiSelects();
       renderRows();
     }
 
-    /* ---------- Filters ---------- */
-    function unique(values) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })); }
-    function fillSelect(id, values, allLabel) {
-      const select = document.getElementById(id);
-      const previous = select.value;
-      select.innerHTML = `<option value="">${allLabel}</option>` + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
-      if (values.includes(previous)) select.value = previous;
+    /* ---------- Field extractors ---------- */
+    function text(value) { return String(value || '').trim().toLowerCase(); }
+    function appFor(item) { return state.apps.find(app => String(app.id) === String(item.linkedAppId || item.appId || item.app_id || item.id)); }
+
+    function gradeOf(item) {
+      const app = appFor(item) || item;
+      return item.grade || item.gradeLevel || item.grade_level || item.nextGrade || app.grade || app.gradeLevel || app.grade_level || '';
     }
+    function schoolOf(item) {
+      const app = appFor(item) || item;
+      return item.school || item.schoolName || item.school_name || app.school || app.schoolName || app.school_name || '';
+    }
+    function programOf(item) {
+      const app = appFor(item) || item;
+      return item.program || item.strand || item.course || item.track || item.department ||
+             app.program || app.strand || app.course || app.track || app.department || '';
+    }
+
+    /* ---------- Filters ---------- */
+    function unique(values) {
+      return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    }
+
     function populateFilters() {
       const type = document.getElementById('printType').value;
       const apps = state.apps;
-      const source = type === 'intake' ? state.intakes : type === 'assessment' ? state.assessments : type === 'families' ? state.families : apps;
-      fillSelect('statusFilter', unique(source.map(item => item.status || item.finalResult)), 'All statuses');
-      fillSelect('gradeFilter', unique(source.map(item => item.grade || item.gradeLevel || item.grade_level || item.nextGrade)), 'All grades');
-      fillSelect('barangayFilter', unique(source.map(item => item.barangay)), 'All barangays');
-      fillSelect('schoolFilter', unique(source.map(item => item.school || item.schoolName || appFor(item)?.school)), 'All schools');
+      const source = type === 'intake' ? state.intakes
+        : type === 'assessment' ? state.assessments
+        : type === 'families' ? state.families
+        : apps;
+
+      setMultiSelectOptions('status', unique(source.map(item => item.status || item.finalResult)));
+      setMultiSelectOptions('grade', unique(source.map(gradeOf)));
+      setMultiSelectOptions('barangay', unique(source.map(item => item.barangay || appFor(item)?.barangay)));
+      setMultiSelectOptions('school', unique(source.map(schoolOf)));
+      setMultiSelectOptions('program', unique(source.map(programOf)));
+
       const eventSelect = document.getElementById('eventFilter');
       const previousEvent = eventSelect.value;
-      eventSelect.innerHTML = '<option value="">Select event</option>' + state.events.map(event => `<option value="${Number(event.id)}">${escapeHtml(event.name || 'Formation event')} - ${escapeHtml(event.date || '')}</option>`).join('');
+      eventSelect.innerHTML = '<option value="">Select event</option>' + state.events.map(event =>
+        `<option value="${Number(event.id)}">${escapeHtml(event.name || 'Formation event')} — ${escapeHtml(event.date || '')}</option>`
+      ).join('');
       if (state.events.some(event => String(event.id) === previousEvent)) eventSelect.value = previousEvent;
       else if (state.events.length) eventSelect.value = String(state.events[0].id);
     }
 
-    function text(value) { return String(value || '').trim().toLowerCase(); }
-    function appFor(item) { return state.apps.find(app => String(app.id) === String(item.linkedAppId || item.appId || item.app_id || item.id)); }
+    /* Any ticked value counts as a match (OR inside a filter, AND across filters) */
+    function filterPass(key, value) {
+      const st = msState[key];
+      if (!st || st.selected.size === 0) return true;
+      const needle = text(value);
+      for (const selected of st.selected) {
+        if (text(selected) === needle) return true;
+      }
+      return false;
+    }
+
     function matches(item) {
       const app = appFor(item) || item;
       const status = text(item.status || item.finalResult);
-      const grade = text(item.grade || item.gradeLevel || item.grade_level || item.nextGrade || app?.grade);
-      const barangay = text(item.barangay || app?.barangay);
-      const year = text(item.schoolYear || item.school_year || item.sy || app?.sy);
-      const selectedStatus = text(document.getElementById('statusFilter').value);
-      const selectedGrade = text(document.getElementById('gradeFilter').value);
-      const selectedBarangay = text(document.getElementById('barangayFilter').value);
-      const selectedSchool = text(document.getElementById('schoolFilter').value);
+      const grade = text(gradeOf(item));
+      const barangay = text(item.barangay || app.barangay);
+      const school = text(schoolOf(item));
+      const program = text(programOf(item));
+      const year = text(item.schoolYear || item.school_year || item.sy || app.sy || app.schoolYear || app.school_year);
       const selectedYear = text(document.getElementById('schoolYearFilter').value);
       const search = text(document.getElementById('searchFilter').value);
-      const school = text(item.school || item.schoolName || app?.school);
-      const searchable = text([recordName(item), item.familySurname, item.student, item.reference, item.referenceNumber, item.caseNo, item.source, item.subject, item.message, item.gradeSummary].filter(Boolean).join(' '));
-      return (!selectedStatus || status === selectedStatus) && (!selectedGrade || grade === selectedGrade) && (!selectedBarangay || barangay === selectedBarangay) && (!selectedSchool || school === selectedSchool) && (!selectedYear || year.includes(selectedYear)) && (!search || searchable.includes(search));
+      const searchable = text([
+        recordName(item), item.familySurname, item.student, item.reference, item.referenceNumber,
+        item.caseNo, item.source, item.subject, item.message, item.gradeSummary, item.school, item.barangay
+      ].filter(Boolean).join(' '));
+
+      return filterPass('status', status)
+        && filterPass('grade', grade)
+        && filterPass('barangay', barangay)
+        && filterPass('school', school)
+        && filterPass('program', program)
+        && (!selectedYear || year.includes(selectedYear))
+        && (!search || searchable.includes(search));
     }
 
     /* ---------- Record source ---------- */
@@ -735,7 +1099,13 @@
     }
 
     function recordName(item) { return item.name || item.student || item.familySurname || item.scholarName || item.scholar_name || appFor(item)?.name || 'Unnamed record'; }
-    function sortRecords(records) { return records.sort((a, b) => `${a.grade || a.gradeLevel || appFor(a)?.grade || ''} ${a.barangay || appFor(a)?.barangay || ''} ${recordName(a)}`.localeCompare(`${b.grade || b.gradeLevel || appFor(b)?.grade || ''} ${b.barangay || appFor(b)?.barangay || ''} ${recordName(b)}`, undefined, { numeric: true })); }
+    function sortRecords(records) {
+      return records.sort((a, b) => {
+        const keyA = `${gradeOf(a)} ${a.barangay || appFor(a)?.barangay || ''} ${recordName(a)}`;
+        const keyB = `${gradeOf(b)} ${b.barangay || appFor(b)?.barangay || ''} ${recordName(b)}`;
+        return keyA.localeCompare(keyB, undefined, { numeric: true });
+      });
+    }
 
     /* ---------- Cell helpers ---------- */
     const DASH = '—';
@@ -762,6 +1132,35 @@
       return { html: `<span class="cell-name">₱${n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` };
     }
     function cell(c) { return (c && typeof c === 'object') ? c.html : escapeHtml(c); }
+
+    /* ---------- Active filter pills ---------- */
+    function renderActiveFilters() {
+      const host = document.getElementById('activeFilters');
+      const pills = [];
+
+      Object.keys(FILTER_META).forEach(key => {
+        [...msState[key].selected].forEach(value => pills.push({ key, value, label: value }));
+      });
+
+      const year = document.getElementById('schoolYearFilter').value.trim();
+      if (year) pills.push({ key: 'schoolYearFilter', value: year, label: `SY: ${year}` });
+
+      const search = document.getElementById('searchFilter').value.trim();
+      if (search) pills.push({ key: 'searchFilter', value: search, label: `Search: “${search}”` });
+
+      if (!pills.length) {
+        host.hidden = true;
+        host.innerHTML = '';
+        return;
+      }
+
+      host.hidden = false;
+      host.innerHTML = pills.map(pill => `
+        <span class="af-pill"><span>${escapeHtml(pill.label)}</span>
+          <button type="button" data-remove-key="${escapeHtml(pill.key)}" data-remove-value="${escapeHtml(pill.value)}" aria-label="Remove ${escapeHtml(pill.label)} filter">&times;</button>
+        </span>`).join('')
+        + `<button type="button" class="af-clear" data-clear-all>Clear all filters</button>`;
+    }
 
     /* ---------- Render ---------- */
     function renderRows() {
@@ -820,12 +1219,13 @@
           <div class="empty-inner">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
             <p>No records match these filters.</p>
-            <span>Try clearing a filter or choosing a different report type.</span>
+            <span>Try unticking a filter or choosing a different report type.</span>
           </div>
         </td></tr>`;
       }
 
       document.getElementById('resultCount').textContent = visibleRecords.length;
+      renderActiveFilters();
       updateSelectionCount();
     }
 
