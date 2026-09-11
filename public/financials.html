@@ -582,7 +582,7 @@
         <div class="card-head">
           <h2 class="card-title">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-            Disburse Stipend
+            Mass Disburse
           </h2>
         </div>
 
@@ -662,7 +662,7 @@
         <div class="card-foot">
           <button class="btn btn-gold btn-full" id="disburseBtn" type="button" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            <span id="disburseBtnLabel">Release Stipends</span>
+            <span id="disburseBtnLabel">Mass Disburse</span>
           </button>
         </div>
       </div>
@@ -1282,8 +1282,8 @@
         const n = state.selectedScholars.size;
         disburseBtn.disabled = n === 0;
         disburseBtnLabel.textContent = n === 0
-          ? 'Release Stipends'
-          : `Release ${n} Stipend${n === 1 ? '' : 's'}`;
+          ? 'Mass Disburse'
+          : `Mass Disburse (${n})`;
       }
 
       // Amount input changes
