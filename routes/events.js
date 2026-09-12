@@ -84,14 +84,91 @@ function buildMonitoringAlerts(applications = [], grades = [], absences = []) {
 
 function buildMonitoringSummary(applications = [], grades = [], absences = []) {
   const alerts = buildMonitoringAlerts(applications, grades, absences);
-  const activeScholars = (applications || []).filter(app => app?.status === 'Accepted').length;
+  const accepted = (applications || []).filter(app => app?.status === 'Accepted').length;
+  const interviewing = (applications || []).filter(app => app?.status === 'Interviewing').length;
+  const pending = (applications || []).filter(app => app?.status === 'Pending Review').length;
+  const rejected = (applications || []).filter(app => app?.status === 'Rejected').length;
+  const graduated = (applications || []).filter(app => app?.status === 'Graduated').length;
+  const activeScholars = accepted;
   return {
     activeScholars,
+    totalApplicants: (applications || []).length,
+    accepted,
+    interviewing,
+    pending,
+    rejected,
+    graduated,
     atRisk: alerts.length,
     alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
     alerts,
   };
 }
+
+function getAuditUser(req) {
+  const user = req?.user || {};
+  return user.name || user.username || user.role || 'System';
+}
+
+function getAuditLogsMemory() {
+  if (!Array.isArray(db.data.audit_logs)) db.data.audit_logs = [];
+  return db.data.audit_logs;
+}
+
+function appendAuditLog(action, payload = {}, req = null) {
+  const user = payload.user || getAuditUser(req);
+  const entry = {
+    id: Date.now() + Math.round(Math.random() * 10000),
+    action: String(action || 'system-activity'),
+    user,
+    applicant: payload.applicant || payload.appId || null,
+    details: payload.details || '',
+    timestamp: new Date().toISOString(),
+  };
+
+  if (db.isPostgres) {
+    try {
+      db.prepare('INSERT INTO audit_logs (action, user_name, applicant, details, timestamp) VALUES (?, ?, ?, ?, ?)')
+        .run(entry.action, entry.user, entry.applicant || '', entry.details, entry.timestamp);
+    } catch (error) {
+      // Postgres schema can be added later; keep the in-memory fallback available.
+    }
+  } else {
+    const logs = getAuditLogsMemory();
+    logs.unshift(entry);
+    if (typeof db.save === 'function') db.save();
+  }
+
+  return entry;
+}
+
+function listAuditLogs() {
+  if (db.isPostgres) {
+    try {
+      return db.prepare('SELECT * FROM audit_logs ORDER BY timestamp DESC, id DESC').all();
+    } catch (_error) {
+      return [];
+    }
+  }
+  return getAuditLogsMemory().slice(0, 50);
+}
+
+router.get('/audit-logs', requireAuth, async (req, res) => {
+  res.json(listAuditLogs());
+});
+
+router.post('/audit-logs', requireAuth, async (req, res) => {
+  const action = String(req.body?.action || '').trim();
+  if (!action) return res.status(400).json({ error: 'action is required.' });
+
+  const payload = req.body?.payload || req.body || {};
+  const log = appendAuditLog(action, {
+    user: payload.user || getAuditUser(req),
+    applicant: payload.applicant || payload.appId || null,
+    details: payload.details || payload.message || '',
+  }, req);
+
+  res.json({ ok: true, log });
+});
 
 // List events with attendance counts
 router.get('/', requireAuth, async (req, res) => {
@@ -111,6 +188,13 @@ router.post('/', requireAuth, requireRole('director','program','edu'), async (re
   const info = await db.prepare(
     'INSERT INTO events (name, date, venue, max_att) VALUES (?, ?, ?, ?)'
   ).run(b.name, b.date || '', b.venue || '', b.max || 75);
+
+  appendAuditLog('event-created', {
+    user: getAuditUser(req),
+    applicant: null,
+    details: `Created event ${b.name || 'Untitled'} (${b.date || 'no date'}).`,
+  }, req);
+
   res.json({ ok: true, id: info.lastInsertRowid });
 });
 
@@ -125,6 +209,7 @@ router.post('/:id/start', requireAuth, requireRole('director','program','edu'), 
   if (db.isPostgres) {
     await db.prepare('UPDATE event_sessions SET active = 0 WHERE event_id = ?').run(eventId);
     const info = await db.prepare('INSERT INTO event_sessions (event_id, code, started_at, expires_at, active) VALUES (?, ?, ?, ?, ?)').run(eventId, code, startedAt, expiresAt, 1);
+    appendAuditLog('event-session-started', { user: getAuditUser(req), details: `Started attendance session for event #${eventId}.` }, req);
     return res.json({ ok: true, session: { id: info.lastInsertRowid, code, expiresAt, startedAt, active: true } });
   }
   const sessions = ensureTable('event_sessions');
@@ -143,6 +228,8 @@ router.post('/:id/start', requireAuth, requireRole('director','program','edu'), 
   sessions.push(newSession);
   if (typeof db.save === 'function') db.save();
 
+  appendAuditLog('event-session-started', { user: getAuditUser(req), details: `Started attendance session for event #${eventId}.` }, req);
+
   res.json({ ok: true, session: { id: newSession.id, code, expiresAt, startedAt, active: true } });
 });
 
@@ -155,6 +242,7 @@ router.post('/:id/end', requireAuth, requireRole('director','program','edu'), as
     if (Number(row.event_id) === eventId) row.active = 0;
   });
   if (typeof db.save === 'function') db.save();
+  appendAuditLog('event-session-ended', { user: getAuditUser(req), details: `Ended attendance session for event #${eventId}.` }, req);
   res.json({ ok: true });
 });
 
@@ -193,6 +281,7 @@ router.post('/:id/checkin', async (req, res) => {
 
   if (db.isPostgres) {
     await db.prepare('INSERT INTO event_checkins (event_id, session_id, student_id, student_name, checked_in_at) VALUES (?, ?, ?, ?, ?)').run(eventId, session.id, studentId || name, name, now.toISOString());
+    appendAuditLog('event-checkin', { user: getAuditUser(req), details: `Recorded check-in for ${name || studentId || 'student'} at event #${eventId}.` }, req);
     return res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.' });
   }
   const checkins = ensureTable('event_checkins');
@@ -205,6 +294,7 @@ router.post('/:id/checkin', async (req, res) => {
     checked_in_at: now.toISOString(),
   });
   if (typeof db.save === 'function') db.save();
+  appendAuditLog('event-checkin', { user: getAuditUser(req), details: `Recorded check-in for ${name || studentId || 'student'} at event #${eventId}.` }, req);
   res.json({ ok: true, duplicate: false, message: 'Attendance recorded successfully.' });
 });
 
@@ -257,6 +347,38 @@ router.get('/:id/checkins', requireAuth, requireRole('director','program','edu')
   res.json(list);
 });
 
+router.get('/:id/attendance/report', requireAuth, async (req, res) => {
+  const eventId = parseInt(req.params.id);
+  const range = String(req.query.range || 'all').toLowerCase();
+  const event = await db.prepare('SELECT * FROM events WHERE id = ?').get(eventId);
+  const attendees = await db.prepare('SELECT * FROM event_attendance WHERE event_id = ?').all(eventId);
+  const checkins = await db.prepare('SELECT * FROM event_checkins WHERE event_id = ?').all(eventId);
+  const appIds = new Set(attendees.map(row => String(row.app_id)));
+  const scholarIds = new Set(checkins.map(row => String(row.student_id || row.app_id || row.id)));
+  const apps = await db.prepare('SELECT id, name, reference_number, grade, barangay FROM applications').all();
+  const filteredApps = apps.filter(app => appIds.has(String(app.id)) || scholarIds.has(String(app.id)) || scholarIds.has(String(app.reference_number || '')) || scholarIds.has(String(app.name || '')));
+
+  const selected = filteredApps.map(app => ({
+    id: app.id,
+    name: app.name,
+    reference: app.reference_number || app.referenceNumber || '',
+    grade: app.grade || '',
+    barangay: app.barangay || '',
+    status: appIds.has(String(app.id)) || scholarIds.has(String(app.id)) ? 'Present' : 'Absent',
+  }));
+
+  res.json({
+    ok: true,
+    event,
+    range,
+    count: selected.length,
+    rows: selected,
+    printedAt: new Date().toISOString(),
+    printable: true,
+    eventId,
+  });
+});
+
 // Delete event
 router.delete('/:id', requireAuth, requireRole('director','program'), async (req, res) => {
   await db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
@@ -274,6 +396,7 @@ router.put('/:id/attendance', requireAuth, async (req, res) => {
   await del.run(eventId);
   for (const id of appIds) await ins.run(eventId, id);
   if (typeof db.save === 'function') db.save();
+  appendAuditLog('event-attendance-saved', { user: getAuditUser(req), details: `Saved attendance roster for event #${eventId}; ${appIds.length} scholar(s).` }, req);
   res.json({ ok: true });
 });
 
@@ -341,6 +464,31 @@ router.delete('/alert-students/:id', requireAuth, async (req, res) => {
   db.data.student_alerts = alerts.filter(item => Number(item.id) !== id);
   if (typeof db.save === 'function') db.save();
   res.json({ ok: true, deletedId: id });
+});
+
+router.get('/summary-report', requireAuth, async (req, res) => {
+  const applications = await db.prepare('SELECT id, name, status FROM applications').all();
+  const grades = await db.prepare('SELECT * FROM grades').all();
+  const absences = await db.prepare('SELECT * FROM absences').all();
+  res.json(buildMonitoringSummary(applications, grades, absences));
+});
+
+router.get('/:id/attendance/report', requireAuth, async (req, res) => {
+  const eventId = Number(req.params.id);
+  const event = await db.prepare('SELECT * FROM events WHERE id = ?').get(eventId);
+  const attendees = await db.prepare('SELECT * FROM event_attendance WHERE event_id = ?').all(eventId);
+  const checkins = await db.prepare('SELECT * FROM event_checkins WHERE event_id = ?').all(eventId);
+  const appIds = new Set([...attendees.map(row => String(row.app_id)), ...checkins.map(row => String(row.student_id || row.app_id || row.id))]);
+  const memberRows = await db.prepare('SELECT id, name, status FROM applications').all();
+  const roster = memberRows.filter(row => appIds.has(String(row.id)) || attendees.some(a => String(a.app_id) === String(row.id)) || checkins.some(c => String(c.student_id) === String(row.id)));
+  res.json({
+    ok: true,
+    event,
+    totalAttendees: roster.length,
+    roster,
+    attendees: attendees.map(row => ({ event_id: row.event_id, app_id: row.app_id })),
+    checkins,
+  });
 });
 
 // Grades

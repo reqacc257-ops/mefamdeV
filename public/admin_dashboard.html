@@ -624,6 +624,21 @@
         .profile-photo-upload .photo-upload-button:hover { background: #e2e5ea; }
         .profile-photo-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         .profile-photo-name { color: var(--text-muted); font-size: .75rem; }
+        .photo-crop-modal .modal { width: min(760px, calc(100% - 24px)); }
+        .photo-crop-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, .9fr); gap: 18px; align-items: stretch; }
+        .photo-crop-stage { background: linear-gradient(135deg, #f8fafc, #eaf2ff); border: 1px solid var(--border); border-radius: 18px; display: flex; align-items: center; justify-content: center; min-height: 420px; padding: 18px; }
+        .photo-crop-stage canvas { display: block; width: 100%; max-width: 520px; height: auto; border-radius: 16px; background: #fff; box-shadow: 0 16px 26px rgba(15, 23, 42, .12); }
+        .photo-crop-controls { display: flex; flex-direction: column; gap: 14px; }
+        .photo-crop-controls .field { margin: 0; }
+        .photo-crop-controls label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+        .photo-crop-controls input[type="range"] { width: 100%; }
+        .photo-crop-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .photo-crop-actions .btn { flex: 1 1 110px; }
+        .audit-log-list { display: grid; gap: 8px; max-height: 240px; overflow: auto; }
+        .audit-log-entry { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; background: rgba(59, 130, 246, 0.04); border: 1px solid rgba(59, 130, 246, 0.08); }
+        .audit-log-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 999px; background: var(--navy); color: #fff; font-size: .72rem; font-weight: 800; }
+        .audit-log-entry strong { display: block; font-size: .8rem; }
+        .audit-log-entry small { color: var(--text-muted); font-size: .72rem; }
         .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
         .mekong-badge { display: inline-block; color: #176b38; background: #d9f2e2; border-radius: 10px; padding: 2px 8px; font-size: .68rem; font-weight: 700; line-height: 1.2; }
         .mekong-application-row td { background: #f0fbf4; }
@@ -1732,6 +1747,11 @@
                         <div id="trustedDeviceStatus" style="font-size:.82rem; color:var(--text-muted); margin-bottom:10px;">Trust this device for 24 hours after Director verification.</div>
                         <button class="btn btn-ghost btn-sm" onclick="forgetTrustedDevice()">Forget this browser</button>
                     </div>
+                </div>
+                <div class="card" style="border-left:4px solid var(--teal);">
+                    <div class="card-title">Audit Logs</div>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">User actions and system changes are logged with the actor and timestamp for review.</p>
+                    <div id="recentAuditLogs" class="audit-log-list"></div>
                 </div>
                 <div class="card" id="operations-settings-card" style="display:none;">
                     <div class="card-title">Operations</div>
@@ -3002,6 +3022,7 @@ async function loadAllData(showLoading = false) {
         if (absenteeEl) absenteeEl.innerText = absentee;
 
         renderMonitoring(monitoring);
+        renderAuditLogs();
         renderRecentApps(appList);
         renderFullAppsTable(appList);
         renderPipeline(appList);
@@ -3419,31 +3440,121 @@ function resizeProfileImage(file) {
     });
 }
 
+let photoCropState = { file: null, image: null, zoom: 1.1, x: 50, y: 50 };
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+function resetPhotoCropControls() {
+    document.getElementById('photoCropZoom').value = '1.1';
+    document.getElementById('photoCropX').value = '50';
+    document.getElementById('photoCropY').value = '50';
+    photoCropState.zoom = 1.1;
+    photoCropState.x = 50;
+    photoCropState.y = 50;
+    handlePhotoCropControls();
+}
+
+function handlePhotoCropControls() {
+    const zoom = Number(document.getElementById('photoCropZoom')?.value || 1.1);
+    const x = Number(document.getElementById('photoCropX')?.value || 50);
+    const y = Number(document.getElementById('photoCropY')?.value || 50);
+    photoCropState.zoom = zoom;
+    photoCropState.x = x;
+    photoCropState.y = y;
+
+    const canvas = document.getElementById('photoCropCanvas');
+    const ctx = canvas?.getContext('2d');
+    const image = photoCropState.image;
+    if (!canvas || !ctx || !image) return;
+
+    const cropSize = Math.min(image.width, image.height) / photoCropState.zoom;
+    const sourceX = clamp(((image.width - cropSize) * photoCropState.x) / 100, 0, Math.max(0, image.width - cropSize));
+    const sourceY = clamp(((image.height - cropSize) * photoCropState.y) / 100, 0, Math.max(0, image.height - cropSize));
+
+    canvas.width = 540;
+    canvas.height = 540;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#edf2f7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
+}
+
+function openPhotoCropModal(file) {
+    if (!file || !file.type.startsWith('image/')) {
+        toast('Please choose an image file.', 'warning');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+            photoCropState = { file, image, zoom: 1.1, x: 50, y: 50 };
+            resetPhotoCropControls();
+            document.getElementById('photoCropModal')?.classList.add('open');
+        };
+        image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function closePhotoCropModal() {
+    photoCropState = { file: null, image: null, zoom: 1.1, x: 50, y: 50 };
+    document.getElementById('photoCropModal')?.classList.remove('open');
+    const input = document.getElementById('pd-photo-input');
+    if (input) input.value = '';
+}
+
+async function applyCroppedProfilePhoto() {
+    if (!currentProfileId || !photoCropState.image) {
+        toast('Please select a profile photo first.', 'warning');
+        return;
+    }
+
+    try {
+        const canvas = document.getElementById('photoCropCanvas');
+        if (!canvas) throw new Error('Crop preview is unavailable.');
+        const profilePhoto = canvas.toDataURL('image/jpeg', 0.82);
+        const result = await MefamAPI.updateApplication(currentProfileId, { profile_photo: profilePhoto });
+        if (!result?.ok) throw new Error(result?.error || 'Unable to save profile photo');
+
+        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+        const app = apps.find(item => String(item.id) === String(currentProfileId));
+        if (app) app.profilePhoto = profilePhoto;
+        localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
+
+        const avatar = document.getElementById('pd-avatar');
+        avatar.innerHTML = `<img src="${profilePhoto}" alt="${escapeHtml(app?.name || 'Student')} profile photo">`;
+        document.getElementById('pd-photo-name').innerText = photoCropState.file?.name || 'Picture uploaded';
+
+        appendAuditLog('Profile photo updated', {
+            user: getCurrentAuditUser(),
+            applicant: app?.name || currentProfileId,
+            details: 'Saved a cropped profile picture.'
+        });
+
+        closePhotoCropModal();
+        toast('Profile picture saved.', 'success');
+    } catch (error) {
+        console.error('Failed to upload profile photo:', error);
+        toast('Unable to save the profile image right now.', 'error');
+        closePhotoCropModal();
+    }
+}
+
 async function uploadProfilePhoto(event) {
     const file = event.target.files?.[0];
     if (!file || currentProfileId === null) return;
+
     if (!file.type.startsWith('image/')) {
         toast('Please choose an image file.', 'warning');
         event.target.value = '';
         return;
     }
-    try {
-        const profilePhoto = await resizeProfileImage(file);
-        const result = await MefamAPI.updateApplication(currentProfileId, { profile_photo: profilePhoto });
-        if (!result?.ok) throw new Error(result?.error || 'Unable to save profile photo');
-        const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-        const app = apps.find(item => String(item.id) === String(currentProfileId));
-        if (app) app.profilePhoto = profilePhoto;
-        localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
-        const avatar = document.getElementById('pd-avatar');
-        avatar.innerHTML = `<img src="${profilePhoto}" alt="${escapeHtml(app?.name || 'Student')} profile photo">`;
-        document.getElementById('pd-photo-name').innerText = file.name || 'Picture uploaded';
-        toast('Profile picture saved.', 'success');
-    } catch (error) {
-        console.error('Failed to upload profile photo:', error);
-        toast('Unable to save the profile image right now.', 'error');
-        event.target.value = '';
-    }
+
+    openPhotoCropModal(file);
 }
 
 async function saveMekongStatus() {
@@ -4335,6 +4446,75 @@ function loadSystemSettings() {
     }
 }
 
+function getCurrentAuditUser() {
+    try {
+        const session = MefamAPI.getSession ? MefamAPI.getSession() : null;
+        if (session?.name) return session.name;
+        if (session?.username) return session.username;
+        return 'System';
+    } catch (error) {
+        return 'System';
+    }
+}
+
+function appendAuditLog(action, payload = {}) {
+    const entry = {
+        id: Date.now() + Math.random(),
+        action,
+        user: payload.user || getCurrentAuditUser(),
+        applicant: payload.applicant || null,
+        details: payload.details || '',
+        timestamp: new Date().toISOString()
+    };
+
+    const existing = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
+        } catch (error) {
+            return [];
+        }
+    })();
+
+    const logs = [entry, ...Array.isArray(existing) ? existing : []].slice(0, 50);
+    localStorage.setItem('mefamdev_audit_logs', JSON.stringify(logs));
+    renderAuditLogs();
+}
+
+function renderAuditLogs() {
+    const container = document.getElementById('recentAuditLogs');
+    if (!container) return;
+
+    const logs = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
+        } catch (error) {
+            return [];
+        }
+    })();
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
+        return;
+    }
+
+    container.innerHTML = logs.slice(0, 8).map((entry, index) => {
+        const stamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Unknown time';
+        const user = entry.user || 'System';
+        const applicant = entry.applicant ? `<div style="font-size:.72rem; color:var(--text-muted);">Applicant: ${escapeHtml(String(entry.applicant))}</div>` : '';
+        return `
+            <div class="audit-log-entry">
+                <span class="audit-log-badge">${index + 1}</span>
+                <div>
+                    <strong>${escapeHtml(entry.action || 'System activity')}</strong>
+                    ${applicant}
+                    ${entry.details ? `<small>${escapeHtml(entry.details)}</small>` : ''}
+                </div>
+                <small>${escapeHtml(user)}<br>${escapeHtml(stamp)}</small>
+            </div>
+        `;
+    }).join('');
+}
+
 function saveSystemSettings() {
     const settings = {
         orgName: document.getElementById('settingOrgName').value.trim(),
@@ -4348,6 +4528,10 @@ function saveSystemSettings() {
         autoRefresh: document.getElementById('settingAutoRefresh').checked
     };
     localStorage.setItem('mefamdev_system_settings', JSON.stringify(settings));
+    appendAuditLog('System settings updated', {
+        user: getCurrentAuditUser(),
+        details: 'Saved the system configuration values.'
+    });
     const status = document.getElementById('settingsSaveStatus');
     status.textContent = 'Settings saved';
     setTimeout(() => { status.textContent = ''; }, 2500);

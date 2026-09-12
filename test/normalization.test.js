@@ -8,6 +8,8 @@ const {
   normalizePeriod,
   validateGrade,
   buildGradeEntryCandidate,
+  getGradeRangeCategory,
+  isGradeAcceptable,
 } = require('../lib/normalization');
 
 function resetNormalizationFixtures() {
@@ -100,6 +102,18 @@ test('validateGrade supports valid, out-of-range, and unparseable grades', () =>
   const unparseable = validateGrade('N/A', 60, 100);
   assert.equal(unparseable.valid, false);
   assert.ok(unparseable.reason.includes('unparseable'));
+});
+
+test('grade range categorization and acceptability helper stay consistent with the shared validator', () => {
+  const acceptable = getGradeRangeCategory('88%', 60, 100);
+  assert.equal(acceptable.category, 'acceptable');
+  assert.equal(acceptable.acceptable, true);
+  assert.equal(isGradeAcceptable('88%', 60, 100), true);
+
+  const outOfRange = getGradeRangeCategory('110', 60, 100);
+  assert.equal(outOfRange.acceptable, false);
+  assert.equal(outOfRange.category, 'out-of-range');
+  assert.equal(isGradeAcceptable('110', 60, 100), false);
 });
 
 test('buildGradeEntryCandidate resolves a clean candidate and flags single-field failures', async () => {

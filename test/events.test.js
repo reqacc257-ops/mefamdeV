@@ -127,3 +127,43 @@ test('staff can trigger reapplication renewal and attendance alerts can be saved
     server.close();
   }
 });
+
+test('event audit logs can be persisted and listed through the events router', async () => {
+  db.data.audit_logs = [];
+
+  const auditApp = express();
+  auditApp.use(express.json());
+  auditApp.use((req, res, next) => {
+    req.user = { type: 'staff', role: 'program', appId: 1 };
+    next();
+  });
+  auditApp.use('/api/events', eventsRouter);
+
+  const auditServer = auditApp.listen(0);
+  await new Promise(resolve => auditServer.once('listening', resolve));
+
+  try {
+    const { port } = auditServer.address();
+    const authHeader = { Authorization: `Bearer ${jwt.sign({ type: 'staff', role: 'program' }, 'local-development-only-jwt-secret')}` };
+
+    const postRes = await fetch(`http://127.0.0.1:${port}/api/events/audit-logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ action: 'summary-report-opened', payload: { user: 'Staff Test', details: 'Monitoring summary report opened.' } })
+    });
+    const postBody = await postRes.json();
+    assert.equal(postRes.status, 200);
+    assert.equal(postBody.ok, true);
+    assert.equal(postBody.log.action, 'summary-report-opened');
+
+    const getRes = await fetch(`http://127.0.0.1:${port}/api/events/audit-logs`, {
+      headers: authHeader,
+    });
+    const logs = await getRes.json();
+    assert.equal(getRes.status, 200);
+    assert.equal(Array.isArray(logs), true);
+    assert.equal(logs.length >= 1, true);
+  } finally {
+    auditServer.close();
+  }
+});

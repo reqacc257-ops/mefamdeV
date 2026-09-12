@@ -39,6 +39,8 @@ function createFreshData() {
     subject_aliases: [],
     grading_periods: [],
     grade_entries: [],
+    audit_logs: [],
+    student_alerts: [],
   };
 }
 
