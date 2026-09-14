@@ -634,11 +634,84 @@
         .photo-crop-controls input[type="range"] { width: 100%; }
         .photo-crop-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .photo-crop-actions .btn { flex: 1 1 110px; }
-        .audit-log-list { display: grid; gap: 8px; max-height: 240px; overflow: auto; }
-        .audit-log-entry { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; background: rgba(59, 130, 246, 0.04); border: 1px solid rgba(59, 130, 246, 0.08); }
-        .audit-log-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 999px; background: var(--navy); color: #fff; font-size: .72rem; font-weight: 800; }
-        .audit-log-entry strong { display: block; font-size: .8rem; }
-        .audit-log-entry small { color: var(--text-muted); font-size: .72rem; }
+        /* Audit trail — reference styling */
+        .actor-line {
+            display: inline-flex; align-items: center; gap: 7px; font-size: .76rem; color: var(--text-muted);
+            line-height: 1.3; text-decoration: none; cursor: help; white-space: nowrap;
+        }
+        .actor-line .al-icon { flex: 0 0 auto; font-size: .72rem; line-height: 1; }
+        .actor-line .al-name { font-weight: 700; color: #41556b; }
+        .actor-line .al-dot { color: #c5ced9; }
+        .actor-line .al-when { white-space: nowrap; }
+        .actor-line--check .al-icon { color: var(--green); }
+        .actor-line--cross .al-icon { color: var(--red); }
+        .actor-line--flag .al-icon { color: var(--orange); }
+        .actor-line--plus .al-icon { color: var(--teal); }
+        .actor-line--minus .al-icon { color: var(--red); }
+        .actor-line--neutral .al-icon { color: var(--text-muted); }
+
+        .actor-row {
+            display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f4f9;
+        }
+        .actor-row:last-child { border-bottom: none; }
+        .actor-row .ar-avatar {
+            width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center;
+            color: #fff; font-weight: 700; font-size: .76rem; letter-spacing: .02em;
+        }
+        .actor-row .ar-body { flex: 1; min-width: 0; }
+        .actor-row .ar-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+        .actor-row .ar-name { font-weight: 700; color: var(--navy); font-size: .88rem; }
+        .actor-row .ar-role {
+            display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .66rem; font-weight: 700;
+            letter-spacing: .04em; text-transform: uppercase;
+        }
+        .actor-row .ar-action { font-size: .85rem; color: var(--text); line-height: 1.5; }
+        .actor-row .ar-action strong { color: var(--navy); }
+        .actor-row .ar-when { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
+        .actor-row .ar-diff {
+            margin-top: 7px; padding: 8px 11px; border-radius: 8px; background: #f8fafc; border: 1px solid #eef2f7;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: .72rem; line-height: 1.6; color: #4b5563;
+        }
+        .actor-row .ar-diff .d-before { color: var(--red); }
+        .actor-row .ar-diff .d-after { color: var(--green); }
+        .actor-row .ar-diff .d-arrow { color: #94a3b8; margin: 0 4px; }
+
+        .role-director { background: linear-gradient(135deg, #1a2e44, #2d4a6a); }
+        .role-edu { background: linear-gradient(135deg, #0f7a68, #1abc9c); }
+        .role-finance { background: linear-gradient(135deg, #b7770d, #f5a623); }
+        .role-program { background: linear-gradient(135deg, #6b3a8c, #8e44ad); }
+        .role-system { background: linear-gradient(135deg, #64748b, #94a3b8); }
+        .role-applicant { background: linear-gradient(135deg, #2471a3, #3498db); }
+        .pill-director { background: #eef2f7; color: #1a2e44; }
+        .pill-edu { background: #e5f6f2; color: #0f7a68; }
+        .pill-finance { background: #fef5e4; color: #8a5b00; }
+        .pill-program { background: #f3e9fb; color: #6b3a8c; }
+        .pill-system { background: #eef1f5; color: #5b6b7f; }
+        .pill-applicant { background: #eaf3ff; color: #2471a3; }
+
+        .audit-log-list { display: grid; gap: 8px; max-height: 260px; overflow: auto; padding-right: 4px; }
+        .audit-log-entry {
+            display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: start; padding: 12px 8px;
+            border-bottom: 1px solid #f0f4f9; background: linear-gradient(180deg, rgba(59, 130, 246, 0.03), rgba(148, 163, 184, 0.02));
+            border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.08);
+        }
+        .audit-log-entry:last-child { border-bottom: none; }
+        .audit-log-badge {
+            display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
+            background: var(--navy); color: #fff; font-size: .78rem; font-weight: 800;
+        }
+        .audit-log-entry .ae-body { min-width: 0; }
+        .audit-log-entry .ae-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+        .audit-log-entry .ae-actor { font-weight: 700; color: var(--navy); font-size: .88rem; }
+        .audit-log-entry .ae-role { padding: 1px 8px; border-radius: 999px; font-size: .64rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+        .audit-log-entry .ae-verb { font-size: .85rem; color: var(--text); }
+        .audit-log-entry .ae-verb strong { color: var(--navy); }
+        .audit-log-entry .ae-entity { margin-top: 3px; font-size: .78rem; color: var(--text-muted); }
+        .audit-log-entry .ae-ref {
+            font-size: .72rem; padding: 2px 7px; border-radius: 5px; background: #eef2f7; color: #41556b; border: 1px solid #e3e9f1;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+        .audit-log-entry .ae-when { font-size: .73rem; color: var(--text-muted); white-space: nowrap; text-align: right; }
         .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
         .mekong-badge { display: inline-block; color: #176b38; background: #d9f2e2; border-radius: 10px; padding: 2px 8px; font-size: .68rem; font-weight: 700; line-height: 1.2; }
         .mekong-application-row td { background: #f0fbf4; }
@@ -4650,19 +4723,47 @@ function renderAuditLogs() {
         return;
     }
 
+    const normalizeEntry = (entry = {}) => {
+        const actorName = entry.actorName || entry.actor || entry.user || 'System';
+        const actorRole = entry.actorRole || entry.role || 'System';
+        const roleKey = String(actorRole).toLowerCase();
+        const roleClass = roleKey.includes('director') ? 'role-director' : roleKey.includes('finance') ? 'role-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'role-edu' : roleKey.includes('program') ? 'role-program' : roleKey.includes('applicant') ? 'role-applicant' : 'role-system';
+        const pillClass = roleKey.includes('director') ? 'pill-director' : roleKey.includes('finance') ? 'pill-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'pill-edu' : roleKey.includes('program') ? 'pill-program' : roleKey.includes('applicant') ? 'pill-applicant' : 'pill-system';
+        const initials = String(actorName).split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0, 2) || 'SY';
+        const action = entry.action || 'system.activity';
+        const label = action.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'System activity';
+        const timestamp = entry.timestamp ? new Date(entry.timestamp) : new Date();
+        const timeLabel = Number.isNaN(timestamp.getTime()) ? 'just now' : timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const displayDate = Number.isNaN(timestamp.getTime()) ? 'Today' : timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const intent = /accept|approved|approve|save|add|created|release|received|approved|submit|updated|edit|flag|reject|decline/.test(String(action).toLowerCase()) ? 'check' : /reject|decline|flag|missing|error/.test(String(action).toLowerCase()) ? 'cross' : /release|remove|minus|pay|disburse/.test(String(action).toLowerCase()) ? 'minus' : /add|create|received|record|contribution|submit|approved/.test(String(action).toLowerCase()) ? 'plus' : 'neutral';
+        const entityText = entry.entityLabel || entry.applicant || entry.entityType || 'System record';
+        const note = entry.note || entry.details || '';
+        return { actorName, actorRole, roleClass, pillClass, initials, label, timestamp, timeLabel, displayDate, intent, entityText, note };
+    };
+
     container.innerHTML = logs.slice(0, 8).map((entry, index) => {
-        const stamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Unknown time';
-        const user = entry.user || 'System';
-        const applicant = entry.applicant ? `<div style="font-size:.72rem; color:var(--text-muted);">Applicant: ${escapeHtml(String(entry.applicant))}</div>` : '';
+        const item = normalizeEntry(entry);
+        const actionText = item.label.length > 0 ? item.label : 'System activity';
+        const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
+        const roleText = escapeHtml(item.actorRole || 'System');
+        const actorLine = `<span class="actor-line actor-line--${item.intent}" title="${escapeHtml(item.actorName)} (${item.actorRole}) • ${escapeHtml(actionText)} • ${escapeHtml(item.displayDate + ' ' + item.timeLabel)}"><span class="al-icon">${item.intent === 'check' ? '✓' : item.intent === 'cross' ? '✕' : item.intent === 'flag' ? '⚠' : item.intent === 'plus' ? '＋' : item.intent === 'minus' ? '−' : '•'}</span><span class="al-name">${escapeHtml(item.actorName)}</span><span class="al-dot">·</span><span class="al-when">${escapeHtml(item.displayDate)}</span></span>`;
+
         return `
             <div class="audit-log-entry">
                 <span class="audit-log-badge">${index + 1}</span>
-                <div>
-                    <strong>${escapeHtml(entry.action || 'System activity')}</strong>
-                    ${applicant}
-                    ${entry.details ? `<small>${escapeHtml(entry.details)}</small>` : ''}
+                <div class="ae-body">
+                    <div class="ae-top">
+                        <span class="ae-actor">${escapeHtml(item.actorName)}</span>
+                        <span class="ae-role ${item.pillClass}">${roleText}</span>
+                    </div>
+                    <div class="ae-verb">${escapeHtml(actionText)}${item.entityText ? ` <strong>${escapeHtml(item.entityText)}</strong>` : ''}</div>
+                    ${withEntity}
+                    <div style="margin-top:8px;">${actorLine}</div>
                 </div>
-                <small>${escapeHtml(user)}<br>${escapeHtml(stamp)}</small>
+                <div class="ae-when">
+                    <div>${escapeHtml(item.displayDate)}</div>
+                    <div>${escapeHtml(item.timeLabel)}</div>
+                </div>
             </div>
         `;
     }).join('');
