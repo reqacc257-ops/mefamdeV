@@ -16,6 +16,28 @@ const defaultApiBase = window.location.protocol === 'file:'
   ? 'https://mefamdev.onrender.com/api'
   : '/api';
 const API_BASE = (configuredApiBase || defaultApiBase).replace(/\/$/, '');
+
+function hydratePreviewSessionFromStorage() {
+  try {
+    const previewRaw = localStorage.getItem('mefamdev_preview_session');
+    if (!previewRaw) return false;
+    const previewSession = JSON.parse(previewRaw);
+    const normalizedSession = previewSession && typeof previewSession === 'object' ? previewSession : null;
+    if (!normalizedSession || !normalizedSession.type || !normalizedSession.appId) return false;
+    if (normalizedSession.token) sessionStorage.setItem('mefamdev_token', normalizedSession.token);
+    const existingSession = sessionStorage.getItem('mefamdev_session');
+    if (!existingSession || JSON.parse(existingSession).appId !== normalizedSession.appId) {
+      sessionStorage.setItem('mefamdev_session', JSON.stringify({
+        ...normalizedSession,
+        loginTime: Number(normalizedSession.loginTime || Date.now())
+      }));
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function storeSession(user, token) {
   localStorage.removeItem('mefamdev_preview_session');
   sessionStorage.setItem('mefamdev_token', token);
@@ -114,7 +136,12 @@ const MefamAPI = {
   getSession() {
     try {
       const raw = sessionStorage.getItem('mefamdev_session');
-      if (!raw) return null;
+      if (!raw) {
+        hydratePreviewSessionFromStorage();
+        const rehydrated = sessionStorage.getItem('mefamdev_session');
+        if (!rehydrated) return null;
+        return JSON.parse(rehydrated);
+      }
       const session = JSON.parse(raw);
       const loginTime = Number(session?.loginTime || 0);
       if (!session || typeof session !== 'object') {
@@ -374,14 +401,9 @@ const MefamAPI = {
     const sessionToken = sessionStorage.getItem('mefamdev_token') || '';
     if (sessionToken) return sessionToken;
 
-    try {
-      const previewRaw = localStorage.getItem('mefamdev_preview_session');
-      if (previewRaw) {
-        const previewSession = JSON.parse(previewRaw);
-        if (previewSession?.token) return previewSession.token;
-      }
-    } catch (e) {
-      // Ignore malformed preview session data.
+    if (hydratePreviewSessionFromStorage()) {
+      const hydratedToken = sessionStorage.getItem('mefamdev_token') || '';
+      if (hydratedToken) return hydratedToken;
     }
 
     return '';
