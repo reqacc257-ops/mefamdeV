@@ -819,13 +819,22 @@ function toggleScholar(appId){
 /* ══════════════════════════════════════════════════════════
    GRADE MODAL — always scoped to a specific school year
 ══════════════════════════════════════════════════════════ */
-function renderGradePeriodOptions(){
+function renderGradePeriodOptions(periodCount = null){
   const sel = document.getElementById('gradeQuarter');
   const label = document.getElementById('gradeQuarterLabel');
   if(!sel) return;
+
   let count = 3;
-  try{count = Number(localStorage.getItem('mefamdev_grading_periods'))===4?4:3}catch(e){}
-  const word = count===4?'Quarter':'Term';
+  try {
+    const stored = Number(localStorage.getItem('mefamdev_grading_periods'));
+    if(stored === 4) count = 4;
+  } catch(e) {}
+
+  if([3,4].includes(Number(periodCount))) {
+    count = Number(periodCount);
+  }
+
+  const word = count === 4 ? 'Quarter' : 'Term';
   if(label) label.textContent = word;
   sel.innerHTML = `<option value="">-- Select ${word} --</option>`+
     Array.from({length:count},(_,i)=>`<option value="${i+1}">${word} ${i+1}</option>`).join('');
@@ -866,14 +875,25 @@ function renderSchoolYearOptions(selectedSchoolYear='') {
 function openGradeModal(appId, name, schoolYear, gradeRowId, subject = '', quarter = '', gradeValue = ''){
   const scholar = acceptedScholars.find(a=>Number(a.id)===Number(appId));
   const context = scholar ? `${scholar.grade||''} · ${scholar.school||''}` : '';
-  document.getElementById('gradeModalTitle').innerText = gradeRowId?'Edit Pending Grade':`Update Grades`;
-  document.getElementById('gradeModalName').innerText = name||'Scholar';
-  document.getElementById('gradeModalContext').innerText = `${context}${schoolYear?` — school year ${schoolYear}`:''}`;
+  document.getElementById('gradeModalTitle').innerText = gradeRowId ? 'Edit Pending Grade' : 'Update Grades';
+  document.getElementById('gradeModalName').innerText = name || 'Scholar';
+  document.getElementById('gradeModalContext').innerText = `${context}${schoolYear ? ` — school year ${schoolYear}` : ''}`;
   document.getElementById('gradeModalAppId').value = appId;
-  renderSchoolYearOptions(schoolYear||'');
+
+  let chartPeriodCount = null;
+  if (gradeRowId) {
+    const row = pendingQuarterGrades.find(item => Number(item.id) === Number(gradeRowId));
+    if (row && Number(row.quarter) >= 4) chartPeriodCount = 4;
+    else if (row && Number(row.quarter) <= 3) chartPeriodCount = 3;
+  }
+  if (!chartPeriodCount && [3, 4].includes(Number(quarter))) {
+    chartPeriodCount = Number(quarter) >= 4 ? 4 : 3;
+  }
+
+  renderSchoolYearOptions(schoolYear || '');
   document.getElementById('gradeSubject').value = subject || '';
   document.getElementById('gradeInput').value = gradeValue || '';
-  renderGradePeriodOptions();
+  renderGradePeriodOptions(chartPeriodCount);
   const qEl = document.getElementById('gradeQuarter');
   if(qEl && quarter) qEl.value = String(quarter);
   else if(qEl) qEl.value = '';
@@ -890,10 +910,11 @@ async function openEditQuarterModal(id){
     const row = rows.find(r=>Number(r.id)===Number(id));
     if(!row) return alert('Grade row not found');
     const scholar = acceptedScholars.find(a=>Number(a.id)===Number(row.student_id));
-    openGradeModal(Number(row.student_id), scholar?.name||`Applicant #${row.student_id}`, row.school_year||'', Number(row.id));
-    // prefill after open
+    const quarterlyCount = Number(row.quarter) >= 4 ? 4 : 3;
+    openGradeModal(Number(row.student_id), scholar?.name||`Applicant #${row.student_id}`, row.school_year||'', Number(row.id), '', String(row.quarter || ''), row.grade_value || '');
+    renderGradePeriodOptions(quarterlyCount);
     document.getElementById('gradeSubject').value = row.subject || '';
-    document.getElementById('gradeQuarter').value = String(row.quarter||'');
+    document.getElementById('gradeQuarter').value = String(row.quarter || '');
     document.getElementById('gradeInput').value = row.grade_value || '';
   }catch(e){console.error(e);alert('Unable to open edit modal.')}
 }
