@@ -299,6 +299,37 @@
     }
     .cb-empty[hidden]{display:none}
 
+    /* ---------- EVENT OPTION (richer display) ---------- */
+    .cb-options--tall{max-height:230px}
+    .cb-option-event{align-items:flex-start;padding:8px 10px;gap:10px}
+    .cb-option-event input[type=checkbox]{margin-top:3px;flex:0 0 auto}
+    .ev-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto}
+    .ev-name{
+      font-weight:600;font-size:.82rem;color:#16283c;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .ev-date{
+      display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+      font-size:.72rem;color:var(--muted);
+    }
+    .ev-date svg{
+      width:11px;height:11px;flex:0 0 auto;
+      stroke:currentColor;fill:none;stroke-width:2.2;
+      stroke-linecap:round;stroke-linejoin:round;
+    }
+    .ev-venue{
+      font-size:.7rem;color:#93a3b6;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .ev-badge{
+      display:inline-block;padding:1px 7px;border-radius:999px;
+      font-size:.6rem;font-weight:700;letter-spacing:.03em;
+      text-transform:uppercase;
+    }
+    .ev-badge.upcoming{color:#0f7a4a;background:#e5f6ee}
+    .ev-badge.today{color:#95610a;background:#fff3df}
+    .ev-badge.past{color:#5b6b7f;background:#eef2f7}
+
     /* ---------- ACTIVE FILTER PILLS ---------- */
     .active-filters{
       display:flex;flex-wrap:wrap;gap:7px;align-items:center;
@@ -712,8 +743,8 @@
           </div>
 
           <div class="field" id="eventFilterWrap" style="display:none">
-            <label for="eventFilter">Formation event</label>
-            <select id="eventFilter" onchange="renderRows()"><option value="">Select event</option></select>
+            <label id="lbl-event">Formation event(s)</label>
+            <div class="cb-group" id="ms-event"></div>
           </div>
 
         </div>
@@ -779,7 +810,7 @@
     </section>
   </main>
 
-  <script src="/mefamdev-api.js"></script>
+  <script src="./mefamdev-api.js"></script>
   <script src="/components/report-card.js"></script>
   <script>
     const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {}, auditLogs: [] };
@@ -794,6 +825,8 @@
       program:  { all: 'All programs',  search: 'Search programs…'  }
     };
     const msState = {};
+    const selectedEventIds = new Set();
+    let eventSearchQuery = '';
 
     const TYPE_NOTES = {
       intake:        '<strong>Intake sheets</strong> print one full page per case, with signature lines for the social worker and supervisor.',
@@ -815,6 +848,7 @@
       const session = MefamAPI.getSession();
       if (!session || session.type !== 'staff') { window.location.href = 'index.html'; return; }
       initCheckboxFilters();
+      initEventFilter();
       bindTypeChips();
       await loadPrintData();
     });
@@ -963,6 +997,131 @@
       updateMultiSelectLabel(key);
     }
 
+    /* ---------- Event filter (checkbox list with rich dates) ---------- */
+    function initEventFilter() {
+      const host = document.getElementById('ms-event');
+      if (!host) return;
+
+      host.innerHTML = `
+        <div class="cb-head">
+          <span class="cb-head-label">All formation events</span>
+          <span class="cb-count" hidden></span>
+          <span class="cb-head-actions">
+            <button type="button" data-ev-action="all" title="Select all visible">All</button>
+            <button type="button" data-ev-action="none" title="Clear selection">None</button>
+          </span>
+        </div>
+        <input type="search" class="cb-search" placeholder="Search events by name, venue, or date…" aria-label="Search events">
+        <div class="cb-options cb-options--tall" role="group" aria-label="Formation events"></div>
+        <p class="cb-empty" hidden>No matching events</p>
+      `;
+
+      const search = host.querySelector('.cb-search');
+      const list = host.querySelector('.cb-options');
+
+      search.addEventListener('input', () => {
+        eventSearchQuery = search.value;
+        renderEventOptions();
+      });
+
+      list.addEventListener('change', event => {
+        const box = event.target.closest('input[type="checkbox"]');
+        if (!box) return;
+        if (box.checked) selectedEventIds.add(box.value);
+        else selectedEventIds.delete(box.value);
+        updateEventLabel();
+        renderRows();
+      });
+
+      host.querySelector('[data-ev-action="all"]').addEventListener('click', () => {
+        visibleEvents().forEach(ev => selectedEventIds.add(String(ev.id)));
+        renderEventOptions();
+        updateEventLabel();
+        renderRows();
+      });
+
+      host.querySelector('[data-ev-action="none"]').addEventListener('click', () => {
+        selectedEventIds.clear();
+        renderEventOptions();
+        updateEventLabel();
+        renderRows();
+      });
+    }
+
+    function visibleEvents() {
+      const q = eventSearchQuery.trim().toLowerCase();
+      if (!q) return state.events;
+      return state.events.filter(ev =>
+        String(ev.name || '').toLowerCase().includes(q) ||
+        String(ev.venue || '').toLowerCase().includes(q) ||
+        String(ev.date || '').toLowerCase().includes(q)
+      );
+    }
+
+    function formatEventDateParts(raw) {
+      const empty = { text: raw || 'No date set', badge: '' };
+      if (!raw) return empty;
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return empty;
+      const text = d.toLocaleDateString('en-PH', {
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+      });
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const cmp = new Date(d); cmp.setHours(0, 0, 0, 0);
+      let badge = '';
+      if (cmp.getTime() === today.getTime()) badge = '<span class="ev-badge today">Today</span>';
+      else if (cmp < today) badge = '<span class="ev-badge past">Past</span>';
+      else badge = '<span class="ev-badge upcoming">Upcoming</span>';
+      return { text, badge };
+    }
+
+    function formatDateLong(raw) {
+      if (!raw) return '-';
+      const d = new Date(raw);
+      if (isNaN(d.getTime())) return raw;
+      return d.toLocaleDateString('en-PH', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+
+    function renderEventOptions() {
+      const host = document.getElementById('ms-event');
+      if (!host) return;
+      const list = host.querySelector('.cb-options');
+      const empty = host.querySelector('.cb-empty');
+      const events = visibleEvents();
+
+      empty.hidden = events.length > 0;
+      list.innerHTML = events.map(ev => {
+        const id = String(ev.id);
+        const checked = selectedEventIds.has(id) ? ' checked' : '';
+        const parts = formatEventDateParts(ev.date);
+        const icon = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+        return `<label class="cb-option cb-option-event">
+          <input type="checkbox" value="${escapeHtml(id)}"${checked}>
+          <span class="ev-info">
+            <span class="ev-name">${escapeHtml(ev.name || 'Formation event')}</span>
+            <span class="ev-date">${icon}<span>${escapeHtml(parts.text)}</span>${parts.badge}</span>
+            ${ev.venue ? `<span class="ev-venue">📍 ${escapeHtml(ev.venue)}</span>` : ''}
+          </span>
+        </label>`;
+      }).join('');
+    }
+
+    function updateEventLabel() {
+      const host = document.getElementById('ms-event');
+      if (!host) return;
+      const badge = host.querySelector('.cb-count');
+      if (!badge) return;
+      const n = selectedEventIds.size;
+      badge.hidden = n === 0;
+      badge.textContent = n ? String(n) : '';
+    }
+
+    function getSelectedEvents() {
+      return state.events.filter(ev => selectedEventIds.has(String(ev.id)));
+    }
+
     /* ---------- Data loading ---------- */
     async function loadPrintData() {
       const loading = document.getElementById('loading');
@@ -1021,9 +1180,15 @@
 
     function changePrintType() {
       const type = document.getElementById('printType').value;
-      document.getElementById('eventFilterWrap').style.display = type === 'formation' || type === 'attendance' ? '' : 'none';
+      const needsEvent = type === 'formation' || type === 'attendance';
+      document.getElementById('eventFilterWrap').style.display = needsEvent ? '' : 'none';
       document.getElementById('formatNote').innerHTML = TYPE_NOTES[type] || '';
-      document.getElementById('modeBanner').classList.toggle('is-visible', type === 'formation' || type === 'attendance');
+      document.getElementById('modeBanner').classList.toggle('is-visible', needsEvent);
+
+      if (needsEvent && selectedEventIds.size === 0 && state.events.length) {
+        selectedEventIds.add(String(state.events[0].id));
+      }
+
       syncTypeChips();
       populateFilters();
       renderRows();
@@ -1084,13 +1249,11 @@
       setMultiSelectOptions('school', unique(source.map(schoolOf)));
       setMultiSelectOptions('program', unique(source.map(programOf)));
 
-      const eventSelect = document.getElementById('eventFilter');
-      const previousEvent = eventSelect.value;
-      eventSelect.innerHTML = '<option value="">Select event</option>' + state.events.map(event =>
-        `<option value="${Number(event.id)}">${escapeHtml(event.name || 'Formation event')} — ${escapeHtml(event.date || '')}</option>`
-      ).join('');
-      if (state.events.some(event => String(event.id) === previousEvent)) eventSelect.value = previousEvent;
-      else if (state.events.length) eventSelect.value = String(state.events[0].id);
+      [...selectedEventIds].forEach(id => {
+        if (!state.events.some(ev => String(ev.id) === id)) selectedEventIds.delete(id);
+      });
+      renderEventOptions();
+      updateEventLabel();
     }
 
     /* Any ticked value counts as a match (OR inside a filter, AND across filters) */
@@ -1214,8 +1377,7 @@
       const type = document.getElementById('printType').value;
       let records = currentRecords().filter(matches);
       if (type === 'formation' || type === 'attendance') {
-        const eventId = document.getElementById('eventFilter').value;
-        if (!eventId) records = [];
+        if (selectedEventIds.size === 0) records = [];
       }
       visibleRecords = sortRecords(records);
 
@@ -1240,9 +1402,10 @@
         body.innerHTML = visibleRecords.map((item, index) => {
           const app = appFor(item) || item;
           const id = `${type}-${item.id || app.id || index}`;
-          const eventId = document.getElementById('eventFilter')?.value || '';
-          const attended = eventId && (state.checkins[eventId] || []).some(check =>
-            text(check.student_name) === text(item.name) || text(check.student_id) === text(item.reference)
+          const attended = [...selectedEventIds].some(eventId =>
+            (state.checkins[eventId] || []).some(check =>
+              text(check.student_name) === text(item.name) || text(check.student_id) === text(item.reference)
+            )
           );
 
           const cells =
@@ -1380,8 +1543,87 @@
     function buildAssessmentPrint(item) { return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Family</span>${escapeHtml(item.familySurname || '-')}</div><div class="field"><span class="label">Student</span>${escapeHtml(item.student || '-')}</div><div class="field"><span class="label">Final result</span>${escapeHtml(item.finalResult || 'Unset')}</div><div class="field"><span class="label">Saved</span>${escapeHtml(item.savedAt || item.assessmentDate || item.created_at || '-')}</div></div><p>${escapeHtml(item.notes || item.assessmentNotes || item.background || 'No assessment notes recorded.')}</p><div class="signature"><div class="line">Staff signature</div><div class="line">Director signature</div></div></section>`; }
     function buildDirectoryPrint(records) { return `<section><h2>Scholar Directory</h2><table><thead><tr><th>No.</th><th>Name</th><th>Student ID</th><th>Grade</th><th>School</th><th>Barangay</th><th>Contact</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildApplicationsPrint(records) { return `<section><h2>Application Register</h2><table><thead><tr><th>Reference</th><th>Name</th><th>Grade</th><th>School</th><th>Barangay</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
-    function buildFormationPrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const attended = new Set((state.events.length && JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}')[event.id] || []).map(String)); const checkins = state.checkins[event.id] || []; checkins.forEach(checkin => { const match = records.find(item => text(item.name) === text(checkin.student_name) || text(item.reference) === text(checkin.student_id)); if (match) attended.add(String(match.id)); }); return `<section><h2>Formation Attendance</h2><div class="summary"><strong>${escapeHtml(event.name || 'Formation event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${attended.has(String(item.id)) ? 'Present' : 'Absent'}</td><td style="height:28px"></td><td></td></tr>`).join('')}</tbody></table></section>`; }
-    function buildAttendancePrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const checkins = state.checkins[event.id] || []; return `<section><h2>Attendance Register</h2><div class="summary"><strong>${escapeHtml(event.name || 'Attendance event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Check-in</th><th>Status</th></tr></thead><tbody>${records.map((item, index) => { const check = checkins.find(c => text(c.student_name) === text(item.name) || text(c.student_id) === text(item.reference)); const present = Boolean(check); return `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${present ? escapeHtml(check.checkin_time || check.date || 'Present') : '—'}</td><td>${present ? 'Present' : 'Absent'}</td></tr>`; }).join('')}</tbody></table></section>`; }
+    function buildFormationPrint(records) {
+      const events = getSelectedEvents();
+      if (!events.length) return '';
+
+      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+
+      return events.map(event => {
+        const attended = new Set((attData[event.id] || []).map(String));
+        const checkins = state.checkins[event.id] || [];
+        checkins.forEach(checkin => {
+          const match = records.find(item =>
+            text(item.name) === text(checkin.student_name) ||
+            text(item.reference) === text(checkin.student_id)
+          );
+          if (match) attended.add(String(match.id));
+        });
+
+        const rows = records.map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.name || '-')}</td>
+            <td>${escapeHtml(item.grade || '-')}</td>
+            <td>${escapeHtml(item.barangay || '-')}</td>
+            <td>${attended.has(String(item.id)) ? 'Present' : 'Absent'}</td>
+            <td style="height:28px"></td>
+            <td></td>
+          </tr>`).join('');
+
+        return `<section class="record">
+          <h2>Formation Attendance</h2>
+          <div class="summary">
+            <strong>${escapeHtml(event.name || 'Formation event')}</strong> ·
+            ${escapeHtml(formatDateLong(event.date))} ·
+            ${escapeHtml(event.venue || '-')}
+          </div>
+          <table>
+            <thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </section>`;
+      }).join('');
+    }
+
+    function buildAttendancePrint(records) {
+      const events = getSelectedEvents();
+      if (!events.length) return '';
+
+      return events.map(event => {
+        const checkins = state.checkins[event.id] || [];
+
+        const rows = records.map((item, index) => {
+          const check = checkins.find(c =>
+            text(c.student_name) === text(item.name) ||
+            text(c.student_id) === text(item.reference)
+          );
+          const present = Boolean(check);
+          return `<tr>
+            <td>${index + 1}</td>
+            <td>${escapeHtml(item.name || '-')}</td>
+            <td>${escapeHtml(item.grade || '-')}</td>
+            <td>${escapeHtml(item.barangay || '-')}</td>
+            <td>${escapeHtml(item.school || '-')}</td>
+            <td>${present ? escapeHtml(check.checkin_time || check.date || 'Present') : '—'}</td>
+            <td>${present ? 'Present' : 'Absent'}</td>
+          </tr>`;
+        }).join('');
+
+        return `<section class="record">
+          <h2>Attendance Register</h2>
+          <div class="summary">
+            <strong>${escapeHtml(event.name || 'Attendance event')}</strong> ·
+            ${escapeHtml(formatDateLong(event.date))} ·
+            ${escapeHtml(event.venue || '-')}
+          </div>
+          <table>
+            <thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Check-in</th><th>Status</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </section>`;
+      }).join('');
+    }
     function buildReportSummaryPrint(records) {
       const bySchool = new Map();
       const byGrade = new Map();
