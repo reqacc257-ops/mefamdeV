@@ -60,7 +60,7 @@
         .badge-green { background: #e9f7ef; color: #1d7a3f; }
         .badge-red { background: #fde8ea; color: #b41623; }
         
-        /* ── FIXED: MODAL POP-UP BEHAVIOR ── */
+        /* ── MODAL POP-UP BEHAVIOR ── */
         .modal-overlay { 
             display: none; 
             position: fixed; 
@@ -126,6 +126,58 @@
             .modal-footer { flex-wrap: wrap; }
             .modal-footer .btn { flex: 1 1 130px; }
         }
+
+        /* ── IMAGE ZOOM LIGHTBOX ── */
+        .zoomable-img {
+            cursor: zoom-in;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .zoomable-img:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+        .image-zoom-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            padding: 20px;
+        }
+        .image-zoom-overlay.open {
+            display: flex;
+        }
+        .image-zoom-overlay img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+        }
+        .image-zoom-overlay .zoom-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: none;
+            font-size: 1.5rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .image-zoom-overlay .zoom-close-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -175,7 +227,14 @@
             <div class="modal-header"><h2>Enter Scholar Grade</h2><button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button></div>
             <div class="modal-body">
                 <p id="gradeModalName" style="font-weight:700; margin-bottom:14px;"></p>
-                <div class="form-group"><label>School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
+                
+                <!-- Updated School Year to Drop Bar with Auto-format -->
+                <div class="form-group">
+                    <label>School Year</label>
+                    <input type="text" id="gradeSchoolYear" list="schoolYearOptions" placeholder="e.g. 2026-2027" autocomplete="off">
+                    <datalist id="schoolYearOptions"></datalist>
+                </div>
+
                 <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button type="button" class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
                 <datalist id="subjectsList"></datalist>
                 <div class="form-group"><label>Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
@@ -198,6 +257,12 @@
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button type="button" class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
         </div>
+    </div>
+
+    <!-- Full-screen Image Zoom Overlay -->
+    <div id="imageZoomOverlay" class="image-zoom-overlay" onclick="closeImageZoom()">
+        <button class="zoom-close-btn" type="button" onclick="closeImageZoom()">✕</button>
+        <img id="imageZoomTarget" src="" alt="Zoomed image" onclick="event.stopPropagation()">
     </div>
 
     <script src="./mefamdev-api.js"></script>
@@ -556,7 +621,78 @@
                 .replace(/'/g, '&#39;');
         }
 
-        window.addEventListener('DOMContentLoaded', loadGradePage);
+        /* ── Auto-format School Year Dropdown ── */
+        function initSchoolYearDropdown() {
+            const datalist = document.getElementById('schoolYearOptions');
+            const input = document.getElementById('gradeSchoolYear');
+            if (!datalist || !input) return;
+
+            // 1. Populate the dropdown with years (3 years back, 5 years forward)
+            const currentYear = new Date().getFullYear();
+            let options = '';
+            for (let i = -3; i <= 5; i++) {
+                const year = currentYear + i;
+                options += `<option value="${year}-${year + 1}"></option>`;
+            }
+            datalist.innerHTML = options;
+
+            // 2. Auto-format when typing (e.g. "2026" -> "2026-2027")
+            input.addEventListener('input', function() {
+                // Strip any non-numeric characters
+                let val = this.value.replace(/[^0-9]/g, '');
+                
+                // If the user types exactly 4 digits, auto-complete the second year
+                if (val.length === 4) {
+                    const startYear = parseInt(val, 10);
+                    if (startYear >= 2000 && startYear <= 2100) {
+                        this.value = `${startYear}-${startYear + 1}`;
+                    }
+                }
+            });
+        }
+
+        /* ── Image Zoom Functionality ── */
+        function openImageZoom(src) {
+            const overlay = document.getElementById('imageZoomOverlay');
+            const target = document.getElementById('imageZoomTarget');
+            if (overlay && target) {
+                target.src = src;
+                overlay.classList.add('open');
+                // Prevent background scrolling while zoomed in
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeImageZoom() {
+            const overlay = document.getElementById('imageZoomOverlay');
+            if (overlay) {
+                overlay.classList.remove('open');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+
+        // Attach zoom click listeners to all images with the 'zoomable-img' class
+        document.addEventListener('DOMContentLoaded', function() {
+            // Use event delegation so it works even if images are loaded dynamically
+            document.body.addEventListener('click', function(e) {
+                if (e.target.classList.contains('zoomable-img')) {
+                    openImageZoom(e.target.src);
+                }
+            });
+        });
+
+        // Allow pressing "Escape" to close the zoom
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageZoom();
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            initSchoolYearDropdown();
+            loadGradePage(); // Your existing load function
+        });
     </script>
     <script src="global-actions.js"></script>
 </body>
