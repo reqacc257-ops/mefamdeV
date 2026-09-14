@@ -391,28 +391,6 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
   </div>
 </div>
 
-<!-- Crop modal -->
-<div class="modal-overlay" id="reportCardCropModal">
-  <div class="modal" style="max-width:780px;">
-    <div class="modal-header">
-      <h2>Crop Uploaded Report Card</h2>
-      <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <canvas id="reportCardCropCanvas" width="540" height="540" style="max-width:100%;border:1px solid var(--border);border-radius:10px;background:#f8fafc;"></canvas>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px;">
-        <label style="margin:0;width:180px;"><span style="display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:6px;">Zoom</span><input type="range" min="1" max="3" step="0.1" value="1.1" id="reportCardCropZoom"></label>
-        <label style="margin:0;width:120px;"><span style="display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:6px;">X</span><input type="range" min="0" max="100" value="50" id="reportCardCropX"></label>
-        <label style="margin:0;width:120px;"><span style="display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:6px;">Y</span><input type="range" min="0" max="100" value="50" id="reportCardCropY"></label>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">Cancel</button>
-      <button type="button" class="btn btn-navy" onclick="applyReportCardCrop()">Use Cropped Image</button>
-    </div>
-  </div>
-</div>
-
 <!-- Manage Subjects modal -->
 <div class="modal-overlay" id="subjectsModal">
   <div class="modal" style="max-width:560px;">
@@ -471,61 +449,6 @@ let expandedScholars = new Set();
 let subjectsCache = [];
 let cropImageSource = '';
 let cropImage = null;
-let reportCardCropState = { image: null, zoom: 1.1, x: 50, y: 50 };
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function bindReportCardCropControls() {
-  const zoomInput = document.getElementById('reportCardCropZoom');
-  const xInput = document.getElementById('reportCardCropX');
-  const yInput = document.getElementById('reportCardCropY');
-  if (!zoomInput || !xInput || !yInput) return;
-  if (zoomInput.dataset.bound === 'true') return;
-
-  const refreshCrop = () => {
-    const zoom = Number(zoomInput.value || 1.1);
-    const x = Number(xInput.value || 50);
-    const y = Number(yInput.value || 50);
-    reportCardCropState.zoom = zoom;
-    reportCardCropState.x = x;
-    reportCardCropState.y = y;
-
-    const canvas = document.getElementById('reportCardCropCanvas');
-    const ctx = canvas?.getContext('2d');
-    const image = reportCardCropState.image;
-    if (!canvas || !ctx || !image) return;
-
-    const cropSize = Math.min(image.width, image.height) / reportCardCropState.zoom;
-    const sourceX = clamp(((image.width - cropSize) * reportCardCropState.x) / 100, 0, Math.max(0, image.width - cropSize));
-    const sourceY = clamp(((image.height - cropSize) * reportCardCropState.y) / 100, 0, Math.max(0, image.height - cropSize));
-
-    canvas.width = 540;
-    canvas.height = 540;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#edf2f7';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
-  };
-
-  zoomInput.addEventListener('input', refreshCrop);
-  xInput.addEventListener('input', refreshCrop);
-  yInput.addEventListener('input', refreshCrop);
-  zoomInput.dataset.bound = 'true';
-}
-
-function resetReportCardCropControls() {
-  const zoomInput = document.getElementById('reportCardCropZoom');
-  const xInput = document.getElementById('reportCardCropX');
-  const yInput = document.getElementById('reportCardCropY');
-  if (zoomInput) zoomInput.value = '1.1';
-  if (xInput) xInput.value = '50';
-  if (yInput) yInput.value = '50';
-  reportCardCropState.zoom = 1.1;
-  reportCardCropState.x = 50;
-  reportCardCropState.y = 50;
-}
 
 const DEFAULT_REVIEW_SUBJECTS = ['Filipino','English','Mathematics','Science','Araling Panlipunan','Technology and Livelihood Education','MAPEH','Edukasyon sa Pagpapakatao'];
 const FALLBACK_SUBJECTS = ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'];
@@ -1168,7 +1091,7 @@ async function openReviewModal(id){
   const periodWord = reviewPeriodCount===4?'Quarter':'Term';
   const periodFields = Array.from({length:reviewPeriodCount},(_,i)=>`q${i+1}`);
   const photo = ext.fileData
-    ? `<img src="${escapeHtml(ext.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)"><div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" type="button" onclick="event.stopPropagation();openCropModalFromReview()">Crop image</button></div>`
+    ? `<img src="${escapeHtml(ext.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)">`
     : '<div class="empty-state">Original image is unavailable.</div>';
 
   content.innerHTML = `
@@ -1279,43 +1202,6 @@ async function saveReview(action){
 /* ══════════════════════════════════════════════════════════
    CROP + IMAGE ZOOM
 ══════════════════════════════════════════════════════════ */
-function openCropModal(src){
-  if(!src) return;
-  bindReportCardCropControls();
-  cropImageSource = src;
-  cropImage = new Image();
-  cropImage.onload = ()=>{
-    const canvas = document.getElementById('reportCardCropCanvas');
-    const ctx = canvas?.getContext('2d');
-    if(!canvas||!ctx) return;
-    reportCardCropState = { image: cropImage, zoom: 1.1, x: 50, y: 50 };
-    resetReportCardCropControls();
-    const cropSize = Math.min(cropImage.width, cropImage.height) / reportCardCropState.zoom;
-    const sourceX = clamp(((cropImage.width - cropSize) * reportCardCropState.x) / 100, 0, Math.max(0, cropImage.width - cropSize));
-    const sourceY = clamp(((cropImage.height - cropSize) * reportCardCropState.y) / 100, 0, Math.max(0, cropImage.height - cropSize));
-    canvas.width = 540;
-    canvas.height = 540;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = '#edf2f7';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
-    openModal('reportCardCropModal');
-  };
-  cropImage.src = src;
-}
-function openCropModalFromReview(){
-  const src = document.querySelector('#reviewExtractionContent .review-photo img')?.src || '';
-  if(src) openCropModal(src);
-}
-function applyReportCardCrop(){
-  const canvas = document.getElementById('reportCardCropCanvas');
-  if(!canvas||!cropImageSource) return;
-  const cropped = canvas.toDataURL('image/jpeg',0.92);
-  const img = document.querySelector('#reviewExtractionContent .review-photo img, #reviewExtractionContent img');
-  if(img) img.src = cropped;
-  cropImageSource = cropped;
-  closeModal('reportCardCropModal');
-}
 let imageZoomScale = 1;
 function updateImageZoom(){
   const img = document.getElementById('zoomedReviewImage');
