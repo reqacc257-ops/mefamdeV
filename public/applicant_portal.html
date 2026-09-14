@@ -1489,6 +1489,12 @@ async function uploadDocumentFromInput(input) {
         return;
     }
 
+    if (!canAddAnotherUnapprovedUpload(appId, docKey, currentItem)) {
+        alert('You can upload up to 5 images before staff approval. Please wait for review.');
+        input.value = '';
+        return;
+    }
+
     const maxSize = 10 * 1024 * 1024; // 10 MB
     const row = input.closest('.doc-upload-row');
     const statusEl = row?.querySelector('.doc-upload-status');
@@ -1579,6 +1585,49 @@ function saveReportCardGallery(appId, docKey, arr) {
     }
 }
 
+function getApplicantUploadHistory(appId, docKey) {
+    if (!appId || !docKey) return [];
+    try {
+        const raw = localStorage.getItem(`mefamdev_doc_upload_history_${appId}_${docKey}`);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveApplicantUploadHistory(appId, docKey, arr) {
+    if (!appId || !docKey) return;
+    try {
+        const trimmed = Array.isArray(arr) ? arr.slice(-5) : [];
+        localStorage.setItem(`mefamdev_doc_upload_history_${appId}_${docKey}`, JSON.stringify(trimmed));
+    } catch (e) {
+        try {
+            const raw = localStorage.getItem(`mefamdev_doc_upload_history_${appId}_${docKey}`);
+            if (raw) {
+                const prior = JSON.parse(raw);
+                const next = Array.isArray(prior) ? prior.slice(-5) : [];
+                localStorage.setItem(`mefamdev_doc_upload_history_${appId}_${docKey}`, JSON.stringify(next));
+            }
+        } catch (ignored) { /* storage unavailable */ }
+    }
+}
+
+function canAddAnotherUnapprovedUpload(appId, docKey, item = null) {
+    if (!appId || !docKey) return true;
+    const currentStatus = String((item && item.status) || '').trim();
+    if (currentStatus === 'Received') return true;
+    const count = getApplicantUploadHistory(appId, docKey).length;
+    return count < 5;
+}
+
+function recordApplicantUploadAttempt(appId, docKey) {
+    if (!appId || !docKey) return;
+    const history = getApplicantUploadHistory(appId, docKey);
+    history.push({ ts: Date.now() });
+    saveApplicantUploadHistory(appId, docKey, history);
+}
+
 async function uploadReportCardPhoto(input) {
     const appId = currentAppId || input.dataset.appId;
     const docKey = input.dataset.docKey;
@@ -1601,6 +1650,18 @@ async function uploadReportCardPhoto(input) {
 
     const maxSize = 10 * 1024 * 1024; // 10 MB
     const statusEl = document.getElementById('rcGalleryStatus');
+
+    if (!canAddAnotherUnapprovedUpload(appId, docKey, currentItem)) {
+        if (statusEl) statusEl.textContent = 'You can upload up to 5 images before staff approval. Please wait for review.';
+        input.value = '';
+        return;
+    }
+
+    if (getReportCardGallery(appId, docKey).length >= 5 && !currentItem?.status?.includes('Received')) {
+        if (statusEl) statusEl.textContent = 'You can keep up to 5 photos before approval. Please wait for staff review.';
+        input.value = '';
+        return;
+    }
 
     if (file.size > maxSize) {
         if (statusEl) statusEl.textContent = 'File is too large. Please select an image under 10MB.';
@@ -2116,6 +2177,8 @@ async function submitApplicantCropUpload() {
             alert(result?.error || 'Upload failed.');
             return;
         }
+
+        recordApplicantUploadAttempt(appId, docKey);
 
         if (applicantCropState.kind === 'reportCard') {
             const compressed = await compressImageDataUrl(dataUrl, 1400, 0.72);
