@@ -351,6 +351,8 @@
         .btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 24px; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: .9rem; font-weight: 700; cursor: pointer; transition: .15s; text-decoration: none; }
         .btn-navy { background: var(--navy); color: #fff; }
         .btn-gold { background: var(--gold); color: var(--navy); }
+        .btn-ghost { background: #f3f6fa; color: var(--navy); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: #eaf0f7; }
 
         @media (max-width: 640px) {
             .cards-grid { grid-template-columns: 1fr; }
@@ -1950,16 +1952,27 @@ function bindApplicantCropControls() {
         const image = applicantCropState.image;
         if (!canvas || !ctx || !image) return;
 
+        const canvasSize = 640;
+        const frameSize = Math.min(canvasSize * 0.76, 420);
+        const margin = (canvasSize - frameSize) / 2;
         const cropSize = Math.min(image.width, image.height) / applicantCropState.zoom;
         const sourceX = applicantClamp(((image.width - cropSize) * applicantCropState.x) / 100, 0, Math.max(0, image.width - cropSize));
         const sourceY = applicantClamp(((image.height - cropSize) * applicantCropState.y) / 100, 0, Math.max(0, image.height - cropSize));
 
-        canvas.width = 640;
-        canvas.height = 640;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
         ctx.fillStyle = '#edf2f7';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.drawImage(image, sourceX, sourceY, cropSize, cropSize, margin, margin, frameSize, frameSize);
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.38)';
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.clearRect(margin, margin, frameSize, frameSize);
+        ctx.strokeStyle = '#f5a623';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(margin, margin, frameSize, frameSize);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 15px "DM Sans", sans-serif';
+        ctx.fillText('Crop area', margin + 14, margin + 26);
     };
 
     zoomInput.addEventListener('input', refresh);
@@ -2002,15 +2015,28 @@ function openApplicantCropModal(dataUrl, appId, docKey, details = {}) {
         const canvas = document.getElementById('applicantCropCanvas');
         const ctx = canvas?.getContext('2d');
         if (!canvas || !ctx) return;
+
+        const canvasSize = 640;
+        const frameSize = Math.min(canvasSize * 0.76, 420);
+        const margin = (canvasSize - frameSize) / 2;
         const cropSize = Math.min(img.width, img.height) / applicantCropState.zoom;
         const sourceX = applicantClamp(((img.width - cropSize) * applicantCropState.x) / 100, 0, Math.max(0, img.width - cropSize));
         const sourceY = applicantClamp(((img.height - cropSize) * applicantCropState.y) / 100, 0, Math.max(0, img.height - cropSize));
-        canvas.width = 640;
-        canvas.height = 640;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
         ctx.fillStyle = '#edf2f7';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.drawImage(img, sourceX, sourceY, cropSize, cropSize, margin, margin, frameSize, frameSize);
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.38)';
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.clearRect(margin, margin, frameSize, frameSize);
+        ctx.strokeStyle = '#f5a623';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(margin, margin, frameSize, frameSize);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 15px "DM Sans", sans-serif';
+        ctx.fillText('Crop area', margin + 14, margin + 26);
 
         const modal = document.getElementById('applicantCropModal');
         if (modal) {
