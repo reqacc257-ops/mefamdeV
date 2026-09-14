@@ -85,7 +85,7 @@
         <header class="topbar">
             <div style="display:flex; align-items:center; gap:12px;"><span class="topbar-title">Student Grade/Card</span></div>
             <div class="topbar-right">
-                <button class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
+                <button type="button" class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
             </div>
         </header>
 
@@ -115,8 +115,8 @@
     <div class="modal-overlay" id="reportCardModal">
         <div class="modal">
             <div class="modal-header">
-                <div style="display:flex; align-items:center; gap:12px;"><h2 style="margin:0;">Report Card</h2><button class="btn btn-sm btn-ghost" onclick="printReportCard()" style="padding:6px 12px;">🖨️ Print</button></div>
-                <button class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
+                <div style="display:flex; align-items:center; gap:12px;"><h2 style="margin:0;">Report Card</h2><button type="button" class="btn btn-sm btn-ghost" onclick="printReportCard()" style="padding:6px 12px;">🖨️ Print</button></div>
+                <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
             </div>
             <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
                 <div id="reportCardContent"></div>
@@ -126,14 +126,14 @@
 
     <div class="modal-overlay" id="subjectsModal">
         <div class="modal" style="max-width:520px;">
-            <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
+            <div class="modal-header"><h2>Manage Subjects</h2><button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
             <div class="modal-body">
                 <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
                 <div style="margin-top:16px;"><label for="gradingPeriodsSelect">Grading format</label><select id="gradingPeriodsSelect" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px;"><option value="3">3 terms (DepEd-style)</option><option value="4">4 quarters (private-school option)</option></select><small style="display:block; margin-top:5px; color:var(--text-muted);">Existing Quarter 4 records are kept and appear when 4 quarters is selected.</small></div>
-                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
+                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button type="button" class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
                 <div style="margin-top:16px;"><ul id="subjectsListView"></ul></div>
             </div>
-            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button type="button" class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
         </div>
     </div>
 
@@ -189,8 +189,8 @@
                     <td>${escapeHtml(app.school || '—')}</td>
                     <td>
                         <div class="action-stack">
-                            <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
-                            <button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                            <button type="button" class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
+                            <button type="button" class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
                         </div>
                     </td>
                 </tr>`;
@@ -274,7 +274,7 @@
             const finalSubjects = subjects.length ? subjects : fallback;
             list.innerHTML = finalSubjects.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
             if (view) {
-                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
+                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button type="button" class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
             }
         }
 

@@ -224,8 +224,8 @@
         <p>Manage formation events, attendance, and follow-up alerts.</p>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-ghost" onclick="window.location.href='admin_dashboard.html'">← Back to Dashboard</button>
-        <button class="btn btn-navy" id="refreshBtn" onclick="refreshFormationData()">↻ Refresh</button>
+        <button type="button" class="btn btn-ghost" onclick="window.location.href='admin_dashboard.html'">← Back to Dashboard</button>
+        <button type="button" class="btn btn-navy" id="refreshBtn" onclick="refreshFormationData()">↻ Refresh</button>
       </div>
     </div>
 
@@ -302,12 +302,12 @@
           <div class="card-title" style="margin:0;" id="evtAttTitle">Attendance — Event</div>
           <p style="font-size:.84rem; color:var(--text-muted); margin:8px 0 0;">Check off scholars who attended this event.</p>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="closeEventAttendancePanel()">✕ Close</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeEventAttendancePanel()">✕ Close</button>
       </div>
       <div id="attendanceSessionControls" style="margin-bottom:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center;"></div>
       <div id="evtAttList" class="evt-att-list"></div>
       <div style="margin-top:18px; text-align:right;">
-        <button class="btn btn-navy" onclick="saveEventAttendance()">💾 Save attendance</button>
+        <button type="button" class="btn btn-navy" onclick="saveEventAttendance()">💾 Save attendance</button>
       </div>
     </div>
   </div>
@@ -317,7 +317,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Start Attendance Session</h3>
-        <button class="btn btn-ghost btn-sm" onclick="closeModal('sessionStartModal')">✕</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('sessionStartModal')">✕</button>
       </div>
       <div class="modal-body">
         <div class="field-row">
@@ -333,8 +333,8 @@
         <p style="margin-top:10px; color:var(--text-muted); font-size:.8rem;">Demo speed only affects how fast the on-screen stopwatch appears to run — it doesn't change the real session length. Leave at 1 for normal use.</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('sessionStartModal')">Cancel</button>
-        <button class="btn btn-gold" id="sessionModalStartBtn" onclick="confirmStartSessionFromModal()">▶ Start</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal('sessionStartModal')">Cancel</button>
+        <button type="button" class="btn btn-gold" id="sessionModalStartBtn" onclick="confirmStartSessionFromModal()">▶ Start</button>
       </div>
     </div>
   </div>
@@ -344,12 +344,12 @@
     <div class="modal" style="width:min(420px,100%);">
       <div class="modal-header">
         <h3 id="confirmModalTitle">Please confirm</h3>
-        <button class="btn btn-ghost btn-sm" onclick="closeConfirmModal()">✕</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeConfirmModal()">✕</button>
       </div>
       <div class="modal-body"><p id="confirmModalMessage">Are you sure?</p></div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeConfirmModal()">Cancel</button>
-        <button class="btn btn-danger" id="confirmModalYesBtn" onclick="confirmModalYes()">Confirm</button>
+        <button type="button" class="btn btn-ghost" onclick="closeConfirmModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmModalYesBtn" onclick="confirmModalYes()">Confirm</button>
       </div>
     </div>
   </div>
@@ -358,7 +358,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Update Formation Status</h3>
-        <button class="btn btn-ghost btn-sm" onclick="closeModal('absenceModal')">✕</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('absenceModal')">✕</button>
       </div>
       <div>
         <div style="margin-bottom:12px;">
@@ -379,8 +379,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('absenceModal')">Cancel</button>
-        <button class="btn btn-navy" onclick="saveAbsence()">Save</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal('absenceModal')">Cancel</button>
+        <button type="button" class="btn btn-navy" onclick="saveAbsence()">Save</button>
       </div>
     </div>
   </div>
@@ -1139,7 +1139,7 @@
             <div class="stopwatch-time">00:00</div>
             <div class="stopwatch-label">Ready</div>
           </div>
-          <div class="ad-actions"><button class="btn btn-gold" onclick="startEventSession(${ev.id})">Start session</button></div>
+          <div class="ad-actions"><button type="button" class="btn btn-gold" onclick="startEventSession(${ev.id})">Start session</button></div>
         </div>`;
         container.appendChild(shell.firstElementChild);
         return;
@@ -1160,8 +1160,8 @@
           <div class="stopwatch-code">${escapeHtml((active.code || '-----').split('').join(' '))}</div>
         </div>
         <div class="ad-actions">
-          <button class="btn btn-ghost" onclick="endEventSession(${ev.id})">End session</button>
-          <button class="btn btn-gold" onclick="startEventSession(${ev.id})">New code</button>
+          <button type="button" class="btn btn-ghost" onclick="endEventSession(${ev.id})">End session</button>
+          <button type="button" class="btn btn-gold" onclick="startEventSession(${ev.id})">New code</button>
         </div>
       </div>`;
       container.appendChild(shell.firstElementChild);

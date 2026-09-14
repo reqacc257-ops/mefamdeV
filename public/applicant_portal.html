@@ -378,7 +378,7 @@
             <div class="uc-avatar" id="ucAvatar">?</div>
             <div class="uc-name" id="ucName">Loading…</div>
         </div>
-        <button class="btn-logout" onclick="logout()">Sign Out</button>
+        <button type="button" class="btn-logout" onclick="logout()">Sign Out</button>
     </div>
 </header>
 
@@ -490,7 +490,7 @@
                         <div style="flex:1;">
                             <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Name</label><div id="sgName" style="font-size:1.1rem; font-weight:700; margin-top:6px;">—</div></div>
                             <div style="margin-bottom:8px;"><label style="font-size:.8rem; color:var(--muted);">Student ID</label><input type="text" id="sgStudentId" autocomplete="off" readonly aria-readonly="true" style="width:260px; padding:10px; margin-top:6px;"></div>
-                            <div style="display:flex; gap:8px; align-items:center; margin-top:6px;"><button class="btn btn-navy" id="sgCheckinBtn">Check In</button><label style="font-size:.85rem; color:var(--muted);"><input type="checkbox" id="sgAutoSubmit" style="margin-right:8px;"> Auto submit</label></div>
+                            <div style="display:flex; gap:8px; align-items:center; margin-top:6px;"><button type="button" class="btn btn-navy" id="sgCheckinBtn">Check In</button><label style="font-size:.85rem; color:var(--muted);"><input type="checkbox" id="sgAutoSubmit" style="margin-right:8px;"> Auto submit</label></div>
                             <div id="sgStatus" style="margin-top:8px; color:var(--muted);"></div>
                         </div>
                     </div>
@@ -501,7 +501,7 @@
                     <div style="display:flex; gap:8px; align-items:center;">
                         <input type="text" id="attCodeInput" placeholder="Enter code" autocomplete="off" style="flex:1; padding:10px;">
                         <input type="text" id="attStudentId" placeholder="Student ID" autocomplete="off" readonly aria-readonly="true" style="width:160px; padding:10px;">
-                        <button class="btn btn-navy" onclick="submitAttendanceCode()">Check In</button>
+                        <button type="button" class="btn btn-navy" onclick="submitAttendanceCode()">Check In</button>
                     </div>
                     <div id="attStatus" style="margin-top:8px; color:var(--muted);"></div>
                 </div>
@@ -1886,7 +1886,7 @@ function logout() {
             </div>
             <div style="flex:1"></div>
             <button class="modal-close" type="button" aria-label="Close" onclick="closeReportCardModal()">×</button>
-            <button class="btn btn-gold" style="margin-left:10px;" onclick="window.print()">🖨️ Print</button>
+            <button type="button" class="btn btn-gold" style="margin-left:10px;" onclick="window.print()">🖨️ Print</button>
         </div>
         <div class="modal-body" id="reportCardModalContent" style="padding:20px; overflow:auto; max-height:70vh; background:var(--bg);"></div>
     </div>

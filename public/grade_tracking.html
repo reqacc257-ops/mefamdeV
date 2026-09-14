@@ -107,7 +107,7 @@
         <header class="topbar">
             <div style="display:flex; align-items:center; gap:12px;"><span class="topbar-title">Grade Tracking</span></div>
             <div class="topbar-right">
-                <button class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
+                <button type="button" class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
             </div>
         </header>
 
@@ -146,31 +146,31 @@
 
     <div class="modal-overlay" id="gradeModal">
         <div class="modal">
-            <div class="modal-header"><h2>Enter Scholar Grade</h2><button class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button></div>
+            <div class="modal-header"><h2>Enter Scholar Grade</h2><button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button></div>
             <div class="modal-body">
                 <p id="gradeModalName" style="font-weight:700; margin-bottom:14px;"></p>
                 <div class="form-group"><label>School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
-                <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
+                <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button type="button" class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
                 <datalist id="subjectsList"></datalist>
                 <div class="form-group"><label>Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
                 <div class="form-group"><label>Grade (60-100)</label><input type="number" id="gradeInput" min="60" max="100"></div>
                 <input type="hidden" id="gradeModalId">
                 <input type="hidden" id="gradeModalAppId">
             </div>
-            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button><button class="btn btn-navy" onclick="saveGrade()">Save Grade</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button><button type="button" class="btn btn-navy" onclick="saveGrade()">Save Grade</button></div>
         </div>
     </div>
 
     <div class="modal-overlay" id="subjectsModal">
         <div class="modal" style="max-width:520px;">
-            <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
+            <div class="modal-header"><h2>Manage Subjects</h2><button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
             <div class="modal-body">
                 <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
                 <div style="margin-top:16px;"><label for="gradingPeriodsSelect">Grading format</label><select id="gradingPeriodsSelect" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px;"><option value="3">3 terms (DepEd-style)</option><option value="4">4 quarters (private-school option)</option></select><small style="display:block; margin-top:5px; color:var(--text-muted);">Use the format that matches the scholar tracking setup. Existing 4th-quarter records remain available when 4 quarters is selected.</small></div>
-                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
+                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button type="button" class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
                 <div style="margin-top:16px;"><ul id="subjectsListView"></ul></div>
             </div>
-            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button type="button" class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
         </div>
     </div>
 
@@ -393,7 +393,7 @@
                     <td>${escapeHtml(s.grade || '—')}</td>
                     <td>${hasGrade ? escapeHtml(String(avgGrade)) + badge : '—'}</td>
                     <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
-                    <td class="table-actions"><button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(s.id)||0}, ${makeJsString(s.name || 'Scholar')})'>Update</button></td>
+                    <td class="table-actions"><button type="button" class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(s.id)||0}, ${makeJsString(s.name || 'Scholar')})'>Update</button></td>
                 </tr>`;
             }).join('');
             if (pager) pager.innerHTML = '';
@@ -459,7 +459,7 @@
             const finalSubjects = subjects.length ? subjects : fallback;
             list.innerHTML = finalSubjects.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
             if (view) {
-                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
+                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button type="button" class=\"btn btn-ghost btn-sm\" onclick=\"removeSubject(${idx})\">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
             }
         }
 

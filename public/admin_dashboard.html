@@ -1064,7 +1064,7 @@
     <!-- Topbar -->
     <header class="topbar">
         <div class="topbar-left">
-            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Open navigation">☰</button>
+            <button type="button" class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Open navigation">☰</button>
             <span class="topbar-title" id="page-title">Dashboard</span>
         </div>
         <div class="topbar-right">
@@ -1173,7 +1173,7 @@
             <div class="card" data-roles="director,program">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
                     <div class="card-title" style="margin:0;">Recent Applications</div>
-                    <button class="btn btn-gold btn-sm" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))">View All</button>
+                    <button type="button" class="btn btn-gold btn-sm" onclick="nav('submitted-apps', document.querySelector('.nav-item[onclick*=submitted]'))">View All</button>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -1198,7 +1198,7 @@
                     <div class="search-wrap" style="min-width:260px;">
                         <input type="text" class="search-input" placeholder="Search by Ref. ID, name, barangay..." id="appSearch" oninput="filterAppsTable()" aria-label="Search applications">
                     </div>
-                    <button class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
+                    <button type="button" class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
                 </div>
             </div>
             <div class="card" style="padding:0;">
@@ -1234,7 +1234,7 @@
                     <div class="search-wrap" style="min-width:240px;">
                         <input type="text" class="search-input" id="pipelineSearch" placeholder="Search by reference number or name…" oninput="filterPipeline()" aria-label="Search pipeline">
                     </div>
-                    <button class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
+                    <button type="button" class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
                 </div>
             </div>
             <div class="kanban">
@@ -1270,7 +1270,7 @@
                 <h3 style="font-family:'DM Serif Display',serif; font-size:1.2rem; color:var(--navy); margin-bottom:8px;">Dedicated Intake Sheet</h3>
                 <p style="font-size:.95rem; color:#444; margin-bottom:12px;">Open the standalone intake form to create a new social worker record and save it to the dashboard's Saved Records list.</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <button class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh Saved Records</button>
+                    <button type="button" class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh Saved Records</button>
                 </div>
                 <p style="font-size:.82rem; color:#64748b; margin-top:10px;">Saved sheets appear in the Saved Records section below and update automatically after each save.</p>
             </div>
@@ -1345,9 +1345,9 @@
                         <div id="pd-documents"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>
 
                         <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
-                            <button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(currentProfileId)">🔗 Open Portal View</button>
-                            <button class="btn btn-gold btn-sm" onclick="triggerScholarRenewal(currentProfileId)">🔄 Renewal</button>
-                            <button class="btn btn-orange btn-sm" onclick="alertStudentForAttendance(currentProfileId)">📣 Alert Student</button>
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="openApplicantPortal(currentProfileId)">🔗 Open Portal View</button>
+                            <button type="button" class="btn btn-gold btn-sm" onclick="triggerScholarRenewal(currentProfileId)">🔄 Renewal</button>
+                            <button type="button" class="btn btn-orange btn-sm" onclick="alertStudentForAttendance(currentProfileId)">📣 Alert Student</button>
                         </div>
                     </div>
                 </div>
@@ -1444,7 +1444,7 @@
                     <h2>Spiritual Formation</h2>
                     <p>Manage formation events and track scholar attendance from the dedicated page.</p>
                 </div>
-                <button class="btn btn-navy" onclick="window.location.href='spiritual_formation.html'">Open Formation Page</button>
+                <button type="button" class="btn btn-navy" onclick="window.location.href='spiritual_formation.html'">Open Formation Page</button>
             </div>
             <div class="card" style="padding:24px;">
                 <div class="card-title">Formation Summary</div>
@@ -1462,8 +1462,8 @@
                     <p>Manage linked families and their scholar connections.</p>
                 </div>
                 <div class="page-header-actions">
-                    <button class="btn btn-gold" onclick="openAddFamilyModal()">➕ Add Family</button>
-                    <button class="btn btn-ghost" id="deleteFamilyTopButton" style="color:var(--red);" onclick="deleteSelectedFamily()" disabled>🗑 Delete Family</button>
+                    <button type="button" class="btn btn-gold" onclick="openAddFamilyModal()">➕ Add Family</button>
+                    <button type="button" class="btn btn-ghost" id="deleteFamilyTopButton" style="color:var(--red);" onclick="deleteSelectedFamily()" disabled>🗑 Delete Family</button>
                 </div>
             </div>
 
@@ -1487,8 +1487,8 @@
                                 <span id="fd-incomeBadge"></span>
                             </div>
                             <div style="display:flex; gap:8px;">
-                                <button class="btn btn-ghost btn-sm" onclick="openAddFamilyModal(currentFamilyRecord)">✎ Edit</button>
-                                <button class="btn btn-red btn-sm" onclick="deleteFamily(currentFamilyId)">Remove</button>
+                                <button type="button" class="btn btn-ghost btn-sm" onclick="openAddFamilyModal(currentFamilyRecord)">✎ Edit</button>
+                                <button type="button" class="btn btn-red btn-sm" onclick="deleteFamily(currentFamilyId)">Remove</button>
                             </div>
                         </div>
                         <hr style="border:0; border-top:1px solid var(--border); margin-bottom:14px;">
@@ -1533,7 +1533,7 @@
                     <div style="margin-bottom:12px;"><label for="fundAmount">Amount (₱)</label><input type="number" id="fundAmount" placeholder="0.00" min="1"></div>
                     <div style="margin-bottom:12px;"><label for="fundDate">Date Received</label><input type="date" id="fundDate"></div>
                     <div style="margin-bottom:14px;"><label for="fundNotes">Notes</label><input type="text" id="fundNotes" placeholder="Optional notes..."></div>
-                    <button class="btn btn-teal" style="width:100%;" id="addFundsBtn" onclick="addFunds()">💵 Add to Fund Balance</button>
+                    <button type="button" class="btn btn-teal" style="width:100%;" id="addFundsBtn" onclick="addFunds()">💵 Add to Fund Balance</button>
                 </div>
 
                 <div class="card" style="border-top:4px solid var(--gold);">
@@ -1546,7 +1546,7 @@
                     </div>
                     <div style="margin-bottom:12px;"><label for="disbAmount">Amount (₱)</label><input type="number" id="disbAmount" value="3000" min="1"></div>
                     <div style="margin-bottom:14px;"><label for="disbPeriod">Period / Month</label><input type="text" id="disbPeriod" placeholder="e.g. March 2026"></div>
-                    <button class="btn btn-gold" style="width:100%;" id="disburseBtn" onclick="disburseStipend()">📤 Release Stipend</button>
+                    <button type="button" class="btn btn-gold" style="width:100%;" id="disburseBtn" onclick="disburseStipend()">📤 Release Stipend</button>
                 </div>
             </div>
 
@@ -1611,7 +1611,7 @@
                     </div>
                     <div style="margin-bottom:12px;"><label for="annSubject">Subject / Title</label><input type="text" id="annSubject" placeholder="e.g. Reminder: Formation Seminar"></div>
                     <div style="margin-bottom:14px;"><label for="annMessage">Message</label><textarea rows="5" id="annMessage" placeholder="Type your message here..."></textarea></div>
-                    <button class="btn btn-navy" style="width:100%;" id="sendAnnBtn" onclick="sendAnnouncement()">📤 Post Announcement</button>
+                    <button type="button" class="btn btn-navy" style="width:100%;" id="sendAnnBtn" onclick="sendAnnouncement()">📤 Post Announcement</button>
                 </div>
                 <div class="card">
                     <div class="card-title">Recent Announcements Sent</div>
@@ -1632,8 +1632,8 @@
                     <p>All saved Intake Sheets and Staff Assessments.</p>
                 </div>
                 <div class="page-header-actions">
-                    <button class="btn btn-navy" onclick="openAssessment(null)">+ New Assessment</button>
-                    <button class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh</button>
+                    <button type="button" class="btn btn-navy" onclick="openAssessment(null)">+ New Assessment</button>
+                    <button type="button" class="btn btn-ghost" onclick="loadSavedRecords()">🔄 Refresh</button>
                 </div>
             </div>
 
@@ -1731,11 +1731,11 @@
                 <div class="card">
                     <div class="card-title">Security</div>
                     <p style="font-size:.87rem; color:var(--text-muted); margin:0 0 14px;">Password changes send a confirmation email. Director email verification can trust this browser for 24 hours when selected during sign-in.</p>
-                    <button class="btn btn-navy" onclick="openChangePasswordModal()">&#128272; Change Password</button>
+                    <button type="button" class="btn btn-navy" onclick="openChangePasswordModal()">&#128272; Change Password</button>
                     <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
                         <div style="font-weight:700; font-size:.88rem; margin-bottom:5px;">Trusted device</div>
                         <div id="trustedDeviceStatus" style="font-size:.82rem; color:var(--text-muted); margin-bottom:10px;">Trust this device for 24 hours after Director verification.</div>
-                        <button class="btn btn-ghost btn-sm" onclick="forgetTrustedDevice()">Forget this browser</button>
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="forgetTrustedDevice()">Forget this browser</button>
                     </div>
                 </div>
                 <div class="card" style="border-left:4px solid var(--teal);">
@@ -1748,9 +1748,9 @@
                     <label style="display:flex; align-items:center; gap:9px; margin-bottom:13px; font-size:.88rem; text-transform:none; letter-spacing:0; font-weight:500;"><input id="settingReviewAlerts" type="checkbox" checked> Show pending application alerts</label>
                     <label style="display:flex; align-items:center; gap:9px; margin-bottom:14px; font-size:.88rem; text-transform:none; letter-spacing:0; font-weight:500;"><input id="settingAutoRefresh" type="checkbox"> Refresh dashboard data automatically</label>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button class="btn btn-navy" onclick="saveSystemSettings()">Save Settings</button>
-                        <button class="btn btn-ghost" onclick="exportData()">&#128228; Export Backup</button>
-                        <button class="btn btn-ghost" onclick="resetSystemSettings()">Reset Defaults</button>
+                        <button type="button" class="btn btn-navy" onclick="saveSystemSettings()">Save Settings</button>
+                        <button type="button" class="btn btn-ghost" onclick="exportData()">&#128228; Export Backup</button>
+                        <button type="button" class="btn btn-ghost" onclick="resetSystemSettings()">Reset Defaults</button>
                     </div>
                     <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
                         <div style="font-weight:700; font-size:.88rem; margin-bottom:5px;">Test data cleanup</div>
@@ -1794,13 +1794,13 @@
     <div class="modal" style="max-width:720px;">
         <div class="modal-header">
             <h2>Previous Uploads</h2>
-            <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('uploadHistoryModal')" aria-label="Close">✕</button>
+            <button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('uploadHistoryModal')" aria-label="Close">✕</button>
         </div>
         <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
             <div id="uploadHistoryContent"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('uploadHistoryModal')">Close</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('uploadHistoryModal')">Close</button>
         </div>
     </div>
 </div>
@@ -1811,9 +1811,9 @@
         <div class="modal-header">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <h2 style="margin:0;">Report Card</h2>
-                <button class="btn btn-sm btn-ghost" onclick="printReportCard()" style="padding:6px 12px; background:rgba(255,255,255,.15); color:#fff;">🖨️ Print</button>
+                <button type="button" class="btn btn-sm btn-ghost" onclick="printReportCard()" style="padding:6px 12px; background:rgba(255,255,255,.15); color:#fff;">🖨️ Print</button>
             </div>
-            <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('reportCardModal')" aria-label="Close">✕</button>
+            <button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('reportCardModal')" aria-label="Close">✕</button>
         </div>
         <div style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
             <div id="reportCardContent"></div>
@@ -1824,7 +1824,7 @@
 <!-- Manage Subjects Modal -->
 <div class="modal-overlay" id="subjectsModal">
     <div class="modal" style="max-width:520px;">
-        <div class="modal-header"><h2>Manage Subjects</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('subjectsModal')" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2>Manage Subjects</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('subjectsModal')" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
             <div style="margin-top:12px;">
@@ -1837,15 +1837,15 @@
             <div style="margin-top:12px;">
                 <label for="newSubjectInput">New subject name</label>
                 <input type="text" id="newSubjectInput" placeholder="Enter subject name" style="margin-bottom:8px;">
-                <button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button>
+                <button type="button" class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button>
             </div>
             <div style="margin-top:16px;">
                 <ul id="subjectsListView" style="list-style:none; padding:0; margin:0; max-height:240px; overflow:auto;"></ul>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button>
-            <button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button>
+            <button type="button" class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button>
         </div>
     </div>
 </div>
@@ -1853,7 +1853,7 @@
 <!-- Change Password Modal (was nested in #my-profile — fixed) -->
 <div class="modal-overlay" id="changePasswordModal">
     <div class="modal" style="max-width:440px;">
-        <div class="modal-header"><h2>Change Password</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('changePasswordModal')" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2>Change Password</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('changePasswordModal')" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <div style="margin-bottom:14px;">
                 <label for="changePasswordCurrent">Current password</label>
@@ -1869,8 +1869,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('changePasswordModal')">Cancel</button>
-            <button class="btn btn-gold" onclick="submitChangePassword()">Update Password</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('changePasswordModal')">Cancel</button>
+            <button type="button" class="btn btn-gold" onclick="submitChangePassword()">Update Password</button>
         </div>
     </div>
 </div>
@@ -1878,15 +1878,15 @@
 <!-- Profile Save Confirmation Modal (was nested — fixed) -->
 <div class="modal-overlay" id="profileSaveModal">
     <div class="modal" style="max-width:440px;">
-        <div class="modal-header"><h2>Confirm Profile Changes</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('profileSaveModal')" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2>Confirm Profile Changes</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('profileSaveModal')" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <p style="font-size:.88rem; color:var(--text-muted); margin-bottom:14px;">Enter your current password to update your name or username.</p>
             <label for="profileCurrentPassword">Current password</label>
             <input type="password" id="profileCurrentPassword" placeholder="Enter current password" autocomplete="current-password">
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('profileSaveModal')">Cancel</button>
-            <button class="btn btn-navy" onclick="confirmSaveStaffProfile()">Confirm &amp; Save</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('profileSaveModal')">Cancel</button>
+            <button type="button" class="btn btn-navy" onclick="confirmSaveStaffProfile()">Confirm &amp; Save</button>
         </div>
     </div>
 </div>
@@ -1894,7 +1894,7 @@
 <!-- Add Absence Modal -->
 <div class="modal-overlay" id="absenceModal">
     <div class="modal" style="max-width:440px;">
-        <div class="modal-header"><h2>Log Formation Attendance</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('absenceModal')" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2>Log Formation Attendance</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('absenceModal')" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <div style="margin-bottom:12px;">
                 <label for="absenceScholarDisplay">Scholar</label>
@@ -1916,8 +1916,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('absenceModal')">Cancel</button>
-            <button class="btn btn-navy" onclick="saveAbsence()">Save</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('absenceModal')">Cancel</button>
+            <button type="button" class="btn btn-navy" onclick="saveAbsence()">Save</button>
         </div>
     </div>
 </div>
@@ -1925,7 +1925,7 @@
 <!-- Add Family Modal -->
 <div class="modal-overlay" id="familyModal">
     <div class="modal" style="max-width:520px;">
-        <div class="modal-header"><h2 id="familyModalTitle">Add Beneficiary Family</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('familyModal')" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2 id="familyModalTitle">Add Beneficiary Family</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('familyModal')" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <input type="hidden" id="fm-id">
             <div class="grid-2eq" style="gap:12px;">
@@ -1946,8 +1946,8 @@
             <div style="margin-top:12px;"><label for="fm-benefits">Benefits / Programs (comma-separated)</label><input type="text" id="fm-benefits" placeholder="e.g. 4Ps, PHILHEALTH, Solo Parent"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('familyModal')">Cancel</button>
-            <button class="btn btn-navy" onclick="saveFamily()">Save Family</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('familyModal')">Cancel</button>
+            <button type="button" class="btn btn-navy" onclick="saveFamily()">Save Family</button>
         </div>
     </div>
 </div>
@@ -1957,7 +1957,7 @@
     <div class="modal">
         <div class="modal-header">
             <h2>Application Details</h2>
-            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('appModal')" aria-label="Close">✕ Close</button>
+            <button type="button" class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('appModal')" aria-label="Close">✕ Close</button>
         </div>
         <div class="modal-body" id="appModalContent"></div>
         <div class="modal-footer" id="appModalFooter"></div>
@@ -1969,7 +1969,7 @@
     <div class="modal" style="max-width:760px;">
         <div class="modal-header">
             <h2 id="documentPreviewTitle">Document Preview</h2>
-            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeDocumentPreview()" aria-label="Close">✕ Close</button>
+            <button type="button" class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeDocumentPreview()" aria-label="Close">✕ Close</button>
         </div>
         <div class="modal-body" style="text-align:center; background:#f4f6f9;">
             <img id="documentPreviewImage" alt="Document preview" style="display:block; max-width:100%; max-height:68vh; margin:0 auto; object-fit:contain;">
@@ -1981,7 +1981,7 @@
 <!-- Delete Confirmation Modal -->
 <div class="modal-overlay" id="deleteConfirmModal">
     <div class="modal delete-modal">
-        <div class="modal-header"><h2 id="deleteConfirmTitle">Delete application</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeDeleteConfirm(false)" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2 id="deleteConfirmTitle">Delete application</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeDeleteConfirm(false)" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <div class="delete-icon" aria-hidden="true">🗑</div>
             <p id="deleteConfirmMessage" style="font-size:1rem; font-weight:700; color:var(--navy);"></p>
@@ -1991,7 +1991,7 @@
                 <input id="deleteConfirmName" type="text" autocomplete="off" placeholder="Applicant full name">
             </div>
         </div>
-        <div class="modal-footer"><button class="btn btn-ghost" onclick="closeDeleteConfirm(false)">Cancel</button><button class="btn btn-danger" onclick="closeDeleteConfirm(true)">Delete permanently</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-ghost" onclick="closeDeleteConfirm(false)">Cancel</button><button type="button" class="btn btn-danger" onclick="closeDeleteConfirm(true)">Delete permanently</button></div>
     </div>
 </div>
 
@@ -2015,7 +2015,7 @@
 <!-- Grade Update Modal -->
 <div class="modal-overlay" id="gradeModal">
     <div class="modal" style="max-width:480px;">
-        <div class="modal-header"><h2>Enter Scholar Grade</h2><button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('gradeModal')" aria-label="Close">✕</button></div>
+        <div class="modal-header"><h2>Enter Scholar Grade</h2><button type="button" class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="closeModal('gradeModal')" aria-label="Close">✕</button></div>
         <div class="modal-body">
             <p id="gradeModalName" style="font-weight:700; margin-bottom:14px;"></p>
             <div style="margin-bottom:12px;"><label for="gradeSchoolYear">School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
@@ -2043,8 +2043,8 @@
             <input type="hidden" id="gradeModalAppId">
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
-            <button class="btn btn-navy" onclick="saveGrade()">Save Grade</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
+            <button type="button" class="btn btn-navy" onclick="saveGrade()">Save Grade</button>
         </div>
     </div>
 </div>
@@ -2054,7 +2054,7 @@
     <div class="modal" style="max-width:720px;">
         <div class="modal-header">
             <h2>Edit Application</h2>
-            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('applicationEditModal')" aria-label="Close">✕ Close</button>
+            <button type="button" class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('applicationEditModal')" aria-label="Close">✕ Close</button>
         </div>
         <div class="modal-body">
             <input type="hidden" id="editAppId">
@@ -2125,8 +2125,8 @@
             <div style="margin-top:12px;"><label for="editAppWhyScholar">Why Scholar</label><textarea id="editAppWhyScholar" rows="3"></textarea></div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeModal('applicationEditModal')">Cancel</button>
-            <button class="btn btn-navy" onclick="saveApplicationEdit()">Save Changes</button>
+            <button type="button" class="btn btn-ghost" onclick="closeModal('applicationEditModal')">Cancel</button>
+            <button type="button" class="btn btn-navy" onclick="saveApplicationEdit()">Save Changes</button>
         </div>
     </div>
 </div>
@@ -2136,7 +2136,7 @@
     <div class="modal tool-modal">
         <div class="modal-header">
             <h2 id="toolModalTitle">Staff Assessment</h2>
-            <button class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeToolModal()" aria-label="Close">✕ Close</button>
+            <button type="button" class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeToolModal()" aria-label="Close">✕ Close</button>
         </div>
         <iframe class="tool-modal-frame" id="toolModalFrame" title="Staff form"></iframe>
     </div>
@@ -2152,7 +2152,7 @@
         <div id="attendanceSessionControls"></div>
         <div id="evtAttList"></div>
         <div style="margin-top:14px;">
-            <button class="btn btn-teal" onclick="saveEventAttendance()">💾 Save Attendance</button>
+            <button type="button" class="btn btn-teal" onclick="saveEventAttendance()">💾 Save Attendance</button>
         </div>
     </div>
 </div>
@@ -3087,7 +3087,7 @@ function renderSavedIntakeSheets(sheets) {
     if (countEl) countEl.innerText = `(${sheets.length})`;
     if (!intakeList) return;
     if (sheets.length === 0) {
-        intakeList.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><p>No intake sheets saved yet.</p><div class="empty-cta"><button class="btn btn-gold btn-sm" onclick="openIntakeSheet(null)">+ New Intake Sheet</button></div></div>`;
+        intakeList.innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><p>No intake sheets saved yet.</p><div class="empty-cta"><button type="button" class="btn btn-gold btn-sm" onclick="openIntakeSheet(null)">+ New Intake Sheet</button></div></div>`;
         return;
     }
     intakeList.innerHTML = `<table><thead><tr><th>Case No.</th><th>Name</th><th>School</th><th>Date</th><th>Action</th></tr></thead><tbody>` +
@@ -3097,8 +3097,8 @@ function renderSavedIntakeSheets(sheets) {
             <td style="font-size:.85rem; color:#64748b;">${escapeHtml(s.school || s.schoolName || s.school_name || '—')}</td>
             <td style="color:var(--text-muted); font-size:.8rem;">${escapeHtml(s.savedAt || s.caseDate || s.created_at || '—')}</td>
             <td>
-                <button class="btn btn-gold btn-sm" onclick="openIntakeSheet(${s.id})">View</button>
-                <button class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_intake_sheets',${s.id})" aria-label="Delete">✕</button>
+                <button type="button" class="btn btn-gold btn-sm" onclick="openIntakeSheet(${s.id})">View</button>
+                <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_intake_sheets',${s.id})" aria-label="Delete">✕</button>
             </td>
         </tr>`).join('') + `</tbody></table>`;
 }
@@ -3109,7 +3109,7 @@ function renderSavedAssessments(assessments) {
     if (countEl) countEl.innerText = `(${assessments.length})`;
     if (!assList) return;
     if (assessments.length === 0) {
-        assList.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><p>No assessments saved yet.</p><div class="empty-cta"><button class="btn btn-gold btn-sm" onclick="openAssessment(null)">+ New Assessment</button></div></div>`;
+        assList.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><p>No assessments saved yet.</p><div class="empty-cta"><button type="button" class="btn btn-gold btn-sm" onclick="openAssessment(null)">+ New Assessment</button></div></div>`;
         return;
     }
     assList.innerHTML = `<table><thead><tr><th>Family</th><th>Student</th><th>Final Result</th><th>Saved</th><th>Action</th></tr></thead><tbody>` +
@@ -3125,8 +3125,8 @@ function renderSavedAssessments(assessments) {
                 <td>${badge}</td>
                 <td style="color:var(--text-muted); font-size:.8rem;">${escapeHtml(a.savedAt || a.assessmentDate || a.created_at || '—')}</td>
                 <td>
-                    <button class="btn btn-gold btn-sm" onclick="openAssessment(${a.linkedAppId||'null'})">Open</button>
-                    <button class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_assessments',${a.id})" aria-label="Delete">✕</button>
+                    <button type="button" class="btn btn-gold btn-sm" onclick="openAssessment(${a.linkedAppId||'null'})">Open</button>
+                    <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_assessments',${a.id})" aria-label="Delete">✕</button>
                 </td>
             </tr>`;
         }).join('') + `</tbody></table>`;
@@ -3349,7 +3349,7 @@ function renderRecentApps(apps) {
             <td>${formatAcademicDisplay(a)} <span style="color:var(--text-muted); font-size:.78rem;">${escapeHtml(a.school || '')}</span></td>
             <td style="color:var(--text-muted); font-size:.82rem;">${formatAppDate(a)}</td>
             <td>${statusBadge(a.status)}</td>
-            <td class="table-actions"><button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button></td>
+            <td class="table-actions"><button type="button" class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button></td>
         </tr>`).join('') || `<tr><td colspan="7" class="empty-state">No applications yet.</td></tr>`;
 }
 
@@ -3369,8 +3369,8 @@ function renderFullAppsTable(apps) {
             <td>${formatAcademicDisplay(a)}<br><small style="color:var(--text-muted);">${escapeHtml(a.school || '')}</small></td>
             <td>${statusBadge(a.status)}</td>
             <td class="table-actions">
-                <button class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteApp(${a.id})" style="color:var(--red);">Delete</button>
+                <button type="button" class="btn btn-gold btn-sm" onclick="viewApp(${a.id})">View</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="deleteApp(${a.id})" style="color:var(--red);">Delete</button>
             </td>
         </tr>`).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><p>No digital applications found.</p></div></td></tr>`;
 }
@@ -3401,10 +3401,10 @@ function renderPipeline(apps) {
 
         const colors = {'Pending Review':'var(--red)', 'Interviewing':'var(--orange)', 'Accepted':'var(--teal)', 'Rejected':'#30363d'};
         let actions = '';
-        if (status === 'Pending Review') actions = `<button class="btn btn-orange btn-sm" onclick="changeStatus(${app.id},'Interviewing')">Move to Interview</button>`;
-        else if (status === 'Interviewing') actions = `<button class="btn btn-green btn-sm" onclick="changeStatus(${app.id},'Accepted')">✓ Accept</button><button class="btn btn-ghost btn-sm" onclick="changeStatus(${app.id},'Pending Review')">← Back</button>`;
-        else if (status === 'Rejected') actions = `<button class="btn btn-red btn-lg" onclick="deleteApp(${app.id})">Delete</button>`;
-        else actions = `<button class="btn btn-gold btn-sm" onclick="viewApp(${app.id})">View Profile</button>`;
+        if (status === 'Pending Review') actions = `<button type="button" class="btn btn-orange btn-sm" onclick="changeStatus(${app.id},'Interviewing')">Move to Interview</button>`;
+        else if (status === 'Interviewing') actions = `<button type="button" class="btn btn-green btn-sm" onclick="changeStatus(${app.id},'Accepted')">✓ Accept</button><button type="button" class="btn btn-ghost btn-sm" onclick="changeStatus(${app.id},'Pending Review')">← Back</button>`;
+        else if (status === 'Rejected') actions = `<button type="button" class="btn btn-red btn-lg" onclick="deleteApp(${app.id})">Delete</button>`;
+        else actions = `<button type="button" class="btn btn-gold btn-sm" onclick="viewApp(${app.id})">View Profile</button>`;
 
         col.innerHTML += `
             <div class="kanban-card${status === 'Rejected' ? ' rejected-card' : ''}" style="border-color:${colors[status]||'#ccc'}">
@@ -3768,10 +3768,10 @@ async function renderDocChecklist(appId, containerId) {
         const safeLabel = escapeHtml(String(d.label || ''));
         const noteText = escapeHtml(d.note || '—');
         const actions = isReportCard
-            ? `<button class="btn btn-ghost btn-sm" onclick="openStudentGradeCard(${appId})">📄 Open Grade Card</button>`
-            : `<button class="btn btn-ghost btn-sm" onclick="openDocumentPreview('${encodedFile}','${escapeHtml(String(d.label || ''))}')" ${hasFile ? '' : 'disabled'}>View</button>
-               <button class="btn btn-green btn-sm" onclick="approveDoc(${appId},'${escapeHtml(String(d.key || ''))}','${containerId}')" ${d.status === 'Received' ? 'disabled' : ''}>✓ Approve</button>
-               <button class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${escapeHtml(String(d.key || ''))}','${containerId}')">Reject</button>`;
+            ? `<button type="button" class="btn btn-ghost btn-sm" onclick="openStudentGradeCard(${appId})">📄 Open Grade Card</button>`
+            : `<button type="button" class="btn btn-ghost btn-sm" onclick="openDocumentPreview('${encodedFile}','${escapeHtml(String(d.label || ''))}')" ${hasFile ? '' : 'disabled'}>View</button>
+               <button type="button" class="btn btn-green btn-sm" onclick="approveDoc(${appId},'${escapeHtml(String(d.key || ''))}','${containerId}')" ${d.status === 'Received' ? 'disabled' : ''}>✓ Approve</button>
+               <button type="button" class="btn btn-red btn-sm" onclick="flagDocMissing(${appId},'${escapeHtml(String(d.key || ''))}','${containerId}')">Reject</button>`;
         return `<tr><td>${safeLabel}</td><td><span class="badge ${badgeFor(d.status)}">${escapeHtml(statusLabel(d.status))}</span></td><td style="font-size:.78rem; color:#c0392b; max-width:200px;">${noteText}</td><td style="white-space:nowrap;">${actions}</td></tr>`;
     }).join('');
 
@@ -3787,7 +3787,7 @@ async function renderDocChecklist(appId, containerId) {
                     <td>Application Form (Online)</td>
                     <td><span class="badge badge-green">Submitted</span></td>
                     <td>—</td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="openApplicantPortal(${appId})">View Portal</button></td>
+                    <td><button type="button" class="btn btn-ghost btn-sm" onclick="openApplicantPortal(${appId})">View Portal</button></td>
                 </tr>
                 ${documentRows}
             </tbody>
@@ -3876,7 +3876,7 @@ function renderGrades(scholars) {
             <td>${escapeHtml(s.grade || '—')}</td>
             <td id="grade-val-${s.id}">${displayGrade} ${badge}</td>
             <td style="white-space:pre-wrap; font-size:.9rem; color:var(--text-muted);">${historyHtml}</td>
-            <td class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},${makeJsString(s.name || 'Scholar')})">Update</button></td>
+            <td class="table-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="openGradeModal(${s.id},${makeJsString(s.name || 'Scholar')})">Update</button></td>
         </tr>`;
     }).join('');
 
@@ -3931,7 +3931,7 @@ function openUploadHistoryModal(appId, name) {
                     <span style="font-weight:700; color:var(--text);">${escapeHtml(row.fileName || 'Uploaded report card')}</span>
                     <span style="display:block; font-size:.78rem; color:var(--text-muted);">${escapeHtml(row.uploadedAt || 'Uploaded')}</span>
                 </div>
-                <button class="btn btn-gold btn-sm" onclick="openGradeModal(${Number(appId)}, ${makeJsString(name || 'Scholar')}); closeModal('uploadHistoryModal');">Update</button>
+                <button type="button" class="btn btn-gold btn-sm" onclick="openGradeModal(${Number(appId)}, ${makeJsString(name || 'Scholar')}); closeModal('uploadHistoryModal');">Update</button>
             </div>`).join('')}
         </div>`;
     }).join('');
@@ -4167,11 +4167,11 @@ async function viewApp(id) {
 
     renderDocChecklist(a.id, 'appModalDocs');
 
-    let footerHTML = `<button class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
+    let footerHTML = `<button type="button" class="btn btn-ghost" onclick="closeModal('appModal')">Close</button>`;
     footerHTML += `<label style="display:inline-flex; align-items:center; gap:6px; margin:0 8px 0 0; font-size:.82rem; color:var(--text-muted); cursor:pointer; text-transform:none; letter-spacing:0; font-weight:500;"><input type="checkbox" ${a.mekong ? 'checked' : ''} onchange="toggleApplicationMekong(${a.id}, this.checked)"> Mark as Mekong</label>`;
-    if (a.status === 'Pending Review') footerHTML += `<button class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
-    if (!['Accepted', 'Rejected'].includes(a.status)) footerHTML += `<button class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
-    if (!['Accepted', 'Year Ended', 'Rejected'].includes(a.status)) footerHTML += `<button class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
+    if (a.status === 'Pending Review') footerHTML += `<button type="button" class="btn btn-orange" onclick="changeStatus(${a.id},'Interviewing'); closeModal('appModal')">Move to Interview</button>`;
+    if (!['Accepted', 'Rejected'].includes(a.status)) footerHTML += `<button type="button" class="btn btn-green" onclick="changeStatus(${a.id},'Accepted'); closeModal('appModal')">✓ Accept Scholar</button>`;
+    if (!['Accepted', 'Year Ended', 'Rejected'].includes(a.status)) footerHTML += `<button type="button" class="btn btn-red" onclick="changeStatus(${a.id},'Rejected'); closeModal('appModal')">✕ Reject Application</button>`;
 
     document.getElementById('appModalFooter').innerHTML = footerHTML;
     document.getElementById('appModal').classList.add('open');
@@ -4418,7 +4418,7 @@ async function renderSubjectsDatalist() {
     const fallback = ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'];
     list.innerHTML = (subjects.length ? subjects : fallback).map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
     if (view) {
-        view.innerHTML = (subjects.length ? subjects : []).map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button class="btn btn-ghost btn-sm" onclick="removeSubject(${idx})">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
+        view.innerHTML = (subjects.length ? subjects : []).map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button type="button" class="btn btn-ghost btn-sm" onclick="removeSubject(${idx})">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
     }
 }
 
@@ -4856,7 +4856,7 @@ function renderAnnouncements() {
     }
     container.innerHTML = anns.map(a => `
         <div class="ann-item">
-            <button class="ann-delete-btn" onclick="deleteAnnouncement(${a.id})" title="Delete" aria-label="Delete announcement">&#128465;</button>
+            <button type="button" class="ann-delete-btn" onclick="deleteAnnouncement(${a.id})" title="Delete" aria-label="Delete announcement">&#128465;</button>
             <div class="ann-tag">${escapeHtml(a.tag)} &middot; ${escapeHtml(a.target)}</div>
             <div class="ann-title">${escapeHtml(a.subject)}</div>
             <div class="ann-body">${escapeHtml(a.message)}</div>
@@ -5077,14 +5077,14 @@ function renderEvents() {
             const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
             const active = ev.activeAttendanceSession || null;
             const sessionHtml = active
-                ? `<div style="font-size:.86rem; margin-bottom:6px;">Code: <strong style="letter-spacing:2px;">${escapeHtml(active.code)}</strong> <span style="color:var(--text-muted); font-size:.78rem;">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div><button class="btn btn-ghost btn-sm" onclick="endEventSession(${ev.id})">⏹ End</button>`
-                : `<button class="btn btn-green btn-sm" onclick="startEventSession(${ev.id})">▶ Start</button>`;
+                ? `<div style="font-size:.86rem; margin-bottom:6px;">Code: <strong style="letter-spacing:2px;">${escapeHtml(active.code)}</strong> <span style="color:var(--text-muted); font-size:.78rem;">(expires ${active.expiresAt ? new Date(active.expiresAt).toLocaleTimeString() : '—'})</span></div><button type="button" class="btn btn-ghost btn-sm" onclick="endEventSession(${ev.id})">⏹ End</button>`
+                : `<button type="button" class="btn btn-green btn-sm" onclick="startEventSession(${ev.id})">▶ Start</button>`;
             return `<tr>
                 <td><strong>${escapeHtml(ev.name)}</strong></td>
                 <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
                 <td style="font-size:.82rem;">${escapeHtml(ev.venue || '—')}</td>
                 <td><span class="badge ${badgeCls}">${attended}/${ev.max}</span></td>
-                <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">${sessionHtml}<div style="margin-left:auto; display:flex; gap:6px;"> <button class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button> <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteEvent(${ev.id})" aria-label="Delete event">✕</button></div></td>
+                <td style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">${sessionHtml}<div style="margin-left:auto; display:flex; gap:6px;"> <button type="button" class="btn btn-gold btn-sm" onclick="openEventAttendance(${ev.id})">📋 Attendance</button> <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteEvent(${ev.id})" aria-label="Delete event">✕</button></div></td>
             </tr>`;
         }).join('') + `</tbody></table></div>`;
 }
@@ -5301,7 +5301,7 @@ function renderAttendanceSessionControls(ev) {
                 <div class="ad-stat"><div class="num">—</div><div class="ad-stat-label">Code refresh</div></div>
             </div>
             <div class="ad-actions">
-                <button id="deviceStart" class="btn btn-gold">Start session</button>
+                <button type="button" id="deviceStart" class="btn btn-gold">Start session</button>
             </div>
             <div class="ad-footer-note">Start a session to generate a live code and begin check-ins.</div>
         `;
@@ -5330,8 +5330,8 @@ function renderAttendanceSessionControls(ev) {
             <div class="ad-stat"><div id="deviceSeconds" class="num">0s</div><div class="ad-stat-label">Code refresh</div></div>
         </div>
         <div class="ad-actions">
-            <button id="deviceEnd" class="btn btn-ghost">End event</button>
-            <button id="deviceRefresh" class="btn btn-gold">New code</button>
+            <button type="button" id="deviceEnd" class="btn btn-ghost">End event</button>
+            <button type="button" id="deviceRefresh" class="btn btn-gold">New code</button>
         </div>
         <div class="ad-footer-note">Students enter this code in their portal with their name to be marked present.</div>
     `;
@@ -5580,8 +5580,8 @@ function renderAttendance(scholars) {
                                 ${escapeHtml(noteText)}
                             </div>
                             <div class="comment-actions">
-                                <button class="mini-btn warn" onclick="showContactModal('${String(contact || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">📞 Contact</button>
-                                <button class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
+                                <button type="button" class="mini-btn warn" onclick="showContactModal('${String(contact || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">📞 Contact</button>
+                                <button type="button" class="mini-btn success" onclick="resetAbsence(${s.id})">✓ Resolve</button>
                             </div>
                         </div>
                     `;
@@ -5609,7 +5609,7 @@ function renderAttendance(scholars) {
                 <td style="font-size:.82rem;">${escapeHtml(s.school || '')}</td>
                 <td>${formCount} / ${events.length} events</td>
                 <td><span class="badge ${cls}">${statusLabel}</span></td>
-                <td><button class="btn btn-ghost btn-sm" onclick="openAddAbsenceModalFor(${s.id})">Edit</button></td>
+                <td><button type="button" class="btn btn-ghost btn-sm" onclick="openAddAbsenceModalFor(${s.id})">Edit</button></td>
             </tr>`;
         }).join('');
     }
@@ -5711,7 +5711,7 @@ function renderFamilies() {
     if (!list) return;
     const families = JSON.parse(localStorage.getItem('mefamdev_families') || '[]');
     if (families.length === 0) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">👨‍👩‍👧</div><p>No families added yet.</p><div class="empty-cta"><button class="btn btn-gold btn-sm" onclick="openAddFamilyModal()">+ Add Family</button></div></div>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">👨‍👩‍👧</div><p>No families added yet.</p><div class="empty-cta"><button type="button" class="btn btn-gold btn-sm" onclick="openAddFamilyModal()">+ Add Family</button></div></div>';
         return;
     }
     list.innerHTML = families.map(f => {
@@ -5907,7 +5907,7 @@ function renderFinancials() {
                 <td style="color:var(--teal); font-weight:700;">+₱${Number(f.amount).toLocaleString()}</td>
                 <td style="font-size:.82rem;">${escapeHtml(f.date)}</td>
                 <td style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(f.notes || '—')}</td>
-                <td><button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteFundEntry(${Number(f.id)})" title="Delete contribution">Delete</button></td>
+                <td><button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteFundEntry(${Number(f.id)})" title="Delete contribution">Delete</button></td>
               </tr>`).join('')
             : '<tr><td colspan="5" class="empty-state">No contributions yet.</td></tr>';
     }
@@ -5921,7 +5921,7 @@ function renderFinancials() {
                 <td style="font-size:.82rem;">${escapeHtml(d.period || '—')}</td>
                 <td style="font-size:.82rem;">${escapeHtml(d.date)}</td>
                 <td><span class="badge badge-green">Released</span></td>
-                <td><button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDisbursementEntry(${Number(d.id)})" title="Delete disbursement">Delete</button></td>
+                <td><button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDisbursementEntry(${Number(d.id)})" title="Delete disbursement">Delete</button></td>
               </tr>`).join('')
             : '<tr><td colspan="6" class="empty-state">No disbursements yet.</td></tr>';
     }
@@ -6048,8 +6048,8 @@ async function renderReportCards() {
                <td>${escapeHtml(scholar.school)}</td>
                <td>
                    <div class="action-stack">
-                       <button class="btn btn-ghost btn-sm" onclick="viewReportCard(${scholar.id}, '${makeJsString(scholar.name)}', '${makeJsString(scholar.gradeLevel)}', '${makeJsString(scholar.school)}', '${makeJsString(scholar.latestSY)}', '${makeJsString(String(scholar.refNo))}')">📄 View</button>
-                       <button class="btn btn-ghost btn-sm" style="margin-left:6px;" onclick="openUploadHistoryModal(${scholar.id}, ${JSON.stringify(String(scholar.name || 'Scholar'))})">Previous Uploads</button>
+                       <button type="button" class="btn btn-ghost btn-sm" onclick="viewReportCard(${scholar.id}, '${makeJsString(scholar.name)}', '${makeJsString(scholar.gradeLevel)}', '${makeJsString(scholar.school)}', '${makeJsString(scholar.latestSY)}', '${makeJsString(String(scholar.refNo))}')">📄 View</button>
+                       <button type="button" class="btn btn-ghost btn-sm" style="margin-left:6px;" onclick="openUploadHistoryModal(${scholar.id}, ${JSON.stringify(String(scholar.name || 'Scholar'))})">Previous Uploads</button>
                    </div>
                </td>
            </tr>

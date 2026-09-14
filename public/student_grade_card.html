@@ -223,8 +223,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
       <span class="topbar-title">Scholar Grade Book &amp; Report Cards</span>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost" onclick="goBackToDashboard()">← Back</button>
-      <button class="btn btn-ghost" onclick="openSubjectsModal()">⚙️ Manage Subjects</button>
+      <button type="button" class="btn btn-ghost" onclick="goBackToDashboard()">← Back</button>
+      <button type="button" class="btn btn-ghost" onclick="openSubjectsModal()">⚙️ Manage Subjects</button>
     </div>
   </header>
 
@@ -291,9 +291,9 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
     <div class="modal-header">
       <div style="display:flex;align-items:center;gap:12px;">
         <h2 style="margin:0;">Report Card</h2>
-        <button class="btn btn-sm btn-ghost" onclick="printReportCard()">🖨️ Print</button>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="printReportCard()">🖨️ Print</button>
       </div>
-      <button class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
     </div>
     <div class="modal-body"><div id="reportCardContent"></div></div>
   </div>
@@ -303,7 +303,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
 <div class="modal-overlay image-zoom-modal" id="imageZoomModal" onclick="if(event.target===this)closeModal('imageZoomModal')">
   <div class="modal">
     <div class="modal-header" style="justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="closeModal('imageZoomModal')">✕ Close</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('imageZoomModal')">✕ Close</button>
     </div>
     <div class="image-zoom-controls">
       <button class="btn btn-ghost" type="button" onclick="changeImageZoom(-0.25)">−</button>
@@ -320,7 +320,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
   <div class="modal" style="max-width:640px;">
     <div class="modal-header">
       <h2 id="gradeModalTitle">Enter Scholar Grade</h2>
-      <button class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button>
     </div>
     <div class="modal-body">
       <p id="gradeModalName" style="font-weight:700;margin-bottom:4px;color:var(--navy);"></p>
@@ -351,8 +351,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
       <input type="hidden" id="gradeModalAppId">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
-      <button class="btn btn-navy" onclick="saveGrade()">Save Grade</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
+      <button type="button" class="btn btn-navy" onclick="saveGrade()">Save Grade</button>
     </div>
   </div>
 </div>
@@ -362,14 +362,14 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
   <div class="modal" style="max-width:1100px;margin:0;width:calc(100vw - 16px);max-height:calc(100vh - 16px);">
     <div class="modal-header">
       <h2>Review Pending Grades</h2>
-      <button class="btn btn-ghost" onclick="closeModal('reviewExtractionModal')">✕</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('reviewExtractionModal')">✕</button>
     </div>
     <div class="modal-body" style="max-height:72vh;">
       <div id="reviewExtractionContent"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="saveReview('reject')">Reject</button>
-      <button class="btn btn-navy" onclick="saveReview('approve')">Approve &amp; Finalize</button>
+      <button type="button" class="btn btn-ghost" onclick="saveReview('reject')">Reject</button>
+      <button type="button" class="btn btn-navy" onclick="saveReview('approve')">Approve &amp; Finalize</button>
     </div>
   </div>
 </div>
@@ -379,7 +379,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
   <div class="modal" style="max-width:780px;">
     <div class="modal-header">
       <h2>Crop Uploaded Report Card</h2>
-      <button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">✕</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">✕</button>
     </div>
     <div class="modal-body">
       <canvas id="reportCardCropCanvas" width="540" height="540" style="max-width:100%;border:1px solid var(--border);border-radius:10px;background:#f8fafc;"></canvas>
@@ -390,8 +390,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">Cancel</button>
-      <button class="btn btn-navy" onclick="applyReportCardCrop()">Use Cropped Image</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">Cancel</button>
+      <button type="button" class="btn btn-navy" onclick="applyReportCardCrop()">Use Cropped Image</button>
     </div>
   </div>
 </div>
@@ -401,7 +401,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
   <div class="modal" style="max-width:560px;">
     <div class="modal-header">
       <h2>Manage Subjects</h2>
-      <button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button>
     </div>
     <div class="modal-body">
       <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:14px;">
@@ -432,8 +432,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
       <ul class="subjects-list" id="subjectsListView"></ul>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button>
-      <button class="btn btn-navy" onclick="saveSubjects()">Save</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button>
+      <button type="button" class="btn btn-navy" onclick="saveSubjects()">Save</button>
     </div>
   </div>
 </div>
@@ -531,7 +531,7 @@ function buildPendingItems(){
       typeLabel:'Upload',
       meta:(ext.extracted?.schoolYear)||'Pending school year',
       dateLabel:uploadedAt?uploadedAt.toLocaleString():'Recently uploaded',
-      actionsHtml:`<button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(ext.id)||0})">Review / Finalize</button>`
+      actionsHtml:`<button type="button" class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(ext.id)||0})">Review / Finalize</button>`
     });
   });
   pendingQuarterGrades.forEach(r=>{
@@ -544,9 +544,9 @@ function buildPendingItems(){
       sortTime:r.submitted_at?new Date(r.submitted_at).getTime():0,
       typeLabel:'Quarter grade',
       meta:`${r.school_year||''} · ${r.subject||''} · Q${String(r.quarter||'')} · ${r.grade_value??'—'}`,
-      actionsHtml:`<button class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
-        <button class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
-        <button class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>`
+      actionsHtml:`<button type="button" class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
+        <button type="button" class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>`
     });
   });
   return items;
