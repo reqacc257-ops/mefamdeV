@@ -765,6 +765,9 @@ function renderScholarYears(app, sortedYears, gradesForApp){
           <div class="subject-name" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
           <div class="subject-quarters">${quarters}</div>
           <div class="subject-avg">Average: ${avg||'—'}</div>
+          <div class="subject-card-actions">
+            <button class="btn btn-ghost btn-sm" type="button" onclick='event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||"Scholar")}, ${makeJsString(sy)}, null, ${makeJsString(subject)})'>✎ Edit</button>
+          </div>
         </div>`;
       }).join('');
       gradesHtml = `<div class="subjects-grid">${cards}</div>`;
@@ -860,7 +863,7 @@ function renderSchoolYearOptions(selectedSchoolYear='') {
   }
 }
 
-function openGradeModal(appId, name, schoolYear, gradeRowId){
+function openGradeModal(appId, name, schoolYear, gradeRowId, subject = '', quarter = '', gradeValue = ''){
   const scholar = acceptedScholars.find(a=>Number(a.id)===Number(appId));
   const context = scholar ? `${scholar.grade||''} · ${scholar.school||''}` : '';
   document.getElementById('gradeModalTitle').innerText = gradeRowId?'Edit Pending Grade':`Update Grades`;
@@ -868,9 +871,12 @@ function openGradeModal(appId, name, schoolYear, gradeRowId){
   document.getElementById('gradeModalContext').innerText = `${context}${schoolYear?` — school year ${schoolYear}`:''}`;
   document.getElementById('gradeModalAppId').value = appId;
   renderSchoolYearOptions(schoolYear||'');
-  document.getElementById('gradeSubject').value = '';
-  document.getElementById('gradeInput').value = '';
+  document.getElementById('gradeSubject').value = subject || '';
+  document.getElementById('gradeInput').value = gradeValue || '';
   renderGradePeriodOptions();
+  const qEl = document.getElementById('gradeQuarter');
+  if(qEl && quarter) qEl.value = String(quarter);
+  else if(qEl) qEl.value = '';
   const modalEl = document.getElementById('gradeModal');
   if(gradeRowId) modalEl.dataset.gradeRowId = String(gradeRowId);
   else delete modalEl.dataset.gradeRowId;
