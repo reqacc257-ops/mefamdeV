@@ -318,7 +318,9 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
 
       <div class="form-group">
         <label for="gradeSchoolYear">School Year</label>
-        <input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026">
+        <select id="gradeSchoolYear">
+          <option value="">-- Select School Year --</option>
+        </select>
       </div>
       <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;">
         <div style="flex:1 1 240px;">
@@ -673,18 +675,17 @@ function renderScholarRow(app){
 function renderScholarYears(app, sortedYears, gradesForApp){
   const appId = Number(app.id)||0;
 
-  // No years yet → seed with current SY so Update has something to write to
+  // No years yet → surface an empty prerequisite view without inventing a school-year pair.
   if(!sortedYears.length){
-    const seedSY = app.sy || `${new Date().getFullYear()}-${new Date().getFullYear()+1}`;
     return `<div class="years-stack">
       <div class="year-block current">
         <div class="year-header">
           <div class="year-title">
-            <span class="year-sy">${escapeHtml(seedSY)}</span>
+            <span class="year-sy">No school year selected</span>
             <div class="year-badges"><span class="pill pill-orange">Not started</span></div>
           </div>
           <div class="year-actions">
-            <button class="btn btn-navy btn-sm" onclick="event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, ${makeJsString(seedSY)})">✎ Update Grades</button>
+            <button class="btn btn-navy btn-sm" onclick="event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, '', ${makeJsString('')})">✎ Update Grades</button>
           </div>
         </div>
         <div class="year-body">
@@ -817,6 +818,38 @@ function renderGradePeriodOptions(){
     Array.from({length:count},(_,i)=>`<option value="${i+1}">${word} ${i+1}</option>`).join('');
 }
 
+function renderSchoolYearOptions(selectedSchoolYear='') {
+  const select = document.getElementById('gradeSchoolYear');
+  if(!select) return;
+
+  const years = new Set();
+  acceptedScholars.forEach(app => {
+    const sy = String(app?.sy || '').trim();
+    if(sy) years.add(sy);
+  });
+  allGrades.forEach(g => {
+    const sy = String(g?.schoolYear || '').trim();
+    if(sy) years.add(sy);
+  });
+  pendingExtractions.forEach(e => {
+    const sy = String(e?.extracted?.schoolYear || '').trim();
+    if(sy) years.add(sy);
+  });
+
+  const currentYear = new Date().getFullYear();
+  years.add(`${currentYear}-${currentYear + 1}`);
+
+  const available = Array.from(years).filter(Boolean).sort((a,b)=>schoolYearSortKey(b)-schoolYearSortKey(a));
+  select.innerHTML = `<option value="">-- Select School Year --</option>` +
+    available.map(sy => `<option value="${escapeHtml(sy)}">${escapeHtml(sy)}</option>`).join('');
+
+  if(selectedSchoolYear && available.includes(selectedSchoolYear)) {
+    select.value = selectedSchoolYear;
+  } else {
+    select.value = '';
+  }
+}
+
 function openGradeModal(appId, name, schoolYear, gradeRowId){
   const scholar = acceptedScholars.find(a=>Number(a.id)===Number(appId));
   const context = scholar ? `${scholar.grade||''} · ${scholar.school||''}` : '';
@@ -824,7 +857,7 @@ function openGradeModal(appId, name, schoolYear, gradeRowId){
   document.getElementById('gradeModalName').innerText = name||'Scholar';
   document.getElementById('gradeModalContext').innerText = `${context}${schoolYear?` — school year ${schoolYear}`:''}`;
   document.getElementById('gradeModalAppId').value = appId;
-  document.getElementById('gradeSchoolYear').value = schoolYear||'';
+  renderSchoolYearOptions(schoolYear||'');
   document.getElementById('gradeSubject').value = '';
   document.getElementById('gradeInput').value = '';
   renderGradePeriodOptions();
