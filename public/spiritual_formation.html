@@ -406,25 +406,41 @@
         .replace(/'/g, '&#39;');
     }
 
+    function idKey(value) {
+      return value == null ? '' : String(value).trim();
+    }
+
+    // Safely embed a value as a JS string literal inside an inline HTML handler.
+    function jsString(value) {
+      return escapeHtml(JSON.stringify(idKey(value)));
+    }
+
     function normalizeEvent(ev) {
-      if (!ev || typeof ev !== 'object') return { max: 0, id: ev?.id || null };
+      if (!ev || typeof ev !== 'object') return { max: 0, id: null };
+      const rawSession = ev.activeAttendanceSession || ev.active_attendance_session || null;
+      const session = rawSession ? {
+        ...rawSession,
+        code: rawSession.code || rawSession.attendanceCode || rawSession.attendance_code || null,
+        startedAt: rawSession.startedAt || rawSession.started_at || null,
+        expiresAt: rawSession.expiresAt || rawSession.expires_at || null,
+      } : null;
       return {
         ...ev,
-        id: ev.id != null ? ev.id : ev.eventId || ev.id,
-        max: Number(ev.max || ev.max_att || ev.maxAtt || 0) || 0,
-        activeAttendanceSession: ev.activeAttendanceSession || ev.active_attendance_session || null,
-        expiresAt: ev.expiresAt || ev.expires_at || null,
-        code: ev.code || ev.attendanceCode || ev.activeAttendanceSession?.code || null,
+        id: ev.id ?? ev.eventId ?? ev.event_id ?? null,
+        max: Number(ev.max ?? ev.max_att ?? ev.maxAtt ?? 0) || 0,
+        activeAttendanceSession: session,
+        expiresAt: ev.expiresAt || ev.expires_at || session?.expiresAt || null,
+        code: ev.code || ev.attendanceCode || session?.code || null,
       };
     }
 
     function findEventById(items, evtId) {
-      const normalizedId = String(evtId || '').trim();
+      const normalizedId = idKey(evtId);
       if (!normalizedId || !Array.isArray(items)) return null;
       return items.find(e => {
-        return String(e?.id || '').trim() === normalizedId
-            || String(e?.eventId || '').trim() === normalizedId
-            || String(e?.event_id || '').trim() === normalizedId;
+        return idKey(e?.id) === normalizedId
+            || idKey(e?.eventId) === normalizedId
+            || idKey(e?.event_id) === normalizedId;
       }) || null;
     }
 
@@ -470,7 +486,8 @@
     }
 
     function getApplicantLevelCounts() {
-      const allApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
+      let allApps = [];
+      try { allApps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]'); } catch (e) { allApps = []; }
       const counts = { elementary: 0, junior_high: 0, senior_high: 0, college: 0 };
 
       (Array.isArray(allApps) ? allApps : [])
@@ -680,8 +697,10 @@
     }
 
     function getAcceptedScholars() {
-      const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
-      return (Array.isArray(apps) ? apps : []).filter(a => a.status === 'Accepted');
+      let apps = [];
+      try { apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]'); } catch (e) { apps = []; }
+      return (Array.isArray(apps) ? apps : []).filter(a =>
+        a && String(a.status || '').trim().toLowerCase() === 'accepted');
     }
 
     function formationPrintValue(value) {
@@ -757,7 +776,7 @@
           <td>${escapeHtml(String(scholar.reference || scholar.referenceNumber || scholar.reference_number || scholar.id || '—'))}</td>
           <td>${escapeHtml(scholar.grade || '—')}</td>
           <td>${escapeHtml(scholar.barangay || '—')}</td>
-          <td>${attendedIds.has(String(scholar.id)) ? 'Present' : 'Absent'}</td>
+          <td>${attendedIds.has(idKey(scholar.id)) ? 'Present' : 'Absent'}</td>
           <td class="signature-cell"></td>
           <td></td>
         </tr>`).join('');
@@ -801,13 +820,13 @@
 
     function getEventAttendanceIds(event, scholars) {
       const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
-      const ids = new Set((attData[event.id] || []).map(id => String(id)));
+      const ids = new Set((attData[event.id] || []).map(id => idKey(id)));
       const checkins = window.liveEventCheckins?.[event.id] || [];
       const scholarKeys = new Map();
       (scholars || []).forEach(scholar => {
         [scholar.id, scholar.reference, scholar.referenceNumber, scholar.reference_number, scholar.name]
           .filter(Boolean)
-          .forEach(value => scholarKeys.set(String(value).trim().toLowerCase(), String(scholar.id)));
+          .forEach(value => scholarKeys.set(String(value).trim().toLowerCase(), idKey(scholar.id)));
       });
       checkins.forEach(checkin => {
         [checkin.student_id, checkin.student_name]
@@ -828,7 +847,10 @@
     function syncEventAttendance(evtId, scholarId, isChecked) {
       const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
       const current = Array.isArray(attData[evtId]) ? attData[evtId] : [];
-      const next = isChecked ? [...new Set([...current, scholarId])] : current.filter(id => id !== scholarId);
+      const key = idKey(scholarId);
+      const next = isChecked
+        ? (current.some(id => idKey(id) === key) ? current : [...current, scholarId])
+        : current.filter(id => idKey(id) !== key);
       attData[evtId] = next;
       localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
       renderEvents();
@@ -841,13 +863,12 @@
       const container = document.getElementById('eventsList');
       if (!container) return;
       const query = (document.getElementById('eventSearch')?.value || '').trim().toLowerCase();
-      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
       let events = sortedEvents();
       if (query) {
         events = events.filter(ev =>
           (ev.name || '').toLowerCase().includes(query) || (ev.venue || '').toLowerCase().includes(query));
       }
-      const totalEvents = JSON.parse(localStorage.getItem('mefamdev_events') || '[]').length;
+      const totalEvents = sortedEvents().length;
       if (totalEvents === 0) {
         container.innerHTML = '<div class="empty-state"><strong>No events yet</strong>Add your first formation event using the form on the right.</div>';
         return;
@@ -857,22 +878,24 @@
         return;
       }
       const today = new Date(); today.setHours(0,0,0,0);
+      const scholars = getAcceptedScholars();
       container.innerHTML = `<table><thead><tr><th>Event</th><th>Date</th><th>Venue</th><th>Attended / Max</th><th>Actions</th></tr></thead><tbody>` +
         events.map(ev => {
-          const attended = getEventAttendanceIds(ev, getAcceptedScholars()).size;
+          const attended = getEventAttendanceIds(ev, scholars).size;
           const max = Number(ev.max || 0) || 0;
           const pct = max > 0 ? Math.round(attended / max * 100) : 0;
           const badgeCls = pct >= 80 ? 'badge-green' : pct >= 50 ? 'badge-orange' : 'badge-red';
           const isPast = ev.date ? new Date(ev.date) < today : false;
+          const evtArg = jsString(ev.id);
           return `<tr>
             <td><strong>${escapeHtml(ev.name)}</strong>${isPast ? ' <span class="badge badge-muted" style="margin-left:4px;">Past</span>' : ''}</td>
             <td style="color:var(--text-muted); font-size:.82rem;">${escapeHtml(ev.date || '—')}</td>
             <td style="font-size:.82rem;">${escapeHtml(ev.venue || '—')}</td>
             <td><span class="badge ${badgeCls}">${attended}/${max}</span></td>
             <td style="white-space:nowrap;">
-              <button class="btn btn-navy btn-sm" type="button" onclick="openEventAttendance(${Number(ev.id)})">Attendance</button>
-              <button class="btn btn-gold btn-sm" type="button" onclick="startEventSession(${Number(ev.id)})">${ev.activeAttendanceSession ? 'New code' : 'Start'}</button>
-              <button class="btn btn-danger btn-sm" type="button" onclick="deleteEvent(${Number(ev.id)})">Delete</button>
+              <button class="btn btn-navy btn-sm" type="button" onclick="openEventAttendance(${evtArg})">Attendance</button>
+              <button class="btn btn-gold btn-sm" type="button" onclick="startEventSession(${evtArg})">${ev.activeAttendanceSession ? 'New code' : 'Start'}</button>
+              <button class="btn btn-danger btn-sm" type="button" onclick="deleteEvent(${evtArg})">Delete</button>
             </td>
           </tr>`;
         }).join('') + `</tbody></table>`;
@@ -882,7 +905,7 @@
 
     function startEventSession(evtId) {
       const events = sortedEvents();
-      const ev = events.find(e => String(e.id) === String(evtId)) || null;
+      const ev = events.find(e => idKey(e.id) === idKey(evtId)) || null;
       const active = ev?.activeAttendanceSession || null;
       if (active) {
         showConfirm(
@@ -923,7 +946,7 @@
         const res = await MefamAPI.startEventSession(evtId, minutes);
         if (res?.ok) {
           await refreshFormationData();
-          if (currentEventId === evtId) await openEventAttendance(evtId);
+          if (idKey(currentEventId) === idKey(evtId)) await openEventAttendance(evtId);
           showToast('Attendance session started.', 'success');
           return;
         }
@@ -942,7 +965,7 @@
           };
           localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
           await refreshFormationData();
-          if (currentEventId === evtId) await openEventAttendance(evtId);
+          if (idKey(currentEventId) === idKey(evtId)) await openEventAttendance(evtId);
           showToast('Attendance session started locally.', 'success');
           return;
         }
@@ -967,7 +990,7 @@
           const res = await MefamAPI.endEventSession(evtId);
           if (res?.ok) {
             await refreshFormationData();
-            if (currentEventId === evtId) await openEventAttendance(evtId);
+            if (idKey(currentEventId) === idKey(evtId)) await openEventAttendance(evtId);
             showToast('Attendance session ended.', 'success');
             if (typeof afterEnd === 'function') afterEnd();
             return;
@@ -984,7 +1007,7 @@
             rawEvent.activeAttendanceSession = null;
             localStorage.setItem('mefamdev_events', JSON.stringify(rawEvents));
             await refreshFormationData();
-            if (currentEventId === evtId) await openEventAttendance(evtId);
+            if (idKey(currentEventId) === idKey(evtId)) await openEventAttendance(evtId);
             showToast('Attendance session ended locally.', 'success');
             if (typeof afterEnd === 'function') afterEnd();
             return;
@@ -1030,7 +1053,7 @@
         async () => {
           try {
             await MefamAPI.deleteEvent(id);
-            if (currentEventId === id) {
+            if (idKey(currentEventId) === idKey(id)) {
               currentEventId = null;
               closeEventAttendancePanel();
             }
@@ -1050,10 +1073,11 @@
     async function openEventAttendance(evtId) {
       currentEventId = evtId;
       const events = sortedEvents();
-      const ev = events.find(e => String(e.id) === String(evtId));
-      if (!ev) return;
+      const ev = events.find(e => idKey(e.id) === idKey(evtId));
+      if (!ev) { showToast('That event could not be found.', 'error'); return; }
       const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
-      const attended = attData[evtId] || [];
+      const attended = Array.isArray(attData[evtId]) ? attData[evtId] : [];
+      const attendedKeys = new Set(attended.map(idKey));
       const scholars = getAcceptedScholars();
       document.getElementById('evtAttTitle').textContent = 'Attendance — ' + ev.name + ' (' + (ev.date || '') + ')';
       const list = document.getElementById('evtAttList');
@@ -1062,13 +1086,15 @@
       try { checkins = await MefamAPI.getEventCheckins(evtId) || []; } catch (e) { console.error('Failed to load event check-ins', e); }
       window.liveEventCheckins = window.liveEventCheckins || {};
       window.liveEventCheckins[evtId] = checkins;
-      const checkedInKeys = new Set(checkins.flatMap(checkin => [checkin.student_id, checkin.student_name].filter(Boolean).map(value => String(value).trim().toLowerCase())));
+      const checkedInKeys = new Set(checkins.flatMap(checkin => [checkin.student_id, checkin.student_name]
+        .filter(Boolean).map(value => String(value).trim().toLowerCase())));
       const isCheckedIn = scholar => {
         const keys = [scholar.id, scholar.reference, scholar.referenceNumber, scholar.reference_number, scholar.name]
           .filter(Boolean).map(value => String(value).trim().toLowerCase());
-        return attended.some(id => String(id) === String(scholar.id)) || keys.some(key => checkedInKeys.has(key));
+        return attendedKeys.has(idKey(scholar.id)) || keys.some(key => checkedInKeys.has(key));
       };
       const pendingScholars = scholars.filter(scholar => !isCheckedIn(scholar));
+      const evtArg = jsString(ev.id);
       if (pendingScholars.length === 0) {
         list.innerHTML = scholars.length === 0
           ? '<p style="color:var(--text-muted); font-size:.87rem;">No accepted scholars yet.</p>'
@@ -1076,7 +1102,7 @@
       } else {
         list.innerHTML = pendingScholars.map(s => `
           <label>
-            <input type="checkbox" value="${s.id}" ${attended.includes(s.id) ? 'checked' : ''} onchange="syncEventAttendance(${evtId}, ${s.id}, this.checked)">
+            <input type="checkbox" value="${escapeHtml(idKey(s.id))}" ${attendedKeys.has(idKey(s.id)) ? 'checked' : ''} onchange="syncEventAttendance(${evtArg}, ${jsString(s.id)}, this.checked)">
             <span><strong>${escapeHtml(s.name)}</strong> — ${escapeHtml(s.grade)}, ${escapeHtml(s.school)} <small style="color:var(--text-muted);">(${escapeHtml(s.reference || s.referenceNumber || s.reference_number || `APP-${s.id}`)})</small></span>
           </label>`).join('');
       }
@@ -1094,12 +1120,26 @@
     }
 
     async function saveEventAttendance() {
-      if (!currentEventId) return;
-      const checked = [...document.querySelectorAll('#evtAttList input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
+      if (currentEventId == null) return;
+      const boxes = [...document.querySelectorAll('#evtAttList input[type=checkbox]')];
+      const renderedKeys = new Set(boxes.map(cb => idKey(cb.value)));
+      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
+      const existing = Array.isArray(attData[currentEventId]) ? attData[currentEventId] : [];
+      const scholars = getAcceptedScholars();
+      const resolveId = raw => {
+        const match = scholars.find(s => idKey(s.id) === idKey(raw));
+        return match ? match.id : raw;
+      };
+      // Keep attendance already on record that isn't part of this checklist
+      // (e.g. scholars who checked in with the session code).
+      const merged = [
+        ...existing.filter(id => !renderedKeys.has(idKey(id))),
+        ...boxes.filter(cb => cb.checked).map(cb => resolveId(cb.value)),
+      ];
+      const deduped = [...new Map(merged.map(id => [idKey(id), id])).values()];
       try {
-        await MefamAPI.saveEventAttendance(currentEventId, checked);
-        const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
-        attData[currentEventId] = checked;
+        await MefamAPI.saveEventAttendance(currentEventId, deduped);
+        attData[currentEventId] = deduped;
         localStorage.setItem('mefamdev_event_attendance', JSON.stringify(attData));
         await refreshFormationData();
         openEventAttendance(currentEventId);
@@ -1139,7 +1179,7 @@
             <div class="stopwatch-time">00:00</div>
             <div class="stopwatch-label">Ready</div>
           </div>
-          <div class="ad-actions"><button type="button" class="btn btn-gold" onclick="startEventSession(${ev.id})">Start session</button></div>
+          <div class="ad-actions"><button type="button" class="btn btn-gold" onclick="startEventSession(${jsString(ev.id)})">Start session</button></div>
         </div>`;
         container.appendChild(shell.firstElementChild);
         return;
@@ -1160,8 +1200,8 @@
           <div class="stopwatch-code">${escapeHtml((active.code || '-----').split('').join(' '))}</div>
         </div>
         <div class="ad-actions">
-          <button type="button" class="btn btn-ghost" onclick="endEventSession(${ev.id})">End session</button>
-          <button type="button" class="btn btn-gold" onclick="startEventSession(${ev.id})">New code</button>
+          <button type="button" class="btn btn-ghost" onclick="endEventSession(${jsString(ev.id)})">End session</button>
+          <button type="button" class="btn btn-gold" onclick="startEventSession(${jsString(ev.id)})">New code</button>
         </div>
       </div>`;
       container.appendChild(shell.firstElementChild);
@@ -1200,7 +1240,6 @@
     function renderAttendance(scholars) {
       const apps = Array.isArray(scholars) ? scholars : [];
       const events = sortedEvents();
-      const attData = JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}');
       const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
 
       renderFormationPrintOptions();
@@ -1229,7 +1268,7 @@
       const alertsList = document.getElementById('absenceAlertsList');
       if (alertsList) {
         const alerts = apps.filter(s => {
-          const status = absences[s.id]?.status;
+          const status = absences[idKey(s.id)]?.status;
           return status === 'yellow' || status === 'bad';
         });
         if (alerts.length === 0) {
@@ -1237,7 +1276,7 @@
         } else {
           alertsList.innerHTML = `<table><thead><tr><th>Student</th><th>Status</th><th>Reason</th></tr></thead><tbody>` +
             alerts.map(s => {
-              const record = absences[s.id] || {};
+              const record = absences[idKey(s.id)] || {};
               const status = record.status || 'yellow';
               const cls = status === 'bad' ? 'badge-red' : 'badge-orange';
               return `<tr><td><strong>${escapeHtml(s.name)}</strong></td><td><span class="badge ${cls}">${status === 'yellow' ? 'Yellow' : 'Bad'}</span></td><td style="font-size:.82rem; color:var(--text-muted);">${escapeHtml(record.reason || '—')}</td></tr>`;
@@ -1252,19 +1291,19 @@
           ? apps.filter(s => (s.name || '').toLowerCase().includes(query) || (s.school || '').toLowerCase().includes(query))
           : apps;
         if (apps.length === 0) {
-          logBody.innerHTML = '<tr><td colspan="5" class="empty-state">No accepted scholars available.</td></tr>';
+          logBody.innerHTML = '<tr><td colspan="4" class="empty-state">No accepted scholars available.</td></tr>';
           return;
         }
         if (filtered.length === 0) {
-          logBody.innerHTML = '<tr><td colspan="5" class="empty-state">No scholars match your search.</td></tr>';
+          logBody.innerHTML = '<tr><td colspan="4" class="empty-state">No scholars match your search.</td></tr>';
           return;
         }
         logBody.innerHTML = filtered.map(s => {
-          const formCount = events.filter(ev => getEventAttendanceIds(ev, apps).has(String(s.id))).length;
+          const formCount = events.filter(ev => getEventAttendanceIds(ev, apps).has(idKey(s.id))).length;
           const totalEvents = events.length;
           const attendancePct = totalEvents > 0 ? (formCount / totalEvents) * 100 : 100;
           // Percentage-based formation status: 91%+ Good, 80-90% Warning, below 80% Bad.
-          const manual = absences[s.id]?.status || null;
+          const manual = absences[idKey(s.id)]?.status || null;
           const computed = attendancePct >= 91 ? 'good' : attendancePct >= 80 ? 'yellow' : 'bad';
           const statusKey = manual || computed;
           const statusLabel = statusKey === 'good' ? 'Good' : statusKey === 'yellow' ? 'Warning' : 'Bad';
@@ -1283,7 +1322,7 @@
       const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
       const scholars = (Array.isArray(apps) ? apps : []).filter(a => a && a.id != null);
       const sel = document.getElementById('absenceScholar');
-      if (sel) sel.innerHTML = '<option value="">— Select scholar —</option>' + scholars.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+      if (sel) sel.innerHTML = '<option value="">— Select scholar —</option>' + scholars.map(s => `<option value="${escapeHtml(idKey(s.id))}">${escapeHtml(s.name)}</option>`).join('');
       document.getElementById('absenceDays').value = 'good';
       document.getElementById('absenceReason').value = '';
       document.getElementById('absenceModal').classList.add('open');
@@ -1291,9 +1330,9 @@
 
     function openAddAbsenceModalFor(id) {
       openAddAbsenceModal();
-      document.getElementById('absenceScholar').value = id;
+      document.getElementById('absenceScholar').value = idKey(id);
       const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-      const record = absences[id];
+      const record = absences[idKey(id)];
       if (record) {
         document.getElementById('absenceDays').value = record.status || 'good';
         document.getElementById('absenceReason').value = record.reason || '';
@@ -1301,17 +1340,21 @@
     }
 
     async function saveAbsence() {
-      const id = parseInt(document.getElementById('absenceScholar').value);
+      const rawId = document.getElementById('absenceScholar').value;
       const status = document.getElementById('absenceDays').value;
       const reason = document.getElementById('absenceReason').value.trim();
-      if (!id || !Number.isFinite(id) || !['good','yellow','bad'].includes(status)) {
+      if (!rawId || !['good','yellow','bad'].includes(status)) {
         showToast('Select a scholar and a valid formation status.', 'error');
         return;
       }
+      const scholar = (JSON.parse(localStorage.getItem('mefamdev_apps') || '[]') || [])
+        .find(s => idKey(s.id) === idKey(rawId));
+      const id = scholar ? scholar.id : rawId;
+      const key = idKey(id);
       const days = status === 'good' ? 0 : status === 'yellow' ? 2 : 5;
       try { await MefamAPI.logAbsence(id, days, reason); } catch (error) { console.warn('Could not persist absence to the server; using local fallback.', error); }
       const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-      absences[id] = { days, status, reason: reason || absences[id]?.reason || '' };
+      absences[key] = { days, status, reason: reason || absences[key]?.reason || '' };
       localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
       closeModal('absenceModal');
       renderAttendance(getAcceptedScholars());
@@ -1319,9 +1362,10 @@
     }
 
     async function resetAbsence(id) {
+      const key = idKey(id);
       try { await MefamAPI.resetAbsence(id); } catch (error) { console.warn('Could not reset absence on server; using local fallback.', error); }
       const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-      delete absences[id];
+      delete absences[key];
       localStorage.setItem('mefamdev_absences', JSON.stringify(absences));
       renderAttendance(getAcceptedScholars());
       showToast('Marked resolved.', 'success');
@@ -1366,7 +1410,7 @@
         const params = new URLSearchParams(window.location.search);
         const eventId = params.get('eventId');
         if (eventId) {
-          const target = sortedEvents().find(ev => String(ev.id) === String(eventId));
+          const target = sortedEvents().find(ev => idKey(ev.id) === idKey(eventId));
           if (target) {
             currentEventId = target.id;
             await openEventAttendance(target.id);
