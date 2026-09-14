@@ -10,8 +10,8 @@
     "dev": "node --watch server.js",
     "frontend:dev": "npm --prefix frontend/react run dev",
     "frontend:build": "npm --prefix frontend/react run build",
-    "test": "node --test --test-concurrency=1",
-    "test:watch": "node --test --watch --test-concurrency=1",
+    "test": "node --test test/*.test.js --test-concurrency=1",
+    "test:watch": "node --test test/*.test.js --watch --test-concurrency=1",
     "test:grades": "node --test test/grades.test.js",
     "test:postgres-adapter": "node --test test/postgres-adapter.test.js"
   },

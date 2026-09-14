@@ -6,10 +6,7 @@
     <title>MEFAMDEV – My Application</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/react-image-crop@8.0.0/dist/ReactCrop.css">
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/react-image-crop@8.0.0/dist/ReactCrop.min.js"></script>
+    <script src="/ImageCropper-master/dist/ImageCropper.min.js"></script>
     <style>
         :root {
             --navy: #1a2e44;
@@ -1931,15 +1928,17 @@ let applicantCropState = {
     fileType: 'image/jpeg',
     uploadMethod: 'upload',
     kind: 'document',
-    crop: { unit: '%', x: 15, y: 15, width: 70, height: 70 },
-    completedCrop: null
+    cropper: null
 };
 
 function closeApplicantCropModal() {
     const modal = document.getElementById('applicantCropModal');
-    const root = document.getElementById('applicantCropReactRoot');
+    const canvas = document.getElementById('applicantCropCanvas');
     if (modal) modal.classList.remove('open');
-    if (root) root.innerHTML = '';
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx && ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
     document.body.style.overflow = '';
     applicantCropState = {
         imageDataUrl: null,
@@ -1949,119 +1948,57 @@ function closeApplicantCropModal() {
         fileType: 'image/jpeg',
         uploadMethod: 'upload',
         kind: 'document',
-        crop: { unit: '%', x: 15, y: 15, width: 70, height: 70 },
-        completedCrop: null
+        cropper: null
     };
 }
 
 function renderApplicantCropEditor(dataUrl) {
-    const rootNode = document.getElementById('applicantCropReactRoot');
-    if (!rootNode || !window.React || !window.ReactDOM || !window.ReactCrop) {
-        console.warn('React cropper dependencies are unavailable.');
+    const canvas = document.getElementById('applicantCropCanvas');
+    if (!canvas || !window.ImageCropper) {
+        console.warn('ImageCropper is unavailable.');
         return;
     }
 
-    const CropEditor = () => {
-        const [crop, setCrop] = React.useState(applicantCropState.crop);
-        const [imgReady, setImgReady] = React.useState(false);
-        const imageRef = React.useRef(null);
+    const image = new Image();
+    image.onload = () => {
+        const maxCanvasSize = 620;
+        const scale = Math.min(maxCanvasSize / image.width, maxCanvasSize / image.height, 1);
+        const drawWidth = Math.max(320, Math.round(image.width * scale));
+        const drawHeight = Math.max(320, Math.round(image.height * scale));
+        canvas.width = drawWidth;
+        canvas.height = drawHeight;
 
-        React.useEffect(() => {
-            applicantCropState.crop = crop;
-        }, [crop]);
-
-        React.useEffect(() => {
-            const preload = new Image();
-            preload.onload = () => {
-                setImgReady(true);
-                if (imageRef.current) {
-                    imageRef.current.style.maxHeight = '62vh';
-                    imageRef.current.style.maxWidth = '100%';
-                }
-            };
-            preload.src = dataUrl;
-        }, [dataUrl]);
-
-        return React.createElement(
-            'div',
-            { className: 'applicant-crop-viewport' },
-            React.createElement('div', { className: 'applicant-crop-meta' },
-                React.createElement('span', null, 'Crop to a clear, centered image'),
-                React.createElement('input', {
-                    type: 'range',
-                    min: '1',
-                    max: '3',
-                    step: '0.1',
-                    value: String(applicantCropState.crop?.width > 80 ? 1.2 : 1),
-                    onChange: (event) => {
-                        const value = Number(event.target.value);
-                        const next = {
-                            ...crop,
-                            width: Math.min(70, Math.max(35, 70 / value)),
-                            height: Math.min(70, Math.max(35, 70 / value)),
-                            x: Math.min(50, Math.max(15, 50 - ((70 / value) - 60) / 2)),
-                            y: Math.min(50, Math.max(15, 50 - ((70 / value) - 60) / 2))
-                        };
-                        setCrop(next);
-                    },
-                    style: { width: '100%' }
-                })
-            ),
-            imgReady ? React.createElement(window.ReactCrop, {
-                crop,
-                keepSelection: true,
-                aspect: 1,
-                minWidth: 20,
-                minHeight: 20,
-                onChange: setCrop,
-                onComplete: (completedCrop) => {
-                    applicantCropState.completedCrop = completedCrop;
-                }
-            }, React.createElement('img', {
-                ref: imageRef,
-                src: dataUrl,
-                alt: 'Applicant crop preview',
-                style: { maxHeight: '62vh', width: '100%', display: 'block' }
-            })) : null
+        const cropWidth = Math.min(drawWidth * 0.72, 440);
+        const cropHeight = Math.min(drawHeight * 0.72, 440);
+        const cropper = new ImageCropper(
+            canvas,
+            canvas.width / 2 - cropWidth / 2,
+            canvas.height / 2 - cropHeight / 2,
+            cropWidth,
+            cropHeight,
+            true
         );
+        cropper.setImage(image);
+        applicantCropState.cropper = cropper;
     };
-
-    ReactDOM.createRoot(rootNode).render(React.createElement(CropEditor));
+    image.src = dataUrl;
 }
 
-async function generateApplicantCroppedDataUrl() {
-    const crop = applicantCropState.completedCrop || applicantCropState.crop;
-    if (!applicantCropState.imageDataUrl || !crop) return null;
+function generateApplicantCroppedDataUrl() {
+    const cropper = applicantCropState.cropper;
+    if (!cropper) return Promise.resolve(null);
 
     return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-            try {
-                const canvas = document.createElement('canvas');
-                const naturalWidth = image.naturalWidth || image.width;
-                const naturalHeight = image.naturalHeight || image.height;
-                const cropX = (crop.x / 100) * naturalWidth;
-                const cropY = (crop.y / 100) * naturalHeight;
-                const cropWidth = (crop.width / 100) * naturalWidth;
-                const cropHeight = (crop.height / 100) * naturalHeight;
-
-                canvas.width = Math.max(1, Math.round(cropWidth));
-                canvas.height = Math.max(1, Math.round(cropHeight));
-
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    reject(new Error('Canvas not available for cropping.'));
-                    return;
-                }
-
-                ctx.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL('image/jpeg', 0.82));
-            } catch (error) {
-                reject(error);
+        try {
+            const cropped = cropper.getCroppedImage(1200, 1200);
+            cropped.onload = () => resolve(cropped.src || null);
+            cropped.onerror = () => reject(new Error('Could not generate the cropped image.'));
+            if (cropped.src) {
+                resolve(cropped.src);
             }
-        };
-        image.onerror = () => reject(new Error('Could not load the uploaded image for cropping.'));
-        image.src = applicantCropState.imageDataUrl;
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
@@ -2076,8 +2013,7 @@ function openApplicantCropModal(dataUrl, appId, docKey, details = {}) {
         fileType: details.fileType || 'image/jpeg',
         uploadMethod: details.uploadMethod || 'upload',
         kind: details.kind || 'document',
-        crop: { unit: '%', x: 15, y: 15, width: 70, height: 70 },
-        completedCrop: null
+        cropper: null
     };
 
     renderApplicantCropEditor(dataUrl);
@@ -2095,7 +2031,7 @@ async function submitApplicantCropUpload() {
     try {
         const dataUrl = await generateApplicantCroppedDataUrl();
         if (!dataUrl) {
-            alert('Please select a crop area before uploading.');
+            alert('Please crop the image before uploading.');
             return;
         }
 
@@ -2200,8 +2136,10 @@ if (typeof clearClientSession !== 'function') {
             <button class="modal-close" type="button" aria-label="Close crop" onclick="closeApplicantCropModal()">×</button>
         </div>
         <div class="modal-body" style="padding:18px 22px 20px;">
-            <div id="applicantCropReactRoot" class="applicant-crop-root"></div>
-            <div class="crop-actions" style="margin-top:18px;">
+            <div class="crop-stage" style="min-height: 420px; margin-bottom: 18px;">
+                <canvas id="applicantCropCanvas" width="640" height="640"></canvas>
+            </div>
+            <div class="crop-actions">
                 <button class="btn btn-gold" type="button" onclick="submitApplicantCropUpload()">Use Cropped Image</button>
                 <button class="btn btn-ghost" type="button" onclick="closeApplicantCropModal()">Cancel</button>
             </div>
