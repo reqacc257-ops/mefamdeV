@@ -496,6 +496,17 @@ function schoolYearSortKey(sy){
   const m = String(sy||'').match(/(\d{4})/);
   return m ? Number(m[1]) : 0;
 }
+function normalizeSchoolYearValue(rawValue){
+  const text = String(rawValue ?? '').trim();
+  if (!text) return '';
+  const compact = text.replace(/\s+/g, '');
+  if (/^\d{4}$/.test(compact)) {
+    const startYear = Number(compact);
+    if (startYear >= 2000 && startYear <= 2100) return `${startYear}-${startYear + 1}`;
+  }
+  if (/^\d{4}-\d{4}$/.test(compact)) return compact;
+  return text;
+}
 
 /* ══════════════════════════════════════════════════════════
    LOAD
@@ -897,15 +908,15 @@ function renderSchoolYearOptions(selectedSchoolYear='') {
 
   const years = new Set();
   acceptedScholars.forEach(app => {
-    const sy = String(app?.sy || '').trim();
+    const sy = normalizeSchoolYearValue(app?.sy || '');
     if(sy) years.add(sy);
   });
   allGrades.forEach(g => {
-    const sy = String(g?.schoolYear || '').trim();
+    const sy = normalizeSchoolYearValue(g?.schoolYear || '');
     if(sy) years.add(sy);
   });
   pendingExtractions.forEach(e => {
-    const sy = String(e?.extracted?.schoolYear || '').trim();
+    const sy = normalizeSchoolYearValue(e?.extracted?.schoolYear || '');
     if(sy) years.add(sy);
   });
 
@@ -916,8 +927,9 @@ function renderSchoolYearOptions(selectedSchoolYear='') {
   select.innerHTML = `<option value="">-- Select School Year --</option>` +
     available.map(sy => `<option value="${escapeHtml(sy)}">${escapeHtml(sy)}</option>`).join('');
 
-  if(selectedSchoolYear && available.includes(selectedSchoolYear)) {
-    select.value = selectedSchoolYear;
+  const normalizedSelected = normalizeSchoolYearValue(selectedSchoolYear);
+  if(normalizedSelected && available.includes(normalizedSelected)) {
+    select.value = normalizedSelected;
   } else {
     select.value = '';
   }
@@ -990,12 +1002,13 @@ async function openEditQuarterModal(id){
 async function saveGrade(){
   const modalEl = document.getElementById('gradeModal');
   const appId = parseInt(document.getElementById('gradeModalAppId').value,10);
-  const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
+  const schoolYear = normalizeSchoolYearValue(document.getElementById('gradeSchoolYear').value.trim());
   const subject = document.getElementById('gradeSubject').value.trim();
   const quarter = document.getElementById('gradeQuarter').value.trim();
   const grade = parseInt(document.getElementById('gradeInput').value,10);
   const gradeRowId = modalEl.dataset.gradeRowId ? Number(modalEl.dataset.gradeRowId) : null;
 
+  document.getElementById('gradeSchoolYear').value = schoolYear;
   if(!schoolYear) return alert('Please enter a school year.');
   if(!subject)    return alert('Please select a subject.');
   if(!quarter)    return alert('Please select a quarter.');
