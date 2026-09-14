@@ -1955,29 +1955,46 @@ function closeApplicantCropModal() {
 function renderApplicantCropEditor(dataUrl) {
     const canvas = document.getElementById('applicantCropCanvas');
     if (!canvas || !window.ImageCropper) {
-        console.warn('ImageCropper is unavailable.');
+        console.warn('ImageCropper is unavailable. Please check the script path.');
         return;
     }
 
     const image = new Image();
     image.onload = () => {
-        const maxCanvasSize = 620;
-        const scale = Math.min(maxCanvasSize / image.width, maxCanvasSize / image.height, 1);
-        const drawWidth = Math.max(320, Math.round(image.width * scale));
-        const drawHeight = Math.max(320, Math.round(image.height * scale));
+        const maxSize = 800;
+        const imgRatio = image.width / image.height;
+        let drawWidth = image.width;
+        let drawHeight = image.height;
+
+        if (drawWidth > maxSize || drawHeight > maxSize) {
+            if (imgRatio > 1) {
+                drawWidth = maxSize;
+                drawHeight = maxSize / imgRatio;
+            } else {
+                drawHeight = maxSize;
+                drawWidth = maxSize * imgRatio;
+            }
+        }
+
         canvas.width = drawWidth;
         canvas.height = drawHeight;
 
-        const cropWidth = Math.min(drawWidth * 0.72, 440);
-        const cropHeight = Math.min(drawHeight * 0.72, 440);
+        const A4_RATIO = 1.414;
+        const cropHeight = drawHeight * 0.85;
+        const cropWidth = cropHeight / A4_RATIO;
+        const x = (canvas.width - cropWidth) / 2;
+        const y = (canvas.height - cropHeight) / 2;
+
         const cropper = new ImageCropper(
             canvas,
-            canvas.width / 2 - cropWidth / 2,
-            canvas.height / 2 - cropHeight / 2,
+            x,
+            y,
             cropWidth,
             cropHeight,
-            true
+            true,
+            20
         );
+
         cropper.setImage(image);
         applicantCropState.cropper = cropper;
     };
@@ -1990,7 +2007,9 @@ function generateApplicantCroppedDataUrl() {
 
     return new Promise((resolve, reject) => {
         try {
-            const cropped = cropper.getCroppedImage(1200, 1200);
+            const outputWidth = 1200;
+            const outputHeight = Math.round(outputWidth * 1.414);
+            const cropped = cropper.getCroppedImage(outputWidth, outputHeight);
             cropped.onload = () => resolve(cropped.src || null);
             cropped.onerror = () => reject(new Error('Could not generate the cropped image.'));
             if (cropped.src) {
