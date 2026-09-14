@@ -18,6 +18,27 @@ const documentsRouter = require('./documents');
 const { appendAuditLog } = require('../lib/audit');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+function parseJsonArray(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseJsonObject(value) {
+  if (!value || typeof value === 'object') return value && typeof value === 'object' ? value : {};
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 function parseApp(row) {
   if (!row) return null;
   return {
@@ -31,11 +52,11 @@ function parseApp(row) {
     grade: row.grade || '',
     sy: row.sy || '',
     barangay: row.barangay || '',
-    family_members: JSON.parse(row.family_members || '[]'),
-    properties:     JSON.parse(row.properties     || '[]'),
-    can_provide:    JSON.parse(row.can_provide     || '[]'),
+    family_members: parseJsonArray(row.family_members),
+    properties:     parseJsonArray(row.properties),
+    can_provide:    parseJsonArray(row.can_provide),
     // Legacy field names kept for frontend compatibility
-    familyMembers: JSON.parse(row.family_members || '[]'),
+    familyMembers: parseJsonArray(row.family_members),
     livingWith:    row.living_with,
     eduLevel:      row.edu_level,
     prevGrade:     row.prev_grade,
@@ -46,12 +67,8 @@ function parseApp(row) {
     reference:      row.reference || row.reference_number || row.referenceNumber || '',
     referenceNumber: row.reference_number || row.referenceNumber || row.reference || '',
     date:            row.date_label || row.date || '—',
-    submittedData: typeof row.submitted_data === 'string' ? (() => {
-      try { return JSON.parse(row.submitted_data || '{}'); } catch { return row.submitted_data || {}; }
-    })() : (row.submitted_data || {}),
-    statusHistory: typeof row.status_history === 'string' ? (() => {
-      try { return JSON.parse(row.status_history || '[]'); } catch { return []; }
-    })() : (row.status_history || []),
+    submittedData: parseJsonObject(row.submitted_data),
+    statusHistory: parseJsonArray(row.status_history),
     submittedAt: row.submitted_at || row.submittedAt || '',
     statusUpdatedAt: row.status_updated_at || row.statusUpdatedAt || '',
   };
