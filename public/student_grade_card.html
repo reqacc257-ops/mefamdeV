@@ -264,6 +264,21 @@
         </div>
     </main>
 
+    <div class="modal-overlay" id="uploadHistoryModal">
+        <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+                <h2>Previous Uploads</h2>
+                <button class="btn btn-ghost" onclick="closeModal('uploadHistoryModal')">✕</button>
+            </div>
+            <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
+                <div id="uploadHistoryContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('uploadHistoryModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="reportCardModal">
         <div class="modal">
             <div class="modal-header">
@@ -679,11 +694,55 @@
                     <td>
                         <div class="action-stack">
                             <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
-                            <button class="btn btn-ghost btn-sm" onclick='openGradeModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(latestSY)})'>✎ Update</button>
+                            <button class="btn btn-ghost btn-sm" onclick='openUploadHistoryModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")})'>Previous Uploads</button>
                         </div>
                     </td>
                 </tr>`;
             }).join('');
+        }
+
+        async function openUploadHistoryModal(appId, name) {
+            const content = document.getElementById('uploadHistoryContent');
+            if (!content) return;
+            try {
+                const rows = await MefamAPI.getGradeExtractionHistory(appId) || [];
+                const history = Array.isArray(rows) ? rows : [];
+                if (!history.length) {
+                    content.innerHTML = `<div class="empty-state">No prior report-card uploads were found for ${escapeHtml(name || 'this scholar')}.</div>`;
+                    document.getElementById('uploadHistoryModal')?.classList.add('open');
+                    return;
+                }
+                const byYear = history.reduce((acc, row) => {
+                    const year = String(row?.extracted?.schoolYear || 'Unknown School Year').trim();
+                    if (!acc[year]) acc[year] = [];
+                    acc[year].push(row);
+                    return acc;
+                }, {});
+                const years = Object.keys(byYear).sort((a, b) => b.localeCompare(a));
+                content.innerHTML = years.map(year => {
+                    const rowsForYear = byYear[year];
+                    const rowHtml = rowsForYear.map(row => {
+                        const ts = row.uploadedAt ? new Date(row.uploadedAt).toLocaleString() : 'Uploaded';
+                        const gradeCount = Array.isArray(row.extracted?.subjects) ? row.extracted.subjects.length : 0;
+                        return `<div class="history-upload-row" style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--border);">
+                            <div>
+                                <div style="font-weight:700; color:var(--navy);">${escapeHtml(ts)}</div>
+                                <div style="font-size:.8rem; color:var(--text-muted);">${gradeCount} learning areas detected</div>
+                            </div>
+                            <button class="btn btn-gold btn-sm" onclick='openGradeModal(${Number(appId)||0}, ${makeJsString(name || "Scholar")}, ${makeJsString(year)})'>Update</button>
+                        </div>`;
+                    }).join('');
+                    return `<div class="upload-history-year" style="margin-bottom:16px;">
+                        <div style="font-size:.84rem; font-weight:800; color:var(--navy); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;">${escapeHtml(year)}</div>
+                        <div>${rowHtml}</div>
+                    </div>`;
+                }).join('');
+                document.getElementById('uploadHistoryModal')?.classList.add('open');
+            } catch (error) {
+                console.error('Failed to load upload history:', error);
+                content.innerHTML = `<div class="empty-state">Unable to load the upload history.</div>`;
+                document.getElementById('uploadHistoryModal')?.classList.add('open');
+            }
         }
 
         async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
