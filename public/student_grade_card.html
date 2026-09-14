@@ -317,6 +317,35 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="reportCardCropModal">
+        <div class="modal" style="max-width:780px;">
+            <div class="modal-header"><h2>Crop Uploaded Report Card</h2><button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">✕</button></div>
+            <div class="modal-body">
+                <div style="display:grid; gap:12px;">
+                    <canvas id="reportCardCropCanvas" width="540" height="540" style="max-width:100%; border:1px solid var(--border); border-radius:10px; background:#f8fafc;"></canvas>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                        <label class="form-group" style="margin:0; width:180px;">
+                            <span style="display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;">Zoom</span>
+                            <input type="range" min="1" max="3" step="0.1" value="1.1" id="reportCardCropZoom">
+                        </label>
+                        <label class="form-group" style="margin:0; width:120px;">
+                            <span style="display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;">X</span>
+                            <input type="range" min="0" max="100" value="50" id="reportCardCropX">
+                        </label>
+                        <label class="form-group" style="margin:0; width:120px;">
+                            <span style="display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;">Y</span>
+                            <input type="range" min="0" max="100" value="50" id="reportCardCropY">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">Cancel</button>
+                <button class="btn btn-navy" onclick="applyReportCardCrop()">Use Cropped Image</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="subjectsModal">
         <div class="modal" style="max-width:520px;">
             <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
@@ -691,7 +720,8 @@
             activeExtractionId = Number(id);
             const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
             const extracted = extraction?.extracted || {};
-            let reviewPeriodCount = Number(extracted.gradingPeriodCount) === 4 ? 4 : 3;
+            const extractedCount = Number(extracted.gradingPeriodCount);
+            let reviewPeriodCount = [1,2,3,4].includes(extractedCount) ? extractedCount : 3;
             const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
             // The uploaded card is the source of truth. Keep every detected
             // learning area, including component rows under MAPEH.
@@ -719,7 +749,7 @@
             const periodFields = Array.from({ length: reviewPeriodCount }, (_, index) => `q${index + 1}`);
             const renderReviewPeriodCell = (subject, field) => `<td>${renderReviewGradeInput(subject, field)}</td>`;
             const photo = extraction.fileData
-                ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)">`
+                ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)"><div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" type="button" onclick="openCropModal('${escapeHtml(extraction.fileData || '')}')">Crop image</button></div>`
                 : '<div class="empty-state">Original image is unavailable.</div>';
             content.innerHTML = `
                 <div class="form-group"><label>Student</label><div style="font-weight:700;">${escapeHtml(scholar?.name || `Applicant #${extraction.appId || '—'}`)}</div></div>
@@ -730,7 +760,7 @@
                     <div class="review-grade-column">
                         <div class="review-panel-title">Grade entry</div>
                         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
-                        <div class="form-group"><label for="reviewPeriodCount">Grading format</label><select id="reviewPeriodCount" onchange="updateReviewPeriodFields()"><option value="3"${reviewPeriodCount === 3 ? ' selected' : ''}>3 terms</option><option value="4"${reviewPeriodCount === 4 ? ' selected' : ''}>4 quarters</option></select></div>
+                        <div class="form-group"><label for="reviewPeriodCount">Grading format</label><select id="reviewPeriodCount" onchange="updateReviewPeriodFields()"><option value="1"${reviewPeriodCount === 1 ? ' selected' : ''}>1 term</option><option value="2"${reviewPeriodCount === 2 ? ' selected' : ''}>2 terms</option><option value="3"${reviewPeriodCount === 3 ? ' selected' : ''}>3 terms</option><option value="4"${reviewPeriodCount === 4 ? ' selected' : ''}>4 quarters</option></select></div>
                         <div class="review-table-toolbar" aria-label="Grade table controls">
                             <button class="btn btn-gold btn-sm" type="button" onclick="addReviewSubjectRow()">+ Add learning area</button>
                             <button class="btn btn-ghost" type="button" title="Scroll grades left" aria-label="Scroll grades left" onclick="scrollReviewGrades(-1)">←</button>
@@ -755,7 +785,7 @@
             const row = document.createElement('tr');
             row.className = 'review-subject-row';
             row.dataset.index = String(table.rows.length);
-            const periodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3;
+            const periodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : Number(document.getElementById('reviewPeriodCount')?.value) === 3 ? 3 : Number(document.getElementById('reviewPeriodCount')?.value) === 2 ? 2 : 1;
             row.innerHTML = `<td><input type="text" class="review-subject-name" placeholder="Learning area name" style="width:100%;"></td>
                 ${Array.from({ length: periodCount }, (_, index) => `q${index + 1}`).concat('final').map(field => `<td><div><input type="number" class="review-quarter-input review-cell-warning" data-quarter="${field}" value="" min="60" max="100" style="width:70px;"><span class="review-cell-warning-label">Blank</span></div></td>`).join('')}`;
             table.appendChild(row);
@@ -763,10 +793,45 @@
             row.scrollIntoView({ block: 'nearest' });
         }
 
+        function openCropModal(src) {
+            if (!src) return;
+            cropImageSource = src;
+            cropImage = new Image();
+            cropImage.onload = () => {
+                const canvas = document.getElementById('reportCardCropCanvas');
+                const ctx = canvas?.getContext('2d');
+                if (!canvas || !ctx) return;
+                canvas.width = Math.min(540, cropImage.width || 540);
+                canvas.height = Math.min(540, cropImage.height || 540);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#edf2f7';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(cropImage, 0, 0, canvas.width, canvas.height);
+                currentCropState = { zoom: 1.1, x: 50, y: 50 };
+                document.getElementById('reportCardCropZoom').value = '1.1';
+                document.getElementById('reportCardCropX').value = '50';
+                document.getElementById('reportCardCropY').value = '50';
+                document.getElementById('reportCardCropModal').classList.add('open');
+            };
+            cropImage.src = src;
+        }
+
+        function applyReportCardCrop() {
+            const canvas = document.getElementById('reportCardCropCanvas');
+            if (!canvas || !cropImageSource) return;
+            const cropped = canvas.toDataURL('image/jpeg', 0.92);
+            const img = document.querySelector('#reviewExtractionContent img');
+            if (img) img.src = cropped;
+            cropImageSource = cropped;
+            closeModal('reportCardCropModal');
+        }
+
         function updateReviewPeriodFields() {
             const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
             if (!extraction) return;
-            extraction.extracted = { ...(extraction.extracted || {}), gradingPeriodCount: Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3 };
+            const count = Number(document.getElementById('reviewPeriodCount')?.value);
+            const reviewCount = [1,2,3,4].includes(count) ? count : 3;
+            extraction.extracted = { ...(extraction.extracted || {}), gradingPeriodCount: reviewCount };
             openReviewModal(activeExtractionId);
         }
 
@@ -800,9 +865,10 @@
 
         function collectReviewSubjects() {
             const rows = Array.from(document.querySelectorAll('.review-subject-row'));
+            const periodSelect = Number(document.getElementById('reviewPeriodCount')?.value);
+            const periodCount = [1,2,3,4].includes(periodSelect) ? periodSelect : 3;
             return rows.map(row => {
                 const payload = { name: row.querySelector('.review-subject-name')?.value?.trim() || '' };
-                const periodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3;
                 Array.from({ length: periodCount }, (_, index) => `q${index + 1}`).concat('final').forEach(key => {
                     const raw = row.querySelector(`[data-quarter="${key}"]`)?.value;
                     payload[key] = raw === '' || raw === null || raw === undefined ? null : Number(raw);
@@ -822,8 +888,10 @@
             try {
                 const reviewNotes = document.getElementById('reviewNotes')?.value || '';
                 const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim() || '';
-                const gradingPeriodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : 3;
-                const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear, gradingPeriodCount);
+                const gradingPeriodCount = Number(document.getElementById('reviewPeriodCount')?.value);
+                const normalizedCount = [1,2,3,4].includes(gradingPeriodCount) ? gradingPeriodCount : 3;
+                const fileData = cropImageSource || document.querySelector('#reviewExtractionContent img')?.src || '';
+                const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear, normalizedCount, fileData);
                 if (response?.error) throw new Error(response.error);
                 const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
                 const appId = extraction?.appId ? Number(extraction.appId) : null;

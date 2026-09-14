@@ -15,6 +15,7 @@ const db = require('../db');
 const crypto = require('crypto');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const documentsRouter = require('./documents');
+const { appendAuditLog } = require('../lib/audit');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function parseApp(row) {
@@ -338,6 +339,12 @@ router.delete('/:id', requireRole('director'), async (req, res) => {
   }
 
   await db.prepare('DELETE FROM applications WHERE id = ?').run(req.params.id);
+  appendAuditLog('application-deleted', {
+    user: req.user?.name || req.user?.username || req.user?.role || 'director',
+    applicant: Number(req.params.id),
+    details: `Deleted application #${req.params.id} (${app.name || 'Applicant'}).`
+  }, req);
+
   res.json({ ok: true, deletedId: Number(req.params.id) });
 });
 

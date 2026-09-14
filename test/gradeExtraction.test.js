@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('assert');
 const db = require('../db');
 const gradeExtractionRouter = require('../routes/gradeExtraction');
+const { appendAuditLog } = require('../lib/audit');
 const { normalizeExtractionResult, parseNumber, parseOcrSpaceText } = require('../lib/gradeExtraction');
 
 test('parseNumber handles numeric strings and nulls', () => {
@@ -73,6 +74,20 @@ test('approved grade review marks the report card requirement as Received', asyn
   assert.ok(row, 'reportCard document row should exist');
   assert.equal(row.status, 'Received');
   assert.match(String(row.note || ''), /approved/i);
+});
+
+test('appendAuditLog records delete-oriented audit entries for the reviewer and applicant context', () => {
+  const log = appendAuditLog('application-deleted', {
+    user: 'director@example.com',
+    applicant: 2003,
+    details: 'Deleted application #2003 from the staff dashboard.'
+  });
+
+  assert.ok(log && typeof log.id !== 'undefined');
+  assert.strictEqual(log.action, 'application-deleted');
+  assert.strictEqual(log.user, 'director@example.com');
+  assert.strictEqual(log.applicant, 2003);
+  assert.match(log.details, /Deleted application/);
 });
 
 test('rejected grade-file review does not reject the applicant', async () => {

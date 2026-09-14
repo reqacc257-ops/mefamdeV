@@ -1005,10 +1005,10 @@
             </button>
             <div class="nav-group-items">
                 <button type="button" class="nav-item" onclick="nav('submitted-apps',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">📨</span> Applications Received <span class="nav-badge" id="nav-badge">0</span>
+                    <span class="nav-icon" aria-hidden="true">📨</span> Submitted Application <span class="nav-badge" id="nav-badge">0</span>
                 </button>
                 <button type="button" class="nav-item" onclick="nav('pipeline',this)" data-roles="director,program">
-                    <span class="nav-icon" aria-hidden="true">🔀</span> Application Pipeline
+                    <span class="nav-icon" aria-hidden="true">🔀</span> Application Status
                 </button>
                 <button type="button" class="nav-item" onclick="openAssessment(null)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">📝</span> Assessment Form
@@ -1048,7 +1048,7 @@
                     <span class="nav-icon" aria-hidden="true">📢</span> Announcements
                 </button>
                 <button type="button" class="nav-item" onclick="window.location.href='mass_print.html'" data-roles="director,edu,finance,program">
-                    <span class="nav-icon" aria-hidden="true">🖨️</span> Print Center
+                    <span class="nav-icon" aria-hidden="true">🖨️</span> Reports
                 </button>
                 <button type="button" class="nav-item" onclick="nav('settings',this)" data-roles="director">
                     <span class="nav-icon" aria-hidden="true">⚙️</span> Settings
@@ -3234,6 +3234,8 @@ function renderMonitoring(monitoring) {
             </div>`).join('');
     }
 
+    const academicAlerts = alerts.filter(alert => alert.type === 'academic').length;
+    const attendanceAlerts = alerts.filter(alert => alert.type === 'attendance').length;
     const alertLevelClass = summary.alertLevel === 'high' ? 'badge-red' : summary.alertLevel === 'medium' ? 'badge-orange' : 'badge-green';
     const alertLevelValue = String(summary.alertLevel || 'low');
 
@@ -3274,6 +3276,17 @@ function renderMonitoring(monitoring) {
                 <div style="border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:#fff;">
                     <div style="font-size:.76rem; color:var(--text-muted);">Rejected / Graduated</div>
                     <div style="font-weight:700; color:var(--text);">${summary.rejected || 0} / ${summary.graduated || 0}</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap:8px; margin-top:8px;">
+                <div style="border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:#eef7ff;">
+                    <div style="font-size:.76rem; color:var(--text-muted);">Academic alerts</div>
+                    <div style="font-weight:700; color:var(--blue, #2f80ed);">${academicAlerts}</div>
+                </div>
+                <div style="border:1px solid var(--border); border-radius:10px; padding:8px 10px; background:#fff7ee;">
+                    <div style="font-size:.76rem; color:var(--text-muted);">Attendance alerts</div>
+                    <div style="font-weight:700; color:var(--orange, #f49f1a);">${attendanceAlerts}</div>
                 </div>
             </div>
 

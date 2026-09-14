@@ -136,10 +136,11 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   const reviewNotes = String(req.body.reviewNotes || '');
   const schoolYear = String(req.body.schoolYear || extracted?.schoolYear || '').trim();
   const requestedPeriodCount = Number(req.body.gradingPeriodCount);
-  const periodCount = requestedPeriodCount === 4 || requestedPeriodCount === 3
-    ? requestedPeriodCount
-    : Number(extracted?.gradingPeriodCount) === 4 ? 4 : 3;
+  const requestedValidCount = [1, 2, 3, 4].includes(requestedPeriodCount) ? requestedPeriodCount : null;
+  const periodCount = requestedValidCount || (Number(extracted?.gradingPeriodCount) >= 1 && Number(extracted?.gradingPeriodCount) <= 4 ? Number(extracted.gradingPeriodCount) : 3);
   const reviewerId = req.user.id || req.user.username || 'staff';
+  const periodKeys = Array.from({ length: periodCount }, (_, index) => `q${index + 1}`);
+  const incomingFileData = String(req.body.fileData || '').trim();
 
   let rejectedCells = [];
   if (action === 'approve') {
@@ -154,7 +155,7 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
     for (const subject of subjects) {
       const name = String(subject.name || '').trim();
       if (!name) continue;
-      for (const quarterKey of ['q1', 'q2', 'q3', ...(periodCount === 4 ? ['q4'] : [])]) {
+      for (const quarterKey of periodKeys) {
         const raw = subject[quarterKey];
         if (raw === null || raw === undefined || raw === '') continue;
         const value = Number(raw);
@@ -170,15 +171,12 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
       });
     }
 
-    // An uploaded report card is the complete source for this school year.
-    // Remove older finalized rows first so unrelated learning areas cannot
-    // leak into the newly approved card.
     await db.prepare('DELETE FROM grades WHERE app_id = ? AND school_year = ?').run(row.app_id, schoolYear);
 
     for (const subject of subjects) {
       const name = String(subject.name || '').trim();
       if (!name) continue;
-      for (const [index, quarterKey] of ['q1', 'q2', 'q3', ...(periodCount === 4 ? ['q4'] : [])].entries()) {
+      for (const [index, quarterKey] of periodKeys.entries()) {
         const raw = subject[quarterKey];
         if (raw === null || raw === undefined || raw === '') continue;
         const value = Number(raw);
@@ -198,8 +196,9 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
   const reviewedAt = new Date().toISOString();
   if (action === 'reject') {
     const applicantNote = reviewNotes || 'Your report card upload was rejected. Please upload a clearer photo for review.';
+    const fileDataForReject = incomingFileData ? incomingFileData : '';
     await db.prepare('UPDATE grade_extraction SET status = ?, file_data = ?, review_notes = ?, reviewer_id = ?, reviewed_at = ? WHERE id = ?')
-      .run(status, '', applicantNote, reviewerId, reviewedAt, id);
+      .run(status, fileDataForReject, applicantNote, reviewerId, reviewedAt, id);
     await db.prepare(`
       UPDATE document_status
       SET status = ?, note = ?, updated_at = ?, file_name = ?, file_type = ?, file_data = ?, upload_method = ?
@@ -223,6 +222,9 @@ router.put('/:id/review', requireRole('director', 'edu'), async (req, res) => {
       .run(status, reviewNotes, reviewerId, reviewedAt, id);
     await db.prepare('UPDATE grade_extraction SET extracted = ? WHERE id = ?')
       .run(JSON.stringify(reviewedExtraction), id);
+    if (incomingFileData) {
+      await db.prepare('UPDATE grade_extraction SET file_data = ? WHERE id = ?').run(incomingFileData, id);
+    }
     await markReportCardReceived(row.app_id, reviewNotes || 'Report card approved and marked as received.');
   }
 
