@@ -1397,6 +1397,15 @@ async function uploadDocumentFromInput(input) {
         return;
     }
 
+    const currentItem = Array.isArray(window.__mefamdevRequirements)
+        ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey))
+        : null;
+    if (currentItem && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
+        alert('This document has already been reviewed. You may only replace it within 10 minutes of the latest approval/rejection update.');
+        input.value = '';
+        return;
+    }
+
     const maxSize = 10 * 1024 * 1024; // 10 MB
     const row = input.closest('.doc-upload-row');
     const statusEl = row?.querySelector('.doc-upload-status');
