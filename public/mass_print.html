@@ -80,6 +80,7 @@
       color:#12283f;
       background:linear-gradient(140deg,#ffe0a3,#f5a623 55%,#d98508);
       box-shadow:0 10px 24px -8px rgba(245,166,35,.75), inset 0 1px 0 rgba(255,255,255,.7);
+      object-fit:cover;
     }
     .brand-org{
       display:block;
@@ -121,9 +122,6 @@
       box-shadow:var(--shadow-md);
       overflow:hidden;
     }
-    /* the setup panel must let multi-select menus escape its bounds */
-    .panel--menu{overflow:visible}
-    .panel--menu > .panel-head:first-child{border-radius:var(--radius) var(--radius) 0 0}
 
     .panel-head{
       display:flex;align-items:center;justify-content:space-between;
@@ -183,7 +181,7 @@
     /* ============ FILTERS ============ */
     .controls{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
       gap:15px;
       align-items:start;
     }
@@ -217,86 +215,89 @@
       cursor:pointer;
     }
 
-    /* ---------- MULTI-SELECT CHECKLIST ---------- */
-    .ms{position:relative}
-    .ms-trigger{
-      width:100%;min-width:0;
-      display:flex;align-items:center;gap:9px;
-      padding:10px 12px;
-      font:inherit;font-size:.86rem;color:var(--text);
-      background:#fff;border:1px solid var(--border-strong);border-radius:11px;
-      cursor:pointer;text-align:left;
-      transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+    /* ---------- CHECKBOX FILTER GROUP ---------- */
+    .cb-group{
+      border:1px solid var(--border-strong);
+      border-radius:11px;
+      background:#fff;
+      overflow:hidden;
+      display:flex;flex-direction:column;
+      min-width:0;
     }
-    .ms-trigger:hover{border-color:#b9c7d8}
-    .ms-trigger:focus-visible{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,166,35,.17)}
-    .ms-trigger[aria-expanded="true"]{border-color:var(--gold);box-shadow:0 0 0 4px rgba(245,166,35,.17)}
-    .ms-value{
+    .cb-head{
+      display:flex;align-items:center;gap:7px;
+      padding:7px 10px;
+      background:linear-gradient(180deg,#fbfdff,#f4f8fd);
+      border-bottom:1px solid var(--border);
+    }
+    .cb-head-label{
       flex:1 1 auto;min-width:0;
+      font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:#5d6e83;
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     }
-    .ms-value.is-placeholder{color:#a9b6c6}
-    .ms-badge{
-      flex:0 0 auto;display:inline-grid;place-items:center;
-      min-width:19px;height:19px;padding:0 5px;
-      border-radius:999px;font-size:.68rem;font-weight:700;
-      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);
+    .cb-count{
+      flex:0 0 auto;
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:19px;height:19px;padding:0 6px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#ffcc6d,#f5a623);
+      color:#3d2700;
+      font-size:.66rem;font-weight:700;
     }
-    .ms-badge[hidden]{display:none}
-    .ms-chev{
-      width:13px;height:13px;flex:0 0 auto;
-      stroke:#6b7c93;fill:none;stroke-width:2.6;
-      stroke-linecap:round;stroke-linejoin:round;
-      transition:transform .2s ease;
+    .cb-count[hidden]{display:none}
+    .cb-head-actions{display:flex;gap:5px;flex:0 0 auto}
+    .cb-head-actions button{
+      padding:3px 8px;border-radius:7px;cursor:pointer;
+      font:inherit;font-size:.67rem;font-weight:700;letter-spacing:.02em;
+      color:#41556b;background:#eef2f7;border:1px solid var(--border);
+      transition:background .15s ease,color .15s ease,border-color .15s ease;
     }
-    .ms-trigger[aria-expanded="true"] .ms-chev{transform:rotate(180deg)}
+    .cb-head-actions button:hover{background:#e3eaf3;color:var(--navy);border-color:#c8d5e4}
+    .cb-head-actions button:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(245,166,35,.28)}
 
-    .ms-panel{
-      position:absolute;z-index:80;top:calc(100% + 6px);left:0;right:0;
-      min-width:220px;padding:9px;
-      background:#fff;border:1px solid var(--border-strong);border-radius:13px;
-      box-shadow:var(--shadow-lg);
-      animation:msIn .14s cubic-bezier(.2,.8,.3,1);
+    .cb-search{
+      width:100%;
+      padding:8px 11px;
+      font-size:.8rem;font-family:inherit;
+      border:0;border-bottom:1px solid var(--border);
+      border-radius:0;
+      background:#fcfdff;
+      transition:background .15s ease,box-shadow .15s ease;
     }
-    .ms-panel[hidden]{display:none}
-    @keyframes msIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+    .cb-search:hover{border-radius:0;border-color:var(--border)}
+    .cb-search:focus{
+      outline:none;background:#fff;
+      box-shadow:inset 0 -2px 0 var(--gold);
+      border-color:var(--border);
+    }
 
-    .ms-search{
-      width:100%;margin-bottom:8px;
-      padding:8px 11px;font-size:.82rem;border-radius:9px;
-    }
-    .ms-actions{display:flex;gap:6px;margin-bottom:7px}
-    .ms-actions button{
-      flex:1 1 auto;padding:6px 8px;border-radius:8px;cursor:pointer;
-      font:inherit;font-size:.71rem;font-weight:700;letter-spacing:.02em;
-      color:#41556b;background:#f2f5f9;border:1px solid var(--border);
-      transition:background .16s ease,color .16s ease,border-color .16s ease;
-    }
-    .ms-actions button:hover{background:#e8eef6;color:var(--navy);border-color:#c8d5e4}
-
-    .ms-options{
-      max-height:216px;overflow:auto;
+    .cb-options{
+      max-height:154px;overflow-y:auto;
       display:flex;flex-direction:column;gap:1px;
+      padding:5px;
       scrollbar-width:thin;scrollbar-color:#c8d4e2 transparent;
     }
-    .ms-options::-webkit-scrollbar{width:9px}
-    .ms-options::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
-    .ms-option{
+    .cb-options::-webkit-scrollbar{width:9px}
+    .cb-options::-webkit-scrollbar-thumb{background:#cbd6e3;border-radius:99px;border:2px solid #fff}
+
+    .cb-option{
       display:flex;align-items:center;gap:9px;
-      padding:7px 8px;border-radius:8px;cursor:pointer;
-      font-size:.83rem;color:#33465b;
+      padding:6px 8px;border-radius:8px;cursor:pointer;
+      font-size:.82rem;color:#33465b;
       transition:background .14s ease;
+      min-width:0;
     }
-    .ms-option:hover{background:#f5f9ff}
-    .ms-option input[type=checkbox]{flex:0 0 auto}
-    .ms-option span{
+    .cb-option:hover{background:#f5f9ff}
+    .cb-option input[type=checkbox]{flex:0 0 auto}
+    .cb-option span{
       min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     }
-    .ms-empty{
+    .cb-empty{
       margin:0;padding:14px 8px;text-align:center;
-      font-size:.78rem;color:#93a3b6;
+      font-size:.76rem;color:#93a3b6;
     }
-    .ms-empty[hidden]{display:none}
+    .cb-empty[hidden]{display:none}
 
     /* ---------- ACTIVE FILTER PILLS ---------- */
     .active-filters{
@@ -364,6 +365,13 @@
     }
     .btn-gold:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 13px 26px -9px rgba(224,140,11,1)}
 
+    .btn-navy{
+      color:#fff;
+      background:linear-gradient(135deg,#16324f,#245075);
+      box-shadow:0 9px 20px -9px rgba(22,50,79,.75);
+    }
+    .btn-navy:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 13px 26px -9px rgba(22,50,79,.9)}
+
     .btn-ghost{
       color:#41556b;background:#f2f5f9;border:1px solid var(--border);
     }
@@ -391,6 +399,27 @@
     .count{
       font-size:.79rem;font-weight:600;color:var(--muted);
       padding:0 5px;white-space:nowrap;
+    }
+
+    /* ============ PRINT MODE BANNER ============ */
+    .mode-banner{
+      display:none;
+      align-items:center;gap:10px;flex-wrap:wrap;
+      padding:10px 20px;
+      background:linear-gradient(90deg, rgba(245,166,35,.10), rgba(245,166,35,.02));
+      border-bottom:1px solid var(--border);
+      font-size:.79rem;color:#5d6e83;line-height:1.5;
+    }
+    .mode-banner.is-visible{display:flex}
+    .mode-banner strong{color:var(--navy)}
+    .mode-banner .mode-tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:3px 10px;border-radius:999px;
+      font-size:.72rem;font-weight:700;
+      color:#fff;background:linear-gradient(135deg,#16324f,#245075);
+    }
+    .mode-banner .mode-tag.gold{
+      color:#3d2700;background:linear-gradient(135deg,#ffcc6d,#f5a623);
     }
 
     /* ============ TABLE ============ */
@@ -503,7 +532,7 @@
 
     /* ============ RESPONSIVE ============ */
     @media (max-width:900px){
-      .controls{grid-template-columns:repeat(2,minmax(150px,1fr))}
+      .controls{grid-template-columns:repeat(2,minmax(180px,1fr))}
       .tagline{display:none}
     }
     @media (max-width:640px){
@@ -519,7 +548,7 @@
       .count{width:100%;text-align:left;padding:0}
       .controls{grid-template-columns:1fr}
       .chip{font-size:.78rem;padding:8px 12px}
-      .ms-options{max-height:190px}
+      .cb-options{max-height:170px}
     }
 
     /* ============ PRINT ============ */
@@ -553,7 +582,7 @@
   <main class="page">
 
     <!-- ============ SETUP ============ -->
-    <section class="panel panel--menu no-print">
+    <section class="panel no-print">
 
       <div class="panel-head">
         <div>
@@ -649,27 +678,27 @@
 
           <div class="field" id="field-status">
             <label id="lbl-status">Status</label>
-            <div class="ms" id="ms-status"></div>
+            <div class="cb-group" id="ms-status"></div>
           </div>
 
           <div class="field" id="field-grade">
             <label id="lbl-grade">Grade / level</label>
-            <div class="ms" id="ms-grade"></div>
+            <div class="cb-group" id="ms-grade"></div>
           </div>
 
           <div class="field" id="field-barangay">
             <label id="lbl-barangay">Barangay</label>
-            <div class="ms" id="ms-barangay"></div>
+            <div class="cb-group" id="ms-barangay"></div>
           </div>
 
           <div class="field" id="field-school">
             <label id="lbl-school">School</label>
-            <div class="ms" id="ms-school"></div>
+            <div class="cb-group" id="ms-school"></div>
           </div>
 
           <div class="field" id="field-program" style="display:none">
             <label id="lbl-program">Program / strand</label>
-            <div class="ms" id="ms-program"></div>
+            <div class="cb-group" id="ms-program"></div>
           </div>
 
           <div class="field">
@@ -715,11 +744,22 @@
             Clear
           </button>
           <span class="count" id="selectionCount">0 selected</span>
+          <button class="btn btn-navy" type="button" id="massPrintBtn" onclick="massPrint()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/><line x1="12" y1="2" x2="12" y2="6"/></svg>
+            Mass print <span id="massPrintCount"></span>
+          </button>
           <button class="btn btn-gold" type="button" id="printBtn" onclick="printSelected()" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print selected
           </button>
         </div>
+      </div>
+
+      <div class="mode-banner" id="modeBanner">
+        <span class="mode-tag">Mass print</span>
+        <span>prints <strong>every</strong> record currently shown after filtering.</span>
+        <span class="mode-tag gold">Print selected</span>
+        <span>prints <strong>only</strong> the scholars you tick in the table below — perfect for printing one section or a specific student.</span>
       </div>
 
       <div id="loading" class="loading-state">
@@ -742,10 +782,10 @@
   <script src="/mefamdev-api.js"></script>
   <script src="/components/report-card.js"></script>
   <script>
-    const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {} };
+    const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {}, auditLogs: [] };
     let visibleRecords = [];
 
-    /* ---------- Multi-select filter configuration ---------- */
+    /* ---------- Checkbox filter configuration ---------- */
     const FILTER_META = {
       status:   { all: 'All statuses',  search: 'Search statuses…'  },
       grade:    { all: 'All grades',    search: 'Search grades…'    },
@@ -759,7 +799,7 @@
       intake:        '<strong>Intake sheets</strong> print one full page per case, with signature lines for the social worker and supervisor.',
       assessment:    '<strong>Staff assessments</strong> print one page per assessment with notes and sign-off lines.',
       applications:  '<strong>Applications</strong> print as a compact register table — handy for endorsement meetings.',
-      formation:     '<strong>Formation attendance</strong> prints a sign-in sheet for the chosen event. Pick the event under filters.',
+      formation:     '<strong>Formation attendance</strong> prints a sign-in sheet for the chosen event. Choose the event under filters, then use <strong>Mass print</strong> for the whole list or <strong>Print selected</strong> for a specific section.',
       attendance:    '<strong>Attendance register</strong> prints a daily or weekly check-in summary from the selected formation event and accepted scholar records.',
       directory:     '<strong>Scholar directory</strong> prints a single roster table of all accepted scholars.',
       'report-card': '<strong>Report cards</strong> create a polished academic card for each selected student, ready to print or share.',
@@ -774,7 +814,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const session = MefamAPI.getSession();
       if (!session || session.type !== 'staff') { window.location.href = 'index.html'; return; }
-      initMultiSelects();
+      initCheckboxFilters();
       bindTypeChips();
       await loadPrintData();
     });
@@ -800,9 +840,9 @@
     }
 
     /* =========================================================
-       MULTI-SELECT CHECKLIST COMPONENT
+       VISIBLE CHECKBOX FILTER PANELS
        ========================================================= */
-    function initMultiSelects() {
+    function initCheckboxFilters() {
       Object.keys(FILTER_META).forEach(key => {
         msState[key] = { options: [], selected: new Set(), query: '' };
 
@@ -810,36 +850,21 @@
         if (!host) return;
 
         host.innerHTML = `
-          <button type="button" class="ms-trigger" aria-haspopup="true" aria-expanded="false" aria-labelledby="lbl-${key}">
-            <span class="ms-value is-placeholder"></span>
-            <span class="ms-badge" hidden></span>
-            <svg class="ms-chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="ms-panel" hidden>
-            <input type="search" class="ms-search" placeholder="${escapeHtml(FILTER_META[key].search)}" aria-label="${escapeHtml(FILTER_META[key].search)}">
-            <div class="ms-actions">
-              <button type="button" data-ms-action="all">Select all</button>
-              <button type="button" data-ms-action="none">Clear</button>
-            </div>
-            <div class="ms-options" role="group" aria-label="${escapeHtml(FILTER_META[key].all)}"></div>
-            <p class="ms-empty" hidden>No matching options</p>
-          </div>`;
+          <div class="cb-head">
+            <span class="cb-head-label">${escapeHtml(FILTER_META[key].all)}</span>
+            <span class="cb-count" hidden></span>
+            <span class="cb-head-actions">
+              <button type="button" data-ms-action="all" title="Select all">All</button>
+              <button type="button" data-ms-action="none" title="Clear selection">None</button>
+            </span>
+          </div>
+          <input type="search" class="cb-search" placeholder="${escapeHtml(FILTER_META[key].search)}" aria-label="${escapeHtml(FILTER_META[key].search)}">
+          <div class="cb-options" role="group" aria-label="${escapeHtml(FILTER_META[key].all)}"></div>
+          <p class="cb-empty" hidden>No matching options</p>
+        `;
 
-        const trigger = host.querySelector('.ms-trigger');
-        const panel = host.querySelector('.ms-panel');
-        const search = host.querySelector('.ms-search');
-        const list = host.querySelector('.ms-options');
-
-        trigger.addEventListener('click', () => {
-          const wasOpen = trigger.getAttribute('aria-expanded') === 'true';
-          closeAllMultiSelects();
-          if (wasOpen) return;
-          trigger.setAttribute('aria-expanded', 'true');
-          panel.hidden = false;
-          search.value = '';
-          msState[key].query = '';
-          renderMultiSelectOptions(key);
-        });
+        const search = host.querySelector('.cb-search');
+        const list = host.querySelector('.cb-options');
 
         search.addEventListener('input', () => {
           msState[key].query = search.value;
@@ -870,13 +895,6 @@
         });
       });
 
-      document.addEventListener('click', event => {
-        if (!event.target.closest('.ms')) closeAllMultiSelects();
-      });
-      document.addEventListener('keydown', event => {
-        if (event.key === 'Escape') closeAllMultiSelects();
-      });
-
       document.getElementById('activeFilters').addEventListener('click', event => {
         if (event.target.closest('[data-clear-all]')) { resetFilters(); return; }
         const btn = event.target.closest('[data-remove-key]');
@@ -894,14 +912,6 @@
       });
     }
 
-    function closeAllMultiSelects() {
-      document.querySelectorAll('.ms-trigger[aria-expanded="true"]').forEach(trigger => {
-        trigger.setAttribute('aria-expanded', 'false');
-        const panel = trigger.parentElement.querySelector('.ms-panel');
-        if (panel) panel.hidden = true;
-      });
-    }
-
     function visibleMultiSelectOptions(key) {
       const st = msState[key];
       const q = st.query.trim().toLowerCase();
@@ -913,14 +923,14 @@
       const st = msState[key];
       const host = document.getElementById('ms-' + key);
       if (!host) return;
-      const list = host.querySelector('.ms-options');
-      const empty = host.querySelector('.ms-empty');
+      const list = host.querySelector('.cb-options');
+      const empty = host.querySelector('.cb-empty');
       const visible = visibleMultiSelectOptions(key);
 
       empty.hidden = visible.length > 0;
       list.innerHTML = visible.map(value => {
         const checked = st.selected.has(value) ? ' checked' : '';
-        return `<label class="ms-option"><input type="checkbox" value="${escapeHtml(value)}"${checked}><span>${escapeHtml(value)}</span></label>`;
+        return `<label class="cb-option"><input type="checkbox" value="${escapeHtml(value)}"${checked}><span>${escapeHtml(value)}</span></label>`;
       }).join('');
     }
 
@@ -928,29 +938,22 @@
       const st = msState[key];
       const host = document.getElementById('ms-' + key);
       if (!host) return;
-      const valueEl = host.querySelector('.ms-value');
-      const badge = host.querySelector('.ms-badge');
+      const badge = host.querySelector('.cb-count');
       const count = st.selected.size;
-
+      if (!badge) return;
       if (!count) {
-        valueEl.textContent = FILTER_META[key].all;
-        valueEl.classList.add('is-placeholder');
         badge.hidden = true;
-        return;
+        badge.textContent = '';
+      } else {
+        badge.hidden = false;
+        badge.textContent = String(count);
       }
-
-      const values = [...st.selected];
-      valueEl.textContent = values.length <= 2 ? values.join(' + ') : `${values.length} selected`;
-      valueEl.classList.remove('is-placeholder');
-      badge.hidden = false;
-      badge.textContent = values.length;
     }
 
     function setMultiSelectOptions(key, values) {
       const st = msState[key];
       if (!st) return;
       st.options = values;
-      // drop anything that no longer exists in this report type
       [...st.selected].forEach(value => { if (!values.includes(value)) st.selected.delete(value); });
 
       const field = document.getElementById('field-' + key);
@@ -1020,6 +1023,7 @@
       const type = document.getElementById('printType').value;
       document.getElementById('eventFilterWrap').style.display = type === 'formation' || type === 'attendance' ? '' : 'none';
       document.getElementById('formatNote').innerHTML = TYPE_NOTES[type] || '';
+      document.getElementById('modeBanner').classList.toggle('is-visible', type === 'formation' || type === 'attendance');
       syncTypeChips();
       populateFilters();
       renderRows();
@@ -1029,6 +1033,9 @@
       Object.keys(FILTER_META).forEach(key => {
         msState[key].selected.clear();
         msState[key].query = '';
+        const host = document.getElementById('ms-' + key);
+        const search = host?.querySelector('.cb-search');
+        if (search) search.value = '';
         updateMultiSelectLabel(key);
         renderMultiSelectOptions(key);
       });
@@ -1036,7 +1043,6 @@
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      closeAllMultiSelects();
       renderRows();
     }
 
@@ -1169,7 +1175,7 @@
       const raw = String(value ?? '').trim();
       if (!raw) return DASH;
       const n = Number(raw.replace(/[^0-9.-]/g, ''));
-      if (!isFinite(n) || !/\d/.test(raw)) return escapeHtml(raw) && { html: escapeHtml(raw) };
+      if (!isFinite(n) || !/\d/.test(raw)) return { html: escapeHtml(raw) };
       return { html: `<span class="cell-name">₱${n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>` };
     }
     function cell(c) { return (c && typeof c === 'object') ? c.html : escapeHtml(c); }
@@ -1286,6 +1292,10 @@
       }
 
       document.getElementById('resultCount').textContent = visibleRecords.length;
+      const massCount = document.getElementById('massPrintCount');
+      if (massCount) massCount.textContent = visibleRecords.length ? `(${visibleRecords.length})` : '';
+      const massBtn = document.getElementById('massPrintBtn');
+      if (massBtn) massBtn.disabled = visibleRecords.length === 0;
       renderActiveFilters();
       updateSelectionCount();
     }
@@ -1316,12 +1326,12 @@
     });
 
     /* ---------- Print ---------- */
-    async function printSelected() {
+    async function runPrint(records, mode) {
       const type = document.getElementById('printType').value;
-      const selectedIds = new Set([...document.querySelectorAll('#recordBody .record-check:checked')].map(input => input.value));
-      const records = visibleRecords.filter((item, index) => selectedIds.has(`${type}-${item.id || appFor(item)?.id || index}`));
-      if (!records.length) { toast('Select at least one record to print.', 'warn'); return; }
-
+      if (!records.length) {
+        toast(mode === 'selected' ? 'Select at least one record to print.' : 'No records to mass print.', 'warn');
+        return;
+      }
       const html = await buildPrintDocument(type, records);
       const printWindow = window.open('', '_blank');
       if (!printWindow) { toast('Allow popups to print these records.', 'error'); return; }
@@ -1329,6 +1339,19 @@
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 500);
+    }
+
+    function printSelected() {
+      const type = document.getElementById('printType').value;
+      const selectedIds = new Set([...document.querySelectorAll('#recordBody .record-check:checked')].map(input => input.value));
+      const records = visibleRecords.filter((item, index) => selectedIds.has(`${type}-${item.id || appFor(item)?.id || index}`));
+      runPrint(records, 'selected');
+    }
+
+    function massPrint() {
+      const type = document.getElementById('printType').value;
+      const records = visibleRecords.filter((item, index) => `${type}-${item.id || appFor(item)?.id || index}`);
+      runPrint(records, 'mass');
     }
 
     async function buildPrintDocument(type, records) {
@@ -1358,7 +1381,7 @@
     function buildDirectoryPrint(records) { return `<section><h2>Scholar Directory</h2><table><thead><tr><th>No.</th><th>Name</th><th>Student ID</th><th>Grade</th><th>School</th><th>Barangay</th><th>Contact</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildApplicationsPrint(records) { return `<section><h2>Application Register</h2><table><thead><tr><th>Reference</th><th>Name</th><th>Grade</th><th>School</th><th>Barangay</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildFormationPrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const attended = new Set((state.events.length && JSON.parse(localStorage.getItem('mefamdev_event_attendance') || '{}')[event.id] || []).map(String)); const checkins = state.checkins[event.id] || []; checkins.forEach(checkin => { const match = records.find(item => text(item.name) === text(checkin.student_name) || text(item.reference) === text(checkin.student_id)); if (match) attended.add(String(match.id)); }); return `<section><h2>Formation Attendance</h2><div class="summary"><strong>${escapeHtml(event.name || 'Formation event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${attended.has(String(item.id)) ? 'Present' : 'Absent'}</td><td style="height:28px"></td><td></td></tr>`).join('')}</tbody></table></section>`; }
-    function buildAttendancePrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const checkins = state.checkins[event.id] || []; const presentIds = new Set(checkins.map(checkin => String(checkin.student_id || checkin.student_name || '')).filter(Boolean)); return `<section><h2>Attendance Register</h2><div class="summary"><strong>${escapeHtml(event.name || 'Attendance event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Check-in</th><th>Status</th></tr></thead><tbody>${records.map((item, index) => { const check = checkins.find(c => text(c.student_name) === text(item.name) || text(c.student_id) === text(item.reference)); const present = Boolean(check); return `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${present ? escapeHtml(check.checkin_time || check.date || 'Present') : '—'}</td><td>${present ? 'Present' : 'Absent'}</td></tr>`; }).join('')}</tbody></table></section>`; }
+    function buildAttendancePrint(records) { const event = state.events.find(item => String(item.id) === document.getElementById('eventFilter').value) || {}; const checkins = state.checkins[event.id] || []; return `<section><h2>Attendance Register</h2><div class="summary"><strong>${escapeHtml(event.name || 'Attendance event')}</strong> · ${escapeHtml(event.date || '-')} · ${escapeHtml(event.venue || '-')}</div><table><thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Check-in</th><th>Status</th></tr></thead><tbody>${records.map((item, index) => { const check = checkins.find(c => text(c.student_name) === text(item.name) || text(c.student_id) === text(item.reference)); const present = Boolean(check); return `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${present ? escapeHtml(check.checkin_time || check.date || 'Present') : '—'}</td><td>${present ? 'Present' : 'Absent'}</td></tr>`; }).join('')}</tbody></table></section>`; }
     function buildReportSummaryPrint(records) {
       const bySchool = new Map();
       const byGrade = new Map();
