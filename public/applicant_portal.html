@@ -1400,7 +1400,8 @@ async function uploadDocumentFromInput(input) {
     const currentItem = Array.isArray(window.__mefamdevRequirements)
         ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey))
         : null;
-    if (currentItem && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
+    const isReportCard = currentItem ? isReportCardDoc(currentItem) : String(docKey || '').toLowerCase().includes('reportcard') || String(docKey || '').toLowerCase().includes('report_card');
+    if (currentItem && !isReportCard && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
         alert('This document has already been reviewed. You may only replace it within 10 minutes of the latest approval/rejection update.');
         input.value = '';
         return;
@@ -1479,7 +1480,8 @@ async function uploadReportCardPhoto(input) {
     }
 
     const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
-    if (currentItem && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
+    const isReportCard = currentItem ? isReportCardDoc(currentItem) : String(docKey || '').toLowerCase().includes('reportcard') || String(docKey || '').toLowerCase().includes('report_card');
+    if (currentItem && !isReportCard && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
         alert('This document has already been reviewed. You may only replace it within 10 minutes of the latest approval/rejection update.');
         input.value = '';
         return;
@@ -1547,13 +1549,8 @@ function removeReportCardPhoto(appId, docKey, index) {
         return;
     }
     const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
-    if (currentItem && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
-        alert('This document has already been reviewed. You may only replace it within 10 minutes of the latest approval/rejection update.');
-        return;
-    }
-    const gallery = getReportCardGallery(appId, docKey);
-    gallery.splice(index, 1);
-    saveReportCardGallery(appId, docKey, gallery);
+    const isReportCard = currentItem ? isReportCardDoc(currentItem) : String(docKey || '').toLowerCase().includes('reportcard') || String(docKey || '').toLowerCase().includes('report_card');
+    if (currentItem && !isReportCard && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
     renderRequirements(appId);
 }
 
@@ -1612,22 +1609,18 @@ async function renderRequirements(appId) {
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
                         ${canUpload && d.status !== 'Received' ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
                     </div>`).join('');
-                const allowUpload = canUpload && (!['Received', 'Missing'].includes(String(d.status || '').trim()) || documentUploadWindowOpen(d));
+                const allowUpload = canUpload;
                 const addTile = allowUpload
-                    ? `<label class="doc-gallery-add"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}>
-                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)"${allowUpload ? '' : ' disabled'}>
+                    ? `<label class="doc-gallery-add">
+                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)">
                         ➕<br>Add Photo
                     </label>`
                     : '';
-                const countLabel = ['Received', 'Missing'].includes(String(d.status || '').trim())
-                    ? documentUploadWindowOpen(d)
-                        ? `<div class="doc-upload-status">Reviewed recently. You can add a replacement image for the next 10 minutes.</div>`
-                        : `<div class="doc-upload-status">This document was already reviewed. No further upload is needed unless staff marks it as missing again.</div>`
-                    : !canUpload
-                        ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
-                        : gallery.length
-                            ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} added — add more pages anytime</div>`
-                            : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
+                const countLabel = !canUpload
+                    ? `<div class="doc-upload-status">Uploads are available while your application is under review.</div>`
+                    : gallery.length
+                        ? `<div class="doc-upload-status">${gallery.length} photo${gallery.length > 1 ? 's' : ''} saved — add one more photo at a time</div>`
+                        : `<div class="doc-upload-status">Upload a photo of each page (max 10MB each)</div>`;
                 return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}
                     <div class="doc-gallery">${galleryThumbs}${addTile}</div>
                     ${countLabel}

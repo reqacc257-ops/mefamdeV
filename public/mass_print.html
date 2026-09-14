@@ -737,6 +737,11 @@
             <input id="schoolYearFilter" placeholder="e.g. 2026-2027" oninput="renderRows()">
           </div>
 
+          <div class="field" id="field-period">
+            <label id="lbl-period">Grading format</label>
+            <div class="cb-group" id="ms-period"></div>
+          </div>
+
           <div class="field">
             <label for="searchFilter">Search</label>
             <input id="searchFilter" placeholder="Name, family, reference..." oninput="renderRows()">
@@ -818,11 +823,12 @@
 
     /* ---------- Checkbox filter configuration ---------- */
     const FILTER_META = {
-      status:   { all: 'All statuses',  search: 'Search statuses…'  },
-      grade:    { all: 'All grades',    search: 'Search grades…'    },
-      barangay: { all: 'All barangays', search: 'Search barangays…' },
-      school:   { all: 'All schools',   search: 'Search schools…'   },
-      program:  { all: 'All programs',  search: 'Search programs…'  }
+      status:   { all: 'All statuses',    search: 'Search statuses…'    },
+      grade:    { all: 'All grades',      search: 'Search grades…'      },
+      barangay: { all: 'All barangays',   search: 'Search barangays…'   },
+      school:   { all: 'All schools',     search: 'Search schools…'     },
+      program:  { all: 'All programs',    search: 'Search programs…'    },
+      period:   { all: 'All grading format', search: 'Search format…' }
     };
     const msState = {};
     const selectedEventIds = new Set();
@@ -1228,6 +1234,22 @@
       return item.program || item.strand || item.course || item.track || item.department ||
              app.program || app.strand || app.course || app.track || app.department || '';
     }
+    function gradingFormatOf(item) {
+      const app = appFor(item) || item;
+      const explicit = app?.gradingFormat || app?.grading_format || app?.periodType || app?.period_type || app?.gradingPeriodType ||
+        item?.gradingFormat || item?.grading_format || item?.periodType || item?.period_type || item?.gradingPeriodType;
+      if (explicit) {
+        const raw = String(explicit).toLowerCase();
+        if (raw.includes('4') || raw.includes('quarter')) return '4 quarters';
+        if (raw.includes('3') || raw.includes('term')) return '3 terms';
+      }
+      const entries = state.grades.filter(entry => {
+        const candidate = entry.appId ?? entry.app_id ?? entry.student_id ?? entry.studentId;
+        return String(candidate) === String(app?.id ?? item?.id ?? '');
+      });
+      const hasQuarterFour = entries.some(entry => Number(entry.quarter || 0) >= 4);
+      return hasQuarterFour ? '4 quarters' : '3 terms';
+    }
 
     /* ---------- Filters ---------- */
     function unique(values) {
@@ -1248,6 +1270,7 @@
       setMultiSelectOptions('barangay', unique(source.map(item => item.barangay || appFor(item)?.barangay)));
       setMultiSelectOptions('school', unique(source.map(schoolOf)));
       setMultiSelectOptions('program', unique(source.map(programOf)));
+      setMultiSelectOptions('period', unique(source.map(gradingFormatOf).filter(Boolean)));
 
       [...selectedEventIds].forEach(id => {
         if (!state.events.some(ev => String(ev.id) === id)) selectedEventIds.delete(id);
@@ -1287,6 +1310,7 @@
         && filterPass('barangay', barangay)
         && filterPass('school', school)
         && filterPass('program', program)
+        && filterPass('period', gradingFormatOf(item))
         && (!selectedYear || year.includes(selectedYear))
         && (!search || searchable.includes(search));
     }
@@ -1309,6 +1333,23 @@
     }
 
     function recordName(item) { return item.name || item.student || item.familySurname || item.scholarName || item.scholar_name || appFor(item)?.name || 'Unnamed record'; }
+    function getReportCardSummary(item) {
+      const app = appFor(item) || item;
+      const entries = state.grades.filter(grade => String(grade.appId ?? grade.app_id ?? grade.student_id ?? grade.studentId) === String(app.id || item.id || ''));
+      const numericGrades = entries
+        .map(grade => Number(grade.grade_val ?? grade.grade_value ?? grade.grade ?? ''))
+        .filter(value => Number.isFinite(value));
+      const hasQuarterFour = entries.some(grade => Number(grade.quarter || 0) >= 4);
+      const format = hasQuarterFour ? '4 quarters' : '3 terms';
+      const totalPeriods = hasQuarterFour ? 4 : 3;
+      const missing = Array.from({ length: totalPeriods }, (_, index) => index + 1)
+        .filter(period => !entries.some(grade => Number(grade.quarter || 0) === period)).length;
+      if (!numericGrades.length) {
+        return { gwa: null, missing, format };
+      }
+      const gwa = Math.round((numericGrades.reduce((sum, value) => sum + value, 0) / numericGrades.length) * 10) / 10;
+      return { gwa, missing, format };
+    }
     function sortRecords(records) {
       return records.sort((a, b) => {
         const keyA = `${gradeOf(a)} ${a.barangay || appFor(a)?.barangay || ''} ${recordName(a)}`;
@@ -1394,6 +1435,7 @@
         type === 'audit' ? ['Action', 'User', 'Applicant', 'Details', 'Timestamp'] :
         type === 'attendance' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Check-in', 'Status'] :
         type === 'summary' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Status'] :
+        type === 'report-card' ? ['Student', 'Grade', 'Barangay', 'School', 'GWA', 'Format'] :
         ['Student', 'Grade', 'Barangay', 'School', 'Status'];
 
       head.innerHTML = `<tr><th class="col-check"><input type="checkbox" id="selectAll" aria-label="Select all visible records" onchange="toggleVisibleSelection(this.checked)"></th>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
@@ -1408,6 +1450,7 @@
             )
           );
 
+          const reportSummary = type === 'report-card' ? getReportCardSummary(item) : null;
           const cells =
             type === 'intake' ? [val(item.caseNo), bold(recordName(item)), val(item.school || app.school), val(item.barangay || app.barangay), val(item.savedAt || item.caseDate || item.created_at)] :
             type === 'assessment' ? [val(item.familySurname), bold(item.student), badge(item.finalResult || 'Unset'), val(item.savedAt || item.assessmentDate || item.created_at)] :
@@ -1439,6 +1482,11 @@
             ] :
             type === 'summary' ? [
               bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(app.status)
+            ] :
+            type === 'report-card' ? [
+              bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school),
+              reportSummary?.gwa ? `${reportSummary.gwa}${reportSummary.missing ? ` · ${reportSummary.missing} missing` : ''}` : 'No grades yet',
+              reportSummary?.format || '3 terms'
             ] :
             [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(app.status)];
 
@@ -1567,8 +1615,6 @@
             <td>${escapeHtml(item.grade || '-')}</td>
             <td>${escapeHtml(item.barangay || '-')}</td>
             <td>${attended.has(String(item.id)) ? 'Present' : 'Absent'}</td>
-            <td style="height:28px"></td>
-            <td></td>
           </tr>`).join('');
 
         return `<section class="record">
@@ -1579,7 +1625,7 @@
             ${escapeHtml(event.venue || '-')}
           </div>
           <table>
-            <thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th><th>Signature</th><th>Remarks</th></tr></thead>
+            <thead><tr><th>No.</th><th>Scholar</th><th>Grade</th><th>Barangay</th><th>Status</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </section>`;
