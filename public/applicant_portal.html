@@ -26,7 +26,6 @@
             --radius: 12px;
         }
 
-        
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
@@ -217,39 +216,35 @@
             border: none; background: transparent; padding: 0; cursor: pointer;
         }
         .doc-preview-link:hover { text-decoration: underline; }
-                .image-modal {
-            position: static; display: none; align-items: stretch; justify-content: stretch;
-            background: transparent; z-index: auto; padding: 0; margin-top: 14px;
-        }
-        .image-modal.open { display: block; }
-        .image-modal .modal-card {
-            width: 100%; max-height: none; background: #fff;
-            border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
-            display: flex; flex-direction: column; border: 1px solid var(--border);
-        }
-        .image-modal .modal-header {
-            padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid #f0f2f6; background: #fff;
-        }
-        .image-modal .modal-title { font-size: .95rem; font-weight: 700; color: var(--navy); }
-        .image-modal .modal-close {
-            border: none; background: transparent; color: var(--text); font-size: 1.6rem; line-height: 1;
-            cursor: pointer; padding: 0; width: 36px; height: 36px;
-        }
-        .image-modal .modal-body { padding: 0; display: flex; justify-content: center; align-items: center; background: #f7f9fb; }
-        .image-modal .modal-body img { width: 100%; max-height: calc(100vh - 94px); object-fit: contain; }
 
-        /* ── Generic content modal (Requirements / Announcements) ── */
-        .content-modal {
-            position: static; display: none; align-items: stretch; justify-content: stretch;
-            background: transparent; z-index: auto; padding: 0; margin-top: 14px;
+        /* ── Fixed modal overlays (Requirements / Announcements / Image / Report Card / Renewal) ── */
+        .content-modal,
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
         }
-        .content-modal.open { display: block; }
-        .content-modal .modal-card {
-            width: 100%; max-height: none; background: #fff;
-            border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
-            display: flex; flex-direction: column; border: 1px solid var(--border);
+        .content-modal.open,
+        .image-modal.open { display: flex; }
+        .content-modal .modal-card,
+        .image-modal .modal-card {
+            width: min(720px, 100%);
+            max-height: 90vh;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
         }
+        .image-modal .modal-card { width: min(1100px, 100%); }
         .content-modal .modal-header {
             padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid #f0f2f6; background: var(--navy); color: #fff;
@@ -261,6 +256,18 @@
         }
         .content-modal .modal-close:hover { background: rgba(255,255,255,.25); }
         .content-modal .modal-body { padding: 8px 22px 20px; overflow-y: auto; }
+
+        .image-modal .modal-header {
+            padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #f0f2f6; background: #fff;
+        }
+        .image-modal .modal-title { font-size: .95rem; font-weight: 700; color: var(--navy); }
+        .image-modal .modal-close {
+            border: none; background: transparent; color: var(--text); font-size: 1.6rem; line-height: 1;
+            cursor: pointer; padding: 0; width: 36px; height: 36px;
+        }
+        .image-modal .modal-body { padding: 0; display: flex; justify-content: center; align-items: center; background: #f7f9fb; overflow: auto; }
+        .image-modal .modal-body img { width: 100%; max-height: calc(90vh - 94px); object-fit: contain; }
 
         .renewal-modal .modal-card { width: min(680px, 100%); }
         .renewal-form { display: grid; gap: 14px; }
@@ -359,6 +366,32 @@
             .doc-upload-row, .doc-upload-thumbnail, .doc-gallery, #rcGalleryStatus { display: none !important; }
             #announcementsCard { display: none !important; }
             * { box-shadow: none !important; }
+        }
+
+        /* ── Print only the report card when its modal is open ── */
+        @media print {
+            body.printing-report-card > *:not(#reportCardModal) { display: none !important; }
+            body.printing-report-card #reportCardModal {
+                display: block !important;
+                position: static !important;
+                background: #fff !important;
+                padding: 0 !important;
+            }
+            body.printing-report-card #reportCardModal .modal-card {
+                display: block !important;
+                box-shadow: none !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                max-height: none !important;
+                width: 100% !important;
+            }
+            body.printing-report-card #reportCardModal .modal-header { display: none !important; }
+            body.printing-report-card #reportCardModal .modal-body {
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+                background: #fff !important;
+            }
         }
     </style>
 </head>
@@ -475,8 +508,8 @@
             </div>
         </div>
 
-        <!-- Attendance check-in (student) -->
-        <div class="card" id="attendanceCard" style="margin-top:14px;">
+        <!-- Attendance check-in (student) — hidden by default -->
+        <div class="card" id="attendanceCard" style="margin-top:14px; display:none;">
             <div class="card-header"><span class="ch-icon">📲</span><h3>Attendance Check-in</h3></div>
             <div class="card-body">
                 <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:8px;">Enter the attendance code shown by staff for the current session.</p>
@@ -535,39 +568,39 @@
     </div><!-- /portalContent -->
 </div><!-- /main -->
 
-    <!-- Next school-year renewal modal -->
-    <div class="content-modal renewal-modal" id="renewalModal" onclick="if (event.target === this) closeRenewalModal()">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div class="modal-title">🔁 Re-apply for the next school year</div>
-                <button class="modal-close" type="button" aria-label="Close" onclick="closeRenewalModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <form class="renewal-form" id="renewalForm" onsubmit="submitRenewal(event)">
-                    <div class="renewal-note">Tell us what changed for the next school year. Your previous grades remain saved, and staff will review these updates before approval.</div>
-                    <div class="form-row">
-                        <div><label for="renewalSchoolYear">School year</label><select id="renewalSchoolYear" required><option value="">Select year</option></select></div>
-                        <div><label for="renewalSchool">New school</label><select id="renewalSchool" required><option value="">Select school</option><option value="__add_new__">+ Add new school</option></select></div>
-                    </div>
-                    <div id="renewalSchoolCustomInput" style="display:none; margin-bottom:14px;"><label for="renewalSchoolCustom">School name</label><input id="renewalSchoolCustom" placeholder="Enter school name"></div>
-                    <div class="form-row">
-                        <div><label for="renewalEduLevel">Education level</label><select id="renewalEduLevel" required><option value="">Select level</option><option value="Elementary">Elementary</option><option value="JuniorHigh">Junior High School</option><option value="SeniorHigh">Senior High School</option><option value="College">College</option></select></div>
-                        <div><label for="renewalGrade">Grade / year level</label><select id="renewalGrade" required><option value="">Select grade/level</option></select></div>
-                    </div>
-                    <div id="renewalTrackRow" style="display:none;"><label for="renewalTrack">Track / Course</label><div class="renewal-track-combobox"><input type="text" id="renewalTrack" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="renewalTrackOptions" placeholder="Search for a track or course..."><div id="renewalTrackOptions" class="renewal-track-options" role="listbox"></div></div></div>
-                    <div class="form-row">
-                        <div><label for="renewalContact">Mobile number</label><input id="renewalContact" type="tel" inputmode="tel" placeholder="09XX XXX XXXX"></div>
-                        <div><label for="renewalEmail">Email address</label><input id="renewalEmail" type="email" placeholder="you@example.com"></div>
-                    </div>
-                    <div class="form-row">
-                        <div><label for="renewalAddress">Address</label><input id="renewalAddress" placeholder="House/street address"></div>
-                        <div><label for="renewalBarangay">Barangay</label><select id="renewalBarangay" required><option value="">Select barangay</option></select></div>
-                    </div>
-                    <div class="renewal-actions"><button class="btn btn-navy" type="button" onclick="closeRenewalModal()">Cancel</button><button class="btn btn-gold" type="submit">Submit updates</button></div>
-                </form>
-            </div>
+<!-- Next school-year renewal modal -->
+<div class="content-modal renewal-modal" id="renewalModal" onclick="if (event.target === this) closeRenewalModal()">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title">🔁 Re-apply for the next school year</div>
+            <button class="modal-close" type="button" aria-label="Close" onclick="closeRenewalModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <form class="renewal-form" id="renewalForm" onsubmit="submitRenewal(event)">
+                <div class="renewal-note">Tell us what changed for the next school year. Your previous grades remain saved, and staff will review these updates before approval.</div>
+                <div class="form-row">
+                    <div><label for="renewalSchoolYear">School year</label><select id="renewalSchoolYear" required><option value="">Select year</option></select></div>
+                    <div><label for="renewalSchool">New school</label><select id="renewalSchool" required><option value="">Select school</option><option value="__add_new__">+ Add new school</option></select></div>
+                </div>
+                <div id="renewalSchoolCustomInput" style="display:none; margin-bottom:14px;"><label for="renewalSchoolCustom">School name</label><input id="renewalSchoolCustom" placeholder="Enter school name"></div>
+                <div class="form-row">
+                    <div><label for="renewalEduLevel">Education level</label><select id="renewalEduLevel" required><option value="">Select level</option><option value="Elementary">Elementary</option><option value="JuniorHigh">Junior High School</option><option value="SeniorHigh">Senior High School</option><option value="College">College</option></select></div>
+                    <div><label for="renewalGrade">Grade / year level</label><select id="renewalGrade" required><option value="">Select grade/level</option></select></div>
+                </div>
+                <div id="renewalTrackRow" style="display:none;"><label for="renewalTrack">Track / Course</label><div class="renewal-track-combobox"><input type="text" id="renewalTrack" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="renewalTrackOptions" placeholder="Search for a track or course..."><div id="renewalTrackOptions" class="renewal-track-options" role="listbox"></div></div></div>
+                <div class="form-row">
+                    <div><label for="renewalContact">Mobile number</label><input id="renewalContact" type="tel" inputmode="tel" placeholder="09XX XXX XXXX"></div>
+                    <div><label for="renewalEmail">Email address</label><input id="renewalEmail" type="email" placeholder="you@example.com"></div>
+                </div>
+                <div class="form-row">
+                    <div><label for="renewalAddress">Address</label><input id="renewalAddress" placeholder="House/street address"></div>
+                    <div><label for="renewalBarangay">Barangay</label><select id="renewalBarangay" required><option value="">Select barangay</option></select></div>
+                </div>
+                <div class="renewal-actions"><button class="btn btn-navy" type="button" onclick="closeRenewalModal()">Cancel</button><button class="btn btn-gold" type="submit">Submit updates</button></div>
+            </form>
         </div>
     </div>
+</div>
 
 <!-- Requirements modal -->
 <div class="content-modal" id="requirementsModal" onclick="if (event.target === this) closeRequirementsModal()">
@@ -778,7 +811,7 @@ function updateTrackOptions() {
     const eduLevel = document.getElementById('renewalEduLevel').value;
     const trackRow = document.getElementById('renewalTrackRow');
     const trackInput = document.getElementById('renewalTrack');
-    
+
     if (eduLevel === 'SeniorHigh' || eduLevel === 'College') {
         trackRow.style.display = 'block';
         trackInput.setAttribute('required', 'required');
@@ -827,8 +860,8 @@ const SHS_TRACK_OPTIONS = [
     'Technical-Professional Track - Industrial Arts / Electrical Installation'
 ];
 
-// College course options
-const COLLEGE_COURSE_OPTIONS = [
+// College course options (deduped)
+const COLLEGE_COURSE_OPTIONS = [...new Set([
     'Bachelor of Science in Civil Engineering (BSCE)',
     'Bachelor of Science in Computer Engineering (BSCpE)',
     'Bachelor of Science in Electrical Engineering (BSEE)',
@@ -896,14 +929,10 @@ const COLLEGE_COURSE_OPTIONS = [
     'Bachelor of Science in Social Work (BSW)',
     'Bachelor of Science in Foreign Service (BSFS)',
     'Bachelor of Science in Statistics (BSS)',
-    'Bachelor of Science in Nursing (BSN)',
-    'Bachelor of Science in Pharmacy (BSPharm)',
     'Bachelor of Science in Occupational Therapy (BSOT)',
     'Bachelor of Science in Dentistry (BSD)',
     'Bachelor of Science in Medicine (MD)',
     'Bachelor of Science in Development Communication',
-    'Bachelor of Science in Nutrition and Dietetics (BSND)',
-    'Bachelor of Science in Entrepreneurship',
     'Bachelor of Science in Real Estate Management',
     'Bachelor of Science in Hotel and Restaurant Management (BSHRM)',
     'Bachelor of Science in Accounting Information Systems (BSAIS)',
@@ -911,7 +940,6 @@ const COLLEGE_COURSE_OPTIONS = [
     'Bachelor of Science in Logistics and Supply Chain Management',
     'Bachelor of Science in Public Health (BSPH)',
     'Bachelor of Science in Environmental Planning',
-    'Bachelor of Science in Civil Engineering (BSCE)',
     'Bachelor of Elementary Education major in General Education',
     'Bachelor of Secondary Education major in Mathematics',
     'Bachelor of Secondary Education major in English',
@@ -919,7 +947,7 @@ const COLLEGE_COURSE_OPTIONS = [
     'Bachelor of Arts in Multimedia Arts',
     'Bachelor of Science in Industrial Technology (BSIT)',
     'Bachelor of Science in Psychology with Forensic Studies'
-];
+])];
 
 // Barangay options
 const barangayOptions = ['Banaban', 'Baybay', 'Binagbag', 'Donacion', 'Encanto', 'Laog', 'Marungko', 'Niugan', 'Paltok', 'Pulong Yantok', 'San Roque (Poblacion)', 'Santa Cruz (Poblacion)', 'Santa Lucia', 'Sto. Cristo (Poblacion)', 'Sulucan', 'Taboc'];
@@ -1019,7 +1047,7 @@ function updateGradeOptions() {
 
 function openRenewalModal() {
     const app = currentApplicant || {};
-    
+
     // Initialize dropdowns if not already done
     initializeRenewalFormDropdowns();
 
@@ -1029,7 +1057,7 @@ function openRenewalModal() {
     const nextSchoolYear = schoolYear.split('-')[0]; // Get first part of year range
     const nextYear = parseInt(nextSchoolYear) + 1;
     const defaultSchoolYear = `${nextYear}-${nextYear + 1}`;
-    
+
     const schoolYearSelect = document.getElementById('renewalSchoolYear');
     if (Array.from(schoolYearSelect.options).some(o => o.value === defaultSchoolYear)) {
         schoolYearSelect.value = defaultSchoolYear;
@@ -1056,10 +1084,10 @@ function openRenewalModal() {
     // Set education level - try multiple possible property names
     const eduLevel = app.eduLevel || app.edu_level || app.educationLevel || app.nextEduLevel || '';
     document.getElementById('renewalEduLevel').value = eduLevel;
-    
+
     // Update grade options for current education level
     updateGradeOptions();
-    
+
     // Set grade - try multiple possible property names
     const gradeSelect = document.getElementById('renewalGrade');
     const appGrade = app.grade || app.nextGrade || app.gradeLevel || '';
@@ -1079,7 +1107,7 @@ function openRenewalModal() {
     document.getElementById('renewalContact').value = app.contact || app.mobile || app.phone || '';
     document.getElementById('renewalEmail').value = app.email || '';
     document.getElementById('renewalAddress').value = app.address || '';
-    
+
     // Set barangay - try multiple possible property names
     const barangaySelect = document.getElementById('renewalBarangay');
     const appBarangay = app.barangay || app.barangayName || app.brgy || '';
@@ -1104,7 +1132,7 @@ async function submitRenewal(event) {
     const eduLevel = document.getElementById('renewalEduLevel').value;
     const grade = document.getElementById('renewalGrade').value.trim();
     const barangay = document.getElementById('renewalBarangay').value.trim();
-    
+
     // If "Add new school" is selected, use the custom input
     if (school === '__add_new__') {
         school = document.getElementById('renewalSchoolCustom').value.trim();
@@ -1124,7 +1152,7 @@ async function submitRenewal(event) {
         alert('Please select a track or course.');
         return;
     }
-    
+
     try {
         const result = await MefamAPI.reapplyApplication(currentAppId, schoolYear, {
             school,
@@ -1139,7 +1167,8 @@ async function submitRenewal(event) {
         if (!result?.ok) throw new Error(result?.error || 'Unable to submit your re-application right now.');
         closeRenewalModal();
         alert('Your re-application was sent for staff review. Your previous grades remain saved.');
-        await loadApplicantData();
+        // Reload with the same session so we don't kick the user out
+        window.location.reload();
     } catch (error) {
         alert(error?.message || 'Unable to submit your re-application right now.');
     }
@@ -1158,10 +1187,13 @@ function renderPortal(app, session) {
     currentAppId = appData.id;
     currentApplicant = appData;
 
-    // Top bar
-    const firstName = String(appData.name || 'Applicant').split(',')[0].trim() || 'Applicant';
-    document.getElementById('ucAvatar').innerText = firstName.charAt(0).toUpperCase();
-    document.getElementById('ucName').innerText = firstName;
+    // Top bar — show the given (first) name if the name is "Surname, Given"
+    const rawName = String(appData.name || 'Applicant').trim();
+    const parts = rawName.split(',').map(p => p.trim()).filter(Boolean);
+    const givenName = parts.length > 1 ? parts[1] : parts[0];
+    const displayFirst = givenName.split(/\s+/)[0] || 'Applicant';
+    document.getElementById('ucAvatar').innerText = displayFirst.charAt(0).toUpperCase();
+    document.getElementById('ucName').innerText = displayFirst;
 
     // Hero
     document.getElementById('heroName').innerText = appData.name || 'Applicant';
@@ -1229,12 +1261,12 @@ function renderPortal(app, session) {
         const el = document.getElementById(`step-${s}`);
         if (!el) return;
         const stepNum = i + 1;
-        if (app.status === 'Rejected' && stepNum === 5) { el.querySelector('.pt-dot').innerText = '🎓'; return; }
+        if (normalizedStatus === 'Rejected' && stepNum === 5) { el.querySelector('.pt-dot').innerText = '🎓'; return; }
         if (stepNum < curStep) { el.classList.add('done'); el.querySelector('.pt-dot').innerText = '✓'; }
         else if (stepNum === curStep) el.classList.add('active');
     });
     // Special case: accepted
-    if (app.status === 'Accepted') {
+    if (normalizedStatus === 'Accepted') {
         document.getElementById('step-scholar').classList.add('done');
         document.getElementById('step-scholar').querySelector('.pt-dot').innerText = '✓';
     }
@@ -1331,8 +1363,10 @@ async function submitAttendanceCode() {
     const code = (document.getElementById('attCodeInput') || {}).value || '';
     const studentId = (document.getElementById('attStudentId') || {}).value || currentApplicant?.referenceNumber || currentApplicant?.reference || currentApplicant?.reference_number || `APP-${currentApplicant?.id || currentAppId || ''}`;
     const statusEl = document.getElementById('attStatus');
-    const heroStatusText = (document.getElementById('heroStatus') || {}).innerText || '';
-    if (!heroStatusText.includes('Accepted')) { alert('Attendance is available only to accepted scholars.'); return; }
+    if (normalizeStatus(currentApplicant?.status) !== 'Accepted') {
+        alert('Attendance is available only to accepted scholars.');
+        return;
+    }
     if (!code || !String(code).trim()) { alert('Please enter the attendance code.'); return; }
     const sess = JSON.parse(sessionStorage.getItem('mefamdev_session') || '{}');
     const name = sess?.name || document.getElementById('heroName')?.innerText || 'Student';
@@ -1378,8 +1412,8 @@ function isRecentReviewUploadWindow(item) {
     return documentUploadWindowOpen(item);
 }
 
-/* Applicants can upload while their application is under review and can also
-   replace a recently approved/rejected document during the 10-minute grace window. */
+/* Applicants can upload while their application is under review.
+   Accepted scholars may also upload additional documents. */
 function canUploadDocuments() {
     const status = normalizeStatus(currentApplicant?.status);
     return ['Pending Review', 'Interviewing', 'Accepted'].includes(status);
@@ -1428,7 +1462,7 @@ async function uploadDocumentFromInput(input) {
                 fileName: file.name,
                 fileType: file.type || 'image/*',
                 fileData: reader.result,
-                uploadMethod: input.getAttribute('capture') ? 'camera' : 'upload'
+                uploadMethod: input.hasAttribute('capture') ? 'camera' : 'upload'
             });
             if (!result?.ok) {
                 if (statusEl) statusEl.textContent = result?.error || 'Upload failed';
@@ -1542,7 +1576,7 @@ async function uploadReportCardPhoto(input) {
                 fileName: file.name,
                 fileType: file.type || 'image/*',
                 fileData: reader.result,
-                uploadMethod: input.getAttribute('capture') ? 'camera' : 'upload'
+                uploadMethod: input.hasAttribute('capture') ? 'camera' : 'upload'
             });
             if (!extraction?.ok) {
                 if (statusEl) statusEl.textContent = extraction?.error || 'Upload failed';
@@ -1555,7 +1589,7 @@ async function uploadReportCardPhoto(input) {
                 fileName: file.name,
                 fileType: file.type || 'image/*',
                 fileData: reader.result,
-                uploadMethod: input.getAttribute('capture') ? 'camera' : 'upload'
+                uploadMethod: input.hasAttribute('capture') ? 'camera' : 'upload'
             });
             if (!result?.ok) {
                 if (statusEl) statusEl.textContent = result?.error || 'Upload failed';
@@ -1587,9 +1621,10 @@ function removeReportCardPhoto(appId, docKey, index) {
         alert('Uploads are available while your application is under review.');
         return;
     }
-    const currentItem = Array.isArray(window.__mefamdevRequirements) ? window.__mefamdevRequirements.find(item => String(item.key) === String(docKey)) : null;
-    const isReportCard = currentItem ? isReportCardDoc(currentItem) : String(docKey || '').toLowerCase().includes('reportcard') || String(docKey || '').toLowerCase().includes('report_card');
-    if (currentItem && !isReportCard && ['Received', 'Missing'].includes(String(currentItem.status || '').trim()) && !documentUploadWindowOpen(currentItem)) {
+    const gallery = getReportCardGallery(appId, docKey);
+    if (!Array.isArray(gallery) || index < 0 || index >= gallery.length) return;
+    gallery.splice(index, 1);
+    saveReportCardGallery(appId, docKey, gallery);
     renderRequirements(appId);
 }
 
@@ -1646,12 +1681,12 @@ async function renderRequirements(appId) {
                 const galleryThumbs = gallery.map((g, i) => `
                     <div class="doc-gallery-item" data-image-src="${g.fileData}" data-image-label="${escapeHtml(d.label)} (${i + 1})" onclick="showImagePreview(this)">
                         <img src="${g.fileData}" alt="${escapeHtml(d.label)} page ${i + 1}">
-                        ${canUpload && d.status !== 'Received' ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${appId}','${d.key}', ${i})">×</button>` : ''}
+                        ${canUpload && d.status !== 'Received' ? `<button type="button" class="dg-remove" title="Remove" onclick="event.stopPropagation(); removeReportCardPhoto('${escapeHtml(String(appId))}','${escapeHtml(String(d.key))}', ${i})">×</button>` : ''}
                     </div>`).join('');
                 const allowUpload = canUpload;
                 const addTile = allowUpload
                     ? `<label class="doc-gallery-add">
-                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadReportCardPhoto(this)">
+                        <input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${escapeHtml(String(appId))}" data-doc-key="${escapeHtml(String(d.key))}" onchange="uploadReportCardPhoto(this)">
                         ➕<br>Add Photo
                     </label>`
                     : '';
@@ -1682,7 +1717,7 @@ async function renderRequirements(appId) {
                 ? `<div class="doc-upload-thumbnail" data-image-src="${d.fileData}" data-image-label="${escapeHtml(d.label)}" onclick="showImagePreview(this)"><img src="${d.fileData}" alt="Uploaded ${escapeHtml(d.label)}"></div>`
                 : '';
             const allowUpload = canUpload && (!['Received', 'Missing'].includes(String(d.status || '').trim()) || documentUploadWindowOpen(d));
-            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${appId}" data-doc-key="${d.key}" onchange="uploadDocumentFromInput(this)"${allowUpload ? '' : ' disabled'}>📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
+            return `<div class="req-item"><span class="req-icon">${c.icon}</span> ${escapeHtml(d.label)} <span class="req-status"><span class="sbadge ${c.cls}">${c.label}</span></span></div>${noteHTML}<div class="doc-upload-row"><label class="doc-upload-btn"${allowUpload ? '' : ' style="pointer-events:none; opacity:.5;"'}><input type="file" class="doc-upload-input" accept="image/*" capture="environment" data-app-id="${escapeHtml(String(appId))}" data-doc-key="${escapeHtml(String(d.key))}" onchange="uploadDocumentFromInput(this)"${allowUpload ? '' : ' disabled'}>📷 Upload / Take Photo</label>${previewLink}${uploadLabel}</div>${previewImage}`;
         }),
     ];
 
@@ -1816,11 +1851,12 @@ async function renderAnnouncements() {
 }
 
 function getApplicantEducationLevel() {
-    const levelText = `${currentApplicant?.eduLevel || ''} ${currentApplicant?.educationLevel || ''} ${currentApplicant?.grade || ''} ${currentApplicant?.gradeLevel || ''}`.toLowerCase();
-    if (/college|university|tertiary/.test(levelText)) return 'college';
-    if (/shs|senior high|grade\s*1[12]|grade\s*12|grade\s*11/.test(levelText)) return 'shs';
-    if (/elementary|grade\s*[1-6]\b/.test(levelText)) return 'elementary';
-    if (/high school|junior high|jhs|grade\s*(7|8|9|10)\b/.test(levelText)) return 'hs';
+    const raw = `${currentApplicant?.eduLevel || ''} ${currentApplicant?.educationLevel || ''} ${currentApplicant?.grade || ''} ${currentApplicant?.gradeLevel || ''}`.toLowerCase();
+    const compact = raw.replace(/[^a-z0-9]/g, '');
+    if (/college|university|tertiary|1sty|2ndy|3rdy|4thy|5thy/.test(compact)) return 'college';
+    if (/seniorhigh|shs|grade1[12]/.test(compact)) return 'shs';
+    if (/juniorhigh|jhs|grade(7|8|9|10)/.test(compact)) return 'hs';
+    if (/elementary|grade[1-6]/.test(compact)) return 'elementary';
     return '';
 }
 
@@ -1893,6 +1929,7 @@ document.addEventListener('keydown', function (event) {
         closeImagePreview();
         closeRequirementsModal();
         closeAnnouncementsModal();
+        closeRenewalModal();
     }
 });
 
@@ -1903,7 +1940,17 @@ function logout() {
     }
 }
 
+/* Fallback if the API helper isn't loaded */
+if (typeof clearClientSession !== 'function') {
+    window.clearClientSession = function () {
+        sessionStorage.removeItem('mefamdev_token');
+        sessionStorage.removeItem('mefamdev_session');
+        localStorage.removeItem('mefamdev_preview_session');
+    };
+}
 </script>
+
+<!-- Image preview modal -->
 <div class="image-modal" id="imageModal" onclick="if (event.target === this) closeImagePreview()">
     <div class="modal-card">
         <div class="modal-header">
@@ -1927,7 +1974,7 @@ function logout() {
             </div>
             <div style="flex:1"></div>
             <button class="modal-close" type="button" aria-label="Close" onclick="closeReportCardModal()">×</button>
-            <button type="button" class="btn btn-gold" style="margin-left:10px;" onclick="window.print()">🖨️ Print</button>
+            <button type="button" class="btn btn-gold" style="margin-left:10px;" onclick="printReportCard()">🖨️ Print</button>
         </div>
         <div class="modal-body" id="reportCardModalContent" style="padding:20px; overflow:auto; max-height:70vh; background:var(--bg);"></div>
     </div>
@@ -1937,14 +1984,14 @@ function logout() {
 <script>
 async function viewMyReportCard() {
     const sess = MefamAPI.getSession() || JSON.parse(localStorage.getItem('mefamdev_preview_session') || '{}');
-    const appId = sess?.appId || sess?.appId || null;
+    const appId = sess?.appId || null;
     if (!appId) { alert('No applicant session found.'); return; }
 
     // Fetch available school years for this applicant
     let gradesAll = [];
     try { gradesAll = await MefamAPI._get(`/events/grades?appId=${appId}`) || []; } catch (e) { gradesAll = []; }
-    const years = Array.from(new Set((gradesAll||[]).map(g => g.school_year || g.schoolYear).filter(Boolean)));
-    const defaultSY = years[0] || `${new Date().getFullYear()}-${new Date().getFullYear()+1}`;
+    const years = Array.from(new Set((gradesAll || []).map(g => g.school_year || g.schoolYear).filter(Boolean)));
+    const defaultSY = years[0] || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
     const sel = document.getElementById('myRCSchoolYear');
     if (sel) {
         sel.innerHTML = years.length ? years.map(y => `<option value="${y}">${y}</option>`).join('') : `<option value="${defaultSY}">${defaultSY}</option>`;
@@ -1976,8 +2023,19 @@ async function viewMyReportCard() {
     if (typeof REPORT_CARD_STYLES !== 'undefined') styleHtml = `<style>${REPORT_CARD_STYLES}</style>`;
     container.innerHTML = styleHtml + html;
     document.getElementById('reportCardModal').classList.add('open');
+    document.body.classList.add('printing-report-card');
 }
-function closeReportCardModal() { document.getElementById('reportCardModal').classList.remove('open'); }
+
+function closeReportCardModal() {
+    document.getElementById('reportCardModal').classList.remove('open');
+    document.body.classList.remove('printing-report-card');
+}
+
+function printReportCard() {
+    document.body.classList.add('printing-report-card');
+    // Give the browser a tick to apply the class before invoking print
+    setTimeout(() => window.print(), 50);
+}
 </script>
 </body>
-</html>bt
+</html>
