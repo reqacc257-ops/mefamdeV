@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const crypto = require('crypto');
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');
 const logger = require('../lib/logger');
@@ -6,6 +7,9 @@ const gradeExtractionRouter = require('./gradeExtraction');
 const { buildGradeEntryCandidate } = require('../lib/normalization');
 
 const RETENTION_YEARS = 7;
+function hashPassword(pw) {
+  return crypto.createHash('sha256').update(String(pw || '')).digest('hex');
+}
 
 async function getGradeRetention(appId) {
   const legacy = await db.prepare('SELECT * FROM grades WHERE app_id = ?').all(appId);
@@ -33,10 +37,21 @@ router.get('/retention/:appId', requireRole('director'), async (req, res) => {
 
 router.post('/retention/:appId/delete', requireRole('director'), async (req, res) => {
   if (req.body?.confirm !== true) return res.status(400).json({ error: 'Final confirmation is required.' });
+
   const retention = await getGradeRetention(req.params.appId);
+  const password = String(req.body?.password || req.body?.bypassPassword || '');
+
   if (!retention.eligible) {
-    return res.status(400).json({ error: 'Grade records cannot be deleted before the seven-year retention period.', retention });
+    if (!password.trim()) {
+      return res.status(400).json({ error: 'Director staff password is required to bypass the seven-year retention period.', retention });
+    }
+
+    const staff = await db.prepare('SELECT * FROM staff WHERE id = ?').get(req.user.id);
+    if (!staff || staff.password !== hashPassword(password)) {
+      return res.status(401).json({ error: 'Incorrect director staff password.' });
+    }
   }
+
   await db.prepare('DELETE FROM grades WHERE app_id = ?').run(req.params.appId);
   await db.prepare('DELETE FROM quarterly_grades WHERE student_id = ?').run(req.params.appId);
   await db.prepare('DELETE FROM grade_extraction WHERE app_id = ?').run(req.params.appId);

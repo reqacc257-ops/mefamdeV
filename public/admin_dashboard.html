@@ -4253,13 +4253,25 @@ function getSchoolYearGradeGroup(app) {
 async function deleteRetainedGrades(appId) {
     try {
         const retention = await MefamAPI.getGradeRetention(appId);
-        if (!retention?.eligible) {
+        const needsBypassPassword = retention && !retention.eligible;
+        let password = '';
+
+        if (needsBypassPassword) {
+            password = String(prompt('Director staff password required to override the seven-year retention lock. Enter password:') || '');
+            if (!password) {
+                toast('A director password is required before retained grade records may be deleted.', 'warning');
+                return;
+            }
+        }
+
+        if (!retention?.eligible && needsBypassPassword && !password) {
             const eligible = retention?.eligibleAt ? new Date(retention.eligibleAt).toLocaleDateString() : 'seven years after the first grade record';
             toast(`Grade records are protected until ${eligible}.`, 'warning');
             return;
         }
+
         if (!confirm('FINAL ACTION: permanently delete this applicant\'s retained grade records? This cannot be undone.')) return;
-        const result = await MefamAPI.deleteRetainedGrades(appId);
+        const result = await MefamAPI.deleteRetainedGrades(appId, password);
         if (!result?.ok) throw new Error(result?.error || 'Unable to delete retained grade records.');
         toast('Retained grade records were permanently deleted.', 'success');
     } catch (error) {
@@ -4295,7 +4307,7 @@ async function loadSettingsRetention() {
         if (status) status.textContent = retention.recordCount
             ? `${retention.recordCount} grade record(s). ${retention.eligible ? 'Eligible for deletion.' : `Protected until ${new Date(retention.eligibleAt).toLocaleDateString()}.`}`
             : 'No retained grade records found.';
-        if (button) button.disabled = !retention.eligible || !retention.recordCount;
+        if (button) button.disabled = !retention.recordCount;
     } catch (error) {
         if (status) status.textContent = error.message || 'Unable to load retention details.';
         if (button) button.disabled = true;

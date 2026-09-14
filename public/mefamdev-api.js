@@ -244,7 +244,9 @@ const MefamAPI = {
     return this._post(`/grades/${encodeURIComponent(id)}/resolve`, payload);
   },
   async getGradeRetention(appId) { return this._get(`/grades/retention/${appId}`); },
-  async deleteRetainedGrades(appId) { return this._post(`/grades/retention/${appId}/delete`, { confirm: true }); },
+  async deleteRetainedGrades(appId, password) {
+    return this._post(`/grades/retention/${appId}/delete`, { confirm: true, password: password || '' });
+  },
   async saveGrade(appId, grade, semesterOrOptions, maybeOptions) {
     // saveGrade supports legacy (appId, grade, semester) and new format
     let options = {};
