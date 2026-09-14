@@ -16,6 +16,7 @@ const gradeExtractionRouter = require('./routes/gradeExtraction');
 const commsRouter = require('./routes/comms');
 const gradesRouter = require('./routes/grades');
 const schoolsRouter = require('./routes/schools');
+const auditRouter = require('./routes/audit');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/ImageCropper-master', express.static(path.join(__dirname, 'ImageCroppe
 
 // Routes
 app.use('/api/auth', authRouter);
+app.use('/api/audit', auditRouter);
 app.use('/api/applications', requireAuth, appsRouter);
 app.use('/api/families', requireAuth, familiesRouter);
 app.use('/api/events', eventsRouter);
