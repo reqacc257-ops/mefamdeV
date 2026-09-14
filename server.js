@@ -73,8 +73,9 @@ app.get('/director', (req, res) => {
   res.redirect('/admin_dashboard.html?director=1');
 });
 
-// Serve static files from the public/ folder
+// Serve static files from the public/ folder and the vendored cropper library
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/ImageCropper-master', express.static(path.join(__dirname, 'ImageCropper-master')));
 
 // Routes
 app.use('/api/auth', authRouter);
