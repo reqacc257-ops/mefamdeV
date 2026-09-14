@@ -249,9 +249,11 @@
             border: 1px solid var(--border);
         }
         .image-modal .modal-card { width: min(1100px, 100%); }
-        .crop-modal .modal-card { width: min(860px, 100%); border: 1px solid rgba(148,163,184,.35); box-shadow: 0 18px 42px rgba(15, 23, 42, .18); }
+        
+        /* ── Fixed Crop Modal UI ── */
+        .crop-modal .modal-card { width: min(800px, 100%); border: 1px solid rgba(148,163,184,.35); box-shadow: 0 18px 42px rgba(15, 23, 42, .18); }
         .crop-modal .modal-header {
-            padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid rgba(148,163,184,.25); background: #f8fafc; color: var(--navy);
         }
         .crop-modal .modal-title { font-size: 1rem; font-weight: 800; color: var(--navy); }
@@ -260,24 +262,21 @@
             cursor: pointer; padding: 0; width: 32px; height: 32px; border-radius: 50%; transition: .15s;
         }
         .crop-modal .modal-close:hover { background: #eef4ff; }
-        .crop-modal .modal-body {
-            padding: 16px 18px 18px; background: linear-gradient(180deg, #f8fafc, #eef4ff);
-        }
-        .crop-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(220px, .9fr); gap: 18px; align-items: stretch; }
+        .crop-modal .modal-body { padding: 20px; background: #f1f5f9; }
         .crop-stage {
-            background: linear-gradient(135deg, #f8fafc, #edf2f8); border: 1px solid #dfe7ef; border-radius: 14px;
-            min-height: 360px; padding: 14px; display: flex; align-items: center; justify-content: center;
+            background: #1e293b; /* Dark background for contrast */
+            border: 1px solid #334155; border-radius: 12px;
+            min-height: 400px; max-height: 500px; padding: 20px; 
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
         }
         .crop-stage canvas {
-            display: block; width: 100%; max-width: 620px; height: auto; border-radius: 12px; background: #fff;
-            border: 1px solid rgba(15, 23, 42, .1); box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+            display: block; max-width: 100%; max-height: 100%; 
+            border-radius: 8px; background: #fff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .3);
         }
-        .crop-controls { display: flex; flex-direction: column; gap: 12px; }
-        .crop-field { margin: 0; }
-        .crop-field label { display: block; font-size: .76rem; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
-        .crop-field input[type="range"] { width: 100%; }
-        .crop-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .crop-actions .btn { flex: 1 1 110px; }
+        .crop-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
         .content-modal .modal-header {
             padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid #f0f2f6; background: var(--navy); color: #fff;
@@ -380,7 +379,7 @@
             @page { size: auto; margin: 10mm 12mm; }
             html, body { background: #fff !important; }
             .topbar, .action-row, .attendance-card, #attendanceCard,
-            .btn-logout, .content-modal, .image-modal { display: none !important; }
+            .btn-logout, .content-modal, .image-modal, .crop-modal { display: none !important; }
             .main { max-width: 100%; padding: 0; margin: 0; }
             .status-hero {
                 color: #1a2e44 !important; background: #fff !important;
@@ -1974,37 +1973,51 @@ function renderApplicantCropEditor(dataUrl) {
 
     const image = new Image();
     image.onload = () => {
-        const maxSize = 800;
+        // 1. Calculate dynamic display size to fit nicely in the modal
+        const maxDisplayWidth = 600;
+        const maxDisplayHeight = 450;
         const imgRatio = image.width / image.height;
+        
         let drawWidth = image.width;
         let drawHeight = image.height;
 
-        if (drawWidth > maxSize || drawHeight > maxSize) {
-            if (imgRatio > 1) {
-                drawWidth = maxSize;
-                drawHeight = maxSize / imgRatio;
+        if (drawWidth > maxDisplayWidth || drawHeight > maxDisplayHeight) {
+            if (imgRatio > maxDisplayWidth / maxDisplayHeight) {
+                drawWidth = maxDisplayWidth;
+                drawHeight = maxDisplayWidth / imgRatio;
             } else {
-                drawHeight = maxSize;
-                drawWidth = maxSize * imgRatio;
+                drawHeight = maxDisplayHeight;
+                drawWidth = maxDisplayHeight * imgRatio;
             }
         }
 
         canvas.width = drawWidth;
         canvas.height = drawHeight;
 
-        const cropWidth = drawWidth * 0.8;
-        const cropHeight = drawHeight * 0.8;
+        // 2. Define A4 Portrait Ratio (1:1.414) for report cards/documents
+        const A4_RATIO = 1.414;
+        let cropHeight = drawHeight * 0.85; // Use 85% of the height
+        let cropWidth = cropHeight / A4_RATIO;
+
+        // Prevent crop box from being wider than the image
+        if (cropWidth > drawWidth * 0.85) {
+            cropWidth = drawWidth * 0.85;
+            cropHeight = cropWidth * A4_RATIO;
+        }
+
+        // 3. Center the crop box
         const x = (canvas.width - cropWidth) / 2;
         const y = (canvas.height - cropHeight) / 2;
 
+        // 4. Initialize ImageCropper with keepAspect = true
         const cropper = new ImageCropper(
             canvas,
             x,
             y,
             cropWidth,
             cropHeight,
-            false,
-            20
+            true, // keepAspect: TRUE (Locks to A4 ratio)
+            20    // touchRadius
         );
 
         cropper.setImage(image);
@@ -2019,9 +2032,10 @@ function generateApplicantCroppedDataUrl() {
 
     return new Promise((resolve, reject) => {
         try {
-            const bounds = cropper.getBounds();
-            const outputWidth = Math.max(1, Math.round(bounds.getWidth()));
-            const outputHeight = Math.max(1, Math.round(bounds.getHeight()));
+            // Output high resolution for documents
+            const outputWidth = 1200;
+            const outputHeight = Math.round(outputWidth * 1.414); // Maintain A4 ratio
+            
             const cropped = cropper.getCroppedImage(outputWidth, outputHeight);
             cropped.onload = () => resolve(cropped.src || null);
             cropped.onerror = () => reject(new Error('Could not generate the cropped image.'));
@@ -2167,11 +2181,11 @@ if (typeof clearClientSession !== 'function') {
             <div class="modal-title">Crop your image</div>
             <button class="modal-close" type="button" aria-label="Close crop" onclick="closeApplicantCropModal()">×</button>
         </div>
-        <div class="modal-body" style="padding:16px 18px 18px;">
-            <div class="crop-stage" style="min-height: 350px; margin-bottom: 16px;">
+        <div class="modal-body">
+            <div class="crop-stage">
                 <canvas id="applicantCropCanvas" width="640" height="640"></canvas>
             </div>
-            <div class="crop-actions" style="margin-top:0;">
+            <div class="crop-actions">
                 <button class="btn btn-gold" type="button" onclick="submitApplicantCropUpload()">Use Cropped Image</button>
                 <button class="btn btn-ghost" type="button" onclick="closeApplicantCropModal()">Cancel</button>
             </div>
