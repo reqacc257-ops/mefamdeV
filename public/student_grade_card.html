@@ -160,6 +160,9 @@ th{background:#f8fafc;color:var(--navy);font-size:.78rem;font-weight:700;text-tr
 .modal-overlay .modal{animation:modalPop .16s ease-out}
 
 .form-group{margin-bottom:14px}
+.grade-quarter-row{display:flex;gap:8px;align-items:center}
+.grade-quarter-row select{flex:1;min-width:0}
+.grade-quarter-row .btn{white-space:nowrap;flex-shrink:0}
 label{display:block;font-size:.85rem;margin-bottom:8px;color:#5f6d7a;font-weight:600}
 input[type=text],input:not([type]),input[type=number],input[type=search],input[type=email],input[type=date],select,textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.95rem;font-family:inherit;color:var(--text);background:#fff;transition:border-color .15s,box-shadow .15s}
 input:hover,select:hover,textarea:hover{border-color:#c7d0dd}
@@ -342,7 +345,11 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
       <datalist id="subjectsList"></datalist>
       <div class="form-group">
         <label id="gradeQuarterLabel" for="gradeQuarter">Quarter</label>
-        <select id="gradeQuarter"></select>
+        <div class="grade-quarter-row">
+          <select id="gradeQuarter"></select>
+          <button class="btn btn-ghost btn-sm" type="button" id="gradePeriodToggle"
+                  onclick="toggleGradePeriods()" title="Switch between 3 terms and 4 quarters">Use 4 quarters</button>
+        </div>
       </div>
       <div class="form-group">
         <label for="gradeInput">Grade (60–100)</label>
@@ -822,6 +829,7 @@ function toggleScholar(appId){
 function renderGradePeriodOptions(periodCount = null){
   const sel = document.getElementById('gradeQuarter');
   const label = document.getElementById('gradeQuarterLabel');
+  const toggle = document.getElementById('gradePeriodToggle');
   if(!sel) return;
 
   let count = 3;
@@ -830,7 +838,7 @@ function renderGradePeriodOptions(periodCount = null){
     if(stored === 4) count = 4;
   } catch(e) {}
 
-  if([3,4].includes(Number(periodCount))) {
+  if([1,2,3,4].includes(Number(periodCount))) {
     count = Number(periodCount);
   }
 
@@ -838,6 +846,23 @@ function renderGradePeriodOptions(periodCount = null){
   if(label) label.textContent = word;
   sel.innerHTML = `<option value="">-- Select ${word} --</option>`+
     Array.from({length:count},(_,i)=>`<option value="${i+1}">${word} ${i+1}</option>`).join('');
+
+  if(toggle){
+    toggle.textContent = count === 4 ? 'Use 3 terms' : 'Use 4 quarters';
+    toggle.dataset.current = String(count);
+    toggle.dataset.next = count === 4 ? '3' : '4';
+  }
+}
+
+function toggleGradePeriods(){
+  const toggle = document.getElementById('gradePeriodToggle');
+  if(!toggle) return;
+  const next = Number(toggle.dataset.next) || 4;
+  const sel = document.getElementById('gradeQuarter');
+  const prevValue = sel?.value || '';
+  renderGradePeriodOptions(next);
+  const sel2 = document.getElementById('gradeQuarter');
+  if(sel2 && prevValue && Number(prevValue) <= next) sel2.value = prevValue;
 }
 
 function renderSchoolYearOptions(selectedSchoolYear='') {
@@ -888,6 +913,23 @@ function openGradeModal(appId, name, schoolYear, gradeRowId, subject = '', quart
   }
   if (!chartPeriodCount && [3, 4].includes(Number(quarter))) {
     chartPeriodCount = Number(quarter) >= 4 ? 4 : 3;
+  }
+
+  // Auto-detect: if this scholar already has Quarter 4 grades on record
+  // (for this subject, or any subject in the same school year),
+  // open the modal with 4 quarters instead of 3 terms.
+  if (!chartPeriodCount) {
+    const scopeAppId = Number(appId) || 0;
+    const yearScope = allGrades.filter(g =>
+      g.appId === scopeAppId &&
+      (!schoolYear || g.schoolYear === schoolYear)
+    );
+    const subjectScope = subject
+      ? yearScope.filter(g => (g.subject || '').toLowerCase() === subject.toLowerCase())
+      : yearScope;
+    const pick = subjectScope.length ? subjectScope : yearScope;
+    const maxQ = pick.reduce((m, g) => Math.max(m, Number(g.quarter) || 0), 0);
+    if (maxQ >= 4) chartPeriodCount = 4;
   }
 
   renderSchoolYearOptions(schoolYear || '');
