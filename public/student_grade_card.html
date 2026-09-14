@@ -111,12 +111,13 @@ th{background:#f8fafc;color:var(--navy);font-size:.78rem;font-weight:700;text-tr
 .subject-card{background:#fbfcfe;border:1px solid #e7edf5;border-radius:12px;padding:12px 14px}
 .subject-card.bad{background:#fff5f5;border-color:#f3c4c4}
 .subject-card.good{background:#f1fbf5;border-color:#c8ecd3}
-.subject-name{font-weight:700;color:var(--navy);font-size:.9rem;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subject-card .subject-name{font-weight:700;color:var(--navy);font-size:.9rem;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .subject-quarters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .q-chip{background:#fff;border:1px solid #dfe7f2;border-radius:999px;padding:2px 9px;font-size:.74rem;font-weight:600;color:var(--navy)}
 .subject-avg{font-size:.76rem;font-weight:800;color:var(--text-muted);letter-spacing:.03em}
 .subject-card.good .subject-avg{color:var(--green)}
 .subject-card.bad .subject-avg{color:var(--red)}
+.subject-card-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
 
 .empty-year{color:var(--text-muted);font-size:.86rem;padding:6px 0}
 
@@ -158,8 +159,6 @@ th{background:#f8fafc;color:var(--navy);font-size:.78rem;font-weight:700;text-tr
 .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px 20px;border-top:1px solid #eef1f5;flex-shrink:0;flex-wrap:wrap}
 @keyframes modalPop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .modal-overlay .modal{animation:modalPop .16s ease-out}
-.image-zoom-modal{padding:0}
-.image-zoom-modal .modal{max-width:none;width:100%;border-radius:16px}
 
 .form-group{margin-bottom:14px}
 .grade-quarter-row{display:flex;gap:8px;align-items:center}
@@ -198,8 +197,8 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
 /* Manage subjects */
 .subjects-list{list-style:none;display:grid;gap:6px;max-height:320px;overflow-y:auto;padding-right:4px}
 .subject-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fbfcfe;border:1px solid #e7edf5;border-radius:10px}
-.subject-name{flex:1;font-weight:600;color:var(--navy);font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.subject-name input{padding:6px 8px !important;font-size:.88rem !important}
+.subject-row .subject-name{flex:1;font-weight:600;color:var(--navy);font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subject-row .subject-name input{padding:6px 8px !important;font-size:.88rem !important}
 .subject-actions{display:flex;gap:4px;flex-shrink:0}
 .subject-actions .btn{padding:5px 9px;font-size:.74rem;border-radius:7px}
 .subjects-empty{color:var(--text-muted);font-size:.87rem;text-align:center;padding:14px 8px}
@@ -235,7 +234,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
 
   <div class="content-area">
 
-    <!-- ── Pending reviews (unchanged idea, kept at top) ── -->
+    <!-- ── Pending reviews ── -->
     <div class="card">
       <div class="page-header-row" style="margin-bottom:8px;">
         <div>
@@ -248,7 +247,7 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
       <div id="pendingGradeReviews"></div>
     </div>
 
-    <!-- ── THE unified scholar list: report card view IS the grade book ── -->
+    <!-- ── THE unified scholar list ── -->
     <div class="card">
       <div class="page-header-row">
         <div>
@@ -722,7 +721,7 @@ function renderScholarYears(app, sortedYears, gradesForApp){
             <div class="year-badges"><span class="pill pill-orange">Not started</span></div>
           </div>
           <div class="year-actions">
-            <button class="btn btn-navy btn-sm" type="button" onclick='event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, "", ${makeJsString("")})'>✎ Update Grades</button>
+            <button class="btn btn-navy btn-sm" type="button" onclick='event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||"Scholar")}, "", null)'>✎ Update Grades</button>
           </div>
         </div>
         <div class="year-body">
@@ -742,7 +741,13 @@ function renderScholarYears(app, sortedYears, gradesForApp){
   const currentSY = String(app.sy || sortedYears[0]);
   const blocks = sortedYears.map(sy=>{
     const gradesForYear = gradesForApp.filter(g=>g.schoolYear===sy);
+    const uploadsForYear = pendingExtractions.filter(e =>
+      Number(e.appId) === appId &&
+      String(e.extracted?.schoolYear || '') === sy
+    );
+    const isCurrent = sy === currentSY;
     const summary = getGradeSummary(gradesForYear);
+
     /* 1. Previous uploads section — shown FIRST, per the workflow */
     let uploadsHtml;
     if(uploadsForYear.length){
