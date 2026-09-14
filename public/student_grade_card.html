@@ -481,9 +481,23 @@ const FALLBACK_SUBJECTS = ['Filipino','English','Mathematics','Science','Araling
 function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function makeJsString(v){return JSON.stringify(String(v??'')).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026').replace(/'/g,'\\u0027')}
 function closeModal(id){document.getElementById(id)?.classList.remove('open')}
-function openModal(id){document.getElementById(id)?.classList.add('open')}
-document.addEventListener('click',e=>{const o=e.target.closest('.modal-overlay');if(o&&e.target===o)o.classList.remove('open')});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){const l=document.querySelectorAll('.modal-overlay.open');if(l.length)l[l.length-1].classList.remove('open')}});
+function openModal(id){
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.classList.add('open');
+  if (id === 'reviewExtractionModal') {
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeModal(id){
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove('open');
+  if (id === 'reviewExtractionModal') {
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('click',e=>{const o=e.target.closest('.modal-overlay');if(o&&e.target===o){o.classList.remove('open'); if (o.id === 'reviewExtractionModal') document.body.style.overflow='';}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const l=document.querySelectorAll('.modal-overlay.open');if(l.length){const last=l[l.length-1];last.classList.remove('open'); if (last.id === 'reviewExtractionModal') document.body.style.overflow='';}}});
 
 function normalizeGrade(row){
   return {

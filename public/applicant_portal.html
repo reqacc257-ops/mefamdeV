@@ -640,20 +640,34 @@ window.addEventListener('storage', function (e) {
     loadApplicantData(session);
 });
 
+function hydratePreviewSession() {
+    const previewRaw = localStorage.getItem('mefamdev_preview_session');
+    if (!previewRaw) return null;
+    try {
+        const previewSession = JSON.parse(previewRaw);
+        if (!previewSession || previewSession.type !== 'applicant' || !previewSession.appId) return null;
+        const hydrated = {
+            ...previewSession,
+            loginTime: Number(previewSession.loginTime || Date.now())
+        };
+        sessionStorage.setItem('mefamdev_session', JSON.stringify(hydrated));
+        if (previewSession.token) sessionStorage.setItem('mefamdev_token', previewSession.token);
+        return hydrated;
+    } catch (e) {
+        return null;
+    }
+}
+
 /* ── Session check ── */
 window.onload = function () {
     const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
     let raw = sessionStorage.getItem('mefamdev_session');
 
     if (isPreview) {
-        const previewRaw = localStorage.getItem('mefamdev_preview_session');
-        if (previewRaw) {
-            raw = previewRaw;
+        const hydrated = hydratePreviewSession();
+        if (hydrated) {
+            raw = JSON.stringify(hydrated);
             localStorage.removeItem('mefamdev_preview_session');
-            try {
-                const previewSession = JSON.parse(previewRaw);
-                if (previewSession.token) sessionStorage.setItem('mefamdev_token', previewSession.token);
-            } catch (e) { /* ignore malformed preview session */ }
         }
     }
 
