@@ -18,6 +18,16 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100%}
 .main{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+@media print{
+  @page{margin:12mm}
+  body{background:#fff}
+  main.main{display:none !important}
+  .modal-overlay{display:none !important}
+  #reportCardModal.open{display:block !important;position:static !important;inset:auto !important;padding:0 !important;background:none !important;backdrop-filter:none !important}
+  #reportCardModal .modal{width:100% !important;max-width:none !important;max-height:none !important;box-shadow:none !important;border-radius:0 !important;overflow:visible !important}
+  #reportCardModal .modal-header,#reportCardModal .modal-footer{display:none !important}
+  #reportCardModal .modal-body{overflow:visible !important;max-height:none !important;padding:0 !important}
+}
 .topbar{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:var(--shadow-sm);position:sticky;top:0;z-index:10}
 .topbar-title{font-family:'DM Serif Display',serif;font-size:1.25rem;color:var(--navy)}
 .topbar-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -571,7 +581,7 @@ function renderPendingReviewsPanel(){
         <div class="review-item-actions">${it.actionsHtml}</div>
       </div>`).join('');
     return `<div class="review-group${isOpen?' open':''}" id="reviewGroup-${escapeHtml(g.key)}">
-      <div class="review-group-header" onclick="toggleReviewGroup('${g.key.replace(/'/g,"\\'")}',${count})">
+      <div class="review-group-header" onclick='toggleReviewGroup(${makeJsString(g.key)},${count})'>
         <span class="review-group-name">${escapeHtml(g.studentName)}</span>
         ${g.mekong?'<span class="review-mekong-badge">Mekong</span>':''}
         ${count>1?`<span class="review-count-badge">×${count}</span>`:''}
@@ -685,7 +695,7 @@ function renderScholarYears(app, sortedYears, gradesForApp){
             <div class="year-badges"><span class="pill pill-orange">Not started</span></div>
           </div>
           <div class="year-actions">
-            <button class="btn btn-navy btn-sm" onclick="event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, '', ${makeJsString('')})">✎ Update Grades</button>
+            <button class="btn btn-navy btn-sm" type="button" onclick='event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, "", ${makeJsString("")})'>✎ Update Grades</button>
           </div>
         </div>
         <div class="year-body">
@@ -715,7 +725,7 @@ function renderScholarYears(app, sortedYears, gradesForApp){
         const uploadedAt = ext.uploadedAt?new Date(ext.uploadedAt):null;
         const fileData = ext.fileData || '';
         const thumb = fileData
-          ? `<div class="upload-thumb" onclick="event.stopPropagation();openImageZoom('${escapeHtml(fileData)}')"><img src="${escapeHtml(fileData)}" alt="Uploaded report card"></div>`
+          ? `<div class="upload-thumb" role="button" tabindex="0" onclick="event.stopPropagation();openImageZoomFromElement(this)"><img src="${escapeHtml(fileData)}" alt="Uploaded report card"></div>`
           : `<div class="upload-thumb">📤</div>`;
         return `<div class="upload-item pending">
           ${thumb}
@@ -724,7 +734,7 @@ function renderScholarYears(app, sortedYears, gradesForApp){
             <div class="upload-sub">${uploadedAt?formatDate(uploadedAt):'Recently uploaded'}</div>
           </div>
           <div class="upload-actions">
-            <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openReviewModal(${Number(ext.id)||0})">Review / Finalize</button>
+            <button class="btn btn-gold btn-sm" type="button" onclick="event.stopPropagation();openReviewModal(${Number(ext.id)||0})">Review / Finalize</button>
           </div>
         </div>`;
       }).join('');
@@ -773,8 +783,8 @@ function renderScholarYears(app, sortedYears, gradesForApp){
           </div>
         </div>
         <div class="year-actions">
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();viewReportCard(${appId}, ${makeJsString(app.name||'Scholar')}, ${makeJsString(app.grade||'—')}, ${makeJsString(app.school||'—')}, ${makeJsString(sy)})">📄 View Report Card</button>
-          <button class="btn btn-navy btn-sm" onclick="event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, ${makeJsString(sy)})">✎ Update Grades</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick='event.stopPropagation();viewReportCard(${appId}, ${makeJsString(app.name||"Scholar")}, ${makeJsString(app.grade||"—")}, ${makeJsString(app.school||"—")}, ${makeJsString(sy)})'>📄 View Report Card</button>
+          <button class="btn btn-navy btn-sm" type="button" onclick='event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||"Scholar")}, ${makeJsString(sy)})'>✎ Update Grades</button>
         </div>
       </div>
       <div class="year-body">
@@ -986,7 +996,7 @@ async function openReviewModal(id){
   const periodWord = reviewPeriodCount===4?'Quarter':'Term';
   const periodFields = Array.from({length:reviewPeriodCount},(_,i)=>`q${i+1}`);
   const photo = ext.fileData
-    ? `<img src="${escapeHtml(ext.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)"><div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" type="button" onclick="openCropModal('${escapeHtml(ext.fileData)}')">Crop image</button></div>`
+    ? `<img src="${escapeHtml(ext.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)"><div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" type="button" onclick="event.stopPropagation();openCropModalFromReview()">Crop image</button></div>`
     : '<div class="empty-state">Original image is unavailable.</div>';
 
   content.innerHTML = `
@@ -1046,7 +1056,8 @@ function updateReviewPeriodFields(){
   if(!ext) return;
   const count = Number(document.getElementById('reviewPeriodCount')?.value);
   const normalized = [1,2,3,4].includes(count)?count:3;
-  ext.extracted = {...(ext.extracted||{}),gradingPeriodCount:normalized};
+  const currentSubjects = collectReviewSubjects();
+  ext.extracted = {...(ext.extracted||{}), gradingPeriodCount: normalized, subjects: currentSubjects};
   openReviewModal(activeExtractionId);
 }
 function scrollReviewGrades(dir){
@@ -1112,6 +1123,10 @@ function openCropModal(src){
   };
   cropImage.src = src;
 }
+function openCropModalFromReview(){
+  const src = document.querySelector('#reviewExtractionContent .review-photo img')?.src || '';
+  if(src) openCropModal(src);
+}
 function applyReportCardCrop(){
   const canvas = document.getElementById('reportCardCropCanvas');
   if(!canvas||!cropImageSource) return;
@@ -1136,10 +1151,50 @@ function openImageZoom(src){
   if(!img||!src) return;
   img.src = src; resetImageZoom(); openModal('imageZoomModal');
 }
+function openImageZoomFromElement(el){
+  const src = el?.querySelector('img')?.src || '';
+  if(src) openImageZoom(src);
+}
 
 /* ══════════════════════════════════════════════════════════
    REPORT CARD VIEWER
 ══════════════════════════════════════════════════════════ */
+function buildFallbackReportCard(data, grades){
+  const bySubject = new Map();
+  (grades||[]).forEach(g=>{
+    if(!g.subject) return;
+    if(!bySubject.has(g.subject)) bySubject.set(g.subject, []);
+    bySubject.get(g.subject).push(g);
+  });
+  const maxQ = Math.max(3, ...((grades||[]).map(g=>Number(g.quarter)||0)));
+  const headerCells = Array.from({length:maxQ},(_,i)=>`<th style="padding:8px;border:1px solid #dde3ec;">Q${i+1}</th>`).join('');
+  const rows = Array.from(bySubject.entries()).map(([subj,list])=>{
+    const sorted = list.slice().sort((a,b)=>String(a.quarter).localeCompare(String(b.quarter),undefined,{numeric:true}));
+    const cells = Array.from({length:maxQ},(_,i)=>{
+      const g = sorted.find(x=>Number(x.quarter)===i+1);
+      return `<td style="text-align:center;padding:8px;border:1px solid #dde3ec;">${g?escapeHtml(String(g.grade_val)):'—'}</td>`;
+    }).join('');
+    const vals = sorted.map(g=>Number(g.grade_val)||0).filter(Boolean);
+    const avg = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+    return `<tr><td style="padding:8px;border:1px solid #dde3ec;">${escapeHtml(subj)}</td>${cells}<td style="text-align:center;font-weight:700;padding:8px;border:1px solid #dde3ec;">${avg||'—'}</td></tr>`;
+  }).join('');
+  return `<div style="font-family:'DM Sans',sans-serif;color:#2c3e50;">
+    <h2 style="text-align:center;margin:0 0 4px;color:#1a2e44;">Scholar Report Card</h2>
+    <p style="text-align:center;color:#7f8c8d;margin:0 0 18px;">School Year ${escapeHtml(data.schoolYear||'N/A')}</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;">
+      <tr><td><strong>Name:</strong> ${escapeHtml(data.name||'—')}</td><td><strong>Grade Level:</strong> ${escapeHtml(data.gradeLevel||'—')}</td></tr>
+      <tr><td><strong>School:</strong> ${escapeHtml(data.school||'—')}</td><td><strong>Reference No.:</strong> ${escapeHtml(String(data.refNo||'—'))}</td></tr>
+    </table>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:#f8fafc;color:#1a2e44;">
+        <th style="text-align:left;padding:8px;border:1px solid #dde3ec;">Subject</th>${headerCells}
+        <th style="padding:8px;border:1px solid #dde3ec;">Average</th>
+      </tr></thead>
+      <tbody>${rows || `<tr><td colspan="${maxQ+2}" style="text-align:center;padding:18px;color:#7f8c8d;">No grades on record for this school year.</td></tr>`}</tbody>
+    </table>
+  </div>`;
+}
+
 async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo){
   try{
     let approved = [];
@@ -1157,7 +1212,10 @@ async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo
     const scholar = acceptedScholars.find(a=>Number(a.id)===Number(appId));
     const ref = refNo || scholar?.reference || scholar?.referenceNumber || appId;
     const data = {name, gradeLevel, school, refNo:ref, schoolYear:schoolYear||'N/A'};
-    document.getElementById('reportCardContent').innerHTML = buildReportCardHTML(data, scholarGrades);
+    const html = (typeof buildReportCardHTML === 'function')
+      ? buildReportCardHTML(data, scholarGrades)
+      : buildFallbackReportCard(data, scholarGrades);
+    document.getElementById('reportCardContent').innerHTML = html;
     if(!document.getElementById('reportCardStyles')){
       const s = document.createElement('style'); s.id = 'reportCardStyles';
       s.textContent = (typeof REPORT_CARD_STYLES !== 'undefined' ? REPORT_CARD_STYLES : '');
