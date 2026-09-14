@@ -2079,6 +2079,9 @@ function openApplicantCropModal(dataUrl, appId, docKey, details = {}) {
 async function submitApplicantCropUpload() {
     if (!applicantCropState.appId || !applicantCropState.docKey) return;
 
+    const appId = applicantCropState.appId;
+    const docKey = applicantCropState.docKey;
+
     try {
         const dataUrl = await generateApplicantCroppedDataUrl();
         if (!dataUrl || dataUrl === 'data:,') {
@@ -2096,7 +2099,7 @@ async function submitApplicantCropUpload() {
         };
 
         if (applicantCropState.kind === 'reportCard') {
-            const extraction = await MefamAPI.uploadReportCardForExtraction(applicantCropState.appId, {
+            const extraction = await MefamAPI.uploadReportCardForExtraction(appId, {
                 fileName: payload.fileName,
                 fileType: payload.fileType,
                 fileData: dataUrl,
@@ -2108,7 +2111,7 @@ async function submitApplicantCropUpload() {
             }
         }
 
-        const result = await MefamAPI.uploadDocument(applicantCropState.appId, applicantCropState.docKey, payload);
+        const result = await MefamAPI.uploadDocument(appId, docKey, payload);
         if (!result?.ok) {
             alert(result?.error || 'Upload failed.');
             return;
@@ -2116,17 +2119,17 @@ async function submitApplicantCropUpload() {
 
         if (applicantCropState.kind === 'reportCard') {
             const compressed = await compressImageDataUrl(dataUrl, 1400, 0.72);
-            const gallery = getReportCardGallery(applicantCropState.appId, applicantCropState.docKey);
+            const gallery = getReportCardGallery(appId, docKey);
             const nextEntry = { fileData: compressed, fileName: payload.fileName, uploadedAt: new Date().toISOString() };
             const deduped = gallery.filter(item => item.fileData !== nextEntry.fileData && item.fileName !== nextEntry.fileName);
             deduped.push(nextEntry);
-            saveReportCardGallery(applicantCropState.appId, applicantCropState.docKey, deduped);
+            saveReportCardGallery(appId, docKey, deduped);
         }
 
         closeApplicantCropModal();
-        await renderRequirements(applicantCropState.appId);
+        await renderRequirements(appId);
     } catch (error) {
-        console.error('Applicant crop upload failed:', error); // Log actual error
+        console.error('Applicant crop upload failed:', error);
         alert(`Upload failed: ${error.message || 'Please try again.'}`);
     }
 }
