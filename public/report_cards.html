@@ -221,20 +221,50 @@
             }
         }
 
+        function normalizeSchoolYearValue(rawValue) {
+            const text = String(rawValue ?? '').trim();
+            if (!text) return '';
+            const compact = text.replace(/[\\/]/g, '-').replace(/\s+/g, '').replace(/[^\d-]/g, '').replace(/-+/g, '-');
+            if (/^\d{4}$/.test(compact)) {
+                const startYear = Number(compact);
+                if (startYear >= 2000 && startYear <= 2100) return `${startYear}-${startYear + 1}`;
+            }
+            if (/^\d{4}-\d{4}$/.test(compact)) return compact;
+            return compact.replace(/-$/, '');
+        }
+
+        function bindSchoolYearAutoFormat(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const apply = function () {
+                const sanitized = String(this.value ?? '').replace(/[\\/]/g, '-').replace(/[^\d-]/g, '').replace(/-+/g, '-');
+                if (sanitized !== this.value) this.value = sanitized;
+                const normalized = normalizeSchoolYearValue(this.value);
+                if (normalized && normalized !== this.value) {
+                    this.value = normalized;
+                }
+            };
+            input.addEventListener('input', apply);
+            input.addEventListener('change', apply);
+            input.addEventListener('blur', apply);
+        }
+
         async function openGradeModal(appId, name, schoolYear) {
             document.getElementById('gradeModalName').innerText = name;
             document.getElementById('gradeModalAppId').value = appId;
-            document.getElementById('gradeSchoolYear').value = schoolYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+            document.getElementById('gradeSchoolYear').value = normalizeSchoolYearValue(schoolYear || new Date().getFullYear());
             document.getElementById('gradeSubject').value = '';
             document.getElementById('gradeQuarter').value = '';
             document.getElementById('gradeInput').value = '';
+            bindSchoolYearAutoFormat('gradeSchoolYear');
             renderSubjectsDatalist();
             document.getElementById('gradeModal').classList.add('open');
         }
 
         async function saveGrade() {
             const appId = parseInt(document.getElementById('gradeModalAppId').value, 10);
-            const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
+            const schoolYear = normalizeSchoolYearValue(document.getElementById('gradeSchoolYear').value.trim());
+            document.getElementById('gradeSchoolYear').value = schoolYear;
             const subject = document.getElementById('gradeSubject').value.trim();
             const quarter = document.getElementById('gradeQuarter').value.trim();
             const grade = parseInt(document.getElementById('gradeInput').value, 10);

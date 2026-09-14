@@ -499,13 +499,14 @@ function schoolYearSortKey(sy){
 function normalizeSchoolYearValue(rawValue){
   const text = String(rawValue ?? '').trim();
   if (!text) return '';
-  const compact = text.replace(/\s+/g, '');
+  const normalizedText = text.replace(/[\\/]/g, '-').replace(/\s+/g, '');
+  const compact = normalizedText.replace(/[^\d-]/g, '').replace(/-+/g, '-');
   if (/^\d{4}$/.test(compact)) {
     const startYear = Number(compact);
     if (startYear >= 2000 && startYear <= 2100) return `${startYear}-${startYear + 1}`;
   }
   if (/^\d{4}-\d{4}$/.test(compact)) return compact;
-  return text;
+  return compact.replace(/-$/, '');
 }
 
 /* ══════════════════════════════════════════════════════════
