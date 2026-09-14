@@ -217,15 +217,15 @@
             border: none; background: transparent; padding: 0; cursor: pointer;
         }
         .doc-preview-link:hover { text-decoration: underline; }
-        .image-modal {
-            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,.65); z-index: 999; padding: 18px;
+                .image-modal {
+            position: static; display: none; align-items: stretch; justify-content: stretch;
+            background: transparent; z-index: auto; padding: 0; margin-top: 14px;
         }
-        .image-modal.open { display: flex; }
+        .image-modal.open { display: block; }
         .image-modal .modal-card {
-            width: min(960px, 100%); max-height: 100%; background: rgba(255,255,255,.98);
-            border-radius: 20px; overflow: hidden; box-shadow: 0 28px 60px rgba(0,0,0,.3);
-            display: flex; flex-direction: column;
+            width: 100%; max-height: none; background: #fff;
+            border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
+            display: flex; flex-direction: column; border: 1px solid var(--border);
         }
         .image-modal .modal-header {
             padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
@@ -241,14 +241,14 @@
 
         /* ── Generic content modal (Requirements / Announcements) ── */
         .content-modal {
-            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-            background: rgba(0,0,0,.55); z-index: 998; padding: 18px;
+            position: static; display: none; align-items: stretch; justify-content: stretch;
+            background: transparent; z-index: auto; padding: 0; margin-top: 14px;
         }
-        .content-modal.open { display: flex; }
+        .content-modal.open { display: block; }
         .content-modal .modal-card {
-            width: min(560px, 100%); max-height: min(720px, 92vh); background: #fff;
-            border-radius: 18px; overflow: hidden; box-shadow: 0 28px 60px rgba(0,0,0,.3);
-            display: flex; flex-direction: column;
+            width: 100%; max-height: none; background: #fff;
+            border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
+            display: flex; flex-direction: column; border: 1px solid var(--border);
         }
         .content-modal .modal-header {
             padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
@@ -1453,6 +1453,32 @@ function isReportCardDoc(d) {
     return label.includes('report card') || key.includes('reportcard') || key.includes('report_card');
 }
 
+function compressImageDataUrl(dataUrl, maxWidth = 1400, quality = 0.7) {
+    return new Promise(resolve => {
+        if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+            resolve(dataUrl || '');
+            return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const scale = Math.min(1, maxWidth / Math.max(img.width, img.height));
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            } catch (e) {
+                resolve(dataUrl);
+            }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+    });
+}
+
 function getReportCardGallery(appId, docKey) {
     try {
         const raw = localStorage.getItem(`mefamdev_rc_gallery_${appId}_${docKey}`);
@@ -1463,8 +1489,18 @@ function getReportCardGallery(appId, docKey) {
 
 function saveReportCardGallery(appId, docKey, arr) {
     try {
-        localStorage.setItem(`mefamdev_rc_gallery_${appId}_${docKey}`, JSON.stringify(arr));
-    } catch (e) { /* storage full or unavailable */ }
+        const trimmed = Array.isArray(arr) ? arr.slice(-5) : [];
+        localStorage.setItem(`mefamdev_rc_gallery_${appId}_${docKey}`, JSON.stringify(trimmed));
+    } catch (e) {
+        try {
+            const raw = localStorage.getItem(`mefamdev_rc_gallery_${appId}_${docKey}`);
+            if (raw) {
+                const prior = JSON.parse(raw);
+                const next = Array.isArray(prior) ? prior.slice(-2) : [];
+                localStorage.setItem(`mefamdev_rc_gallery_${appId}_${docKey}`, JSON.stringify(next));
+            }
+        } catch (ignored) { /* storage unavailable */ }
+    }
 }
 
 async function uploadReportCardPhoto(input) {
@@ -1526,10 +1562,13 @@ async function uploadReportCardPhoto(input) {
                 return;
             }
 
-            // Also keep this page in the applicant's own local gallery of all pages/photos
+            // Keep the local gallery small and compressed so big report-card uploads do not blow up memory / localStorage.
+            const compressed = await compressImageDataUrl(reader.result, 1400, 0.72);
             const gallery = getReportCardGallery(appId, docKey);
-            gallery.push({ fileData: reader.result, fileName: file.name, uploadedAt: new Date().toISOString() });
-            saveReportCardGallery(appId, docKey, gallery);
+            const nextEntry = { fileData: compressed, fileName: file.name, uploadedAt: new Date().toISOString() };
+            const deduped = gallery.filter(item => item.fileData !== nextEntry.fileData && item.fileName !== nextEntry.fileName);
+            deduped.push(nextEntry);
+            saveReportCardGallery(appId, docKey, deduped);
             input.value = '';
             await renderRequirements(appId);
         } catch (error) {
