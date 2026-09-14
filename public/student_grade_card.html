@@ -1,1107 +1,1228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MEFAMDEV-Life Student Grade/Card</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --navy: #1a2e44;
-            --navy2: #243b55;
-            --gold: #f5a623;
-            --gold-light: #fdf0d5;
-            --teal: #1abc9c;
-            --red: #e74c3c;
-            --orange: #f39c12;
-            --purple: #8e44ad;
-            --bg: #eef1f5;
-            --white: #ffffff;
-            --border: #dde3ec;
-            --text: #2c3e50;
-            --text-muted: #7f8c8d;
-            --header-h: 64px;
-            --shadow-sm: 0 1px 4px rgba(26,46,68,.08);
-            --shadow: 0 3px 14px rgba(26,46,68,.11);
-            --radius: 10px;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { min-height: 100%; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
-        .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 50px; }
-        .topbar { height: var(--header-h); background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 10; }
-        .topbar-title { font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--navy); }
-        .topbar-right { display: flex; align-items: center; gap: 12px; }
-        .topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-        .content-area { margin-top: 18px; }
-        .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
-        .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); }
-        .btn { border: 0; border-radius: 10px; padding: 10px 16px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .2s, transform .2s; }
-        .btn:hover { transform: translateY(-1px); }
-        .btn-ghost { background: rgba(15,33,48,.06); color: var(--navy); }
-        .btn-navy { background: var(--navy); color: #fff; }
-        .btn-gold { background: var(--gold); color: var(--navy); }
-        .btn-sm { padding: 8px 12px; font-size: .82rem; }
-        .search-wrap { position: relative; display: inline-flex; width: 100%; max-width: 320px; min-width: 0; }
-        input.search-input { width: 100%; min-width: 0; padding: 10px 14px 10px 42px; border-radius: 9px; border: 1px solid var(--border); background:#fbfcfe; font-size: .92rem; }
-        .search-input:focus { background:#fff; border-color:var(--gold); box-shadow:0 0 0 3px rgba(245,166,35,.16); }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%237f8c8d"><path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm8.71 1.71-4.3-4.3A9.95 9.95 0 0 0 20 10a10 10 0 1 0-10 10 9.95 9.95 0 0 0 5.41-1.59l4.3 4.3a1 1 0 0 0 1.42-1.42Z"/></svg>') no-repeat center / contain; }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eef1f5; }
-        th { background: #f8fafc; color: var(--navy); font-size: .85rem; font-weight: 700; }
-        tbody tr:hover { background: #f9fbfd; }
-        .app-id-badge { background: #eef4ff; color: #1d4ed8; padding: 4px 9px; border-radius: 999px; font-size: .78rem; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(12,20,39,.65); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 20px; z-index: 50; }
-        .modal-overlay.open { display: flex; }
-        .modal { width: min(100%, 900px); background: #fff; border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #eef1f5; }
-        .modal-header h2 { margin: 0; font-size: 1.1rem; }
-        .modal-body { padding: 20px 24px; }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px 24px; border-top: 1px solid #eef1f5; }
-        .form-group { margin-bottom: 14px; }
-        label { display: block; font-size: .85rem; margin-bottom: 8px; color: var(--text-muted); }
-        input[type=text], select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: .95rem; }
-        /* Catches every other input variant the rule above misses: number
-           inputs (type="number"), and combo/autocomplete fields that carry
-           a `list` attribute but no explicit `type` at all (e.g. the Subject
-           field) — both previously fell through to unstyled browser defaults. */
-        input:not([type]), input[type=number], input[type=search], input[type=email], input[type=date], textarea {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 14px;
-            font-size: .95rem;
-            font-family: inherit;
-            color: var(--text);
-            background: #fff;
-        }
-        input[type=text], input:not([type]), input[type=number], input[type=search], input[type=email], input[type=date], select, textarea {
-            transition: border-color .15s ease, box-shadow .15s ease;
-        }
-        input[type=text]:hover, input:not([type]):hover, input[type=number]:hover, select:hover, textarea:hover {
-            border-color: #c7d0dd;
-        }
-        input[type=text]:focus, input:not([type]):focus, input[type=number]:focus, input[type=search]:focus, input[type=email]:focus, input[type=date]:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(245,166,35,.16);
-        }
-        input::placeholder, textarea::placeholder { color: #a7b1bd; }
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%237f8c8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            background-size: 16px;
-            padding-right: 40px;
-            cursor: pointer;
-        }
-        label { letter-spacing: .1px; }
-        .form-group label { font-weight: 600; color: #5f6d7a; }
-        .modal-overlay .modal { animation: modalPop .16s ease-out; }
-        @keyframes modalPop {
-            from { opacity: 0; transform: translateY(6px) scale(.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        ul { list-style: none; padding: 0; margin: 0; }
-        .empty-state { background: #f8fbff; border: 1px solid #dfe8f3; color: #5f6d7a; padding: 24px; border-radius: 14px; text-align: center; }
-        .page-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .page-header-row > div { min-width: 0; }
-        .page-header-row > div:last-child { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; width: min(100%, 690px); min-width: 0; gap: 10px; align-items: center; }
-        .grade-card-filters { flex: 1 1 100% !important; width: 100% !important; max-width: none !important; }
-        .grade-card-filters .search-wrap { min-width: 0 !important; max-width: none !important; }
-        .page-header-row .search-wrap { min-width: 0; max-width: none; }
-        .page-header-row .btn { white-space: nowrap; }
-        .review-source { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(600px, 1.7fr); gap: 18px; align-items: start; }
-        .review-source > div, .review-source .table-wrap { min-width: 0; max-width: 100%; }
-        .review-source .table-wrap { overflow-x: auto; }
-        .review-source table { min-width: 520px; table-layout: fixed; }
-        .review-grade-column { min-width: 0; }
-        .review-source th:first-child, .review-source td:first-child { width: 155px; }
-        .review-source .review-quarter-input { width: 58px !important; padding-left: 6px; padding-right: 6px; }
-        .review-source input { max-width: 100%; }
-        .review-source > .review-image-column,
-        .review-source > .review-grade-column { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: #fff; }
-        .review-source > .review-image-column { grid-column: 1; grid-row: 1; }
-        .review-source > .review-grade-column { grid-column: 2; grid-row: 1; }
-        .review-panel-title { margin-bottom: 10px; color: var(--navy); font-size: .92rem; font-weight: 700; }
-        .review-table-toolbar { display: flex; justify-content: flex-end; gap: 6px; margin: -4px 0 4px; }
-        .review-table-toolbar .btn { min-width: 38px; padding: 7px 10px; }
-        .review-photo { min-height: 460px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; text-align: center; }
-        .review-photo img { display: block; width: 100%; max-height: 68vh; object-fit: contain; border-radius: 6px; cursor: zoom-in; }
-        .image-zoom-modal { background: transparent; z-index: 100; pointer-events: none; align-items: flex-start; justify-content: flex-start; padding: 8px; }
-        .image-zoom-modal .modal { width: min(48vw, 700px); max-height: calc(100vh - 16px); margin: 0; padding: 14px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: auto; pointer-events: auto; }
-        .image-zoom-modal .modal-header { padding: 0 0 10px; }
-        .image-zoom-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-bottom: 10px; }
-        .image-zoom-controls .btn { min-width: 42px; padding: 8px 10px; }
-        .image-zoom-modal img { display: block; width: 100%; min-width: 100%; height: auto; max-width: none; object-fit: contain; border-radius: 8px; transform-origin: top left; }
-        #reviewExtractionModal { justify-content: flex-start; }
-        #reviewExtractionModal { padding: 8px; }
-        #reviewExtractionModal > .modal { margin: 0; width: calc(100vw - 16px) !important; max-width: none !important; max-height: calc(100vh - 16px); }
-        .image-zoom-modal { backdrop-filter: none; }
-        .image-zoom-modal .modal { margin-right: 0; }
-        .review-flags { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #f3c56b; border-radius: 8px; background: #fff8e8; color: #765400; font-size: .85rem; }
-        .review-flags ul { margin: 6px 0 0 18px; list-style: disc; }
-        .review-cell-warning { background: #fff8e8; border-color: #e9a11b !important; box-shadow: inset 0 0 0 1px rgba(233,161,27,.18); }
-        .review-cell-warning::placeholder { color: #9a6700; }
-        .review-cell-warning-label { display: inline-block; margin-top: 3px; color: #9a6700; font-size: .68rem; line-height: 1.1; }
-        .review-legend { margin: 8px 0 0; color: #765400; font-size: .76rem; }
-        @media (max-width: 760px) {
-            #reviewExtractionModal { justify-content: center; }
-            #reviewExtractionModal > .modal { margin: 0; width: 100%; }
-            .review-source { grid-template-columns: 1fr; }
-            .review-source > .review-image-column,
-            .review-source > .review-grade-column { grid-column: 1; grid-row: auto; }
-            .image-zoom-modal { padding: 8px; }
-            .image-zoom-modal .modal { width: min(58vw, 480px); max-height: calc(100vh - 16px); }
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEFAMDEV-Life · Scholar Grade Book &amp; Report Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2e44;--navy2:#243b55;--gold:#f5a623;--gold-light:#fdf0d5;
+  --teal:#1abc9c;--green:#27ae60;--red:#e74c3c;--orange:#f39c12;
+  --bg:#eef1f5;--white:#fff;--border:#dde3ec;--text:#2c3e50;--text-muted:#7f8c8d;
+  --header-h:64px;--shadow-sm:0 1px 4px rgba(26,46,68,.08);
+  --shadow:0 3px 14px rgba(26,46,68,.11);--shadow-lg:0 12px 40px rgba(26,46,68,.14);
+  --radius:10px;--focus-ring:0 0 0 3px rgba(245,166,35,.28);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100%}
+.main{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+.topbar{height:var(--header-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:var(--shadow-sm);position:sticky;top:0;z-index:10}
+.topbar-title{font-family:'DM Serif Display',serif;font-size:1.25rem;color:var(--navy)}
+.topbar-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.content-area{margin-top:18px}
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:20px}
+.card+.card{margin-top:18px}
+.card-title{font-size:1rem;font-weight:700;color:var(--navy)}
+.btn{border:0;border-radius:10px;padding:10px 16px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,transform .15s,box-shadow .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.btn-ghost{background:rgba(15,33,48,.06);color:var(--navy)}
+.btn-ghost:hover:not(:disabled){background:rgba(15,33,48,.11)}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-navy:hover:not(:disabled){background:var(--navy2)}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover:not(:disabled){background:#e09520}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover:not(:disabled){background:#1f8b4c}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover:not(:disabled){background:#c0392b}
+.btn-sm{padding:7px 11px;font-size:.8rem;border-radius:8px}
+.search-wrap{position:relative;display:inline-flex;width:100%;max-width:320px;min-width:0}
+input.search-input{width:100%;min-width:0;padding:10px 14px 10px 42px;border-radius:9px;border:1px solid var(--border);background:#fbfcfe;font-size:.92rem;font-family:inherit;color:var(--text);transition:border-color .15s,box-shadow .15s}
+.search-input:focus{background:#fff;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.16);outline:none}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;background:url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%237f8c8d"><path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm8.71 1.71-4.3-4.3A9.95 9.95 0 0 0 20 10a10 10 0 1 0-10 10 9.95 9.95 0 0 0 5.41-1.59l4.3 4.3a1 1 0 0 0 1.42-1.42Z"/></svg>') no-repeat center / contain;pointer-events:none}
+.table-wrap{overflow-x:auto;border-radius:8px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px;text-align:left;border-bottom:1px solid #eef1f5;vertical-align:middle}
+th{background:#f8fafc;color:var(--navy);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.scholar-row{cursor:pointer;transition:background .12s}
+.scholar-row:hover{background:#f9fbfd}
+.scholar-row.open{background:#eef5ff}
+.scholar-row.open td{border-bottom-color:transparent}
+.scholar-row .chev{display:inline-block;transition:transform .2s;color:var(--text-muted);font-size:.75rem;margin-right:6px}
+.scholar-row.open .chev{transform:rotate(90deg);color:var(--navy)}
+.scholar-name{font-weight:700;color:var(--navy)}
+.scholar-meta{font-size:.78rem;color:var(--text-muted);margin-top:3px}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;line-height:1.2}
+.pill-navy{background:#eef4ff;color:#1d4ed8}
+.pill-green{background:#e9f7ef;color:#1a8a4a}
+.pill-orange{background:#fef5e4;color:#b7770d}
+.pill-red{background:#fdedeb;color:#c0392b}
+.pill-grey{background:#f0f2f5;color:#6c757d}
+.pill-teal{background:#dff5f0;color:#0f7a68}
+.detail-row{display:none}
+.detail-row.open{display:table-row}
+.detail-row > td{padding:0;background:#f8fafc;border-bottom:1px solid var(--border)}
+.detail-inner{padding:20px 22px 24px}
 
-        /* Grouped/stacked pending-review rows: one header per student with a
-           count badge, items collapse underneath instead of repeating the
-           student's name for every single upload. */
-        .review-group { border-bottom: 1px solid #eef1f5; }
-        .review-group:last-child { border-bottom: none; }
-        .review-group-header { display: flex; align-items: center; gap: 10px; padding: 13px 4px; cursor: pointer; border-radius: 8px; user-select: none; }
-        .review-group-header:hover { background: #f9fbfd; }
-        .review-group-name { font-weight: 700; color: var(--navy); }
-        .review-count-badge { background: var(--gold-light); color: #8a5a00; border: 1px solid #f0d9a8; font-weight: 700; font-size: .74rem; padding: 2px 9px; border-radius: 999px; letter-spacing: .2px; }
-        .review-count-badge { background: #fde8ea; color: #b41623; border-color: #f3b8bf; }
-        .review-mekong-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; background: #d9f2e2; color: #176b38; font-size: .72rem; font-weight: 700; white-space: nowrap; }
-        .review-group-sub { font-size: .82rem; color: var(--text-muted); }
-        .review-group-chevron { margin-left: auto; color: var(--text-muted); font-size: .8rem; transition: transform .18s ease; flex-shrink: 0; }
-        .review-group.open .review-group-chevron { transform: rotate(180deg); }
-        .review-group-items { display: none; margin: 0 4px 12px 14px; padding-left: 14px; border-left: 2px solid #eef1f5; }
-        .review-group.open .review-group-items { display: block; }
-        .review-item-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #eef1f5; flex-wrap: wrap; }
-        .review-item-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-left: auto; }
-        .action-stack { display: inline-flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 112px; }
-        .action-stack .btn { width: 100%; margin-left: 0 !important; text-align: center; }
-        .review-item-actions .btn { min-width: 112px; text-align: center; }
-        .review-item-row:last-child { border-bottom: none; }
-        .review-item-meta { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
-        .review-item-date { display: block; margin-top: 3px; font-size: .88rem; color: var(--navy); font-weight: 600; }
-        .review-item-type { display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #5f6d7a; background: #eef1f5; padding: 2px 7px; border-radius: 6px; margin-right: 6px; }
-        @media (max-width: 640px) {
-            .main { padding: 12px 10px 28px; }
-            .topbar { height: auto; min-height: var(--header-h); padding: 10px 12px; gap: 8px; }
-            .topbar, .topbar-right { flex-wrap: wrap; }
-            .topbar-right { width: 100%; }
-            .topbar-title { font-size: 1.02rem; }
-            .topbar-actions { gap: 8px; }
-            .topbar-actions .btn { flex: 1 1 calc(50% - 8px); }
-            .card { padding: 14px; }
-            .page-header-row { margin-bottom: 10px; }
-            .page-header-row > div:last-child { grid-template-columns: 1fr; width: 100%; }
-            .page-header-row > div:last-child .btn { width: 100%; }
-            .grade-card-filters { display: grid; grid-template-columns: 1fr; }
-            .search-wrap { max-width: none; }
-            .review-group-header { align-items: flex-start; flex-wrap: wrap; }
-            .review-group-sub { flex: 1 1 100%; order: 5; }
-            .review-group-chevron { margin-left: auto; }
-            .review-item-actions { width: 100%; margin-left: 0; justify-content: flex-start; }
-            .review-item-actions .btn, .action-stack .btn { width: 100%; }
-            .action-stack { width: 100%; }
-            .page-header-row .card-title { font-size: .94rem; }
-            th, td { padding: 9px 8px; }
-            .app-id-badge { font-size: .71rem; }
-        }
+/* ── Per-year blocks ── */
+.years-stack{display:grid;gap:14px}
+.year-block{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(26,46,68,.05)}
+.year-block.current{border-color:#c7d9f0;box-shadow:0 3px 12px rgba(36,59,85,.08)}
+.year-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,#f4f8ff,#eaf2ff);border-bottom:1px solid #e7edf5;flex-wrap:wrap}
+.year-block.current .year-header{background:linear-gradient(135deg,#e9f1ff,#dbe9ff)}
+.year-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.year-sy{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--navy);letter-spacing:.3px}
+.year-badges{display:flex;gap:6px;flex-wrap:wrap}
+.year-actions{display:flex;gap:8px;flex-wrap:wrap}
+.year-body{padding:16px 18px 18px;display:grid;gap:16px}
+.year-section{display:grid;gap:8px}
+.year-section-title{font-size:.74rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+.year-section-title::after{content:'';flex:1;height:1px;background:#eef1f5}
 
-        @media (max-width: 480px) {
-            .topbar-actions .btn { flex-basis: 100%; }
-            .main { padding-left: 8px; padding-right: 8px; }
-            .card { padding: 12px; }
-            .modal-header { padding: 14px 16px; }
-            .modal-body { padding: 14px 16px; }
-            .modal-footer { padding: 12px 16px 16px; }
-            .review-item-row { gap: 8px; }
-            .review-item-date { font-size: .82rem; }
-        }
-    </style>
+/* Uploads list */
+.upload-list{display:grid;gap:8px}
+.upload-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #e7edf5;border-radius:12px;background:#fbfcfe;flex-wrap:wrap;transition:border-color .15s,box-shadow .15s}
+.upload-item:hover{border-color:#cfdcef}
+.upload-item.pending{background:#fff8e8;border-color:#f3d99b}
+.upload-item.approved{background:#f1fbf5;border-color:#c8ecd3}
+.upload-thumb{width:52px;height:52px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;background:#eef1f5;font-size:1.4rem;overflow:hidden;cursor:zoom-in}
+.upload-thumb img{width:100%;height:100%;object-fit:cover}
+.upload-body{flex:1;min-width:0}
+.upload-title{font-weight:700;color:var(--navy);font-size:.9rem}
+.upload-sub{font-size:.78rem;color:var(--text-muted);margin-top:3px}
+.upload-actions{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+
+/* Subject grade cards */
+.subjects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.subject-card{background:#fbfcfe;border:1px solid #e7edf5;border-radius:12px;padding:12px 14px}
+.subject-card.bad{background:#fff5f5;border-color:#f3c4c4}
+.subject-card.good{background:#f1fbf5;border-color:#c8ecd3}
+.subject-name{font-weight:700;color:var(--navy);font-size:.9rem;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subject-quarters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.q-chip{background:#fff;border:1px solid #dfe7f2;border-radius:999px;padding:2px 9px;font-size:.74rem;font-weight:600;color:var(--navy)}
+.subject-avg{font-size:.76rem;font-weight:800;color:var(--text-muted);letter-spacing:.03em}
+.subject-card.good .subject-avg{color:var(--green)}
+.subject-card.bad .subject-avg{color:var(--red)}
+
+.empty-year{color:var(--text-muted);font-size:.86rem;padding:6px 0}
+
+/* Pending reviews (top panel) */
+.review-group{border-bottom:1px solid #eef1f5}
+.review-group:last-child{border-bottom:none}
+.review-group-header{display:flex;align-items:center;gap:10px;padding:13px 4px;cursor:pointer;border-radius:8px;user-select:none}
+.review-group-header:hover{background:#f9fbfd}
+.review-group-name{font-weight:700;color:var(--navy)}
+.review-count-badge{background:#fde8ea;color:#b41623;border:1px solid #f3b8bf;font-weight:700;font-size:.74rem;padding:2px 9px;border-radius:999px}
+.review-mekong-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#d9f2e2;color:#176b38;font-size:.72rem;font-weight:700;white-space:nowrap}
+.review-group-sub{font-size:.82rem;color:var(--text-muted)}
+.review-group-chevron{margin-left:auto;color:var(--text-muted);font-size:.8rem;transition:transform .18s ease;flex-shrink:0}
+.review-group.open .review-group-chevron{transform:rotate(180deg)}
+.review-group-items{display:none;margin:0 4px 12px 14px;padding-left:14px;border-left:2px solid #eef1f5}
+.review-group.open .review-group-items{display:block}
+.review-item-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed #eef1f5;flex-wrap:wrap}
+.review-item-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.review-item-meta{font-size:.82rem;color:var(--text-muted);margin-top:2px}
+.review-item-date{display:block;margin-top:3px;font-size:.88rem;color:var(--navy);font-weight:600}
+.review-item-type{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#5f6d7a;background:#eef1f5;padding:2px 7px;border-radius:6px;margin-right:6px}
+
+.empty-state{background:#f8fbff;border:1px solid #dfe8f3;color:#5f6d7a;padding:22px;border-radius:14px;text-align:center}
+
+/* Page header row */
+.page-header-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.page-header-row > div{min-width:0}
+.page-header-row > div:last-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;width:min(100%,690px);gap:10px;align-items:center}
+.page-header-row .search-wrap{min-width:0;max-width:none}
+.page-header-row .btn{white-space:nowrap}
+
+/* Modals */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(12,20,39,.65);backdrop-filter:blur(2px);align-items:center;justify-content:center;padding:20px;z-index:50}
+.modal-overlay.open{display:flex}
+.modal{width:min(100%,900px);background:#fff;border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden;max-height:92vh;display:flex;flex-direction:column}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #eef1f5;flex-shrink:0}
+.modal-header h2{margin:0;font-size:1.1rem;color:var(--navy)}
+.modal-body{padding:20px 24px;overflow-y:auto}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:18px 24px 24px;border-top:1px solid #eef1f5;flex-shrink:0;flex-wrap:wrap}
+@keyframes modalPop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-overlay .modal{animation:modalPop .16s ease-out}
+
+.form-group{margin-bottom:14px}
+label{display:block;font-size:.85rem;margin-bottom:8px;color:#5f6d7a;font-weight:600}
+input[type=text],input:not([type]),input[type=number],input[type=search],input[type=email],input[type=date],select,textarea{width:100%;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:.95rem;font-family:inherit;color:var(--text);background:#fff;transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover,textarea:hover{border-color:#c7d0dd}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.16)}
+select{appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%237f8c8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');background-repeat:no-repeat;background-position:right 14px center;background-size:16px;padding-right:40px;cursor:pointer}
+
+/* Review extraction modal */
+.review-source{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(600px,1.7fr);gap:18px;align-items:start}
+.review-source > .review-image-column,
+.review-source > .review-grade-column{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff;min-width:0}
+.review-panel-title{margin-bottom:10px;color:var(--navy);font-size:.92rem;font-weight:700}
+.review-photo{min-height:360px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;text-align:center}
+.review-photo img{display:block;width:100%;max-height:62vh;object-fit:contain;border-radius:6px;cursor:zoom-in}
+.review-source .table-wrap{overflow-x:auto}
+.review-source table{min-width:520px;table-layout:fixed;margin-top:0}
+.review-source th:first-child,.review-source td:first-child{width:155px}
+.review-source .review-quarter-input{width:58px !important;padding-left:6px;padding-right:6px;text-align:center}
+.review-cell-warning{background:#fff8e8;border-color:#e9a11b !important}
+.review-cell-warning-label{display:block;margin-top:3px;color:#9a6700;font-size:.68rem;text-align:center}
+.review-flags{margin:0 0 14px;padding:10px 12px;border:1px solid #f3c56b;border-radius:8px;background:#fff8e8;color:#765400;font-size:.85rem}
+.review-legend{margin:8px 0 0;color:#765400;font-size:.76rem}
+.review-table-toolbar{display:flex;justify-content:flex-end;gap:6px;margin:-4px 0 4px;flex-wrap:wrap}
+
+/* Image zoom */
+.image-zoom-modal{background:transparent;z-index:100;pointer-events:none;align-items:flex-start;justify-content:flex-start;padding:8px}
+.image-zoom-modal .modal{width:min(48vw,700px);max-height:calc(100vh - 16px);margin:0;padding:14px;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35);overflow:auto;pointer-events:auto}
+.image-zoom-modal .modal-header{padding:0 0 10px;border:0}
+.image-zoom-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-bottom:10px}
+.image-zoom-modal img{display:block;width:100%;height:auto;border-radius:8px}
+
+/* Manage subjects */
+.subjects-list{list-style:none;display:grid;gap:6px;max-height:320px;overflow-y:auto;padding-right:4px}
+.subject-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fbfcfe;border:1px solid #e7edf5;border-radius:10px}
+.subject-name{flex:1;font-weight:600;color:var(--navy);font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subject-name input{padding:6px 8px !important;font-size:.88rem !important}
+.subject-actions{display:flex;gap:4px;flex-shrink:0}
+.subject-actions .btn{padding:5px 9px;font-size:.74rem;border-radius:7px}
+.subjects-empty{color:var(--text-muted);font-size:.87rem;text-align:center;padding:14px 8px}
+
+/* Tablet / mobile */
+@media (max-width:760px){
+  .main{padding:12px 10px 28px}
+  .topbar{height:auto;min-height:var(--header-h);padding:10px 12px;flex-wrap:wrap}
+  .topbar-actions .btn{flex:1 1 calc(50% - 6px)}
+  .card{padding:14px}
+  .page-header-row > div:last-child{grid-template-columns:1fr;width:100%}
+  .page-header-row > div:last-child .btn{width:100%}
+  .review-source{grid-template-columns:1fr}
+  .year-header{padding:12px 14px}
+  .year-body{padding:12px 14px 14px}
+  .detail-inner{padding:14px}
+  th,td{padding:10px 8px}
+  .subjects-grid{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-    <main class="main">
-        <header class="topbar">
-            <div style="display:flex; align-items:center; gap:12px;"><span class="topbar-title">Student Grade/Card</span></div>
-            <div class="topbar-right topbar-actions">
-                <button class="btn btn-ghost" onclick="goBackToDashboard()">← Back</button>
-                <button class="btn btn-ghost" onclick="openSubjectsModal()">Manage Subjects</button>
-            </div>
-        </header>
+<main class="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="topbar-title">Scholar Grade Book &amp; Report Cards</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="goBackToDashboard()">← Back</button>
+      <button class="btn btn-ghost" onclick="openSubjectsModal()">⚙️ Manage Subjects</button>
+    </div>
+  </header>
 
-        <div class="content-area">
-            <div class="card" style="margin-bottom:18px;">
-                <div class="page-header-row" style="margin-bottom:12px;">
-                    <div>
-                        <div class="card-title">Pending Grade Reviews</div>
-                        <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">Applicant-uploaded report cards await staff approval before becoming finalized grades.</p>
-                    </div>
-                </div>
-                <div id="pendingGradeReviews"></div>
-            </div>
+  <div class="content-area">
 
-            <div class="card">
-                <div class="page-header-row" style="margin-bottom:18px;">
-                    <div>
-                        <div class="card-title">Student Grade/Cards</div>
-                        <p style="color:var(--text-muted); font-size:.92rem; margin-top:6px;">View student grade cards and print academic progress.</p>
-                    </div>
-                    <div class="grade-card-filters">
-                        <div class="search-wrap"><span class="search-icon"></span><input type="text" id="rcSearchInput" class="search-input" placeholder="Search student, school, grade..." oninput="filterReportCards()"></div>
-                        <div class="search-wrap" style="min-width:240px; max-width:320px;"><span class="search-icon"></span><input type="text" id="rcSchoolYearFilter" class="search-input" placeholder="Filter by school year" oninput="filterReportCards()"></div>
-                        <button class="btn btn-gold btn-sm" type="button" onclick="filterReportCards()">🔍 Filter</button>
-                    </div>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>Scholar Name</th><th>Student ID</th><th>School Year</th><th>Grade Level</th><th>School</th><th>Action</th></tr></thead>
-                        <tbody id="report-cards-body"></tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- ── Pending reviews (unchanged idea, kept at top) ── -->
+    <div class="card">
+      <div class="page-header-row" style="margin-bottom:8px;">
+        <div>
+          <div class="card-title">Pending Grade Reviews</div>
+          <p style="color:var(--text-muted);font-size:.92rem;margin-top:6px;">
+            Applicant uploads and submitted quarter grades waiting for staff approval.
+          </p>
         </div>
-    </main>
-
-    <div class="modal-overlay" id="uploadHistoryModal">
-        <div class="modal" style="max-width:700px;">
-            <div class="modal-header">
-                <h2>Previous Uploads</h2>
-                <button class="btn btn-ghost" onclick="closeModal('uploadHistoryModal')">✕</button>
-            </div>
-            <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
-                <div id="uploadHistoryContent"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-ghost" onclick="closeModal('uploadHistoryModal')">Close</button>
-            </div>
-        </div>
+      </div>
+      <div id="pendingGradeReviews"></div>
     </div>
 
-    <div class="modal-overlay" id="reportCardModal">
-        <div class="modal">
-            <div class="modal-header">
-                <div style="display:flex; align-items:center; gap:12px;"><h2 style="margin:0;">Report Card</h2><button class="btn btn-sm btn-ghost" onclick="printReportCard()" style="padding:6px 12px;">🖨️ Print</button></div>
-                <button class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
-            </div>
-            <div class="modal-body" style="padding:20px; overflow-y:auto; max-height:calc(90vh - 100px);">
-                <div id="reportCardContent"></div>
-            </div>
+    <!-- ── THE unified scholar list: report card view IS the grade book ── -->
+    <div class="card">
+      <div class="page-header-row">
+        <div>
+          <div class="card-title">Scholars</div>
+          <p style="color:var(--text-muted);font-size:.92rem;margin-top:6px;">
+            Click a scholar to see previous uploads by school year, then update grades for that year.
+          </p>
         </div>
+        <div>
+          <div class="search-wrap"><span class="search-icon"></span>
+            <input type="text" id="scholarSearch" class="search-input" placeholder="Search student, school, grade..." oninput="renderScholars()">
+          </div>
+          <div class="search-wrap"><span class="search-icon"></span>
+            <input type="text" id="scholarYearFilter" class="search-input" placeholder="Filter by school year" oninput="renderScholars()">
+          </div>
+          <button class="btn btn-gold btn-sm" type="button" onclick="renderScholars()">🔍 Filter</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:32%">Scholar</th>
+              <th>Student ID</th>
+              <th>Grade Level</th>
+              <th>School</th>
+              <th>Latest Grade</th>
+              <th>School Years</th>
+            </tr>
+          </thead>
+          <tbody id="scholars-body"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="modal-overlay image-zoom-modal" id="imageZoomModal" onclick="if(event.target===this) closeModal('imageZoomModal')">
-        <div class="modal">
-            <div class="modal-header" style="justify-content:flex-end; border:0; padding:0 0 10px;">
-                <button class="btn btn-ghost" onclick="closeModal('imageZoomModal')">✕ Close</button>
-            </div>
-            <div class="image-zoom-controls">
-                <button class="btn btn-ghost" type="button" onclick="changeImageZoom(-0.25)" title="Zoom out">−</button>
-                <button class="btn btn-ghost" type="button" onclick="resetImageZoom()" title="Reset zoom">Reset</button>
-                <button class="btn btn-ghost" type="button" onclick="changeImageZoom(0.25)" title="Zoom in">+</button>
-                <span id="imageZoomLevel" style="min-width:48px; text-align:center; font-size:.8rem; color:var(--text-muted);">100%</span>
-            </div>
-            <img id="zoomedReviewImage" src="" alt="Zoomed report card">
-        </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════════
+     Report Card viewer modal
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="reportCardModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <h2 style="margin:0;">Report Card</h2>
+        <button class="btn btn-sm btn-ghost" onclick="printReportCard()">🖨️ Print</button>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
     </div>
+    <div class="modal-body"><div id="reportCardContent"></div></div>
+  </div>
+</div>
 
-    <div class="modal-overlay" id="gradeModal">
-        <div class="modal" style="max-width:640px;">
-            <div class="modal-header"><h2 id="gradeModalTitle">Update Grade</h2><button class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button></div>
-            <div class="modal-body">
-                <p id="gradeModalName" style="font-weight:700; margin-bottom:14px;"></p>
-                <div class="form-group"><label>School Year</label><input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026"></div>
-                <div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap;"><div style="flex:1 1 240px;"><label>Subject</label><input list="subjectsList" id="gradeSubject" placeholder="Type or select subject"></div><button class="btn btn-ghost btn-sm" style="height:42px; align-self:flex-end;" onclick="openSubjectsModal()">Manage Subjects</button></div>
-                <datalist id="subjectsList"></datalist>
-                <div class="form-group"><label id="gradeQuarterLabel" for="gradeQuarter">Quarter</label><select id="gradeQuarter"><option value="">-- Select Quarter --</option><option value="1">Quarter 1</option><option value="2">Quarter 2</option><option value="3">Quarter 3</option><option value="4">Quarter 4</option></select></div>
-                <div class="form-group"><label>Grade (60-100)</label><input type="number" id="gradeInput" min="60" max="100"></div>
-                <input type="hidden" id="gradeModalAppId">
-            </div>
-            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button><button class="btn btn-navy" onclick="saveGrade()">Save Grade</button></div>
-        </div>
+<!-- Image zoom -->
+<div class="modal-overlay image-zoom-modal" id="imageZoomModal" onclick="if(event.target===this)closeModal('imageZoomModal')">
+  <div class="modal">
+    <div class="modal-header" style="justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('imageZoomModal')">✕ Close</button>
     </div>
-
-    <div class="modal-overlay" id="reviewExtractionModal">
-        <div class="modal" style="max-width:1100px;">
-            <div class="modal-header"><h2>Review Pending Grades</h2><button class="btn btn-ghost" onclick="closeModal('reviewExtractionModal')">✕</button></div>
-            <div class="modal-body" style="max-height:72vh; overflow:auto;">
-                <div id="reviewExtractionContent"></div>
-            </div>
-            <div class="modal-footer"><button class="btn btn-ghost" onclick="saveReview('reject')">Reject</button><button class="btn btn-navy" onclick="saveReview('approve')">Approve & Finalize</button></div>
-        </div>
+    <div class="image-zoom-controls">
+      <button class="btn btn-ghost" type="button" onclick="changeImageZoom(-0.25)">−</button>
+      <button class="btn btn-ghost" type="button" onclick="resetImageZoom()">Reset</button>
+      <button class="btn btn-ghost" type="button" onclick="changeImageZoom(0.25)">+</button>
+      <span id="imageZoomLevel" style="min-width:48px;text-align:center;font-size:.8rem;color:var(--text-muted);">100%</span>
     </div>
+    <img id="zoomedReviewImage" src="" alt="Zoomed report card">
+  </div>
+</div>
 
-    <div class="modal-overlay" id="reportCardCropModal">
-        <div class="modal" style="max-width:780px;">
-            <div class="modal-header"><h2>Crop Uploaded Report Card</h2><button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">✕</button></div>
-            <div class="modal-body">
-                <div style="display:grid; gap:12px;">
-                    <canvas id="reportCardCropCanvas" width="540" height="540" style="max-width:100%; border:1px solid var(--border); border-radius:10px; background:#f8fafc;"></canvas>
-                    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                        <label class="form-group" style="margin:0; width:180px;">
-                            <span style="display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;">Zoom</span>
-                            <input type="range" min="1" max="3" step="0.1" value="1.1" id="reportCardCropZoom">
-                        </label>
-                        <label class="form-group" style="margin:0; width:120px;">
-                            <span style="display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;">X</span>
-                            <input type="range" min="0" max="100" value="50" id="reportCardCropX">
-                        </label>
-                        <label class="form-group" style="margin:0; width:120px;">
-                            <span style="display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:6px;">Y</span>
-                            <input type="range" min="0" max="100" value="50" id="reportCardCropY">
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">Cancel</button>
-                <button class="btn btn-navy" onclick="applyReportCardCrop()">Use Cropped Image</button>
-            </div>
-        </div>
+<!-- Grade modal (scoped per year) -->
+<div class="modal-overlay" id="gradeModal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h2 id="gradeModalTitle">Enter Scholar Grade</h2>
+      <button class="btn btn-ghost" onclick="closeModal('gradeModal')">✕</button>
     </div>
+    <div class="modal-body">
+      <p id="gradeModalName" style="font-weight:700;margin-bottom:4px;color:var(--navy);"></p>
+      <p id="gradeModalContext" style="font-size:.82rem;color:var(--text-muted);margin-bottom:14px;"></p>
 
-    <div class="modal-overlay" id="subjectsModal">
-        <div class="modal" style="max-width:520px;">
-            <div class="modal-header"><h2>Manage Subjects</h2><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button></div>
-            <div class="modal-body">
-                <p style="font-size:.9rem; color:var(--text-muted);">Add, remove, or edit the list of subjects that appear in Grade Entry and Report Cards.</p>
-                <div style="margin-top:16px;"><label for="gradingPeriodsSelect">Grading format</label><select id="gradingPeriodsSelect" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px;"><option value="3">3 terms (DepEd-style)</option><option value="4">4 quarters (private-school option)</option></select><small style="display:block; margin-top:5px; color:var(--text-muted);">Existing Quarter 4 records are kept and appear when 4 quarters is selected.</small></div>
-                <div style="margin-top:12px;"><input type="text" id="newSubjectInput" placeholder="Enter subject name" style="width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;"><button class="btn btn-gold" onclick="addSubject()">➕ Add Subject</button></div>
-                <div style="margin-top:16px;"><ul id="subjectsListView"></ul></div>
-            </div>
-            <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button><button class="btn btn-navy" onclick="saveSubjects()">Save Subjects</button></div>
+      <div class="form-group">
+        <label for="gradeSchoolYear">School Year</label>
+        <input type="text" id="gradeSchoolYear" placeholder="e.g. 2025-2026">
+      </div>
+      <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1 1 240px;">
+          <label for="gradeSubject">Subject</label>
+          <input list="subjectsList" id="gradeSubject" placeholder="Type or select subject">
         </div>
+        <button class="btn btn-ghost btn-sm" style="height:44px;align-self:flex-end;" type="button" onclick="openSubjectsModal()">Manage</button>
+      </div>
+      <datalist id="subjectsList"></datalist>
+      <div class="form-group">
+        <label id="gradeQuarterLabel" for="gradeQuarter">Quarter</label>
+        <select id="gradeQuarter"></select>
+      </div>
+      <div class="form-group">
+        <label for="gradeInput">Grade (60–100)</label>
+        <input type="number" id="gradeInput" min="60" max="100" placeholder="e.g. 88">
+      </div>
+      <input type="hidden" id="gradeModalAppId">
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('gradeModal')">Cancel</button>
+      <button class="btn btn-navy" onclick="saveGrade()">Save Grade</button>
+    </div>
+  </div>
+</div>
 
-    <script src="/components/report-card.js"></script>
-    <script src="/mefamdev-api.js"></script>
-    <script>
-        let acceptedScholars = [];
-        let pendingExtractions = [];
-        let pendingQuarterGrades = [];
-        let activeExtractionId = null;
-        let currentSchoolYearFilter = '';
-        // Which student groups the reviewer has manually expanded, so a
-        // re-render (after approve/reject/save) doesn't snap them shut.
-        let expandedReviewGroups = new Set();
+<!-- Review extraction modal -->
+<div class="modal-overlay" id="reviewExtractionModal" style="justify-content:flex-start;padding:8px;">
+  <div class="modal" style="max-width:1100px;margin:0;width:calc(100vw - 16px);max-height:calc(100vh - 16px);">
+    <div class="modal-header">
+      <h2>Review Pending Grades</h2>
+      <button class="btn btn-ghost" onclick="closeModal('reviewExtractionModal')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:72vh;">
+      <div id="reviewExtractionContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="saveReview('reject')">Reject</button>
+      <button class="btn btn-navy" onclick="saveReview('approve')">Approve &amp; Finalize</button>
+    </div>
+  </div>
+</div>
 
-        async function loadReportCardsPage() {
-            try {
-                acceptedScholars = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
-                await renderSubjectsDatalist();
-                await loadPendingGradeReviews();
-                await loadPendingQuarterSubmissions();
-                renderPendingReviewsPanel();
-                renderReportCards();
-            } catch (error) {
-                console.error('Failed to load report cards page:', error);
-                acceptedScholars = Array.isArray(acceptedScholars) ? acceptedScholars : [];
-                renderReportCards();
-            }
-        }
+<!-- Crop modal -->
+<div class="modal-overlay" id="reportCardCropModal">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-header">
+      <h2>Crop Uploaded Report Card</h2>
+      <button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <canvas id="reportCardCropCanvas" width="540" height="540" style="max-width:100%;border:1px solid var(--border);border-radius:10px;background:#f8fafc;"></canvas>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px;">
+        <label style="margin:0;width:180px;"><span style="display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:6px;">Zoom</span><input type="range" min="1" max="3" step="0.1" value="1.1" id="reportCardCropZoom"></label>
+        <label style="margin:0;width:120px;"><span style="display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:6px;">X</span><input type="range" min="0" max="100" value="50" id="reportCardCropX"></label>
+        <label style="margin:0;width:120px;"><span style="display:block;font-size:.78rem;color:var(--text-muted);margin-bottom:6px;">Y</span><input type="range" min="0" max="100" value="50" id="reportCardCropY"></label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reportCardCropModal')">Cancel</button>
+      <button class="btn btn-navy" onclick="applyReportCardCrop()">Use Cropped Image</button>
+    </div>
+  </div>
+</div>
 
-        // Fetches applicant-uploaded extractions awaiting review. Rendering
-        // happens in renderPendingReviewsPanel() once both sources are loaded,
-        // so an empty result here doesn't clobber rows from the other source.
-        async function loadPendingGradeReviews() {
-            try {
-                const rows = await MefamAPI.getPendingGradeExtractions() || [];
-                pendingExtractions = Array.isArray(rows) ? rows : [];
-            } catch (error) {
-                console.error('Failed to load pending grade reviews:', error);
-                pendingExtractions = [];
-            }
-        }
+<!-- Manage Subjects modal -->
+<div class="modal-overlay" id="subjectsModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h2>Manage Subjects</h2>
+      <button class="btn btn-ghost" onclick="closeModal('subjectsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:14px;">
+        Add, rename, or remove the subjects used in Grade Entry and Report Cards.
+      </p>
 
-        // Fetches student-submitted quarterly grades awaiting approval.
-        async function loadPendingQuarterSubmissions() {
-            try {
-                const rows = await MefamAPI.pendingGrades() || [];
-                pendingQuarterGrades = Array.isArray(rows) ? rows : [];
-            } catch (err) {
-                console.error('Failed to load pending quarterly submissions', err);
-                pendingQuarterGrades = [];
-            }
-        }
+      <div class="form-group">
+        <label for="gradingPeriodsSelect">Grading Format</label>
+        <select id="gradingPeriodsSelect">
+          <option value="3">3 Terms (DepEd-style)</option>
+          <option value="4">4 Quarters (Private-school option)</option>
+        </select>
+        <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:.78rem;">
+          Existing Quarter 4 records are kept and appear when 4 quarters is selected.
+        </small>
+      </div>
 
-        // Builds one entry per pending item (either an uploaded-report-card
-        // extraction or a submitted quarter grade), tagged with a student id
-        // and a display timestamp, so both sources can be grouped together.
-        function buildPendingReviewItems() {
-            const items = [];
+      <div class="form-group" style="display:flex;gap:8px;">
+        <input type="text" id="newSubjectInput" placeholder="Enter subject name"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addSubject();}">
+        <button class="btn btn-gold" type="button" onclick="addSubject()">➕ Add</button>
+      </div>
 
-            pendingExtractions.forEach(extraction => {
-                const studentId = extraction.appId != null ? Number(extraction.appId) : null;
-                const scholar = (acceptedScholars || []).find(app => Number(app.id) === studentId);
-                const schoolYear = extraction?.extracted?.schoolYear || 'Pending school year';
-                const uploadedAt = extraction?.uploadedAt ? new Date(extraction.uploadedAt) : null;
-                items.push({
-                    studentId,
-                    studentName: scholar?.name || `Applicant #${extraction.appId ?? '—'}`,
-                    mekong: Boolean(scholar?.mekong),
-                    sortTime: uploadedAt ? uploadedAt.getTime() : 0,
-                    typeLabel: 'Upload',
-                    meta: schoolYear,
-                    dateLabel: uploadedAt ? uploadedAt.toLocaleString() : 'Recently uploaded',
-                    actionsHtml: `<button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(extraction.id) || 0})">Review / Finalize</button>`,
-                });
-            });
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong style="font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);">Current Subjects</strong>
+        <span id="subjectsCount" style="font-size:.78rem;color:var(--text-muted);"></span>
+      </div>
+      <ul class="subjects-list" id="subjectsListView"></ul>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('subjectsModal')">Close</button>
+      <button class="btn btn-navy" onclick="saveSubjects()">Save</button>
+    </div>
+  </div>
+</div>
 
-            pendingQuarterGrades.forEach(r => {
-                const studentId = r.student_id != null ? Number(r.student_id) : null;
-                const scholar = (acceptedScholars || []).find(app => Number(app.id) === studentId);
-                items.push({
-                    studentId,
-                    studentName: scholar?.name || `Applicant #${r.student_id ?? '—'}`,
-                    mekong: Boolean(scholar?.mekong),
-                    sortTime: r.submitted_at ? new Date(r.submitted_at).getTime() : 0,
-                    typeLabel: 'Quarter grade',
-                    meta: `${r.school_year || ''} · ${r.subject || ''} · Q${String(r.quarter || '')} · ${r.grade_value ?? '—'}`,
-                    actionsHtml: `<button class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
-                        <button class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
-                        <button class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>`,
-                });
-            });
+<script src="/components/report-card.js"></script>
+<script src="/mefamdev-api.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let acceptedScholars = [];
+let pendingExtractions = [];
+let pendingQuarterGrades = [];
+let allGrades = [];
+let activeExtractionId = null;
+let expandedReviewGroups = new Set();
+let expandedScholars = new Set();
+let subjectsCache = [];
+let cropImageSource = '';
+let cropImage = null;
 
-            return items;
-        }
+const DEFAULT_REVIEW_SUBJECTS = ['Filipino','English','Mathematics','Science','Araling Panlipunan','Technology and Livelihood Education','MAPEH','Edukasyon sa Pagpapakatao'];
+const FALLBACK_SUBJECTS = ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'];
 
-        function renderPendingReviewsPanel() {
-            const container = document.getElementById('pendingGradeReviews');
-            if (!container) return;
+/* ══════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════ */
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function makeJsString(v){return JSON.stringify(String(v??'')).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026').replace(/'/g,'\\u0027')}
+function closeModal(id){document.getElementById(id)?.classList.remove('open')}
+function openModal(id){document.getElementById(id)?.classList.add('open')}
+document.addEventListener('click',e=>{const o=e.target.closest('.modal-overlay');if(o&&e.target===o)o.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const l=document.querySelectorAll('.modal-overlay.open');if(l.length)l[l.length-1].classList.remove('open')}});
 
-            const items = buildPendingReviewItems();
-            if (!items.length) {
-                container.innerHTML = '<div class="empty-state">No pending grade submissions from applicants right now.</div>';
-                return;
-            }
+function normalizeGrade(row){
+  return {
+    appId:Number(row.app_id || row.appId || 0),
+    schoolYear:String(row.school_year || row.schoolYear || '').trim(),
+    subject:String(row.subject || '').trim(),
+    quarter:String(row.quarter ?? '').trim(),
+    grade:Number(row.grade_value ?? row.grade_val ?? row.grade ?? 0),
+    updatedAt:row.updated_at || row.updatedAt || ''
+  };
+}
+function formatDate(v){
+  if(!v) return '';
+  const d = new Date(v); if(isNaN(d)) return String(v);
+  return d.toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function schoolYearSortKey(sy){
+  const m = String(sy||'').match(/(\d{4})/);
+  return m ? Number(m[1]) : 0;
+}
 
-            // Group by student so a scholar with several uploads/submissions
-            // shows up once, with a "×N" badge, instead of repeating their
-            // name for every row — keeps the panel readable as volume grows.
-            const groups = new Map();
-            items.forEach(item => {
-                const key = item.studentId != null ? `id-${item.studentId}` : `name-${item.studentName}`;
-                if (!groups.has(key)) groups.set(key, { key, studentName: item.studentName, mekong: item.mekong, items: [] });
-                groups.get(key).items.push(item);
-            });
+/* ══════════════════════════════════════════════════════════
+   LOAD
+══════════════════════════════════════════════════════════ */
+async function loadPage(){
+  try{acceptedScholars = await MefamAPI.getApplications({status:'Accepted'}) || []}catch(e){console.error(e);acceptedScholars=[]}
+  await Promise.all([loadPendingExtractions(),loadPendingQuarters(),loadAllGrades(),renderSubjectsDatalist()]);
+  renderPendingReviewsPanel();
+  renderScholars();
+}
+async function loadPendingExtractions(){
+  try{const r = await MefamAPI.getPendingGradeExtractions() || [];pendingExtractions = Array.isArray(r)?r:[]}
+  catch(e){console.error(e);pendingExtractions=[]}
+}
+async function loadPendingQuarters(){
+  try{const r = await MefamAPI.pendingGrades() || [];pendingQuarterGrades = Array.isArray(r)?r:[]}
+  catch(e){console.error(e);pendingQuarterGrades=[]}
+}
+async function loadAllGrades(){
+  try{const r = await MefamAPI.getGrades() || [];allGrades = Array.isArray(r)?r.map(normalizeGrade):[]}
+  catch(e){console.error(e);allGrades=[]}
+}
+function goBackToDashboard(){
+  if(window.parent!==window && !window.parent.closed){try{window.parent.location.href='admin_dashboard.html';return}catch(e){}}
+  window.location.href='admin_dashboard.html';
+}
 
-            const groupList = Array.from(groups.values());
-            groupList.forEach(g => g.items.sort((a, b) => b.sortTime - a.sortTime));
-            // Students with the most pending items float to the top.
-            groupList.sort((a, b) => b.items.length - a.items.length);
+/* ══════════════════════════════════════════════════════════
+   PENDING REVIEWS (top panel)
+══════════════════════════════════════════════════════════ */
+function buildPendingItems(){
+  const items = [];
+  pendingExtractions.forEach(ext => {
+    const studentId = ext.appId!=null?Number(ext.appId):null;
+    const scholar = acceptedScholars.find(a=>Number(a.id)===studentId);
+    const uploadedAt = ext.uploadedAt?new Date(ext.uploadedAt):null;
+    items.push({
+      studentId,
+      studentName:scholar?.name||`Applicant #${ext.appId??'—'}`,
+      mekong:Boolean(scholar?.mekong),
+      sortTime:uploadedAt?uploadedAt.getTime():0,
+      typeLabel:'Upload',
+      meta:(ext.extracted?.schoolYear)||'Pending school year',
+      dateLabel:uploadedAt?uploadedAt.toLocaleString():'Recently uploaded',
+      actionsHtml:`<button class="btn btn-gold btn-sm" onclick="openReviewModal(${Number(ext.id)||0})">Review / Finalize</button>`
+    });
+  });
+  pendingQuarterGrades.forEach(r=>{
+    const studentId = r.student_id!=null?Number(r.student_id):null;
+    const scholar = acceptedScholars.find(a=>Number(a.id)===studentId);
+    items.push({
+      studentId,
+      studentName:scholar?.name||`Applicant #${r.student_id??'—'}`,
+      mekong:Boolean(scholar?.mekong),
+      sortTime:r.submitted_at?new Date(r.submitted_at).getTime():0,
+      typeLabel:'Quarter grade',
+      meta:`${r.school_year||''} · ${r.subject||''} · Q${String(r.quarter||'')} · ${r.grade_value??'—'}`,
+      actionsHtml:`<button class="btn btn-ghost btn-sm" onclick="openEditQuarterModal(${Number(r.id)})">Edit</button>
+        <button class="btn btn-gold btn-sm" onclick="approveQuarter(${Number(r.id)})">Approve</button>
+        <button class="btn btn-ghost btn-sm" onclick="rejectQuarter(${Number(r.id)})">Reject</button>`
+    });
+  });
+  return items;
+}
+function renderPendingReviewsPanel(){
+  const c = document.getElementById('pendingGradeReviews');
+  if(!c) return;
+  const items = buildPendingItems();
+  if(!items.length){c.innerHTML='<div class="empty-state">No pending grade submissions from applicants right now.</div>';return}
 
-            container.innerHTML = groupList.map(group => {
-                const count = group.items.length;
-                const isOpen = expandedReviewGroups.has(group.key) || count === 1;
-                const latestMeta = group.items[0]?.meta || '';
-                const itemsHtml = group.items.map(item => `
-                    <div class="review-item-row">
-                        <div>
-                            <span class="review-item-type">${escapeHtml(item.typeLabel)}</span>
-                            <span class="review-item-meta">${escapeHtml(item.meta)}</span>
-                            ${item.dateLabel ? `<span class="review-item-date">${escapeHtml(item.dateLabel)}</span>` : ''}
-                        </div>
-                        <div class="review-item-actions">${item.actionsHtml}</div>
-                    </div>`).join('');
+  const groups = new Map();
+  items.forEach(it=>{
+    const key = it.studentId!=null?`id-${it.studentId}`:`name-${it.studentName}`;
+    if(!groups.has(key)) groups.set(key,{key,studentName:it.studentName,mekong:it.mekong,items:[]});
+    groups.get(key).items.push(it);
+  });
+  const list = Array.from(groups.values());
+  list.forEach(g=>g.items.sort((a,b)=>b.sortTime-a.sortTime));
+  list.sort((a,b)=>b.items.length-a.items.length);
 
-                return `<div class="review-group${isOpen ? ' open' : ''}" id="reviewGroup-${escapeHtml(group.key)}">
-                    <div class="review-group-header" onclick="toggleReviewGroup('${group.key.replace(/'/g, "\\'")}', ${count})">
-                        <span class="review-group-name">${escapeHtml(group.studentName)}</span>
-                        ${group.mekong ? '<span class="review-mekong-badge">Mekong</span>' : ''}
-                        ${count > 1 ? `<span class="review-count-badge">×${count}</span>` : ''}
-                        ${count === 1 ? `<span class="review-group-sub">${escapeHtml(latestMeta)}</span>` : ''}
-                        <span class="review-group-chevron">▾</span>
-                    </div>
-                    <div class="review-group-items">${itemsHtml}</div>
-                </div>`;
-            }).join('');
-        }
+  c.innerHTML = list.map(g=>{
+    const count = g.items.length;
+    const isOpen = expandedReviewGroups.has(g.key)||count===1;
+    const latestMeta = g.items[0]?.meta||'';
+    const itemsHtml = g.items.map(it=>`
+      <div class="review-item-row">
+        <div>
+          <span class="review-item-type">${escapeHtml(it.typeLabel)}</span>
+          <span class="review-item-meta">${escapeHtml(it.meta)}</span>
+          ${it.dateLabel?`<span class="review-item-date">${escapeHtml(it.dateLabel)}</span>`:''}
+        </div>
+        <div class="review-item-actions">${it.actionsHtml}</div>
+      </div>`).join('');
+    return `<div class="review-group${isOpen?' open':''}" id="reviewGroup-${escapeHtml(g.key)}">
+      <div class="review-group-header" onclick="toggleReviewGroup('${g.key.replace(/'/g,"\\'")}',${count})">
+        <span class="review-group-name">${escapeHtml(g.studentName)}</span>
+        ${g.mekong?'<span class="review-mekong-badge">Mekong</span>':''}
+        ${count>1?`<span class="review-count-badge">×${count}</span>`:''}
+        ${count===1?`<span class="review-group-sub">${escapeHtml(latestMeta)}</span>`:''}
+        <span class="review-group-chevron">▾</span>
+      </div>
+      <div class="review-group-items">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+}
+function toggleReviewGroup(key,count){
+  if(count<=1) return;
+  const el = document.getElementById(`reviewGroup-${key}`); if(!el) return;
+  if(expandedReviewGroups.has(key)){expandedReviewGroups.delete(key);el.classList.remove('open')}
+  else{expandedReviewGroups.add(key);el.classList.add('open')}
+}
 
-        // Expands/collapses a student's stacked pending items. Single-item
-        // groups always stay open (nothing to hide), so this only toggles
-        // groups with more than one pending submission.
-        function toggleReviewGroup(key, count) {
-            if (count <= 1) return;
-            const el = document.getElementById(`reviewGroup-${key}`);
-            if (!el) return;
-            if (expandedReviewGroups.has(key)) {
-                expandedReviewGroups.delete(key);
-                el.classList.remove('open');
-            } else {
-                expandedReviewGroups.add(key);
-                el.classList.add('open');
-            }
-        }
+/* ══════════════════════════════════════════════════════════
+   THE UNIFIED SCHOLAR LIST
+   Each row is the report-card view AND the grade book.
+   Expanding shows per-year blocks: uploads first, then Update.
+══════════════════════════════════════════════════════════ */
+function renderScholars(){
+  const body = document.getElementById('scholars-body');
+  if(!body) return;
 
-        function goBackToDashboard() {
-            if (window.parent !== window && !window.parent.closed) {
-                window.parent.location.href = 'admin_dashboard.html';
-                return;
-            }
-            window.location.href = 'admin_dashboard.html';
-        }
+  const search = (document.getElementById('scholarSearch')?.value||'').trim().toLowerCase();
+  const syFilter = (document.getElementById('scholarYearFilter')?.value||'').trim().toLowerCase();
 
-        async function approveQuarter(id) {
-            if (!confirm('Approve this quarter grade?')) return;
-            try {
-                await MefamAPI.approveGrade(id);
-                const row = (pendingQuarterGrades || []).find(item => Number(item.id) === Number(id));
-                const appId = row?.student_id ? Number(row.student_id) : null;
-                if (appId) {
-                    const documentStatus = await MefamAPI.setDocumentStatus(appId, 'reportCard', 'Received', 'Quarterly grade approved by staff; report card marked as received.');
-                    if (documentStatus?.error) {
-                        console.warn('Unable to mark report card as received:', documentStatus.error);
-                    }
-                }
-                if (window.parent !== window) {
-                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
-                }
-                await loadPendingGradeReviews();
-                await loadPendingQuarterSubmissions();
-                renderPendingReviewsPanel();
-                await renderReportCards();
-                alert('Grade approved.');
-            } catch (e) { console.error(e); alert('Unable to approve grade.'); }
-        }
+  const filtered = acceptedScholars.filter(app=>{
+    if(search){
+      const hay = `${app.name||''} ${app.school||''} ${app.grade||''} ${app.reference||app.referenceNumber||''}`.toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    if(syFilter){
+      const appSY = String(app.sy||'').toLowerCase();
+      const inGrades = allGrades.some(g=>g.appId===Number(app.id) && g.schoolYear.toLowerCase().includes(syFilter));
+      const inUploads = pendingExtractions.some(e=>Number(e.appId)===Number(app.id) && String(e.extracted?.schoolYear||'').toLowerCase().includes(syFilter));
+      if(!appSY.includes(syFilter) && !inGrades && !inUploads) return false;
+    }
+    return true;
+  });
 
-        async function rejectQuarter(id) {
-            const reason = prompt('Enter rejection reason (optional):', '');
-            try {
-                await MefamAPI.rejectGrade(id, reason || '');
-                if (window.parent !== window) {
-                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
-                }
-                await loadPendingGradeReviews();
-                await loadPendingQuarterSubmissions();
-                renderPendingReviewsPanel();
-                await renderReportCards();
-                alert('Grade rejected.');
-            } catch (e) { console.error(e); alert('Unable to reject grade.'); }
-        }
+  if(!filtered.length){
+    body.innerHTML = '<tr><td colspan="6"><div class="empty-state">No accepted scholars match the current filters.</div></td></tr>';
+    return;
+  }
 
-        function openEditQuarterModal(id) {
-            (async () => {
-                try {
-                    const rows = await MefamAPI.pendingGrades() || [];
-                    const row = rows.find(r => Number(r.id) === Number(id));
-                    if (!row) return alert('Grade row not found');
-                    document.getElementById('gradeModalTitle').innerText = 'Edit Pending Grade';
-                    document.getElementById('gradeModalName').innerText = `Applicant #${row.student_id}`;
-                    document.getElementById('gradeModalAppId').value = row.student_id;
-                    document.getElementById('gradeSchoolYear').value = row.school_year || '';
-                    document.getElementById('gradeSubject').value = row.subject || '';
-                    document.getElementById('gradeQuarter').value = String(row.quarter || '');
-                    document.getElementById('gradeInput').value = row.grade_value || '';
-                    // Tag the modal with the pending row's id so Save routes to
-                    // editGrade() instead of creating a brand-new grade entry.
-                    document.getElementById('gradeModal').dataset.gradeRowId = String(row.id);
-                    renderSubjectsDatalist();
-                    document.getElementById('gradeModal').classList.add('open');
-                } catch (e) { console.error(e); alert('Unable to open edit modal.'); }
-            })();
-        }
+  body.innerHTML = filtered.map(app=>renderScholarRow(app)).join('');
+}
 
-        async function openGradeModal(appId, name, schoolYear) {
-            document.getElementById('gradeModalTitle').innerText = 'Update Grade';
-            document.getElementById('gradeModalName').innerText = name;
-            document.getElementById('gradeModalAppId').value = appId;
-            document.getElementById('gradeSchoolYear').value = schoolYear || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
-            document.getElementById('gradeSubject').value = '';
-            document.getElementById('gradeQuarter').value = '';
-            document.getElementById('gradeInput').value = '';
-            renderGradePeriodOptions();
-            // Clear any pending-row tag left over from a previous edit session
-            // so this fresh entry doesn't get routed to editGrade() by mistake.
-            delete document.getElementById('gradeModal').dataset.gradeRowId;
-            renderSubjectsDatalist();
-            document.getElementById('gradeModal').classList.add('open');
-        }
+function renderScholarRow(app){
+  const appId = Number(app.id)||0;
+  const refNo = app.reference || app.referenceNumber || app.reference_number || appId || '—';
+  const gradesForApp = allGrades.filter(g=>g.appId===appId);
+  const latest = gradesForApp.slice().sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''))[0];
+  const latestGrade = latest?.grade || 0;
+  const latestPill = latestGrade
+    ? (latestGrade>=80?`<span class="pill pill-green">${latestGrade} · Passed</span>`:`<span class="pill pill-red">${latestGrade} · Alert</span>`)
+    : '<span class="pill pill-grey">No grades yet</span>';
 
-        // Single source of truth for saving a grade — handles both a brand
-        // new entry (MefamAPI.saveGrade) and editing an already-submitted
-        // pending quarter row (MefamAPI.editGrade), based on whether the
-        // modal carries a gradeRowId.
-        async function saveGrade() {
-            const modalEl = document.getElementById('gradeModal');
-            const appId = parseInt(document.getElementById('gradeModalAppId').value, 10);
-            const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
-            const subject = document.getElementById('gradeSubject').value.trim();
-            const quarter = document.getElementById('gradeQuarter').value.trim();
-            const grade = parseInt(document.getElementById('gradeInput').value, 10);
-            const gradeRowId = modalEl.dataset.gradeRowId ? Number(modalEl.dataset.gradeRowId) : null;
+  // Collect every school year this scholar has activity in
+  const years = new Set();
+  gradesForApp.forEach(g=>g.schoolYear && years.add(g.schoolYear));
+  pendingExtractions.filter(e=>Number(e.appId)===appId).forEach(e=>{
+    const sy = e.extracted?.schoolYear; if(sy) years.add(sy);
+  });
+  if(app.sy) years.add(String(app.sy));
 
-            if (!schoolYear) return alert('Please enter a school year.');
-            if (!subject) return alert('Please select a subject.');
-            if (!quarter) return alert('Please select a quarter.');
-            if (!(grade >= 60 && grade <= 100)) return alert('Please enter a valid grade between 60 and 100.');
+  const sortedYears = Array.from(years).sort((a,b)=>schoolYearSortKey(b)-schoolYearSortKey(a));
+  const yearsLabel = sortedYears.length
+    ? `${sortedYears.length} year${sortedYears.length>1?'s':''}`
+    : '—';
 
-            try {
-                if (gradeRowId) {
-                    await MefamAPI.editGrade(gradeRowId, grade);
-                } else {
-                    await MefamAPI.saveGrade(appId, grade, null, { subject, quarter, schoolYear });
-                }
-                delete modalEl.dataset.gradeRowId;
-                if (window.parent !== window) {
-                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
-                }
-                closeModal('gradeModal');
-                await loadPendingGradeReviews();
-                await loadPendingQuarterSubmissions();
-                renderPendingReviewsPanel();
-                await renderReportCards();
-                alert('✅ Grade saved successfully!');
-            } catch (error) {
-                console.error('Failed to save grade:', error);
-                alert('Unable to save the grade right now.');
-            }
-        }
+  const isOpen = expandedScholars.has(appId);
 
-        async function renderReportCards() {
-            const body = document.getElementById('report-cards-body');
-            if (!body) return;
-            const schoolYear = document.getElementById('rcSchoolYearFilter')?.value.trim().toLowerCase();
-            const searchQuery = document.getElementById('rcSearchInput')?.value.trim().toLowerCase();
-            const accepted = Array.isArray(acceptedScholars) ? acceptedScholars : [];
-            const filtered = accepted.filter(app => {
-                const yearMatch = !schoolYear || String(app.sy || app.school_year || '').toLowerCase().includes(schoolYear) || String(app.school_year || '').toLowerCase().includes(schoolYear);
-                const searchMatch = !searchQuery || `${app.name || ''} ${app.school || ''} ${app.grade || ''} ${app.reference || app.referenceNumber || ''}`.toLowerCase().includes(searchQuery);
-                return yearMatch && searchMatch;
-            });
-            if (filtered.length === 0) {
-                body.innerHTML = '<tr><td colspan="6"><div class="empty-state">No accepted scholars yet.</div></td></tr>';
-                return;
-            }
-            let grades = [];
-            try {
-                grades = await MefamAPI.getGrades() || [];
-            } catch (error) {
-                console.error('Failed to load grades:', error);
-            }
-            body.innerHTML = filtered.map(app => {
-                const appGrades = grades.filter(g => Number(g.app_id || g.appId) === Number(app.id));
-                const schoolYears = Array.from(new Set(appGrades.map(g => g.school_year || g.schoolYear).filter(Boolean))).sort();
-                const latestSY = schoolYears.length > 0 ? schoolYears[schoolYears.length - 1] : String(app.sy || '2025-2026');
-                const refNo = app.reference || app.referenceNumber || app.reference_number || String(app.id || '—');
-                return `<tr>
-                    <td><strong>${escapeHtml(app.name || '—')}</strong></td>
-                    <td><span class="app-id-badge">${escapeHtml(refNo)}</span></td>
-                    <td>${escapeHtml(latestSY)}</td>
-                    <td>${escapeHtml(app.grade || '—')}</td>
-                    <td>${escapeHtml(app.school || '—')}</td>
-                    <td>
-                        <div class="action-stack">
-                            <button class="btn btn-ghost btn-sm" onclick='viewReportCard(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")}, ${makeJsString(app.grade || "—")}, ${makeJsString(app.school || "—")}, ${makeJsString(latestSY)}, ${makeJsString(refNo)})'>📄 View</button>
-                            <button class="btn btn-ghost btn-sm" onclick='openUploadHistoryModal(${Number(app.id)||0}, ${makeJsString(app.name || "Scholar")})'>Previous Uploads</button>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
+  return `
+    <tr class="scholar-row${isOpen?' open':''}" onclick="toggleScholar(${appId})">
+      <td>
+        <div class="scholar-name">
+          <span class="chev">▶</span>${escapeHtml(app.name||'—')}
+          ${app.mekong?' <span class="review-mekong-badge" style="font-size:.65rem;">Mekong</span>':''}
+        </div>
+        <div class="scholar-meta">Click to expand · previous uploads &amp; grades by year</div>
+      </td>
+      <td><span class="pill pill-navy">${escapeHtml(String(refNo))}</span></td>
+      <td>${escapeHtml(app.grade||'—')}</td>
+      <td>${escapeHtml(app.school||'—')}</td>
+      <td>${latestPill}</td>
+      <td>${escapeHtml(yearsLabel)}</td>
+    </tr>
+    <tr class="detail-row${isOpen?' open':''}" id="detail-${appId}">
+      <td colspan="6">
+        <div class="detail-inner">
+          ${renderScholarYears(app, sortedYears, gradesForApp)}
+        </div>
+      </td>
+    </tr>`;
+}
 
-        async function openUploadHistoryModal(appId, name) {
-            const content = document.getElementById('uploadHistoryContent');
-            if (!content) return;
-            try {
-                const rows = await MefamAPI.getGradeExtractionHistory(appId) || [];
-                const history = Array.isArray(rows) ? rows : [];
-                if (!history.length) {
-                    content.innerHTML = `<div class="empty-state">No prior report-card uploads were found for ${escapeHtml(name || 'this scholar')}.</div>`;
-                    document.getElementById('uploadHistoryModal')?.classList.add('open');
-                    return;
-                }
-                const byYear = history.reduce((acc, row) => {
-                    const year = String(row?.extracted?.schoolYear || 'Unknown School Year').trim();
-                    if (!acc[year]) acc[year] = [];
-                    acc[year].push(row);
-                    return acc;
-                }, {});
-                const years = Object.keys(byYear).sort((a, b) => b.localeCompare(a));
-                content.innerHTML = years.map(year => {
-                    const rowsForYear = byYear[year];
-                    const rowHtml = rowsForYear.map(row => {
-                        const ts = row.uploadedAt ? new Date(row.uploadedAt).toLocaleString() : 'Uploaded';
-                        const gradeCount = Array.isArray(row.extracted?.subjects) ? row.extracted.subjects.length : 0;
-                        return `<div class="history-upload-row" style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--border);">
-                            <div>
-                                <div style="font-weight:700; color:var(--navy);">${escapeHtml(ts)}</div>
-                                <div style="font-size:.8rem; color:var(--text-muted);">${gradeCount} learning areas detected</div>
-                            </div>
-                            <button class="btn btn-gold btn-sm" onclick='openGradeModal(${Number(appId)||0}, ${makeJsString(name || "Scholar")}, ${makeJsString(year)})'>Update</button>
-                        </div>`;
-                    }).join('');
-                    return `<div class="upload-history-year" style="margin-bottom:16px;">
-                        <div style="font-size:.84rem; font-weight:800; color:var(--navy); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;">${escapeHtml(year)}</div>
-                        <div>${rowHtml}</div>
-                    </div>`;
-                }).join('');
-                document.getElementById('uploadHistoryModal')?.classList.add('open');
-            } catch (error) {
-                console.error('Failed to load upload history:', error);
-                content.innerHTML = `<div class="empty-state">Unable to load the upload history.</div>`;
-                document.getElementById('uploadHistoryModal')?.classList.add('open');
-            }
-        }
+function renderScholarYears(app, sortedYears, gradesForApp){
+  const appId = Number(app.id)||0;
 
-        async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
-            try {
-                const response = await MefamAPI.getApprovedGradeCard(appId, schoolYear);
-                if (!Array.isArray(response)) {
-                    throw new Error(response?.error || 'The approved grades could not be loaded.');
-                }
-                const approvedSubjects = response;
-                const scholarGrades = approvedSubjects.flatMap(subject => Object.entries(subject.quarters || {}).map(([quarter, grade_value]) => ({
-                    subject: subject.subject,
-                    quarter: String(quarter).replace(/^Q/i, ''),
-                    grade_val: grade_value,
-                })));
-                const scholarData = { name, gradeLevel, school, refNo: refNo || appId, schoolYear: schoolYear || 'N/A' };
-                const reportCardHTML = buildReportCardHTML(scholarData, scholarGrades);
-                document.getElementById('reportCardContent').innerHTML = reportCardHTML;
-                if (!document.getElementById('reportCardStyles')) {
-                    const styleEl = document.createElement('style');
-                    styleEl.id = 'reportCardStyles';
-                    styleEl.textContent = REPORT_CARD_STYLES;
-                    document.head.appendChild(styleEl);
-                }
-                document.getElementById('reportCardModal').classList.add('open');
-            } catch (error) {
-                console.error('Failed to view report card:', error);
-                alert(`Unable to load the report card: ${error.message || 'please try again.'}`);
-            }
-        }
+  // No years yet → seed with current SY so Update has something to write to
+  if(!sortedYears.length){
+    const seedSY = app.sy || `${new Date().getFullYear()}-${new Date().getFullYear()+1}`;
+    return `<div class="years-stack">
+      <div class="year-block current">
+        <div class="year-header">
+          <div class="year-title">
+            <span class="year-sy">${escapeHtml(seedSY)}</span>
+            <div class="year-badges"><span class="pill pill-orange">Not started</span></div>
+          </div>
+          <div class="year-actions">
+            <button class="btn btn-navy btn-sm" onclick="event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, ${makeJsString(seedSY)})">✎ Update Grades</button>
+          </div>
+        </div>
+        <div class="year-body">
+          <div class="year-section">
+            <div class="year-section-title">Previous Uploads</div>
+            <div class="empty-year">No report cards uploaded yet.</div>
+          </div>
+          <div class="year-section">
+            <div class="year-section-title">Grades on Record</div>
+            <div class="empty-year">No grades recorded for this school year yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
 
-        async function openReviewModal(id) {
-            const extraction = pendingExtractions.find(item => Number(item.id) === Number(id));
-            if (!extraction) return;
-            activeExtractionId = Number(id);
-            const scholar = (acceptedScholars || []).find(app => Number(app.id) === Number(extraction.appId));
-            const extracted = extraction?.extracted || {};
-            const extractedCount = Number(extracted.gradingPeriodCount);
-            let reviewPeriodCount = [1,2,3,4].includes(extractedCount) ? extractedCount : 3;
-            const subjects = Array.isArray(extracted.subjects) ? extracted.subjects : [];
-            // The uploaded card is the source of truth. Keep every detected
-            // learning area, including component rows under MAPEH.
-            const reviewSubjects = subjects.length
-                ? subjects
-                : DEFAULT_REVIEW_SUBJECTS.map(name => ({ name, q1: null, q2: null, q3: null, q4: null, final: null }));
-            const content = document.getElementById('reviewExtractionContent');
-            if (!content) return;
-            const flags = Array.isArray(extraction.flags) ? extraction.flags : [];
-            const uncertainFields = Array.isArray(extracted.uncertainFields) ? extracted.uncertainFields : [];
-            const normalizedUncertainFields = uncertainFields.map(field => String(field).trim().toLowerCase());
-            const lowConfidence = Number(extracted.confidence) < 0.95;
-            const isUncertain = (subjectName, field) => {
-                const label = `${subjectName} ${field.toUpperCase()}`.toLowerCase();
-                return normalizedUncertainFields.some(uncertain => uncertain === label || uncertain.includes(label) || label.includes(uncertain));
-            };
-            const renderReviewGradeInput = (subject, field) => {
-                const value = subject[field];
-                const isBlank = value === null || value === undefined || value === '';
-                const warning = isBlank || lowConfidence || isUncertain(subject.name, field);
-                const warningLabel = isBlank ? 'Blank' : '';
-                return `<div><input type="number" class="review-quarter-input${warning ? ' review-cell-warning' : ''}" data-quarter="${field}" value="${isBlank ? '' : escapeHtml(value)}" min="60" max="100" style="width:70px;"${warning && warningLabel ? ` aria-label="${escapeHtml(subject.name)} ${field.toUpperCase()} ${warningLabel}"` : ''}>${warningLabel ? `<span class="review-cell-warning-label">${warningLabel}</span>` : ''}</div>`;
-            };
-            const periodWord = reviewPeriodCount === 4 ? 'Quarter' : 'Term';
-            const periodFields = Array.from({ length: reviewPeriodCount }, (_, index) => `q${index + 1}`);
-            const renderReviewPeriodCell = (subject, field) => `<td>${renderReviewGradeInput(subject, field)}</td>`;
-            const photo = extraction.fileData
-                ? `<img src="${escapeHtml(extraction.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)"><div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" type="button" onclick="openCropModal('${escapeHtml(extraction.fileData || '')}')">Crop image</button></div>`
-                : '<div class="empty-state">Original image is unavailable.</div>';
-            content.innerHTML = `
-                <div class="form-group"><label>Student</label><div style="font-weight:700;">${escapeHtml(scholar?.name || `Applicant #${extraction.appId || '—'}`)}</div></div>
-                ${flags.length ? `<div class="review-flags"><strong>Review warnings</strong><ul>${flags.map(flag => `<li>${escapeHtml(flag)}</li>`).join('')}</ul></div>` : ''}
-                <div class="review-legend"><strong>Highlighted cells:</strong> blank values or values the extraction could not read confidently. Check them against the uploaded photo.</div>
-                <div class="review-source">
-                    <div class="review-image-column"><div class="review-panel-title">Uploaded report card</div><div class="review-photo">${photo}</div></div>
-                    <div class="review-grade-column">
-                        <div class="review-panel-title">Grade entry</div>
-                        <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear || '')}"></div>
-                        <div class="form-group"><label for="reviewPeriodCount">Grading format</label><select id="reviewPeriodCount" onchange="updateReviewPeriodFields()"><option value="1"${reviewPeriodCount === 1 ? ' selected' : ''}>1 term</option><option value="2"${reviewPeriodCount === 2 ? ' selected' : ''}>2 terms</option><option value="3"${reviewPeriodCount === 3 ? ' selected' : ''}>3 terms</option><option value="4"${reviewPeriodCount === 4 ? ' selected' : ''}>4 quarters</option></select></div>
-                        <div class="review-table-toolbar" aria-label="Grade table controls">
-                            <button class="btn btn-gold btn-sm" type="button" onclick="addReviewSubjectRow()">+ Add learning area</button>
-                            <button class="btn btn-ghost" type="button" title="Scroll grades left" aria-label="Scroll grades left" onclick="scrollReviewGrades(-1)">←</button>
-                            <button class="btn btn-ghost" type="button" title="Scroll grades right" aria-label="Scroll grades right" onclick="scrollReviewGrades(1)">→</button>
-                        </div>
-                        <div class="table-wrap" id="reviewGradesTableWrap"><table><thead><tr><th>Subject</th>${periodFields.map((_, index) => `<th>${periodWord} ${index + 1}</th>`).join('')}<th>Final</th></tr></thead><tbody>${reviewSubjects.map((subject, idx) => `
-                            <tr class="review-subject-row" data-index="${idx}">
-                                <td><input type="text" class="review-subject-name" value="${escapeHtml(subject.name || '')}" style="width:100%;"></td>
-                                ${periodFields.map(field => renderReviewPeriodCell(subject, field)).join('')}
-                                <td>${renderReviewGradeInput(subject, 'final')}</td>
-                            </tr>`).join('')}</tbody></table></div>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-top:12px;"><label>Review Notes</label><textarea id="reviewNotes" rows="3" style="width:100%; border:1px solid var(--border); border-radius:10px; padding:10px;"></textarea></div>
-            `;
-            document.getElementById('reviewExtractionModal').classList.add('open');
-        }
+  const currentSY = String(app.sy || sortedYears[0]);
+  const blocks = sortedYears.map(sy=>{
+    const gradesForYear = gradesForApp.filter(g=>g.schoolYear===sy);
+    const uploadsForYear = pendingExtractions.filter(e=>Number(e.appId)===appId && String(e.extracted?.schoolYear||'')===sy);
+    const isCurrent = sy===currentSY;
 
-        function addReviewSubjectRow() {
-            const table = document.querySelector('#reviewGradesTableWrap tbody');
-            if (!table) return;
-            const row = document.createElement('tr');
-            row.className = 'review-subject-row';
-            row.dataset.index = String(table.rows.length);
-            const periodCount = Number(document.getElementById('reviewPeriodCount')?.value) === 4 ? 4 : Number(document.getElementById('reviewPeriodCount')?.value) === 3 ? 3 : Number(document.getElementById('reviewPeriodCount')?.value) === 2 ? 2 : 1;
-            row.innerHTML = `<td><input type="text" class="review-subject-name" placeholder="Learning area name" style="width:100%;"></td>
-                ${Array.from({ length: periodCount }, (_, index) => `q${index + 1}`).concat('final').map(field => `<td><div><input type="number" class="review-quarter-input review-cell-warning" data-quarter="${field}" value="" min="60" max="100" style="width:70px;"><span class="review-cell-warning-label">Blank</span></div></td>`).join('')}`;
-            table.appendChild(row);
-            row.querySelector('.review-subject-name')?.focus();
-            row.scrollIntoView({ block: 'nearest' });
-        }
+    /* 1. Previous uploads section — shown FIRST, per the workflow */
+    let uploadsHtml;
+    if(uploadsForYear.length){
+      uploadsHtml = uploadsForYear.map(ext=>{
+        const uploadedAt = ext.uploadedAt?new Date(ext.uploadedAt):null;
+        const fileData = ext.fileData || '';
+        const thumb = fileData
+          ? `<div class="upload-thumb" onclick="event.stopPropagation();openImageZoom('${escapeHtml(fileData)}')"><img src="${escapeHtml(fileData)}" alt="Uploaded report card"></div>`
+          : `<div class="upload-thumb">📤</div>`;
+        return `<div class="upload-item pending">
+          ${thumb}
+          <div class="upload-body">
+            <div class="upload-title">Uploaded Report Card — Pending Review</div>
+            <div class="upload-sub">${uploadedAt?formatDate(uploadedAt):'Recently uploaded'}</div>
+          </div>
+          <div class="upload-actions">
+            <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openReviewModal(${Number(ext.id)||0})">Review / Finalize</button>
+          </div>
+        </div>`;
+      }).join('');
+    }else{
+      uploadsHtml = `<div class="empty-year">No uploads for this school year.</div>`;
+    }
 
-        function openCropModal(src) {
-            if (!src) return;
-            cropImageSource = src;
-            cropImage = new Image();
-            cropImage.onload = () => {
-                const canvas = document.getElementById('reportCardCropCanvas');
-                const ctx = canvas?.getContext('2d');
-                if (!canvas || !ctx) return;
-                canvas.width = Math.min(540, cropImage.width || 540);
-                canvas.height = Math.min(540, cropImage.height || 540);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#edf2f7';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(cropImage, 0, 0, canvas.width, canvas.height);
-                currentCropState = { zoom: 1.1, x: 50, y: 50 };
-                document.getElementById('reportCardCropZoom').value = '1.1';
-                document.getElementById('reportCardCropX').value = '50';
-                document.getElementById('reportCardCropY').value = '50';
-                document.getElementById('reportCardCropModal').classList.add('open');
-            };
-            cropImage.src = src;
-        }
+    /* 2. Grades on record section — grouped by subject, showing per-quarter */
+    const bySubject = new Map();
+    gradesForYear.forEach(g=>{
+      if(!g.subject) return;
+      if(!bySubject.has(g.subject)) bySubject.set(g.subject, []);
+      bySubject.get(g.subject).push(g);
+    });
 
-        function applyReportCardCrop() {
-            const canvas = document.getElementById('reportCardCropCanvas');
-            if (!canvas || !cropImageSource) return;
-            const cropped = canvas.toDataURL('image/jpeg', 0.92);
-            const img = document.querySelector('#reviewExtractionContent img');
-            if (img) img.src = cropped;
-            cropImageSource = cropped;
-            closeModal('reportCardCropModal');
-        }
+    let gradesHtml;
+    if(bySubject.size){
+      const cards = Array.from(bySubject.entries()).map(([subject, list])=>{
+        const values = list.map(g=>g.grade).filter(Boolean);
+        const avg = values.length ? Math.round(values.reduce((a,b)=>a+b,0)/values.length) : 0;
+        const cls = avg>=80?'good':(avg>0?'bad':'');
+        const quarters = list
+          .slice()
+          .sort((a,b)=>String(a.quarter).localeCompare(String(b.quarter),undefined,{numeric:true}))
+          .map(g=>`<span class="q-chip">Q${escapeHtml(g.quarter)||'?'}: ${escapeHtml(String(g.grade))}</span>`)
+          .join('');
+        return `<div class="subject-card ${cls}">
+          <div class="subject-name" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+          <div class="subject-quarters">${quarters}</div>
+          <div class="subject-avg">Average: ${avg||'—'}</div>
+        </div>`;
+      }).join('');
+      gradesHtml = `<div class="subjects-grid">${cards}</div>`;
+    }else{
+      gradesHtml = `<div class="empty-year">No approved grades for this school year yet.</div>`;
+    }
 
-        function updateReviewPeriodFields() {
-            const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
-            if (!extraction) return;
-            const count = Number(document.getElementById('reviewPeriodCount')?.value);
-            const reviewCount = [1,2,3,4].includes(count) ? count : 3;
-            extraction.extracted = { ...(extraction.extracted || {}), gradingPeriodCount: reviewCount };
-            openReviewModal(activeExtractionId);
-        }
+    return `<div class="year-block${isCurrent?' current':''}">
+      <div class="year-header">
+        <div class="year-title">
+          <span class="year-sy">${escapeHtml(sy)}</span>
+          <div class="year-badges">
+            ${isCurrent?'<span class="pill pill-teal">Current</span>':''}
+            ${gradesForYear.length?`<span class="pill pill-green">${gradesForYear.length} grade${gradesForYear.length>1?'s':''}</span>`:''}
+            ${uploadsForYear.length?`<span class="pill pill-orange">${uploadsForYear.length} pending</span>`:''}
+          </div>
+        </div>
+        <div class="year-actions">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();viewReportCard(${appId}, ${makeJsString(app.name||'Scholar')}, ${makeJsString(app.grade||'—')}, ${makeJsString(app.school||'—')}, ${makeJsString(sy)})">📄 View Report Card</button>
+          <button class="btn btn-navy btn-sm" onclick="event.stopPropagation();openGradeModal(${appId}, ${makeJsString(app.name||'Scholar')}, ${makeJsString(sy)})">✎ Update Grades</button>
+        </div>
+      </div>
+      <div class="year-body">
+        <div class="year-section">
+          <div class="year-section-title">Previous Uploads</div>
+          <div class="upload-list">${uploadsHtml}</div>
+        </div>
+        <div class="year-section">
+          <div class="year-section-title">Grades on Record</div>
+          ${gradesHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 
-        let imageZoomScale = 1;
+  return `<div class="years-stack">${blocks}</div>`;
+}
 
-        function updateImageZoom() {
-            const image = document.getElementById('zoomedReviewImage');
-            const level = document.getElementById('imageZoomLevel');
-            if (!image) return;
-            image.style.width = `${imageZoomScale * 100}%`;
-            if (level) level.textContent = `${Math.round(imageZoomScale * 100)}%`;
-        }
+function toggleScholar(appId){
+  const detail = document.getElementById(`detail-${appId}`);
+  const row = detail?.previousElementSibling;
+  if(!detail) return;
+  const open = detail.classList.toggle('open');
+  row?.classList.toggle('open',open);
+  if(open) expandedScholars.add(appId);
+  else expandedScholars.delete(appId);
+}
 
-        function changeImageZoom(amount) {
-            imageZoomScale = Math.min(5, Math.max(0.5, imageZoomScale + amount));
-            updateImageZoom();
-        }
+/* ══════════════════════════════════════════════════════════
+   GRADE MODAL — always scoped to a specific school year
+══════════════════════════════════════════════════════════ */
+function renderGradePeriodOptions(){
+  const sel = document.getElementById('gradeQuarter');
+  const label = document.getElementById('gradeQuarterLabel');
+  if(!sel) return;
+  let count = 3;
+  try{count = Number(localStorage.getItem('mefamdev_grading_periods'))===4?4:3}catch(e){}
+  const word = count===4?'Quarter':'Term';
+  if(label) label.textContent = word;
+  sel.innerHTML = `<option value="">-- Select ${word} --</option>`+
+    Array.from({length:count},(_,i)=>`<option value="${i+1}">${word} ${i+1}</option>`).join('');
+}
 
-        function resetImageZoom() {
-            imageZoomScale = 1;
-            updateImageZoom();
-        }
+function openGradeModal(appId, name, schoolYear, gradeRowId){
+  const scholar = acceptedScholars.find(a=>Number(a.id)===Number(appId));
+  const context = scholar ? `${scholar.grade||''} · ${scholar.school||''}` : '';
+  document.getElementById('gradeModalTitle').innerText = gradeRowId?'Edit Pending Grade':`Update Grades`;
+  document.getElementById('gradeModalName').innerText = name||'Scholar';
+  document.getElementById('gradeModalContext').innerText = `${context}${schoolYear?` — school year ${schoolYear}`:''}`;
+  document.getElementById('gradeModalAppId').value = appId;
+  document.getElementById('gradeSchoolYear').value = schoolYear||'';
+  document.getElementById('gradeSubject').value = '';
+  document.getElementById('gradeInput').value = '';
+  renderGradePeriodOptions();
+  const modalEl = document.getElementById('gradeModal');
+  if(gradeRowId) modalEl.dataset.gradeRowId = String(gradeRowId);
+  else delete modalEl.dataset.gradeRowId;
+  renderSubjectsDatalist();
+  openModal('gradeModal');
+}
 
-        function openImageZoom(src) {
-            const image = document.getElementById('zoomedReviewImage');
-            if (!image || !src) return;
-            image.src = src;
-            resetImageZoom();
-            document.getElementById('imageZoomModal').classList.add('open');
-        }
+async function openEditQuarterModal(id){
+  try{
+    const rows = await MefamAPI.pendingGrades() || [];
+    const row = rows.find(r=>Number(r.id)===Number(id));
+    if(!row) return alert('Grade row not found');
+    const scholar = acceptedScholars.find(a=>Number(a.id)===Number(row.student_id));
+    openGradeModal(Number(row.student_id), scholar?.name||`Applicant #${row.student_id}`, row.school_year||'', Number(row.id));
+    // prefill after open
+    document.getElementById('gradeSubject').value = row.subject || '';
+    document.getElementById('gradeQuarter').value = String(row.quarter||'');
+    document.getElementById('gradeInput').value = row.grade_value || '';
+  }catch(e){console.error(e);alert('Unable to open edit modal.')}
+}
 
-        function collectReviewSubjects() {
-            const rows = Array.from(document.querySelectorAll('.review-subject-row'));
-            const periodSelect = Number(document.getElementById('reviewPeriodCount')?.value);
-            const periodCount = [1,2,3,4].includes(periodSelect) ? periodSelect : 3;
-            return rows.map(row => {
-                const payload = { name: row.querySelector('.review-subject-name')?.value?.trim() || '' };
-                Array.from({ length: periodCount }, (_, index) => `q${index + 1}`).concat('final').forEach(key => {
-                    const raw = row.querySelector(`[data-quarter="${key}"]`)?.value;
-                    payload[key] = raw === '' || raw === null || raw === undefined ? null : Number(raw);
-                });
-                return payload;
-            }).filter(item => item.name);
-        }
+async function saveGrade(){
+  const modalEl = document.getElementById('gradeModal');
+  const appId = parseInt(document.getElementById('gradeModalAppId').value,10);
+  const schoolYear = document.getElementById('gradeSchoolYear').value.trim();
+  const subject = document.getElementById('gradeSubject').value.trim();
+  const quarter = document.getElementById('gradeQuarter').value.trim();
+  const grade = parseInt(document.getElementById('gradeInput').value,10);
+  const gradeRowId = modalEl.dataset.gradeRowId ? Number(modalEl.dataset.gradeRowId) : null;
 
-        function scrollReviewGrades(direction) {
-            document.getElementById('reviewGradesTableWrap')?.scrollBy({ left: direction * 260, behavior: 'smooth' });
-        }
+  if(!schoolYear) return alert('Please enter a school year.');
+  if(!subject)    return alert('Please select a subject.');
+  if(!quarter)    return alert('Please select a quarter.');
+  if(!(grade>=60 && grade<=100)) return alert('Please enter a valid grade between 60 and 100.');
 
-        async function saveReview(action) {
-            const subjects = collectReviewSubjects();
-            if (!activeExtractionId) return alert('No pending review is selected.');
-            if (action === 'approve' && !subjects.length) return alert('Add at least one subject before approving.');
-            try {
-                const reviewNotes = document.getElementById('reviewNotes')?.value || '';
-                const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim() || '';
-                const gradingPeriodCount = Number(document.getElementById('reviewPeriodCount')?.value);
-                const normalizedCount = [1,2,3,4].includes(gradingPeriodCount) ? gradingPeriodCount : 3;
-                const fileData = cropImageSource || document.querySelector('#reviewExtractionContent img')?.src || '';
-                const response = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, reviewNotes, schoolYear, normalizedCount, fileData);
-                if (response?.error) throw new Error(response.error);
-                const extraction = pendingExtractions.find(item => Number(item.id) === Number(activeExtractionId));
-                const appId = extraction?.appId ? Number(extraction.appId) : null;
-                if (action === 'approve' && appId) {
-                    const documentStatus = await MefamAPI.setDocumentStatus(appId, 'reportCard', 'Received', reviewNotes || 'Report card approved by staff and marked as received.');
-                    if (documentStatus?.error) {
-                        console.warn('Unable to mark report card as received:', documentStatus.error);
-                    }
-                }
-                closeModal('reviewExtractionModal');
-                if (window.parent !== window) {
-                    window.parent.postMessage({ type: 'mefamdev:grade-updated' }, '*');
-                }
-                await loadPendingGradeReviews();
-                await loadPendingQuarterSubmissions();
-                renderPendingReviewsPanel();
-                await renderReportCards();
-                alert(action === 'approve' ? '✅ Grades approved and finalized.' : '⚠️ Review rejected and saved.');
-            } catch (error) {
-                console.error('Failed to review extraction:', error);
-                alert('Unable to finalize the review right now.');
-            }
-        }
+  try{
+    if(gradeRowId) await MefamAPI.editGrade(gradeRowId, grade);
+    else await MefamAPI.saveGrade(appId, grade, null, {subject, quarter, schoolYear});
+    delete modalEl.dataset.gradeRowId;
+    if(window.parent!==window) window.parent.postMessage({type:'mefamdev:grade-updated'},'*');
+    closeModal('gradeModal');
+    // Refetch and re-render — keeping the scholar expanded
+    expandedScholars.add(appId);
+    await loadPendingExtractions();
+    await loadPendingQuarters();
+    await loadAllGrades();
+    renderPendingReviewsPanel();
+    renderScholars();
+    alert('✅ Grade saved successfully!');
+  }catch(e){
+    console.error('Failed to save grade:',e);
+    alert('Unable to save the grade right now.');
+  }
+}
 
-        function printReportCard() { window.print(); }
+/* ══════════════════════════════════════════════════════════
+   APPROVE / REJECT QUARTER GRADES
+══════════════════════════════════════════════════════════ */
+async function approveQuarter(id){
+  if(!confirm('Approve this quarter grade?')) return;
+  try{
+    await MefamAPI.approveGrade(id);
+    const row = pendingQuarterGrades.find(i=>Number(i.id)===Number(id));
+    const appId = row?.student_id?Number(row.student_id):null;
+    if(appId){
+      try{await MefamAPI.setDocumentStatus(appId,'reportCard','Received','Quarterly grade approved by staff; report card marked as received.')}
+      catch(e){console.warn(e)}
+    }
+    if(window.parent!==window) window.parent.postMessage({type:'mefamdev:grade-updated'},'*');
+    if(appId) expandedScholars.add(appId);
+    await Promise.all([loadPendingExtractions(),loadPendingQuarters(),loadAllGrades()]);
+    renderPendingReviewsPanel();
+    renderScholars();
+    alert('Grade approved.');
+  }catch(e){console.error(e);alert('Unable to approve grade.')}
+}
+async function rejectQuarter(id){
+  const reason = prompt('Enter rejection reason (optional):','');
+  try{
+    await MefamAPI.rejectGrade(id, reason||'');
+    if(window.parent!==window) window.parent.postMessage({type:'mefamdev:grade-updated'},'*');
+    await Promise.all([loadPendingExtractions(),loadPendingQuarters(),loadAllGrades()]);
+    renderPendingReviewsPanel();
+    renderScholars();
+    alert('Grade rejected.');
+  }catch(e){console.error(e);alert('Unable to reject grade.')}
+}
 
-        async function filterReportCards() { await renderReportCards(); }
+/* ══════════════════════════════════════════════════════════
+   REVIEW EXTRACTION MODAL
+══════════════════════════════════════════════════════════ */
+async function openReviewModal(id){
+  const ext = pendingExtractions.find(i=>Number(i.id)===Number(id));
+  if(!ext) return;
+  activeExtractionId = Number(id);
+  const scholar = acceptedScholars.find(a=>Number(a.id)===Number(ext.appId));
+  const extracted = ext.extracted || {};
+  const extractedCount = Number(extracted.gradingPeriodCount);
+  let reviewPeriodCount = [1,2,3,4].includes(extractedCount)?extractedCount:3;
+  const subjects = Array.isArray(extracted.subjects)?extracted.subjects:[];
+  const reviewSubjects = subjects.length
+    ? subjects
+    : DEFAULT_REVIEW_SUBJECTS.map(name=>({name,q1:null,q2:null,q3:null,q4:null,final:null}));
 
-        function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+  const content = document.getElementById('reviewExtractionContent');
+  if(!content) return;
 
-        async function renderSubjectsDatalist() {
-            const list = document.getElementById('subjectsList');
-            const view = document.getElementById('subjectsListView');
-            if (!list) return;
-            let subjects = [];
-            try {
-                const res = await MefamAPI.getSubjects();
-                if (Array.isArray(res)) subjects = res;
-            } catch (e) {
-                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
-            }
-            const fallback = ['Filipino','English','Mathematics','Science','Araling Panlipunan','EsP','TLE','Music','Arts','PE','Health'];
-            const finalSubjects = subjects.length ? subjects : fallback;
-            list.innerHTML = finalSubjects.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
-            if (view) {
-                view.innerHTML = finalSubjects.map((s, idx) => `<li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f5f5f5;"><span>${escapeHtml(s)}</span><button class="btn btn-ghost btn-sm" onclick="removeSubject(${idx})">Remove</button></li>`).join('') || '<li style="color:var(--text-muted);">No custom subjects added.</li>';
-            }
-        }
+  const flags = Array.isArray(ext.flags)?ext.flags:[];
+  const uncertainFields = Array.isArray(extracted.uncertainFields)?extracted.uncertainFields:[];
+  const normalizedUncertain = uncertainFields.map(f=>String(f).trim().toLowerCase());
+  const lowConfidence = Number(extracted.confidence) < 0.95;
+  const isUncertain = (subjectName,field)=>{
+    const label = `${subjectName} ${field.toUpperCase()}`.toLowerCase();
+    return normalizedUncertain.some(u=>u===label||u.includes(label)||label.includes(u));
+  };
+  const renderInput = (subject,field)=>{
+    const value = subject[field];
+    const isBlank = value===null||value===undefined||value==='';
+    const warn = isBlank||lowConfidence||isUncertain(subject.name,field);
+    const lbl = isBlank?'Blank':'';
+    return `<div><input type="number" class="review-quarter-input${warn?' review-cell-warning':''}" data-quarter="${field}" value="${isBlank?'':escapeHtml(value)}" min="60" max="100">${lbl?`<span class="review-cell-warning-label">${lbl}</span>`:''}</div>`;
+  };
+  const periodWord = reviewPeriodCount===4?'Quarter':'Term';
+  const periodFields = Array.from({length:reviewPeriodCount},(_,i)=>`q${i+1}`);
+  const photo = ext.fileData
+    ? `<img src="${escapeHtml(ext.fileData)}" alt="Uploaded report card" onclick="openImageZoom(this.src)"><div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" type="button" onclick="openCropModal('${escapeHtml(ext.fileData)}')">Crop image</button></div>`
+    : '<div class="empty-state">Original image is unavailable.</div>';
 
-        function renderGradePeriodOptions() {
-            const select = document.getElementById('gradeQuarter');
-            if (!select) return;
-            let count = 3;
-            try { count = Number(localStorage.getItem('mefamdev_grading_periods')) === 4 ? 4 : 3; } catch (e) {}
-            const periodWord = count === 3 ? 'Term' : 'Quarter';
-            const label = document.getElementById('gradeQuarterLabel');
-            if (label) label.textContent = periodWord;
-            select.innerHTML = `<option value="">-- Select ${periodWord} --</option>` + Array.from({ length: count }, (_, index) => `<option value="${index + 1}">${periodWord} ${index + 1}</option>`).join('');
-        }
+  content.innerHTML = `
+    <div class="form-group"><label>Student</label><div style="font-weight:700;color:var(--navy);">${escapeHtml(scholar?.name||`Applicant #${ext.appId||'—'}`)}</div></div>
+    ${flags.length?`<div class="review-flags"><strong>Review warnings</strong><ul style="margin:6px 0 0 18px;">${flags.map(f=>`<li>${escapeHtml(f)}</li>`).join('')}</ul></div>`:''}
+    <div class="review-legend"><strong>Highlighted cells:</strong> blank values or ones the extraction couldn't read confidently.</div>
+    <div class="review-source">
+      <div class="review-image-column">
+        <div class="review-panel-title">Uploaded report card</div>
+        <div class="review-photo">${photo}</div>
+      </div>
+      <div class="review-grade-column">
+        <div class="review-panel-title">Grade entry</div>
+        <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear||'')}"></div>
+        <div class="form-group"><label for="reviewPeriodCount">Grading format</label>
+          <select id="reviewPeriodCount" onchange="updateReviewPeriodFields()">
+            <option value="1"${reviewPeriodCount===1?' selected':''}>1 term</option>
+            <option value="2"${reviewPeriodCount===2?' selected':''}>2 terms</option>
+            <option value="3"${reviewPeriodCount===3?' selected':''}>3 terms</option>
+            <option value="4"${reviewPeriodCount===4?' selected':''}>4 quarters</option>
+          </select>
+        </div>
+        <div class="review-table-toolbar">
+          <button class="btn btn-gold btn-sm" type="button" onclick="addReviewSubjectRow()">+ Add learning area</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="scrollReviewGrades(-1)">←</button>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="scrollReviewGrades(1)">→</button>
+        </div>
+        <div class="table-wrap" id="reviewGradesTableWrap">
+          <table><thead><tr><th>Subject</th>${periodFields.map((_,i)=>`<th>${periodWord} ${i+1}</th>`).join('')}<th>Final</th></tr></thead>
+          <tbody>${reviewSubjects.map((s,idx)=>`
+            <tr class="review-subject-row" data-index="${idx}">
+              <td><input type="text" class="review-subject-name" value="${escapeHtml(s.name||'')}" style="width:100%;"></td>
+              ${periodFields.map(f=>`<td>${renderInput(s,f)}</td>`).join('')}
+              <td>${renderInput(s,'final')}</td>
+            </tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px;"><label>Review Notes</label><textarea id="reviewNotes" rows="3"></textarea></div>
+  `;
+  openModal('reviewExtractionModal');
+}
 
-        function openSubjectsModal() {
-            const select = document.getElementById('gradingPeriodsSelect');
-            if (select) select.value = Number(localStorage.getItem('mefamdev_grading_periods')) === 4 ? '4' : '3';
-            document.getElementById('subjectsModal').classList.add('open');
-            renderSubjectsDatalist();
-        }
+function addReviewSubjectRow(){
+  const tbody = document.querySelector('#reviewGradesTableWrap tbody');
+  if(!tbody) return;
+  const row = document.createElement('tr');
+  row.className = 'review-subject-row';
+  const count = Number(document.getElementById('reviewPeriodCount')?.value)||3;
+  row.innerHTML = `<td><input type="text" class="review-subject-name" placeholder="Learning area name" style="width:100%;"></td>
+    ${Array.from({length:count},(_,i)=>`q${i+1}`).concat('final').map(f=>`<td><div><input type="number" class="review-quarter-input review-cell-warning" data-quarter="${f}" value="" min="60" max="100"><span class="review-cell-warning-label">Blank</span></div></td>`).join('')}`;
+  tbody.appendChild(row);
+  row.querySelector('.review-subject-name')?.focus();
+}
+function updateReviewPeriodFields(){
+  const ext = pendingExtractions.find(i=>Number(i.id)===Number(activeExtractionId));
+  if(!ext) return;
+  const count = Number(document.getElementById('reviewPeriodCount')?.value);
+  const normalized = [1,2,3,4].includes(count)?count:3;
+  ext.extracted = {...(ext.extracted||{}),gradingPeriodCount:normalized};
+  openReviewModal(activeExtractionId);
+}
+function scrollReviewGrades(dir){
+  document.getElementById('reviewGradesTableWrap')?.scrollBy({left:dir*260,behavior:'smooth'});
+}
+function collectReviewSubjects(){
+  const rows = Array.from(document.querySelectorAll('.review-subject-row'));
+  const sel = Number(document.getElementById('reviewPeriodCount')?.value);
+  const count = [1,2,3,4].includes(sel)?sel:3;
+  return rows.map(r=>{
+    const payload = {name:r.querySelector('.review-subject-name')?.value?.trim()||''};
+    Array.from({length:count},(_,i)=>`q${i+1}`).concat('final').forEach(k=>{
+      const raw = r.querySelector(`[data-quarter="${k}"]`)?.value;
+      payload[k] = raw===''||raw===null||raw===undefined?null:Number(raw);
+    });
+    return payload;
+  }).filter(x=>x.name);
+}
+async function saveReview(action){
+  const subjects = collectReviewSubjects();
+  if(!activeExtractionId) return alert('No pending review is selected.');
+  if(action==='approve' && !subjects.length) return alert('Add at least one subject before approving.');
+  try{
+    const notes = document.getElementById('reviewNotes')?.value||'';
+    const schoolYear = document.getElementById('reviewSchoolYear')?.value.trim()||'';
+    const gpCount = Number(document.getElementById('reviewPeriodCount')?.value);
+    const normalized = [1,2,3,4].includes(gpCount)?gpCount:3;
+    const fileData = cropImageSource || document.querySelector('#reviewExtractionContent img')?.src || '';
+    const res = await MefamAPI.reviewGradeExtraction(activeExtractionId, action, subjects, notes, schoolYear, normalized, fileData);
+    if(res?.error) throw new Error(res.error);
+    const ext = pendingExtractions.find(i=>Number(i.id)===Number(activeExtractionId));
+    const appId = ext?.appId?Number(ext.appId):null;
+    if(action==='approve'&&appId){
+      try{await MefamAPI.setDocumentStatus(appId,'reportCard','Received',notes||'Report card approved by staff and marked as received.')}
+      catch(e){console.warn(e)}
+    }
+    if(appId) expandedScholars.add(appId);
+    closeModal('reviewExtractionModal');
+    if(window.parent!==window) window.parent.postMessage({type:'mefamdev:grade-updated'},'*');
+    await Promise.all([loadPendingExtractions(),loadPendingQuarters(),loadAllGrades()]);
+    renderPendingReviewsPanel();
+    renderScholars();
+    alert(action==='approve'?'✅ Grades approved and finalized.':'⚠️ Review rejected and saved.');
+  }catch(e){console.error(e);alert('Unable to finalize the review right now.')}
+}
 
-        async function addSubject() {
-            const input = document.getElementById('newSubjectInput');
-            if (!input) return;
-            const val = input.value.trim();
-            if (!val) return alert('Enter a subject name to add.');
-            try {
-                const current = await MefamAPI.getSubjects() || [];
-                if (current.includes(val)) return alert('That subject already exists.');
-                const next = current.concat([val]);
-                await MefamAPI.saveSubjects(next);
-                input.value = '';
-                await renderSubjectsDatalist();
-            } catch (e) {
-                let subjects = [];
-                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
-                if (subjects.includes(val)) return alert('That subject already exists.');
-                subjects.push(val);
-                localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
-                input.value = '';
-                await renderSubjectsDatalist();
-            }
-        }
+/* ══════════════════════════════════════════════════════════
+   CROP + IMAGE ZOOM
+══════════════════════════════════════════════════════════ */
+function openCropModal(src){
+  if(!src) return;
+  cropImageSource = src;
+  cropImage = new Image();
+  cropImage.onload = ()=>{
+    const canvas = document.getElementById('reportCardCropCanvas');
+    const ctx = canvas?.getContext('2d');
+    if(!canvas||!ctx) return;
+    canvas.width = Math.min(540,cropImage.width||540);
+    canvas.height = Math.min(540,cropImage.height||540);
+    ctx.fillStyle = '#edf2f7'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(cropImage,0,0,canvas.width,canvas.height);
+    openModal('reportCardCropModal');
+  };
+  cropImage.src = src;
+}
+function applyReportCardCrop(){
+  const canvas = document.getElementById('reportCardCropCanvas');
+  if(!canvas||!cropImageSource) return;
+  const cropped = canvas.toDataURL('image/jpeg',0.92);
+  const img = document.querySelector('#reviewExtractionContent img');
+  if(img) img.src = cropped;
+  cropImageSource = cropped;
+  closeModal('reportCardCropModal');
+}
+let imageZoomScale = 1;
+function updateImageZoom(){
+  const img = document.getElementById('zoomedReviewImage');
+  const lvl = document.getElementById('imageZoomLevel');
+  if(!img) return;
+  img.style.width = `${imageZoomScale*100}%`;
+  if(lvl) lvl.textContent = `${Math.round(imageZoomScale*100)}%`;
+}
+function changeImageZoom(a){imageZoomScale = Math.min(5,Math.max(0.5,imageZoomScale+a));updateImageZoom()}
+function resetImageZoom(){imageZoomScale = 1;updateImageZoom()}
+function openImageZoom(src){
+  const img = document.getElementById('zoomedReviewImage');
+  if(!img||!src) return;
+  img.src = src; resetImageZoom(); openModal('imageZoomModal');
+}
 
-        async function removeSubject(idx) {
-            try {
-                const current = await MefamAPI.getSubjects() || [];
-                if (idx < 0 || idx >= current.length) return;
-                if (!confirm(`Remove subject "${current[idx]}"?`)) return;
-                current.splice(idx, 1);
-                await MefamAPI.saveSubjects(current);
-                await renderSubjectsDatalist();
-            } catch (e) {
-                let subjects = [];
-                try { subjects = JSON.parse(localStorage.getItem('mefamdev_subjects') || '[]'); } catch (_e) { subjects = []; }
-                if (idx < 0 || idx >= subjects.length) return;
-                if (!confirm(`Remove subject "${subjects[idx]}"?`)) return;
-                subjects.splice(idx, 1);
-                localStorage.setItem('mefamdev_subjects', JSON.stringify(subjects));
-                await renderSubjectsDatalist();
-            }
-        }
+/* ══════════════════════════════════════════════════════════
+   REPORT CARD VIEWER
+══════════════════════════════════════════════════════════ */
+async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo){
+  try{
+    let approved = [];
+    try{approved = await MefamAPI.getApprovedGradeCard(appId, schoolYear) || []}catch(e){console.warn(e)}
+    let scholarGrades = [];
+    if(Array.isArray(approved) && approved.length){
+      scholarGrades = approved.flatMap(sub => Object.entries(sub.quarters||{}).map(([q,v])=>({
+        subject:sub.subject, quarter:String(q).replace(/^Q/i,''), grade_val:v
+      })));
+    }else{
+      scholarGrades = allGrades
+        .filter(g=>g.appId===Number(appId) && (!schoolYear||g.schoolYear===schoolYear))
+        .map(g=>({subject:g.subject, quarter:g.quarter, grade_val:g.grade}));
+    }
+    const scholar = acceptedScholars.find(a=>Number(a.id)===Number(appId));
+    const ref = refNo || scholar?.reference || scholar?.referenceNumber || appId;
+    const data = {name, gradeLevel, school, refNo:ref, schoolYear:schoolYear||'N/A'};
+    document.getElementById('reportCardContent').innerHTML = buildReportCardHTML(data, scholarGrades);
+    if(!document.getElementById('reportCardStyles')){
+      const s = document.createElement('style'); s.id = 'reportCardStyles';
+      s.textContent = (typeof REPORT_CARD_STYLES !== 'undefined' ? REPORT_CARD_STYLES : '');
+      document.head.appendChild(s);
+    }
+    openModal('reportCardModal');
+  }catch(e){console.error(e);alert(`Unable to load the report card: ${e.message||'please try again.'}`)}
+}
+function printReportCard(){window.print()}
 
-        async function saveSubjects() {
-            const periods = document.getElementById('gradingPeriodsSelect')?.value === '4' ? 4 : 3;
-            localStorage.setItem('mefamdev_grading_periods', String(periods));
-            closeModal('subjectsModal');
-            renderGradePeriodOptions();
-            await renderSubjectsDatalist();
-        }
+/* ══════════════════════════════════════════════════════════
+   MANAGE SUBJECTS
+══════════════════════════════════════════════════════════ */
+async function loadSubjectsFromStore(){
+  try{const r = await MefamAPI.getSubjects(); if(Array.isArray(r)&&r.length) return r}catch(e){}
+  try{const l = JSON.parse(localStorage.getItem('mefamdev_subjects')||'[]'); if(Array.isArray(l)&&l.length) return l}catch(e){}
+  return FALLBACK_SUBJECTS.slice();
+}
+async function persistSubjects(list){
+  try{const r = await MefamAPI.saveSubjects(list); if(r?.error) throw new Error(r.error)}
+  catch(e){console.warn('Server save failed, using localStorage:',e);localStorage.setItem('mefamdev_subjects',JSON.stringify(list))}
+}
+async function renderSubjectsDatalist(){
+  subjectsCache = await loadSubjectsFromStore();
+  const subjects = subjectsCache.length?subjectsCache:FALLBACK_SUBJECTS;
+  const listEl = document.getElementById('subjectsList');
+  const viewEl = document.getElementById('subjectsListView');
+  const countEl = document.getElementById('subjectsCount');
+  if(listEl) listEl.innerHTML = subjects.map(s=>`<option value="${escapeHtml(s)}"></option>`).join('');
+  if(countEl) countEl.textContent = `${subjects.length} subject${subjects.length===1?'':'s'}`;
+  if(viewEl){
+    if(!subjects.length){viewEl.innerHTML = '<li class="subjects-empty">No subjects yet. Add one above.</li>'}
+    else{
+      viewEl.innerHTML = subjects.map((s,idx)=>`
+        <li class="subject-row" data-idx="${idx}">
+          <span class="subject-name">${escapeHtml(s)}</span>
+          <span class="subject-actions">
+            <button class="btn btn-ghost" type="button" onclick="editSubject(${idx})" title="Rename">✎</button>
+            <button class="btn btn-ghost" type="button" style="color:var(--red);" onclick="removeSubject(${idx})" title="Remove">✕</button>
+          </span>
+        </li>`).join('');
+    }
+  }
+}
+function openSubjectsModal(){
+  const sel = document.getElementById('gradingPeriodsSelect');
+  if(sel) sel.value = Number(localStorage.getItem('mefamdev_grading_periods'))===4?'4':'3';
+  openModal('subjectsModal');
+  renderSubjectsDatalist();
+}
+async function addSubject(){
+  const input = document.getElementById('newSubjectInput'); if(!input) return;
+  const val = input.value.trim(); if(!val) return alert('Enter a subject name to add.');
+  const list = await loadSubjectsFromStore();
+  if(list.some(s=>s.toLowerCase()===val.toLowerCase())) return alert('That subject already exists.');
+  await persistSubjects(list.concat([val]));
+  input.value = ''; await renderSubjectsDatalist();
+}
+async function editSubject(idx){
+  const list = await loadSubjectsFromStore();
+  if(idx<0||idx>=list.length) return;
+  const row = document.querySelector(`.subject-row[data-idx="${idx}"]`); if(!row) return;
+  const current = list[idx];
+  const nameSpan = row.querySelector('.subject-name');
+  nameSpan.innerHTML = `<input type="text" value="${escapeHtml(current)}" style="width:100%;">`;
+  const input = nameSpan.querySelector('input'); input.focus(); input.select();
+  const commit = async ()=>{
+    const next = input.value.trim();
+    if(!next||next===current){renderSubjectsDatalist();return}
+    if(list.some((s,i)=>i!==idx&&s.toLowerCase()===next.toLowerCase())){alert('That subject already exists.');renderSubjectsDatalist();return}
+    list[idx] = next; await persistSubjects(list); await renderSubjectsDatalist();
+  };
+  input.addEventListener('blur',commit,{once:true});
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();input.blur()}
+    if(e.key==='Escape'){e.preventDefault();renderSubjectsDatalist()}
+  });
+}
+async function removeSubject(idx){
+  const list = await loadSubjectsFromStore();
+  if(idx<0||idx>=list.length) return;
+  if(!confirm(`Remove subject "${list[idx]}"?`)) return;
+  list.splice(idx,1); await persistSubjects(list); await renderSubjectsDatalist();
+}
+async function saveSubjects(){
+  const periods = document.getElementById('gradingPeriodsSelect')?.value==='4'?4:3;
+  localStorage.setItem('mefamdev_grading_periods',String(periods));
+  await persistSubjects(subjectsCache);
+  closeModal('subjectsModal');
+  renderGradePeriodOptions();
+  await renderSubjectsDatalist();
+}
 
-        function makeJsString(value) {
-            // Must produce the literal 6-character escape sequence text (e.g.
-            // "\u003c"), not the actual character, so the browser's JS parser
-            // re-decodes it at runtime instead of the HTML attribute containing
-            // a raw '<', '>', '&', or "'" that could break out of the
-            // surrounding onclick='...' attribute. Single quotes MUST be
-            // escaped here since every call site uses a single-quoted
-            // attribute — a name like "O'Brien" would otherwise terminate the
-            // attribute early and break (or corrupt) the button.
-            return JSON.stringify(String(value ?? ''))
-                .replace(/</g, '\\u003c')
-                .replace(/>/g, '\\u003e')
-                .replace(/&/g, '\\u0026')
-                .replace(/'/g, '\\u0027');
-        }
-
-            const DEFAULT_REVIEW_SUBJECTS = [
-                'Filipino', 'English', 'Mathematics', 'Science',
-                'Araling Panlipunan', 'Technology and Livelihood Education',
-                'MAPEH',
-                'Edukasyon sa Pagpapakatao'
-            ];
-
-        function escapeHtml(value) {
-            return String(value || '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        window.addEventListener('DOMContentLoaded', loadReportCardsPage);
-    </script>
-    <script src="global-actions.js"></script>
+/* ══════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',loadPage);
+</script>
+<script src="global-actions.js"></script>
 </body>
 </html>

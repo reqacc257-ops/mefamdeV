@@ -189,7 +189,7 @@ const REPORT_CARD_STYLES = `
     --radius: 12px;
   }
 
-  .rc-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin: 20px 0; }
+  .rc-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin: 12px auto; width: min(700px, 100%); }
 
   .rc-head {
     background: var(--navy); color: #fff; padding: 26px 32px 22px; text-align: center; position: relative;

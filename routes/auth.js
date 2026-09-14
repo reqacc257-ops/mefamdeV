@@ -142,15 +142,27 @@ async function sendDirectorOtp(email, code) {
 }
 
 function buildResetUrl(token, baseUrlOverride) {
-  const rawBaseUrl = baseUrlOverride || process.env.APP_BASE_URL || 'http://localhost:3000';
+  const fallbackBaseUrl = 'http://localhost:3000';
+  const rawBaseUrl = baseUrlOverride || process.env.APP_BASE_URL || fallbackBaseUrl;
+  const value = String(rawBaseUrl || '').trim();
 
-  let baseOrigin = rawBaseUrl;
+  let baseOrigin = fallbackBaseUrl;
   try {
-    const parsed = new URL(rawBaseUrl);
-    baseOrigin = `${parsed.protocol}//${parsed.host}`;
+    const parsed = new URL(value);
+    if (parsed.protocol && parsed.host) {
+      baseOrigin = `${parsed.protocol}//${parsed.host}`;
+    }
   } catch {
-    const cleaned = String(rawBaseUrl || '').replace(/\/[^/]*\.html?$/i, '').replace(/\/$/, '');
-    baseOrigin = cleaned || 'http://localhost:3000';
+    try {
+      if (value.startsWith('//')) {
+        const schemeRelative = new URL(`http:${value}`);
+        if (schemeRelative.protocol && schemeRelative.host) {
+          baseOrigin = `${schemeRelative.protocol}//${schemeRelative.host}`;
+        }
+      }
+    } catch {
+      baseOrigin = fallbackBaseUrl;
+    }
   }
 
   return `${baseOrigin.replace(/\/$/, '')}/reset_password.html?token=${encodeURIComponent(token)}`;

@@ -1022,9 +1022,6 @@
                 <button type="button" class="nav-item" onclick="openToolModal('student_grade_card.html', 'Student Report Cards')" data-roles="director,edu" title="Open Student Report Cards">
                     <span class="nav-icon" aria-hidden="true">📄</span> Student Report Cards
                 </button>
-                <button type="button" class="nav-item" onclick="openToolModal('grade_tracking.html', 'Grade Book')" data-roles="director,edu" title="Open Grade Book">
-                    <span class="nav-icon" aria-hidden="true">📚</span> Grade Book
-                </button>
                 <button type="button" class="nav-item" onclick="nav('attendance',this)" data-roles="director,edu,program">
                     <span class="nav-icon" aria-hidden="true">🗓️</span> Attendance Updates
                 </button>
@@ -1131,7 +1128,7 @@
             <!-- Edu stats -->
             <div class="stats-grid" data-roles="edu">
                 <button type="button" class="stat-card" style="--card-accent:#3498db; border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-user-graduate"></i></span><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
-                <button type="button" class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c;" onclick="openToolModal('grade_tracking.html', '📊 Grade Register')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c;" onclick="openToolModal('student_grade_card.html', '📄 Student Report Cards')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
                 <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-file-contract"></i></span><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
             </div>
 
@@ -1199,7 +1196,6 @@
                 </div>
                 <div class="page-header-actions">
                     <div class="search-wrap" style="min-width:260px;">
-                        <span class="search-icon" aria-hidden="true">🔍</span>
                         <input type="text" class="search-input" placeholder="Search by Ref. ID, name, barangay..." id="appSearch" oninput="filterAppsTable()" aria-label="Search applications">
                     </div>
                     <button class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
@@ -1236,7 +1232,6 @@
                 </div>
                 <div class="page-header-actions">
                     <div class="search-wrap" style="min-width:240px;">
-                        <span class="search-icon" aria-hidden="true">🔍</span>
                         <input type="text" class="search-input" id="pipelineSearch" placeholder="Search by reference number or name…" oninput="filterPipeline()" aria-label="Search pipeline">
                     </div>
                     <button class="btn btn-gold" onclick="loadAllData(true)">🔄 Refresh</button>
@@ -1288,7 +1283,6 @@
             <div class="grid-2" style="align-items:start;">
                 <div class="card" style="padding:16px;">
                     <div class="search-wrap" style="margin-bottom:12px;">
-                        <span class="search-icon" aria-hidden="true">🔍</span>
                         <input type="text" class="search-input" id="profileSearch" placeholder="Search scholars..." oninput="filterProfiles()" aria-label="Search scholars">
                     </div>
                     <div id="profile-list" style="max-height:580px; overflow-y:auto;"></div>
@@ -1393,7 +1387,7 @@
                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                         <label style="font-size:.84rem; color:var(--text-muted); margin:0; text-transform:none;">School Year:</label>
                         <input type="text" id="rcSchoolYearFilter" placeholder="e.g. 2025-2026" style="width:150px;">
-                        <button class="btn btn-sm btn-ghost" type="button" onclick="filterReportCards()" style="padding:8px 10px;">🔍 Filter</button>
+                        <button class="btn btn-sm btn-ghost" type="button" onclick="filterReportCards()" style="padding:8px 10px;">Filter</button>
                     </div>
                 </div>
                 <div class="table-wrap">
@@ -1429,7 +1423,6 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
                     <div class="card-title" style="margin:0;">Scholar Absence Log</div>
                     <div class="search-wrap" style="width:220px;">
-                        <span class="search-icon" aria-hidden="true">🔍</span>
                         <input type="text" class="search-input" id="absenceSearch" placeholder="Search scholar..." oninput="filterAbsenceLog()" aria-label="Search scholar">
                     </div>
                 </div>
@@ -1477,7 +1470,6 @@
             <div class="grid-2" style="align-items:start;">
                 <div class="card" style="padding:16px;">
                     <div class="search-wrap" style="margin-bottom:12px;">
-                        <span class="search-icon" aria-hidden="true">🔍</span>
                         <input type="text" class="search-input" id="familySearch" placeholder="Search families..." oninput="filterFamilies()" aria-label="Search families">
                     </div>
                     <div id="familyList" style="max-height:520px; overflow-y:auto;"></div>
@@ -1650,7 +1642,6 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                         <div class="card-title" style="margin:0;">📄 Saved Intake Sheets <span id="savedIntakeCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
                         <div class="search-wrap" style="max-width:320px; width:100%;">
-                            <span class="search-icon" aria-hidden="true">🔍</span>
                             <input id="savedIntakeSearch" type="text" class="search-input" placeholder="Filter intake sheets..." oninput="filterSavedRecords()" aria-label="Filter intake sheets">
                         </div>
                     </div>
@@ -1661,7 +1652,6 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                         <div class="card-title" style="margin:0;">Saved Staff Assessments <span id="savedAssessmentCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
                         <div class="search-wrap" style="max-width:320px; width:100%;">
-                            <span class="search-icon" aria-hidden="true">🔍</span>
                             <input id="savedAssessmentSearch" type="text" class="search-input" placeholder="Filter assessments..." oninput="filterSavedRecords()" aria-label="Filter assessments">
                         </div>
                     </div>
@@ -2372,7 +2362,6 @@ const CMDK_PAGES = [
     { icon: '<i class="fa-solid fa-church"></i>', title: 'Spiritual Formation', sub: 'Formation events', action: () => nav('events', document.querySelector('.nav-item[onclick*=events]')) },
     { icon: '<i class="fa-solid fa-user-graduate"></i>', title: 'Scholar Records', sub: 'Browse scholar records', action: () => nav('profiles', document.querySelector('.nav-item[onclick*=profiles]')) },
     { icon: '<i class="fa-solid fa-file-signature"></i>', title: 'Student Report Cards', sub: 'View and print student report cards', action: () => openToolModal('student_grade_card.html', '📄 Student Report Cards') },
-    { icon: '<i class="fa-solid fa-book-open-reader"></i>', title: 'Grade Book', sub: 'Enter and monitor scholar grades', action: () => openToolModal('grade_tracking.html', '📊 Grade Book') },
     { icon: '<i class="fa-solid fa-calendar-check"></i>', title: 'Attendance Updates', sub: 'Formation absence tracking', action: () => nav('attendance', document.querySelector('.nav-item[onclick*=attendance]')) },
     { icon: '<i class="fa-solid fa-people-roof"></i>', title: 'Family Records', sub: 'Family records', action: () => nav('family', document.querySelector('.nav-item[onclick*=family]')) },
     { icon: '<i class="fa-solid fa-wallet"></i>', title: 'Financials', sub: 'Funds & disbursements', action: () => nav('financials', document.querySelector('.nav-item[onclick*=financials]')) },
