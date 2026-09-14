@@ -600,6 +600,10 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
             <span>Announcements</span>
           </button>
+          <button type="button" class="chip" data-type="audit" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="M6 15l4-4 4 4 4-4"/><path d="M5 5h14v10H5z"/></svg>
+            <span>Audit logs</span>
+          </button>
           <button type="button" class="chip" data-type="financials" aria-pressed="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
             <span>Financial registers</span>
@@ -618,6 +622,7 @@
           <option value="families">Beneficiary families</option>
           <option value="alerts">Formation alerts</option>
           <option value="announcements">Announcements</option>
+          <option value="audit">Audit logs</option>
           <option value="financials">Financial registers</option>
         </select>
       </div>
@@ -754,6 +759,7 @@
       families:      '<strong>Beneficiary families</strong> print as a family register with guardian and benefit details.',
       alerts:        '<strong>Formation alerts</strong> list scholars flagged for follow-up, together with the reason.',
       announcements: '<strong>Announcements</strong> print as a register with subject, target, and full message text.',
+      audit:         '<strong>Audit logs</strong> print a chronological activity register with actor, action, applicant reference, and timestamps.',
       financials:    '<strong>Financial registers</strong> combine contributions and disbursements into one ledger table.'
     };
 
@@ -953,7 +959,8 @@
         const results = await Promise.all([
           MefamAPI.getApplications(), MefamAPI.getFamilies(), MefamAPI.getEvents(),
           MefamAPI.getIntakeSheets(), MefamAPI.getAssessments(), MefamAPI.getGrades(),
-          MefamAPI.getFundLog(), MefamAPI.getDisbursements(), MefamAPI.getAnnouncements()
+          MefamAPI.getFundLog(), MefamAPI.getDisbursements(), MefamAPI.getAnnouncements(),
+          MefamAPI.getAuditLogs().catch(() => [])
         ]);
         state.apps = Array.isArray(results[0]) ? results[0] : [];
         state.families = Array.isArray(results[1]) ? results[1] : [];
@@ -964,6 +971,7 @@
         state.funds = Array.isArray(results[6]) ? results[6] : [];
         state.disbursements = Array.isArray(results[7]) ? results[7] : [];
         state.announcements = Array.isArray(results[8]) ? results[8] : [];
+        state.auditLogs = Array.isArray(results[9]) ? results[9] : [];
         const checks = await Promise.all(state.events.map(async event => [event.id, await MefamAPI.getEventCheckins(event.id).catch(() => [])]));
         state.checkins = Object.fromEntries(checks);
         changePrintType();
@@ -1094,6 +1102,7 @@
       if (type === 'formation' || type === 'directory' || type === 'report-card') return state.apps.filter(app => app.status === 'Accepted');
       if (type === 'families') return state.families;
       if (type === 'announcements') return state.announcements;
+      if (type === 'audit') return state.auditLogs || [];
       return [...state.funds, ...state.disbursements];
     }
 
@@ -1181,6 +1190,7 @@
         type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] :
         type === 'alerts' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Alert'] :
         type === 'applications' ? ['Reference', 'Name', 'Grade', 'School', 'Barangay', 'Status'] :
+        type === 'audit' ? ['Action', 'User', 'Applicant', 'Details', 'Timestamp'] :
         ['Student', 'Grade', 'Barangay', 'School', 'Status'];
 
       head.innerHTML = `<tr><th class="col-check"><input type="checkbox" id="selectAll" aria-label="Select all visible records" onchange="toggleVisibleSelection(this.checked)"></th>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
@@ -1208,6 +1218,13 @@
             type === 'applications' ? [
               val(item.reference || item.referenceNumber || item.reference_number || item.id),
               bold(item.name), val(item.grade), val(item.school), val(item.barangay), badge(item.status)
+            ] :
+            type === 'audit' ? [
+              bold(item.action || 'system-activity'),
+              val(item.user || item.user_name || 'System'),
+              val(item.applicant || item.appId || ''),
+              val(item.details || item.message || ''),
+              val(item.timestamp || item.created_at || '')
             ] :
             [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(app.status)];
 
@@ -1278,6 +1295,7 @@
       else if (type === 'families') body = buildFamiliesPrint(records);
       else if (type === 'alerts') body = buildAlertsPrint(records);
       else if (type === 'announcements') body = buildAnnouncementsPrint(records);
+      else if (type === 'audit') body = buildAuditLogsPrint(records);
       else if (type === 'financials') body = buildFinancialPrint(records);
       else if (type === 'intake') body = records.map(buildIntakePrint).join('');
       else body = records.map(buildAssessmentPrint).join('');
@@ -1297,6 +1315,7 @@
     function buildFamiliesPrint(records) { return `<section><h2>Beneficiary Family Register</h2><table><thead><tr><th>Family</th><th>Guardian</th><th>Barangay</th><th>Contact</th><th>Income</th><th>Bracket</th><th>Benefits</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.surname || '-')}</td><td>${escapeHtml(item.guardian || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td><td>${escapeHtml(item.income || '-')}</td><td>${escapeHtml(item.bracket || '-')}</td><td>${escapeHtml(item.benefits || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildAlertsPrint(records) { return `<section><h2>Formation Alert Register</h2><table><thead><tr><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Alert / Reason</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.alert || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildAnnouncementsPrint(records) { return `<section><h2>Announcement Register</h2><table><thead><tr><th>Subject</th><th>Target</th><th>Tag</th><th>Message</th><th>Date</th><th>Posted By</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.subject || '-')}</td><td>${escapeHtml(item.target || '-')}</td><td>${escapeHtml(item.tag || '-')}</td><td>${escapeHtml(item.message || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td><td>${escapeHtml(item.postedBy || item.posted_by || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
+    function buildAuditLogsPrint(records) { return `<section><h2>Audit Log Register</h2><table><thead><tr><th>Action</th><th>User</th><th>Applicant</th><th>Details</th><th>Timestamp</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.action || '-')}</td><td>${escapeHtml(item.user || item.user_name || '-')}</td><td>${escapeHtml(item.applicant || item.appId || '-')}</td><td>${escapeHtml(item.details || item.message || '-')}</td><td>${escapeHtml(item.timestamp || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildFinancialPrint(records) { return `<section><h2>Financial Registers</h2><table><thead><tr><th>Type</th><th>Name / Source</th><th>Amount</th><th>Date / Period</th><th>Notes</th></tr></thead><tbody>${records.map(item => { const contribution = state.funds.includes(item); return `<tr><td>${contribution ? 'Contribution' : 'Disbursement'}</td><td>${escapeHtml(item.source || item.scholarName || item.scholar_name || '-')}</td><td>${escapeHtml(item.amount || '-')}</td><td>${escapeHtml(item.date || item.period || '-')}</td><td>${escapeHtml(item.notes || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
 
     /* ---------- Toast ---------- */

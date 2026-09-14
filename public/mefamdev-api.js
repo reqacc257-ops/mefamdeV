@@ -364,6 +364,9 @@ const MefamAPI = {
   },
   async deleteAnnouncement(id) { return this._delete(`/comms/${id}`); },
 
+  // ── Audit logs ───────────────────────────────────────────────────────────
+  async getAuditLogs() { return this._get('/events/audit-logs'); },
+
   // ── Internal fetch helpers ────────────────────────────────────────────────
   _token() {
     const sessionToken = sessionStorage.getItem('mefamdev_token') || '';
