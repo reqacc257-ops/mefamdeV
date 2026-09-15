@@ -12,3 +12,9 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   assert.match(pageSource, /type === 'audit'/);
   assert.match(pageSource, /buildAuditLogsPrint/);
 });
+
+test('api error parser converts rate-limit responses into a user-friendly message', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'mefamdev-api.js'), 'utf8');
+  assert.match(source, /Too many attempts\. Please wait, then try again\./);
+  assert.match(source, /response\.status === 429/);
+});

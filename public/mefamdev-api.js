@@ -489,13 +489,30 @@ const MefamAPI = {
       if (!response.ok) throw new Error(`Server returned an empty error response (${response.status}).`);
       return {};
     }
+
     let payload;
     try {
       payload = JSON.parse(text);
     } catch (error) {
-      throw new Error(`Server returned invalid JSON (${response.status}).`);
+      const fallback = text.trim();
+      const fallbackMessage = fallback && fallback.length < 200 ? fallback : `Server returned an invalid response (${response.status}).`;
+      if (!response.ok) {
+        throw new Error(
+          response.status === 429
+            ? 'Too many attempts. Please wait, then try again.'
+            : fallbackMessage
+        );
+      }
+      return {};
     }
-    if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);
+
+    if (!response.ok) {
+      const serverMessage = payload?.error || payload?.message || `Request failed (${response.status}).`;
+      if (response.status === 429) {
+        throw new Error('Too many attempts. Please wait, then try again.');
+      }
+      throw new Error(serverMessage);
+    }
     return payload;
   },
 };
