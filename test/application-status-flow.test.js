@@ -62,3 +62,48 @@ test('rejected applications cannot move to accepted', async () => {
     server.close();
   }
 });
+
+test('status changes record the staff actor and plain audit action', async () => {
+  db.data.applications = [];
+  db.data.audit_logs = [];
+  db.prepare('INSERT INTO applications (name, status) VALUES (?, ?)').run('Audit Applicant', 'Pending Review');
+
+  const app = express();
+  app.use(express.json());
+  app.use((req, res, next) => {
+    req.user = { type: 'staff', role: 'program', name: 'Maria Program' };
+    next();
+  });
+  app.use('/api/applications', applicationsRouter);
+  const server = app.listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+
+  try {
+    const { port } = server.address();
+    const interview = await fetch(`http://127.0.0.1:${port}/api/applications/1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'Interviewing' })
+    });
+    assert.equal(interview.status, 200);
+
+    const accepted = await fetch(`http://127.0.0.1:${port}/api/applications/1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'Accepted' })
+    });
+    assert.equal(accepted.status, 200);
+
+    assert.deepEqual(db.data.audit_logs.slice(0, 2).map(log => ({
+      action: log.action,
+      actor: log.actorName,
+      role: log.actorRole,
+      entity: log.entityLabel
+    })), [
+      { action: 'application.accept', actor: 'Maria Program', role: 'program', entity: 'Audit Applicant' },
+      { action: 'application.status-change', actor: 'Maria Program', role: 'program', entity: 'Audit Applicant' }
+    ]);
+  } finally {
+    server.close();
+  }
+});
