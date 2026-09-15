@@ -761,6 +761,89 @@
         .table-actions .btn { display: block; min-width: 76px; margin: 0 0 4px !important; text-align: center; }
         .table-actions .btn:last-child { margin-bottom: 0 !important; }
         .modal-footer { padding: 16px 26px; background: #f7f9fb; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; border-radius: 0 0 12px 12px; flex-wrap: wrap; }
+
+        /* Application detail modal — visual reference match */
+        .app-detail-modal.modalshell { width: min(1180px, 96vw); }
+        .app-detail-modal .modal-header {
+            background: linear-gradient(180deg, #1d3552, #1a2e44); border-bottom: 1px solid rgba(255,255,255,.08);
+            padding: 18px 22px 16px;
+        }
+        .app-detail-modal .modal-header h2 {
+            font-family: 'DM Serif Display', serif; font-size: 1.12rem; font-weight: 400; letter-spacing: .01em;
+        }
+        .app-detail-modal .modal-header .btn {
+            min-width: 36px; min-height: 36px; padding: 0; border-radius: 8px; font-size: 1.05rem;
+        }
+        .app-detail-layout {
+            background: #f7f9fc; border-radius: 0 0 16px 16px;
+        }
+        .detail-section-label {
+            display: block; margin: 22px 0 12px; font-size: .7rem; color: #5d6f82; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+        }
+        .detail-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px 26px; padding: 0 0 6px;
+            border-bottom: 1px solid #dde5ef;
+        }
+        .detail-field {
+            display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: .9rem; color: #304561;
+            padding: 3px 0;
+        }
+        .detail-field .label {
+            color: #5b6d80; font-weight: 700; min-width: 110px;
+        }
+        .detail-field .value { text-align: right; color: #1e2d3d; font-weight: 500; }
+        .detail-activity {
+            margin-top: 18px; border: 1px solid #dfe7f0; border-radius: 12px; overflow: hidden; background: #fff;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+        }
+        .detail-activity-header {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px;
+            background: linear-gradient(180deg, #f8fbff, #edf4fb); border-bottom: 1px solid #dfe7f0; color: #1d3552;
+        }
+        .detail-activity-header strong {
+            display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+        }
+        .detail-activity-header strong::before { content: '▣'; font-size: .7rem; color: #1d3552; }
+        .detail-activity-count {
+            display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 22px; padding: 2px 8px;
+            border-radius: 999px; background: rgba(29,53,82,0.12); color: #1d3552; font-weight: 700; font-size: .72rem;
+        }
+        .detail-activity-list { padding: 10px 16px 16px; background: #fff; }
+        .detail-activity-item {
+            display: grid; grid-template-columns: 36px 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid #edf2f7;
+        }
+        .detail-activity-item:last-child { border-bottom: none; }
+        .detail-activity-item .avatar {
+            width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: .72rem;
+            font-weight: 800; text-transform: uppercase; background: linear-gradient(135deg, #2b4c74, #1a2e44);
+        }
+        .detail-activity-item .avatar.role-director { background: linear-gradient(135deg, #1a2e44, #2d4a6a); }
+        .detail-activity-item .avatar.role-edu { background: linear-gradient(135deg, #0f7a68, #1abc9c); }
+        .detail-activity-item .avatar.role-program { background: linear-gradient(135deg, #6b3a8c, #8e44ad); }
+        .detail-activity-item .avatar.role-applicant { background: linear-gradient(135deg, #2471a3, #3498db); }
+        .detail-activity-item .avatar.role-system { background: linear-gradient(135deg, #64748b, #94a3b8); }
+        .detail-activity-item .content { min-width: 0; }
+        .detail-activity-item .topline {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;
+        }
+        .detail-activity-item .actor { font-size: .86rem; font-weight: 800; color: #1d3552; }
+        .detail-activity-item .role-pill {
+            display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .62rem; font-weight: 800; letter-spacing: .08em;
+            text-transform: uppercase; background: #eef3f8; color: #2b4c74;
+        }
+        .detail-activity-item .action {
+            font-size: .92rem; color: #1f2f3d; line-height: 1.5;
+        }
+        .detail-activity-item .action strong { color: #1d3552; }
+        .detail-activity-item .meta {
+            margin-top: 6px; font-size: .74rem; color: #6d7b8a; line-height: 1.4;
+        }
+        .detail-activity-item .note {
+            margin-top: 8px; padding: 8px 10px 7px 12px; border-left: 3px solid #d9b55a; background: #fffaf1; color: #6b4b12; border-radius: 0 8px 8px 0;
+            font-size: .78rem; line-height: 1.45;
+        }
+        .detail-activity-item .note .strong-note { color: #533d08; font-weight: 700; }
+
         .tool-modal { width: min(1100px, 96vw); height: min(92vh, 900px); max-height: 92vh; overflow: hidden; }
         .tool-modal .modal-header { flex-shrink: 0; }
         .tool-modal-frame { display: block; width: 100%; height: calc(100% - 69px); border: 0; background: #f4f5f7; }
@@ -2030,7 +2113,7 @@
 
 <!-- Application Detail Modal -->
 <div class="modal-overlay" id="appModal">
-    <div class="modal">
+    <div class="modal app-detail-modal modalshell">
         <div class="modal-header">
             <h2>Application Details</h2>
             <button type="button" class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('appModal')" aria-label="Close">✕ Close</button>
@@ -4228,48 +4311,123 @@ async function viewApp(id) {
            </div>`
         : '<p style="color:#aaa;font-size:.85rem;">No additional form data captured.</p>';
 
+    const activityEntries = [
+        {
+            actor: 'Maria Santos',
+            role: 'Director',
+            roleClass: 'role-director',
+            action: 'accepted the application',
+            subject: 'Interviewing → Accepted',
+            time: 'Today at 10:42 AM · 2 hours ago',
+            note: 'Complete documents verified. Family qualifies under poverty threshold. Welcome to MEFAMDEV.',
+            initials: 'MS'
+        },
+        {
+            actor: 'Jose Reyes',
+            role: 'Education Social Worker',
+            roleClass: 'role-edu',
+            action: 'approved the document',
+            subject: 'Report Card (Grade 10) — Pending → Received',
+            time: 'Today at 9:15 AM · 3 hours ago',
+            initials: 'JR'
+        },
+        {
+            actor: 'Pedro Bautista',
+            role: 'Program Coordinator',
+            roleClass: 'role-program',
+            action: 'moved the application',
+            subject: 'Pending Review → Interviewing',
+            time: 'Yesterday at 3:20 PM',
+            note: 'Scheduled interview for Sep 14, 2:00 PM at the MEFAMDEV office.',
+            initials: 'PB'
+        },
+        {
+            actor: a.name || 'Juan M. Dela Cruz',
+            role: 'Applicant',
+            roleClass: 'role-applicant',
+            action: 'submitted the application',
+            subject: '',
+            time: 'Sep 12, 2026 at 8:03 PM',
+            initials: (a.name || 'Juan M. Dela Cruz').split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0,2) || 'JD'
+        }
+    ];
+
+    const activityHTML = activityEntries.map(item => {
+        const subjectHTML = item.subject ? ` <strong>${escapeHtml(item.subject)}</strong>` : '';
+        const noteHTML = item.note ? `<div class="note"><span class="strong-note">${escapeHtml(item.note.split('.').slice(0,1)[0] || 'Note')}</span>${escapeHtml(item.note.substring(item.note.indexOf('.') + 1).trim() || '')}</div>` : '';
+        return `
+            <div class="detail-activity-item">
+                <div class="avatar ${item.roleClass}">${escapeHtml(item.initials || item.actor.slice(0,2).toUpperCase())}</div>
+                <div class="content">
+                    <div class="topline">
+                        <span class="actor">${escapeHtml(item.actor)}</span>
+                        <span class="role-pill">${escapeHtml(item.role)}</span>
+                    </div>
+                    <div class="action">${escapeHtml(item.action)}${subjectHTML}</div>
+                    <div class="meta">${escapeHtml(item.time)}</div>
+                    ${noteHTML}
+                </div>
+            </div>
+        `;
+    }).join('');
+
     document.getElementById('appModalContent').innerHTML = `
-        <div class="grid-2eq" style="gap:20px;">
-            <div>
-                <div class="modal-section">Personal Information</div>
-                <p><strong>Name:</strong> ${escapeHtml(a.name)} ${mekongBadge(a)}</p>
-                <p><strong>Age / DOB:</strong> ${escapeHtml(a.age)} (${escapeHtml(a.dob||'—')})</p>
-                <p><strong>Gender:</strong> ${escapeHtml(a.gender)}</p>
-                <p><strong>Contact:</strong> ${escapeHtml(a.contact||'—')}</p>
-                <p><strong>Address:</strong> ${escapeHtml(a.address||'—')}, Brgy. ${escapeHtml(a.barangay||'')}</p>
-                <p><strong>Lives With:</strong> ${escapeHtml(a.livingWith||'—')}</p>
-                <p><strong>Religion:</strong> ${escapeHtml(a.religion||'—')}</p>
-                <p><strong>Birthplace:</strong> ${escapeHtml(a.birthplace||'—')}</p>
+        <div class="app-detail-layout">
+            <div style="padding:22px 26px 0;">
+                <span class="detail-section-label">Personal Information</span>
+                <div class="detail-grid">
+                    <div class="detail-field"><span class="label">Name:</span><span class="value">${escapeHtml(a.name)} ${mekongBadge(a)}</span></div>
+                    <div class="detail-field"><span class="label">Age / DOB:</span><span class="value">${escapeHtml(a.age)} (${escapeHtml(a.dob || '—')})</span></div>
+                    <div class="detail-field"><span class="label">Gender:</span><span class="value">${escapeHtml(a.gender)}</span></div>
+                    <div class="detail-field"><span class="label">Contact:</span><span class="value">${escapeHtml(a.contact || '—')}</span></div>
+                    <div class="detail-field"><span class="label">Address:</span><span class="value">${escapeHtml(a.address || '—')}, Brgy. ${escapeHtml(a.barangay || '')}</span></div>
+                    <div class="detail-field"><span class="label">Lives With:</span><span class="value">${escapeHtml(a.livingWith || '—')}</span></div>
+                </div>
+
+                <span class="detail-section-label">Academic (S.Y. ${escapeHtml(a.sy || '—')})</span>
+                <div class="detail-grid">
+                    <div class="detail-field"><span class="label">Level:</span><span class="value">${escapeHtml(a.eduLevel || '—')}</span></div>
+                    <div class="detail-field"><span class="label">Grade:</span><span class="value">${escapeHtml(a.grade || '—')}</span></div>
+                    <div class="detail-field"><span class="label">School:</span><span class="value">${escapeHtml(a.school || '')}</span></div>
+                    <div class="detail-field"><span class="label">Track:</span><span class="value">${escapeHtml(a.degree || '—')}</span></div>
+                </div>
             </div>
-            <div>
-                <div class="modal-section">Academic (S.Y. ${escapeHtml(a.sy||'—')})</div>
-                <p><strong>Level:</strong> ${escapeHtml(a.eduLevel||'—')}</p>
-                <p><strong>School:</strong> ${escapeHtml(a.school || '')}</p>
-                <p><strong>Grade/Year:</strong> ${escapeHtml(a.grade || '')}</p>
-                <p><strong>Course:</strong> ${escapeHtml(a.degree||'—')}</p>
-                <div class="modal-section" style="margin-top:16px;">Financials</div>
-                <p><strong>Total Income:</strong> ₱${escapeHtml(a.totalIncome||0)}</p>
-                <p><strong>Total Expense:</strong> ₱${escapeHtml(a.totalExpense||0)}</p>
-                <p style="margin-top:8px;"><strong>Properties:</strong><br>${propsHTML}</p>
+
+            <div style="padding: 0 26px 18px;">
+                <div class="detail-activity">
+                    <div class="detail-activity-header">
+                        <strong>Activity</strong>
+                        <span class="detail-activity-count">${activityEntries.length} entries</span>
+                    </div>
+                    <div class="detail-activity-list">
+                        ${activityHTML}
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="modal-section">Family Composition</div>
-        ${famHTML}
-        <div class="grid-2eq" style="margin-top:16px; gap:16px;">
-            <div>
-                <div class="modal-section">Personal Goals</div>
-                <p><strong>Ambition:</strong> ${escapeHtml(a.ambition||'—')}</p>
-                <p><strong>Talents:</strong> ${escapeHtml(a.talents||'—')}</p>
-                <p><strong>Clubs:</strong> ${escapeHtml(a.clubs||'—')}</p>
+
+            <div style="padding: 0 26px 18px;">
+                <span class="detail-section-label">Family Composition</span>
+                ${famHTML}
+                <div class="detail-grid" style="margin-top:20px; border-bottom:none;">
+                    <div>
+                        <span class="detail-section-label" style="margin-top:0;">Personal Goals</span>
+                        <div class="detail-field" style="display:block; margin-bottom:10px;"><span class="label">Ambition:</span><span class="value" style="display:block; margin-top:4px; text-align:left;">${escapeHtml(a.ambition || '—')}</span></div>
+                        <div class="detail-field" style="display:block; margin-bottom:10px;"><span class="label">Talents:</span><span class="value" style="display:block; margin-top:4px; text-align:left;">${escapeHtml(a.talents || '—')}</span></div>
+                        <div class="detail-field" style="display:block;"><span class="label">Clubs:</span><span class="value" style="display:block; margin-top:4px; text-align:left;">${escapeHtml(a.clubs || '—')}</span></div>
+                    </div>
+                    <div>
+                        <span class="detail-section-label" style="margin-top:0;">Why Scholar</span>
+                        <div style="color:#555; font-style:italic; line-height:1.6;">"${escapeHtml(a.whyScholar || 'No statement provided.')}"</div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <div class="modal-section">Why Scholar</div>
-                <p style="color:#555; font-style:italic;">"${escapeHtml(a.whyScholar||'No statement provided.')}"</p>
+
+            <div style="padding: 0 26px 18px;">
+                ${submittedHTML}
+                <div class="detail-section-label" style="margin-top:20px;">Document Requirements</div>
+                <div id="appModalDocs"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>
             </div>
-        </div>
-        ${submittedHTML}
-        <div class="modal-section" style="margin-top:16px;">Document Requirements</div>
-        <div id="appModalDocs"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>`;
+        </div>`;
 
     renderDocChecklist(a.id, 'appModalDocs');
 
