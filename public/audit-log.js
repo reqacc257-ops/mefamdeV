@@ -92,7 +92,12 @@
   function readLocal() {
     try {
       const value = JSON.parse(global.localStorage.getItem(STORAGE_KEY) || '[]');
-      return Array.isArray(value) ? value : [];
+      if (!Array.isArray(value)) return [];
+      const filtered = value.filter(row => row?.action !== 'print.generated');
+      if (filtered.length !== value.length) {
+        global.localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+      }
+      return filtered;
     } catch (_) {
       return [];
     }
@@ -107,8 +112,15 @@
   }
 
   function actor() {
+    const sessionCandidates = [];
+    for (const source of [global, global.parent !== global ? global.parent : null, global.opener]) {
+      try {
+        const session = source?.MefamAPI?.getSession?.();
+        if (session) sessionCandidates.push(session);
+      } catch (_) {}
+    }
     try {
-      const session = global.MefamAPI?.getSession?.();
+      const session = sessionCandidates.find(value => value && typeof value === 'object');
       if (session?.type === 'staff' || (session && session.role && session.role !== 'applicant')) {
         return {
           name: session.name || session.displayName || session.username || 'Staff',
@@ -120,9 +132,10 @@
         return { name: session.name || 'Applicant', role: 'applicant', id: session.appId || null };
       }
     } catch (_) {}
-    try {
-      const raw = global.sessionStorage?.getItem('mefamdev_session');
-      if (raw) {
+    for (const storage of [global.sessionStorage, global.parent !== global ? global.parent.sessionStorage : null, global.opener?.sessionStorage]) {
+      try {
+        const raw = storage?.getItem('mefamdev_session');
+        if (!raw) continue;
         const session = JSON.parse(raw);
         if (session && (session.name || session.username || session.displayName)) {
           return {
@@ -131,6 +144,17 @@
             id: session.id || session.staffId || session.appId || null
           };
         }
+      } catch (_) {}
+    }
+    try {
+      const profile = JSON.parse(global.localStorage?.getItem('mefamdev_staff_profile') || '{}');
+      if (profile.displayName) {
+        const session = sessionCandidates.find(value => value && typeof value === 'object');
+        return {
+          name: profile.displayName,
+          role: String(session?.role || 'staff').toLowerCase(),
+          id: session?.id || session?.staffId || null
+        };
       }
     } catch (_) {}
     return { name: 'System', role: 'system', id: null };
@@ -181,7 +205,7 @@
       let remote = [];
       try {
         const rows = await global.MefamAPI?.getAuditLogs?.();
-        if (Array.isArray(rows)) remote = rows;
+        if (Array.isArray(rows)) remote = rows.filter(row => row?.action !== 'print.generated');
       } catch (_) {}
       const local = readLocal();
       const localById = new Map(local.filter(row => row?.id).map(row => [row.id, row]));

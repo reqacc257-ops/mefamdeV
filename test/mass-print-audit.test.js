@@ -16,6 +16,15 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   assert.match(pageSource, /AuditLog\.getAll\(\)/);
 });
 
+test('audit sources exclude print-generated noise', () => {
+  const auditSource = fs.readFileSync(path.join(__dirname, '..', 'lib', 'audit.js'), 'utf8');
+  const clientSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'audit-log.js'), 'utf8');
+
+  assert.match(auditSource, /DELETE FROM audit_logs WHERE action = 'print\.generated'/);
+  assert.match(clientSource, /filter\(row => row\?\.action !== 'print\.generated'\)/);
+  assert.match(auditSource, /purgePrintAuditLogs/);
+});
+
 test('api error parser converts rate-limit responses into a user-friendly message', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'mefamdev-api.js'), 'utf8');
   assert.match(source, /Too many attempts\. Please wait, then try again\./);

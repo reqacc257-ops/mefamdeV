@@ -106,7 +106,7 @@ function buildMonitoringSummary(applications = [], grades = [], absences = []) {
 }
 
 router.get('/audit-logs', requireAuth, async (req, res) => {
-  res.json(listAuditLogs());
+  res.json(await listAuditLogs());
 });
 
 router.post('/audit-logs', requireAuth, async (req, res) => {
