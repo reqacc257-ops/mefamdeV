@@ -4634,17 +4634,26 @@ function appendAuditLog(action, payload = {}) {
     renderAuditLogs();
 }
 
-function renderAuditLogs() {
+async function renderAuditLogs() {
     const container = document.getElementById('recentAuditLogs');
     if (!container) return;
 
-    const logs = (() => {
+    const localLogs = (() => {
         try {
             return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
         } catch (error) {
             return [];
         }
     })();
+    let serverLogs = [];
+    try {
+        const fetched = await MefamAPI.getAuditLogs();
+        serverLogs = Array.isArray(fetched) ? fetched : [];
+    } catch (error) {
+        serverLogs = [];
+    }
+    const serverIds = new Set(serverLogs.map(entry => entry?.id).filter(Boolean));
+    const logs = [...serverLogs, ...localLogs.filter(entry => entry?.id && !serverIds.has(entry.id))];
 
     if (!Array.isArray(logs) || logs.length === 0) {
         container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
@@ -4653,15 +4662,17 @@ function renderAuditLogs() {
 
     container.innerHTML = logs.slice(0, 8).map((entry, index) => {
         const stamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Unknown time';
-        const user = entry.user || 'System';
-        const applicant = entry.applicant ? `<div style="font-size:.72rem; color:var(--text-muted);">Applicant: ${escapeHtml(String(entry.applicant))}</div>` : '';
+        const user = entry.actorName || entry.user || entry.user_name || 'System';
+        const entity = entry.entityLabel || entry.entity_label || entry.applicant || entry.entityId || entry.entity_id;
+        const applicant = entity ? `<div style="font-size:.72rem; color:var(--text-muted);">${escapeHtml(String(entity))}</div>` : '';
+        const details = entry.note || entry.details || '';
         return `
             <div class="audit-log-entry">
                 <span class="audit-log-badge">${index + 1}</span>
                 <div>
                     <strong>${escapeHtml(entry.action || 'System activity')}</strong>
                     ${applicant}
-                    ${entry.details ? `<small>${escapeHtml(entry.details)}</small>` : ''}
+                    ${details ? `<small>${escapeHtml(details)}</small>` : ''}
                 </div>
                 <small>${escapeHtml(user)}<br>${escapeHtml(stamp)}</small>
             </div>
