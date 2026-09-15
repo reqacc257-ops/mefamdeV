@@ -15,6 +15,8 @@ const recordsRouter = require('./routes/records');
 const gradeExtractionRouter = require('./routes/gradeExtraction');
 const commsRouter = require('./routes/comms');
 const gradesRouter = require('./routes/grades');
+const auditRouter = require('./routes/audit');
+const { appendAuditLog } = require('./lib/audit');
 const schoolsRouter = require('./routes/schools');
 const { requireAuth } = require('./middleware/auth');
 
@@ -31,20 +33,21 @@ app.use((req, res, next) => {
   if (!req.path.startsWith('/api/') || ['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase())) {
     return next();
   }
-
-  if (!db || db.isPostgres) return next();
-  const action = `${req.method.toUpperCase()} ${req.path}`;
-  const requestDetails = {
-    action,
-    user: req.user?.name || req.user?.username || req.user?.role || 'System',
-    applicant: req.user?.appId || null,
-    details: `${req.method.toUpperCase()} ${req.path}${req.body && typeof req.body === 'object' ? ' payload=' + JSON.stringify(req.body).slice(0, 180) : ''}`,
-    timestamp: new Date().toISOString(),
-  };
-  if (!Array.isArray(db.data.audit_logs)) db.data.audit_logs = [];
-  db.data.audit_logs.unshift(requestDetails);
-  db.data.audit_logs = db.data.audit_logs.slice(0, 100);
-  if (typeof db.save === 'function') db.save();
+  if (req.path === '/audit' || req.path.startsWith('/audit/')) return next();
+  res.once('finish', () => {
+    if (res.statusCode < 200 || res.statusCode >= 300 || !req.user) return;
+    const actor = req.user;
+    const entityId = req.params?.id || req.body?.appId || req.body?.app_id || actor.appId || null;
+    appendAuditLog(`${req.method.toUpperCase()} ${req.path}`, {
+      actorId: actor.id ?? actor.appId ?? null,
+      actorRole: actor.role || actor.type || 'system',
+      user: actor.name || actor.username || actor.role || actor.type || 'System',
+      applicant: actor.appId || req.body?.appId || req.body?.app_id || null,
+      entityId,
+      entityType: req.path.includes('/applications') ? 'application' : req.path.split('/')[2] || 'system',
+      details: `${req.method.toUpperCase()} ${req.path}`,
+    }, req);
+  });
   next();
 });
 
@@ -79,6 +82,7 @@ app.use('/ImageCropper-master', express.static(path.join(__dirname, 'ImageCroppe
 
 // Routes
 app.use('/api/auth', authRouter);
+app.use('/api/audit', requireAuth, auditRouter);
 app.use('/api/applications', requireAuth, appsRouter);
 app.use('/api/families', requireAuth, familiesRouter);
 app.use('/api/events', eventsRouter);

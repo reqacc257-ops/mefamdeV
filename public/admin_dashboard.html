@@ -1846,8 +1846,8 @@
                     </div>
                 </div>
                 <div class="card" style="border-left:4px solid var(--teal);">
-                    <div class="card-title">Audit Logs</div>
-                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">User actions and system changes are logged with the actor and timestamp for review.</p>
+                    <div class="card-title">Full Audit Log</div>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Recent actions by every authenticated staff role, including approvals, updates, documents, grades, and finance.</p>
                     <div id="recentAuditLogs" class="audit-log-list"></div>
                 </div>
                 <div class="card" id="operations-settings-card" style="display:none;">
@@ -4828,7 +4828,7 @@ async function renderAuditLogs() {
     const container = document.getElementById('recentAuditLogs');
     if (!container) return;
     try {
-        const result = await MefamAPI.getRecentAudit(8);
+        const result = await MefamAPI.getRecentAudit(200);
         const logs = Array.isArray(result?.entries) ? result.entries : [];
         const feed = logs.length ? logs : (() => {
             try {
@@ -4843,7 +4843,7 @@ async function renderAuditLogs() {
             return;
         }
 
-        container.innerHTML = feed.slice(0, 8).map((entry, index) => {
+        container.innerHTML = feed.slice(0, 200).map((entry, index) => {
         const item = normalizeAuditDisplayEntry(entry);
         const actionText = item.label.length > 0 ? item.label : 'System activity';
         const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
@@ -4879,7 +4879,7 @@ async function renderAuditLogs() {
             }
         })();
         if (Array.isArray(fallback) && fallback.length > 0) {
-            container.innerHTML = fallback.slice(0, 8).map((entry, index) => {
+            container.innerHTML = fallback.slice(0, 200).map((entry, index) => {
                 const item = normalizeAuditDisplayEntry(entry);
                 const actionText = item.label.length > 0 ? item.label : 'System activity';
                 const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
