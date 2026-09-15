@@ -151,6 +151,8 @@ test('event audit logs can be persisted and listed through the events router', a
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         action: 'summary-report-opened',
+        actorName: 'Flattened Staff',
+        actorRole: 'program',
         payload: {
           user: 'Staff Test',
           actorRole: 'program',
@@ -167,6 +169,7 @@ test('event audit logs can be persisted and listed through the events router', a
     assert.equal(postRes.status, 200);
     assert.equal(postBody.ok, true);
     assert.equal(postBody.log.action, 'summary-report-opened');
+    assert.equal(postBody.log.actorName, 'Flattened Staff');
     assert.equal(postBody.log.actorRole, 'program');
     assert.equal(postBody.log.entityType, 'report');
     assert.equal(postBody.log.entityLabel, 'Monitoring summary');

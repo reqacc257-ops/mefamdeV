@@ -113,9 +113,12 @@ router.post('/audit-logs', requireAuth, async (req, res) => {
   const action = String(req.body?.action || '').trim();
   if (!action) return res.status(400).json({ error: 'action is required.' });
 
-  const payload = req.body?.payload || req.body || {};
+  const payload = {
+    ...(req.body?.payload || {}),
+    ...(req.body || {}),
+  };
   const log = appendAuditLog(action, {
-    user: payload.user || getAuditUser(req),
+    user: req.body?.actorName || payload.actorName || payload.user || getAuditUser(req),
     actorId: payload.actorId || payload.actor_id,
     actorRole: payload.actorRole || payload.actor_role,
     applicant: payload.applicant || payload.appId || null,

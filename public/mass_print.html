@@ -1873,12 +1873,6 @@
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.focus();
-      window.AuditLog?.log(AUDIT_ACTIONS.PRINT_GENERATED, {
-        entityType: AUDIT_ENTITY_TYPES.PRINT,
-        entityLabel: `${type} report`,
-        note: `${mode === 'selected' ? 'Printed selected' : 'Mass printed'} ${records.length} record(s).`,
-        meta: { reportType: type, mode, recordCount: records.length }
-      });
       setTimeout(() => printWindow.print(), 500);
     }
 

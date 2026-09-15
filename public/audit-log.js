@@ -109,11 +109,28 @@
   function actor() {
     try {
       const session = global.MefamAPI?.getSession?.();
-      if (session?.type === 'staff') {
-        return { name: session.name || session.username || 'Staff', role: session.role || 'staff', id: session.id || null };
+      if (session?.type === 'staff' || (session && session.role && session.role !== 'applicant')) {
+        return {
+          name: session.name || session.displayName || session.username || 'Staff',
+          role: String(session.role || 'staff').toLowerCase(),
+          id: session.id || session.staffId || null
+        };
       }
       if (session?.type === 'applicant') {
         return { name: session.name || 'Applicant', role: 'applicant', id: session.appId || null };
+      }
+    } catch (_) {}
+    try {
+      const raw = global.sessionStorage?.getItem('mefamdev_session');
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session && (session.name || session.username || session.displayName)) {
+          return {
+            name: session.name || session.displayName || session.username,
+            role: String(session.role || session.type || 'staff').toLowerCase(),
+            id: session.id || session.staffId || session.appId || null
+          };
+        }
       }
     } catch (_) {}
     return { name: 'System', role: 'system', id: null };
@@ -167,8 +184,18 @@
         if (Array.isArray(rows)) remote = rows;
       } catch (_) {}
       const local = readLocal();
+      const localById = new Map(local.filter(row => row?.id).map(row => [row.id, row]));
+      const merged = remote.map(row => {
+        const localMatch = row?.id ? localById.get(row.id) : null;
+        const remoteName = String(row?.actorName || row?.user_name || row?.user || '').trim().toLowerCase();
+        if (localMatch?.actorName && !['system', 'unknown'].includes(remoteName)) return row;
+        if (localMatch?.actorName && (!remoteName || remoteName === 'system' || remoteName === 'unknown')) {
+          return { ...row, actorName: localMatch.actorName, actorRole: localMatch.actorRole, actorId: localMatch.actorId };
+        }
+        return row;
+      });
       const remoteIds = new Set(remote.map(row => row?.id).filter(Boolean));
-      return [...remote, ...local.filter(row => row?.id && !remoteIds.has(row.id))];
+      return [...merged, ...local.filter(row => row?.id && !remoteIds.has(row.id))];
     },
     clearLocal() { writeLocal([]); },
   };

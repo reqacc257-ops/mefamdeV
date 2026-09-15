@@ -396,7 +396,21 @@ const MefamAPI = {
   // ── Audit logs ───────────────────────────────────────────────────────────
   async getAuditLogs() { return this._get('/events/audit-logs'); },
   async recordAuditLog(action, payload = {}) {
-    return this._post('/events/audit-logs', { action, payload });
+    return this._post('/events/audit-logs', {
+      action,
+      id: payload.id,
+      actorName: payload.actorName,
+      actorRole: payload.actorRole,
+      actorId: payload.actorId,
+      entityType: payload.entityType,
+      entityId: payload.entityId,
+      entityLabel: payload.entityLabel,
+      note: payload.note,
+      before: payload.before,
+      after: payload.after,
+      meta: payload.meta,
+      timestamp: payload.timestamp,
+    });
   },
 
   // ── Internal fetch helpers ────────────────────────────────────────────────
