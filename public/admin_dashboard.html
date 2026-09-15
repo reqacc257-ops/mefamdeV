@@ -2820,7 +2820,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrades(apps.filter(a => a.status === 'Accepted'));
     });
     loadAllData().then(() => enableSortableTables());
-    setInterval(() => { loadAllData(); }, 5000);
+    let savedSettings = {};
+    try { savedSettings = JSON.parse(localStorage.getItem('mefamdev_system_settings') || '{}'); } catch (_) { savedSettings = {}; }
+    if (savedSettings.autoRefresh === true) {
+        window.dashboardRefreshTimer = window.setInterval(() => {
+            loadAllData();
+        }, 60000);
+    }
 
     window.addEventListener('resize', () => {
         if (window.innerWidth > 900) closeSidebar();

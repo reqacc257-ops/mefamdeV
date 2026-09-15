@@ -564,6 +564,7 @@ const MefamAPI = {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const r = await fetch(`${API_BASE}${path}`, { headers, credentials: 'same-origin' });
       if (r.status === 401) { this.logout(); return; }
+      if (r.status === 429) return this._parseJsonResponse(r);
       if (![429, 502, 503, 504].includes(r.status) || attempt === 2) return this._parseJsonResponse(r);
       const retryAfter = Number(r.headers.get('Retry-After'));
       const retryDelay = Number.isFinite(retryAfter) && retryAfter > 0
