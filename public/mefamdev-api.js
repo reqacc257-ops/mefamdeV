@@ -395,6 +395,9 @@ const MefamAPI = {
 
   // ── Audit logs ───────────────────────────────────────────────────────────
   async getAuditLogs() { return this._get('/events/audit-logs'); },
+  async recordAuditLog(action, payload = {}) {
+    return this._post('/events/audit-logs', { action, payload });
+  },
 
   // ── Internal fetch helpers ────────────────────────────────────────────────
   _token() {

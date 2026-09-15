@@ -1868,6 +1868,12 @@
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.focus();
+      MefamAPI.recordAuditLog('print.generated', {
+        entityType: 'print',
+        entityLabel: `${type} report`,
+        details: `${mode === 'selected' ? 'Printed selected' : 'Mass printed'} ${records.length} ${type} record${records.length === 1 ? '' : 's'}.`,
+        meta: { reportType: type, mode, recordCount: records.length }
+      }).catch(error => console.warn('Could not record print activity:', error));
       setTimeout(() => printWindow.print(), 500);
     }
 

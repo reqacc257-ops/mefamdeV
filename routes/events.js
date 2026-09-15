@@ -116,8 +116,15 @@ router.post('/audit-logs', requireAuth, async (req, res) => {
   const payload = req.body?.payload || req.body || {};
   const log = appendAuditLog(action, {
     user: payload.user || getAuditUser(req),
+    actorId: payload.actorId || payload.actor_id,
+    actorRole: payload.actorRole || payload.actor_role,
     applicant: payload.applicant || payload.appId || null,
+    entityType: payload.entityType || payload.entity_type,
+    entityId: payload.entityId || payload.entity_id,
+    entityLabel: payload.entityLabel || payload.entity_label,
     details: payload.details || payload.message || '',
+    note: payload.note,
+    meta: payload.meta,
   }, req);
 
   res.json({ ok: true, log });

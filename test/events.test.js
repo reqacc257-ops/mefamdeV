@@ -149,12 +149,26 @@ test('event audit logs can be persisted and listed through the events router', a
     const postRes = await fetch(`http://127.0.0.1:${port}/api/events/audit-logs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeader },
-      body: JSON.stringify({ action: 'summary-report-opened', payload: { user: 'Staff Test', details: 'Monitoring summary report opened.' } })
+      body: JSON.stringify({
+        action: 'summary-report-opened',
+        payload: {
+          user: 'Staff Test',
+          actorRole: 'program',
+          entityType: 'report',
+          entityLabel: 'Monitoring summary',
+          details: 'Monitoring summary report opened.',
+          meta: { source: 'dashboard' }
+        }
+      })
     });
     const postBody = await postRes.json();
     assert.equal(postRes.status, 200);
     assert.equal(postBody.ok, true);
     assert.equal(postBody.log.action, 'summary-report-opened');
+    assert.equal(postBody.log.actorRole, 'program');
+    assert.equal(postBody.log.entityType, 'report');
+    assert.equal(postBody.log.entityLabel, 'Monitoring summary');
+    assert.deepEqual(postBody.log.meta, { source: 'dashboard' });
 
     const getRes = await fetch(`http://127.0.0.1:${port}/api/events/audit-logs`, {
       headers: authHeader,
