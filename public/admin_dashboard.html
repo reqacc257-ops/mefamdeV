@@ -792,58 +792,6 @@
             color: #5b6d80; font-weight: 700; min-width: 110px;
         }
         .detail-field .value { text-align: right; color: #1e2d3d; font-weight: 500; }
-        .detail-activity {
-            margin-top: 18px; border: 1px solid #dfe7f0; border-radius: 12px; overflow: hidden; background: #fff;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
-        }
-        .detail-activity-header {
-            display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px;
-            background: linear-gradient(180deg, #f8fbff, #edf4fb); border-bottom: 1px solid #dfe7f0; color: #1d3552;
-        }
-        .detail-activity-header strong {
-            display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
-        }
-        .detail-activity-header strong::before { content: '▣'; font-size: .7rem; color: #1d3552; }
-        .detail-activity-count {
-            display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 22px; padding: 2px 8px;
-            border-radius: 999px; background: rgba(29,53,82,0.12); color: #1d3552; font-weight: 700; font-size: .72rem;
-        }
-        .detail-activity-list { padding: 10px 16px 16px; background: #fff; }
-        .detail-activity-item {
-            display: grid; grid-template-columns: 36px 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid #edf2f7;
-        }
-        .detail-activity-item:last-child { border-bottom: none; }
-        .detail-activity-item .avatar {
-            width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: .72rem;
-            font-weight: 800; text-transform: uppercase; background: linear-gradient(135deg, #2b4c74, #1a2e44);
-        }
-        .detail-activity-item .avatar.role-director { background: linear-gradient(135deg, #1a2e44, #2d4a6a); }
-        .detail-activity-item .avatar.role-edu { background: linear-gradient(135deg, #0f7a68, #1abc9c); }
-        .detail-activity-item .avatar.role-program { background: linear-gradient(135deg, #6b3a8c, #8e44ad); }
-        .detail-activity-item .avatar.role-applicant { background: linear-gradient(135deg, #2471a3, #3498db); }
-        .detail-activity-item .avatar.role-system { background: linear-gradient(135deg, #64748b, #94a3b8); }
-        .detail-activity-item .content { min-width: 0; }
-        .detail-activity-item .topline {
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;
-        }
-        .detail-activity-item .actor { font-size: .86rem; font-weight: 800; color: #1d3552; }
-        .detail-activity-item .role-pill {
-            display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .62rem; font-weight: 800; letter-spacing: .08em;
-            text-transform: uppercase; background: #eef3f8; color: #2b4c74;
-        }
-        .detail-activity-item .action {
-            font-size: .92rem; color: #1f2f3d; line-height: 1.5;
-        }
-        .detail-activity-item .action strong { color: #1d3552; }
-        .detail-activity-item .meta {
-            margin-top: 6px; font-size: .74rem; color: #6d7b8a; line-height: 1.4;
-        }
-        .detail-activity-item .note {
-            margin-top: 8px; padding: 8px 10px 7px 12px; border-left: 3px solid #d9b55a; background: #fffaf1; color: #6b4b12; border-radius: 0 8px 8px 0;
-            font-size: .78rem; line-height: 1.45;
-        }
-        .detail-activity-item .note .strong-note { color: #533d08; font-weight: 700; }
-
         .tool-modal { width: min(1100px, 96vw); height: min(92vh, 900px); max-height: 92vh; overflow: hidden; }
         .tool-modal .modal-header { flex-shrink: 0; }
         .tool-modal-frame { display: block; width: 100%; height: calc(100% - 69px); border: 0; background: #f4f5f7; }
@@ -4317,59 +4265,6 @@ async function viewApp(id) {
            </div>`
         : '<p style="color:#aaa;font-size:.85rem;">No additional form data captured.</p>';
 
-    let activityEntries = [];
-    try {
-        const response = await MefamAPI.getAuditForEntity('application', id);
-        const entries = Array.isArray(response?.entries) ? response.entries : [];
-        activityEntries = entries.slice(0, 8).map((entry) => {
-            const actorRole = String(entry.actorRole || entry.role || entry.title || 'System').trim();
-            const normalizedRole = actorRole && actorRole !== 'unknown' ? actorRole.replace(/[_-]+/g, ' ') : 'System';
-            const actorLabel = normalizedRole === 'System' ? 'System' : normalizedRole;
-            const action = String(entry.action || 'system.activity').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-            const note = String(entry.note || entry.details || '').trim();
-            const subject = entry.entityLabel ? ` ${escapeHtml(entry.entityLabel)}` : '';
-            const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString([], {
-                month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
-            }) : 'Recently';
-            const initials = actorLabel.split(/\s+/).filter(Boolean).slice(0, 2).map(fragment => fragment[0].toUpperCase()).join('').slice(0, 2) || 'SY';
-            const roleClass = normalizedRole.toLowerCase().includes('director') ? 'role-director' : normalizedRole.toLowerCase().includes('finance') ? 'role-finance' : normalizedRole.toLowerCase().includes('education') || normalizedRole.toLowerCase().includes('social') ? 'role-edu' : normalizedRole.toLowerCase().includes('program') ? 'role-program' : normalizedRole.toLowerCase().includes('applicant') ? 'role-applicant' : 'role-system';
-            return {
-                actor: actorLabel,
-                role: actorLabel,
-                roleClass,
-                action: action || 'system activity',
-                subject,
-                time,
-                note,
-                initials
-            };
-        });
-    } catch (error) {
-        console.error('Failed to load application activity:', error);
-        activityEntries = [];
-    }
-
-    const activityHTML = activityEntries.length
-        ? activityEntries.map(item => {
-        const subjectHTML = item.subject ? ` <strong>${escapeHtml(item.subject)}</strong>` : '';
-        const noteHTML = item.note ? `<div class="note"><span class="strong-note">${escapeHtml(item.note.split('.').slice(0,1)[0] || 'Note')}</span>${escapeHtml(item.note.substring(item.note.indexOf('.') + 1).trim() || '')}</div>` : '';
-        return `
-            <div class="detail-activity-item">
-                <div class="avatar ${item.roleClass}">${escapeHtml(item.initials || item.actor.slice(0,2).toUpperCase())}</div>
-                <div class="content">
-                    <div class="topline">
-                        <span class="actor">${escapeHtml(item.actor)}</span>
-                        <span class="role-pill">${escapeHtml(item.role)}</span>
-                    </div>
-                    <div class="action">${escapeHtml(item.action)}${subjectHTML}</div>
-                    <div class="meta">${escapeHtml(item.time)}</div>
-                    ${noteHTML}
-                </div>
-            </div>
-        `;
-    }).join('')
-        : '<div class="empty-state" style="padding:18px 12px; margin-top:10px;">No application activity has been recorded yet.</div>';
-
     document.getElementById('appModalContent').innerHTML = `
         <div class="app-detail-layout">
             <div style="padding:22px 26px 0;">
@@ -4389,18 +4284,6 @@ async function viewApp(id) {
                     <div class="detail-field"><span class="label">Grade:</span><span class="value">${escapeHtml(a.grade || '—')}</span></div>
                     <div class="detail-field"><span class="label">School:</span><span class="value">${escapeHtml(a.school || '')}</span></div>
                     <div class="detail-field"><span class="label">Track:</span><span class="value">${escapeHtml(a.degree || '—')}</span></div>
-                </div>
-            </div>
-
-            <div style="padding: 0 26px 18px;">
-                <div class="detail-activity">
-                    <div class="detail-activity-header">
-                        <strong>Activity</strong>
-                        <span class="detail-activity-count">${activityEntries.length || 0} entries</span>
-                    </div>
-                    <div class="detail-activity-list">
-                        ${activityHTML}
-                    </div>
                 </div>
             </div>
 
