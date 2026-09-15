@@ -567,7 +567,11 @@ const MefamAPI = {
       const r = await fetch(`${API_BASE}${path}`, { headers, credentials: 'same-origin' });
       if (r.status === 401) { this.logout(); return; }
       if (![429, 502, 503, 504].includes(r.status) || attempt === 2) return this._parseJsonResponse(r);
-      await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)));
+      const retryAfter = Number(r.headers.get('Retry-After'));
+      const retryDelay = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 10000)
+        : 350 * (attempt + 1);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
     }
   },
   async _post(path, body, auth = true, retryTransient = false) {
@@ -627,6 +631,18 @@ const MefamAPI = {
   },
   async _parseJsonResponse(response) {
     const text = await response.text();
+    if (response.status === 429) {
+      const retryAfter = Number(response.headers.get('Retry-After'));
+      const waitLabel = Number.isFinite(retryAfter) && retryAfter > 0
+        ? ` Please try again in about ${Math.ceil(retryAfter)} second${Math.ceil(retryAfter) === 1 ? '' : 's'}.`
+        : ' Please wait a moment and try again.';
+      let payload = null;
+      try { payload = text.trim() ? JSON.parse(text) : null; } catch (_) {}
+      const error = new Error(`${payload?.error || 'The server is temporarily rate-limiting requests.'}${waitLabel}`);
+      error.status = 429;
+      error.retryAfter = retryAfter || null;
+      throw error;
+    }
     if (!text.trim()) {
       if (!response.ok) throw new Error(`Server returned an empty error response (${response.status}).`);
       return {};
