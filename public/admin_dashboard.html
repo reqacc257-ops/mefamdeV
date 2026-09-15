@@ -4634,6 +4634,47 @@ function appendAuditLog(action, payload = {}) {
     renderAuditLogs();
 }
 
+function describeAuditAction(action) {
+    const labels = {
+        'application.status-change': 'Changed application status',
+        'application.accept': 'Accepted scholar',
+        'application.reject': 'Rejected application',
+        'application.edit': 'Updated application',
+        'application.delete': 'Deleted application',
+        'application.reapply': 'Started a new application cycle',
+        'application.mekong-toggle': 'Marked scholar as Mekong',
+        'document.upload': 'Uploaded document',
+        'document.approve': 'Approved document',
+        'document.reject': 'Flagged document',
+        'grade.enter': 'Entered grade',
+        'grade.edit': 'Updated grade',
+        'fund.add': 'Added contribution',
+        'fund.delete': 'Deleted contribution',
+        'disbursement.release': 'Released stipend',
+        'disbursement.batch': 'Released stipends',
+        'disbursement.delete': 'Deleted stipend record',
+        'event.add': 'Created formation event',
+        'event.delete': 'Deleted formation event',
+        'event.session-start': 'Started attendance session',
+        'event.session-end': 'Ended attendance session',
+        'event.attendance-save': 'Saved attendance',
+        'absence.log': 'Logged attendance concern',
+        'absence.reset': 'Cleared attendance concern',
+        'intake.save': 'Saved intake sheet',
+        'intake.delete': 'Deleted intake sheet',
+        'assessment.save': 'Saved assessment',
+        'assessment.delete': 'Deleted assessment',
+        'announcement.post': 'Posted announcement',
+        'announcement.delete': 'Deleted announcement',
+        'settings.update': 'Updated system settings',
+        'settings.password-change': 'Changed staff password',
+        'settings.profile-update': 'Updated staff profile',
+        'auth.login': 'Signed in',
+        'auth.logout': 'Signed out',
+    };
+    return labels[action] || String(action || 'System activity').replace(/[._-]+/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
 async function renderAuditLogs() {
     const container = document.getElementById('recentAuditLogs');
     if (!container) return;
@@ -4670,7 +4711,7 @@ async function renderAuditLogs() {
             <div class="audit-log-entry">
                 <span class="audit-log-badge">${index + 1}</span>
                 <div>
-                    <strong>${escapeHtml(entry.action || 'System activity')}</strong>
+                    <strong>${escapeHtml(describeAuditAction(entry.action))}</strong>
                     ${applicant}
                     ${details ? `<small>${escapeHtml(details)}</small>` : ''}
                 </div>
