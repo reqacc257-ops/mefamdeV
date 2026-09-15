@@ -93,8 +93,14 @@
     try {
       const value = JSON.parse(global.localStorage.getItem(STORAGE_KEY) || '[]');
       if (!Array.isArray(value)) return [];
-      const filtered = value.filter(row => row?.action !== 'print.generated');
-      if (filtered.length !== value.length) {
+      const filtered = value
+        .filter(row => row?.action !== 'print.generated')
+        .map(row => {
+          const isLegacySystem = String(row?.actorName || row?.user || '').trim().toLowerCase() === 'system'
+            || String(row?.actorRole || '').trim().toLowerCase() === 'system';
+          return isLegacySystem ? { ...row, user: 'Director', actorName: 'Director', actorRole: 'director' } : row;
+        });
+      if (JSON.stringify(filtered) !== JSON.stringify(value)) {
         global.localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
       }
       return filtered;

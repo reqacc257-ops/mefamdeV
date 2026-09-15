@@ -23,6 +23,8 @@ test('audit sources exclude print-generated noise', () => {
   assert.match(auditSource, /DELETE FROM audit_logs WHERE action = 'print\.generated'/);
   assert.match(clientSource, /filter\(row => row\?\.action !== 'print\.generated'\)/);
   assert.match(auditSource, /purgePrintAuditLogs/);
+  assert.match(auditSource, /normalizeLegacyAuditActors/);
+  assert.match(clientSource, /actorName: 'Director'/);
 });
 
 test('api error parser converts rate-limit responses into a user-friendly message', () => {
