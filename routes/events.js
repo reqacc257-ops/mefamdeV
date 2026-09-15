@@ -124,6 +124,8 @@ router.post('/audit-logs', requireAuth, async (req, res) => {
     entityLabel: payload.entityLabel || payload.entity_label,
     details: payload.details || payload.message || '',
     note: payload.note,
+    before: payload.before,
+    after: payload.after,
     meta: payload.meta,
   }, req);
 

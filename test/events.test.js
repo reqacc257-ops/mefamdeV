@@ -157,6 +157,8 @@ test('event audit logs can be persisted and listed through the events router', a
           entityType: 'report',
           entityLabel: 'Monitoring summary',
           details: 'Monitoring summary report opened.',
+          before: { status: 'closed' },
+          after: { status: 'opened' },
           meta: { source: 'dashboard' }
         }
       })
@@ -168,6 +170,8 @@ test('event audit logs can be persisted and listed through the events router', a
     assert.equal(postBody.log.actorRole, 'program');
     assert.equal(postBody.log.entityType, 'report');
     assert.equal(postBody.log.entityLabel, 'Monitoring summary');
+    assert.deepEqual(postBody.log.before, { status: 'closed' });
+    assert.deepEqual(postBody.log.after, { status: 'opened' });
     assert.deepEqual(postBody.log.meta, { source: 'dashboard' });
 
     const getRes = await fetch(`http://127.0.0.1:${port}/api/events/audit-logs`, {

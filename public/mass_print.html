@@ -935,6 +935,7 @@
   </main>
 
   <script src="./mefamdev-api.js"></script>
+  <script src="./audit-log.js"></script>
   <script src="/components/report-card.js"></script>
   <script>
     const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {}, auditLogs: [], auditActor: '', auditEntity: '', auditFrom: '', auditTo: '', auditSort: 'newest' };
@@ -1017,6 +1018,10 @@
       initCheckboxFilters();
       initEventFilter();
       bindTypeChips();
+      window.addEventListener('mefamdev:audit-log', () => {
+        if (document.getElementById('printType')?.value !== 'audit') return;
+        AuditLog.getAll().then(rows => { state.auditLogs = rows || []; renderRows(); }).catch(() => {});
+      });
       await loadPrintData();
     });
 
@@ -1303,7 +1308,7 @@
           ['funds', () => MefamAPI.getFundLog()],
           ['disbursements', () => MefamAPI.getDisbursements()],
           ['announcements', () => MefamAPI.getAnnouncements()],
-          ['auditLogs', () => MefamAPI.getAuditLogs().catch(() => [])]
+          ['auditLogs', () => (window.AuditLog ? AuditLog.getAll() : MefamAPI.getAuditLogs().catch(() => []))]
         ];
 
         const loaded = {};
@@ -1868,12 +1873,12 @@
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.focus();
-      MefamAPI.recordAuditLog('print.generated', {
-        entityType: 'print',
+      window.AuditLog?.log(AUDIT_ACTIONS.PRINT_GENERATED, {
+        entityType: AUDIT_ENTITY_TYPES.PRINT,
         entityLabel: `${type} report`,
-        details: `${mode === 'selected' ? 'Printed selected' : 'Mass printed'} ${records.length} ${type} record${records.length === 1 ? '' : 's'}.`,
+        note: `${mode === 'selected' ? 'Printed selected' : 'Mass printed'} ${records.length} record(s).`,
         meta: { reportType: type, mode, recordCount: records.length }
-      }).catch(error => console.warn('Could not record print activity:', error));
+      });
       setTimeout(() => printWindow.print(), 500);
     }
 

@@ -886,6 +886,8 @@
 
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
+<script src="./mefamdev-api.js"></script>
+<script src="./audit-log.js"></script>
 <script>
 "use strict";
 
@@ -1518,6 +1520,14 @@ function saveAssessment() {
     else list.unshift(record);
 
     if (!writeLS(LS.assessments, list)) return;
+    window.AuditLog?.log(AUDIT_ACTIONS.ASSESSMENT_SAVE, {
+        entityType: AUDIT_ENTITY_TYPES.ASSESSMENT,
+        entityId: record.id,
+        entityLabel: family || student,
+        after: finalResult,
+        note: `Checks: ${s.checks}, Crosses: ${s.crosses}, Starred: ${s.starCrosses}`,
+        meta: { linkedAppId: state.linkedAppId, manualOverride: state.manualOverride }
+    });
 
     // Mirror the result onto the linked application record
     if (state.linkedAppId) {

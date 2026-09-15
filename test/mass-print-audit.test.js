@@ -12,7 +12,8 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   assert.match(pageSource, /type === 'audit'/);
   assert.match(pageSource, /buildAuditLogsPrint/);
   assert.match(apiSource, /async recordAuditLog\(action, payload = \{\}\)/);
-  assert.match(pageSource, /MefamAPI\.recordAuditLog\('print\.generated'/);
+  assert.match(pageSource, /window\.AuditLog\?\.log\(AUDIT_ACTIONS\.PRINT_GENERATED/);
+  assert.match(pageSource, /AuditLog\.getAll\(\)/);
 });
 
 test('api error parser converts rate-limit responses into a user-friendly message', () => {

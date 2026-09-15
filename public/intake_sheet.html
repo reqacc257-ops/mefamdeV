@@ -1399,6 +1399,8 @@
     </div>
 </div>
 
+<script src="./mefamdev-api.js"></script>
+<script src="./audit-log.js"></script>
 <script>
 let linkedAppId = null;
 let currentIntakeId = null;
@@ -1824,6 +1826,13 @@ function saveIntake() {
     if (existing > -1) { saved[existing] = data; } else { saved.unshift(data); }
     localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
     localStorage.setItem('mefamdev_intake_sheet_saved', String(Date.now()));
+    window.AuditLog?.log(AUDIT_ACTIONS.INTAKE_SAVE, {
+        entityType: AUDIT_ENTITY_TYPES.INTAKE,
+        entityId: data.id,
+        entityLabel: data.name || data.caseNo,
+        note: `Case No: ${data.caseNo}`,
+        meta: { linkedAppId: linkedAppId || null }
+    });
 
     const hostWindow = window.parent !== window ? window.parent : window.opener;
     if (hostWindow && !hostWindow.closed) {
