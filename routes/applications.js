@@ -257,16 +257,22 @@ router.patch('/:id', async (req, res) => {
 
   values.push(req.params.id);
   await db.prepare(`UPDATE applications SET ${updates.join(', ')} WHERE id = ?`).run(...values);
-  appendAuditLog(newStatus ? 'application-status-updated' : 'application-updated', {
+  const auditAction = newStatus
+    ? String(newStatus).trim() === 'Accepted' ? 'application.accept'
+      : String(newStatus).trim() === 'Rejected' ? 'application.reject' : 'application.status-change'
+    : req.body.mekong !== undefined ? 'application.mekong-toggle' : 'application.edit';
+  appendAuditLog(auditAction, {
     applicant: Number(req.params.id),
     entityType: 'application',
     entityId: Number(req.params.id),
     entityLabel: app.name || `Application #${req.params.id}`,
     details: newStatus
       ? `Moved application #${req.params.id} from ${app.status || 'Unknown'} to ${newStatus}.`
-      : `Updated application #${req.params.id}.`,
-    before: { status: app.status || null },
-    after: { status: newStatus || app.status || null },
+      : req.body.mekong !== undefined
+        ? `Marked application #${req.params.id} as ${req.body.mekong ? 'Mekong' : 'regular'}.`
+        : `Updated application #${req.params.id}.`,
+    before: { status: app.status || null, mekong: Boolean(app.mekong) },
+    after: { status: newStatus || app.status || null, mekong: req.body.mekong === undefined ? Boolean(app.mekong) : Boolean(req.body.mekong) },
   }, req);
   res.json({ ok: true });
 });
