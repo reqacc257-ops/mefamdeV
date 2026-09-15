@@ -214,6 +214,39 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
 .subject-actions .btn{padding:5px 9px;font-size:.74rem;border-radius:7px}
 .subjects-empty{color:var(--text-muted);font-size:.87rem;text-align:center;padding:14px 8px}
 
+/* ── FIX: Report Card Modal UI ── */
+#reportCardModal .modal {
+  max-width: 900px !important; /* Much wider to fit the table */
+  width: 95% !important;
+}
+
+#reportCardModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+#reportCardModal .modal-header > div {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Prevent text from wrapping awkwardly in the table */
+#reportCardModal table th,
+#reportCardModal table td {
+  white-space: nowrap !important; 
+  padding: 12px 16px !important; /* More breathing room */
+}
+
+/* Ensure table doesn't overflow if screen is tiny */
+#reportCardModal .modal-body {
+  padding: 24px !important;
+  overflow-x: auto !important;
+}
+
 /* Tablet / mobile */
 @media (max-width:760px){
   .main{padding:12px 10px 28px}
@@ -304,11 +337,11 @@ select{appearance:none;-webkit-appearance:none;background-image:url('data:image/
 <div class="modal-overlay" id="reportCardModal">
   <div class="modal">
     <div class="modal-header">
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;width:100%;">
         <h2 style="margin:0;">Report Card</h2>
-        <button type="button" class="btn btn-sm btn-ghost" onclick="printReportCard()">🖨️ Print</button>
+        <button type="button" class="btn btn-sm btn-ghost" style="margin-left:auto;" onclick="printReportCard()">🖨️ Print</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
       </div>
-      <button type="button" class="btn btn-ghost" onclick="closeModal('reportCardModal')">✕</button>
     </div>
     <div class="modal-body"><div id="reportCardContent"></div></div>
   </div>
@@ -1263,11 +1296,11 @@ function buildFallbackReportCard(data, grades){
   return `<div style="font-family:'DM Sans',sans-serif;color:#2c3e50;">
     <h2 style="text-align:center;margin:0 0 4px;color:#1a2e44;">Scholar Report Card</h2>
     <p style="text-align:center;color:#7f8c8d;margin:0 0 18px;">School Year ${escapeHtml(data.schoolYear||'N/A')}</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:14px;">
+    <table class="report-card-table" style="width:100%;border-collapse:collapse;margin-bottom:14px;">
       <tr><td><strong>Name:</strong> ${escapeHtml(data.name||'—')}</td><td><strong>Grade Level:</strong> ${escapeHtml(data.gradeLevel||'—')}</td></tr>
       <tr><td><strong>School:</strong> ${escapeHtml(data.school||'—')}</td><td><strong>Reference No.:</strong> ${escapeHtml(String(data.refNo||'—'))}</td></tr>
     </table>
-    <table style="width:100%;border-collapse:collapse;">
+    <table class="report-card-table" style="width:100%;border-collapse:collapse;">
       <thead><tr style="background:#f8fafc;color:#1a2e44;">
         <th style="text-align:left;padding:8px;border:1px solid #dde3ec;">Subject</th>${headerCells}
         <th style="padding:8px;border:1px solid #dde3ec;">Average</th>
