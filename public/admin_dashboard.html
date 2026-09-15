@@ -1038,7 +1038,7 @@
         .cmdk-item-sub { font-size: .75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cmdk-empty { padding: 32px 20px; text-align: center; color: var(--text-muted); font-size: .88rem; }
         .cmdk-footer {
-            border-top: 1px solid var(--border);
+            border-top: 1px solid  var(--border);
             padding: 10px 20px;
             font-size: .72rem;
             color: var(--text-muted);
@@ -4311,48 +4311,40 @@ async function viewApp(id) {
            </div>`
         : '<p style="color:#aaa;font-size:.85rem;">No additional form data captured.</p>';
 
-    const activityEntries = [
-        {
-            actor: 'Maria Santos',
-            role: 'Director',
-            roleClass: 'role-director',
-            action: 'accepted the application',
-            subject: 'Interviewing → Accepted',
-            time: 'Today at 10:42 AM · 2 hours ago',
-            note: 'Complete documents verified. Family qualifies under poverty threshold. Welcome to MEFAMDEV.',
-            initials: 'MS'
-        },
-        {
-            actor: 'Jose Reyes',
-            role: 'Education Social Worker',
-            roleClass: 'role-edu',
-            action: 'approved the document',
-            subject: 'Report Card (Grade 10) — Pending → Received',
-            time: 'Today at 9:15 AM · 3 hours ago',
-            initials: 'JR'
-        },
-        {
-            actor: 'Pedro Bautista',
-            role: 'Program Coordinator',
-            roleClass: 'role-program',
-            action: 'moved the application',
-            subject: 'Pending Review → Interviewing',
-            time: 'Yesterday at 3:20 PM',
-            note: 'Scheduled interview for Sep 14, 2:00 PM at the MEFAMDEV office.',
-            initials: 'PB'
-        },
-        {
-            actor: a.name || 'Juan M. Dela Cruz',
-            role: 'Applicant',
-            roleClass: 'role-applicant',
-            action: 'submitted the application',
-            subject: '',
-            time: 'Sep 12, 2026 at 8:03 PM',
-            initials: (a.name || 'Juan M. Dela Cruz').split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0,2) || 'JD'
-        }
-    ];
+    let activityEntries = [];
+    try {
+        const response = await MefamAPI.getAuditForEntity('application', id);
+        const entries = Array.isArray(response?.entries) ? response.entries : [];
+        activityEntries = entries.slice(0, 8).map((entry) => {
+            const actorRole = String(entry.actorRole || entry.role || entry.title || 'System').trim();
+            const normalizedRole = actorRole && actorRole !== 'unknown' ? actorRole.replace(/[_-]+/g, ' ') : 'System';
+            const actorLabel = normalizedRole === 'System' ? 'System' : normalizedRole;
+            const action = String(entry.action || 'system.activity').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+            const note = String(entry.note || entry.details || '').trim();
+            const subject = entry.entityLabel ? ` ${escapeHtml(entry.entityLabel)}` : '';
+            const time = entry.timestamp ? new Date(entry.timestamp).toLocaleString([], {
+                month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
+            }) : 'Recently';
+            const initials = actorLabel.split(/\s+/).filter(Boolean).slice(0, 2).map(fragment => fragment[0].toUpperCase()).join('').slice(0, 2) || 'SY';
+            const roleClass = normalizedRole.toLowerCase().includes('director') ? 'role-director' : normalizedRole.toLowerCase().includes('finance') ? 'role-finance' : normalizedRole.toLowerCase().includes('education') || normalizedRole.toLowerCase().includes('social') ? 'role-edu' : normalizedRole.toLowerCase().includes('program') ? 'role-program' : normalizedRole.toLowerCase().includes('applicant') ? 'role-applicant' : 'role-system';
+            return {
+                actor: actorLabel,
+                role: actorLabel,
+                roleClass,
+                action: action || 'system activity',
+                subject,
+                time,
+                note,
+                initials
+            };
+        });
+    } catch (error) {
+        console.error('Failed to load application activity:', error);
+        activityEntries = [];
+    }
 
-    const activityHTML = activityEntries.map(item => {
+    const activityHTML = activityEntries.length
+        ? activityEntries.map(item => {
         const subjectHTML = item.subject ? ` <strong>${escapeHtml(item.subject)}</strong>` : '';
         const noteHTML = item.note ? `<div class="note"><span class="strong-note">${escapeHtml(item.note.split('.').slice(0,1)[0] || 'Note')}</span>${escapeHtml(item.note.substring(item.note.indexOf('.') + 1).trim() || '')}</div>` : '';
         return `
@@ -4369,7 +4361,8 @@ async function viewApp(id) {
                 </div>
             </div>
         `;
-    }).join('');
+    }).join('')
+        : '<div class="empty-state" style="padding:18px 12px; margin-top:10px;">No application activity has been recorded yet.</div>';
 
     document.getElementById('appModalContent').innerHTML = `
         <div class="app-detail-layout">
@@ -4397,7 +4390,7 @@ async function viewApp(id) {
                 <div class="detail-activity">
                     <div class="detail-activity-header">
                         <strong>Activity</strong>
-                        <span class="detail-activity-count">${activityEntries.length} entries</span>
+                        <span class="detail-activity-count">${activityEntries.length || 0} entries</span>
                     </div>
                     <div class="detail-activity-list">
                         ${activityHTML}
@@ -4864,43 +4857,65 @@ function appendAuditLog(action, payload = {}) {
     renderAuditLogs();
 }
 
-function renderAuditLogs() {
+function getAuditRoleLabel(rawEntry = {}) {
+    const actorRole = String(rawEntry.actorRole || rawEntry.role || rawEntry.title || rawEntry.userRole || 'System').trim();
+    if (actorRole && actorRole !== 'unknown' && actorRole !== 'System') return actorRole.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+    const fallback = String(rawEntry.actorName || rawEntry.user || rawEntry.name || 'System').trim();
+    if (!fallback || fallback === 'System' || fallback === 'null') return 'System';
+    return fallback.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function normalizeAuditDisplayEntry(entry = {}) {
+    const actorRole = String(entry.actorRole || entry.role || entry.title || entry.userRole || 'System').trim();
+    const actorLabel = getAuditRoleLabel(entry);
+    const roleKey = String(actorRole || actorLabel || 'system').toLowerCase();
+    const roleClass = roleKey.includes('director') ? 'role-director' : roleKey.includes('finance') ? 'role-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'role-edu' : roleKey.includes('program') ? 'role-program' : roleKey.includes('applicant') ? 'role-applicant' : 'role-system';
+    const pillClass = roleKey.includes('director') ? 'pill-director' : roleKey.includes('finance') ? 'pill-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'pill-edu' : roleKey.includes('program') ? 'pill-program' : roleKey.includes('applicant') ? 'pill-applicant' : 'pill-system';
+    const initials = actorLabel.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0, 2) || 'SY';
+    const action = String(entry.action || 'system.activity').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const entityText = entry.entityLabel || entry.applicant || entry.entityType || 'System record';
+    const note = entry.note || entry.details || '';
+    const timestamp = entry.timestamp ? new Date(entry.timestamp) : new Date();
+    const displayDate = Number.isNaN(timestamp.getTime()) ? 'Today' : timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const timeLabel = Number.isNaN(timestamp.getTime()) ? 'just now' : timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+    return {
+        actorName: actorLabel,
+        actorRole: actorLabel,
+        roleClass,
+        pillClass,
+        initials,
+        label: action || 'System activity',
+        timestamp,
+        timeLabel,
+        displayDate,
+        intent: /accept|approved|approve|save|add|created|release|received|submit|updated|edit|flag|reject|decline/.test(String(action).toLowerCase()) ? 'check' : /reject|decline|flag|missing|error/.test(String(action).toLowerCase()) ? 'cross' : /release|remove|minus|pay|disburse/.test(String(action).toLowerCase()) ? 'minus' : /add|create|received|record|contribution|submit|approved/.test(String(action).toLowerCase()) ? 'plus' : 'neutral',
+        entityText,
+        note
+    };
+}
+
+async function renderAuditLogs() {
     const container = document.getElementById('recentAuditLogs');
     if (!container) return;
+    try {
+        const result = await MefamAPI.getRecentAudit(8);
+        const logs = Array.isArray(result?.entries) ? result.entries : [];
+        const feed = logs.length ? logs : (() => {
+            try {
+                return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
+            } catch (error) {
+                return [];
+            }
+        })();
 
-    const logs = (() => {
-        try {
-            return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-        } catch (error) {
-            return [];
+        if (!Array.isArray(feed) || feed.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
+            return;
         }
-    })();
 
-    if (!Array.isArray(logs) || logs.length === 0) {
-        container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
-        return;
-    }
-
-    const normalizeEntry = (entry = {}) => {
-        const actorName = entry.actorName || entry.actor || entry.user || 'System';
-        const actorRole = entry.actorRole || entry.role || 'System';
-        const roleKey = String(actorRole).toLowerCase();
-        const roleClass = roleKey.includes('director') ? 'role-director' : roleKey.includes('finance') ? 'role-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'role-edu' : roleKey.includes('program') ? 'role-program' : roleKey.includes('applicant') ? 'role-applicant' : 'role-system';
-        const pillClass = roleKey.includes('director') ? 'pill-director' : roleKey.includes('finance') ? 'pill-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'pill-edu' : roleKey.includes('program') ? 'pill-program' : roleKey.includes('applicant') ? 'pill-applicant' : 'pill-system';
-        const initials = String(actorName).split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0, 2) || 'SY';
-        const action = entry.action || 'system.activity';
-        const label = action.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'System activity';
-        const timestamp = entry.timestamp ? new Date(entry.timestamp) : new Date();
-        const timeLabel = Number.isNaN(timestamp.getTime()) ? 'just now' : timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        const displayDate = Number.isNaN(timestamp.getTime()) ? 'Today' : timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
-        const intent = /accept|approved|approve|save|add|created|release|received|approved|submit|updated|edit|flag|reject|decline/.test(String(action).toLowerCase()) ? 'check' : /reject|decline|flag|missing|error/.test(String(action).toLowerCase()) ? 'cross' : /release|remove|minus|pay|disburse/.test(String(action).toLowerCase()) ? 'minus' : /add|create|received|record|contribution|submit|approved/.test(String(action).toLowerCase()) ? 'plus' : 'neutral';
-        const entityText = entry.entityLabel || entry.applicant || entry.entityType || 'System record';
-        const note = entry.note || entry.details || '';
-        return { actorName, actorRole, roleClass, pillClass, initials, label, timestamp, timeLabel, displayDate, intent, entityText, note };
-    };
-
-    container.innerHTML = logs.slice(0, 8).map((entry, index) => {
-        const item = normalizeEntry(entry);
+        container.innerHTML = feed.slice(0, 8).map((entry, index) => {
+        const item = normalizeAuditDisplayEntry(entry);
         const actionText = item.label.length > 0 ? item.label : 'System activity';
         const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
         const roleText = escapeHtml(item.actorRole || 'System');
@@ -4925,6 +4940,45 @@ function renderAuditLogs() {
             </div>
         `;
     }).join('');
+    } catch (error) {
+        console.error('Failed to load recent audit logs:', error);
+        const fallback = (() => {
+            try {
+                return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
+            } catch (_) {
+                return [];
+            }
+        })();
+        if (Array.isArray(fallback) && fallback.length > 0) {
+            container.innerHTML = fallback.slice(0, 8).map((entry, index) => {
+                const item = normalizeAuditDisplayEntry(entry);
+                const actionText = item.label.length > 0 ? item.label : 'System activity';
+                const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
+                const roleText = escapeHtml(item.actorRole || 'System');
+                const actorLine = `<span class="actor-line actor-line--${item.intent}" title="${escapeHtml(item.actorName)} (${item.actorRole}) • ${escapeHtml(actionText)} • ${escapeHtml(item.displayDate + ' ' + item.timeLabel)}"><span class="al-icon">${item.intent === 'check' ? '✓' : item.intent === 'cross' ? '✕' : item.intent === 'flag' ? '⚠' : item.intent === 'plus' ? '＋' : item.intent === 'minus' ? '−' : '•'}</span><span class="al-name">${escapeHtml(item.actorName)}</span><span class="al-dot">·</span><span class="al-when">${escapeHtml(item.displayDate)}</span></span>`;
+                return `
+                    <div class="audit-log-entry">
+                        <span class="audit-log-badge">${index + 1}</span>
+                        <div class="ae-body">
+                            <div class="ae-top">
+                                <span class="ae-actor">${escapeHtml(item.actorName)}</span>
+                                <span class="ae-role ${item.pillClass}">${roleText}</span>
+                            </div>
+                            <div class="ae-verb">${escapeHtml(actionText)}${item.entityText ? ` <strong>${escapeHtml(item.entityText)}</strong>` : ''}</div>
+                            ${withEntity}
+                            <div style="margin-top:8px;">${actorLine}</div>
+                        </div>
+                        <div class="ae-when">
+                            <div>${escapeHtml(item.displayDate)}</div>
+                            <div>${escapeHtml(item.timeLabel)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
+        }
+    }
 }
 
 function saveSystemSettings() {
