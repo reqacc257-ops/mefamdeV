@@ -3850,17 +3850,39 @@ function filterPipeline() {
 }
 
 /* ── Document Checklist ── */
+const documentChecklistCache = new Map();
+
 async function renderDocChecklist(appId, containerId) {
     const el = document.getElementById(containerId);
     if (!el) return;
+    const cacheKey = String(appId);
+    const cached = documentChecklistCache.get(cacheKey);
+    if (cached && Date.now() - cached.loadedAt < 30000) {
+        renderDocumentChecklistItems(cached.items, el, appId, containerId);
+        return;
+    }
     el.innerHTML = '<p style="color:#aaa;font-size:.85rem;">Loading documents…</p>';
 
     let items;
     try {
         items = await MefamAPI.getDocuments(appId);
+        if (Array.isArray(items)) documentChecklistCache.set(cacheKey, { items, loadedAt: Date.now() });
     } catch (e) {
-        items = null;
+        console.error(`Failed to load document checklist for application ${appId}:`, e);
+        const message = e?.status === 429
+            ? 'The server is rate-limiting checklist requests. Please wait a moment and try again.'
+            : (e?.message || 'Could not load the document checklist right now.');
+        el.innerHTML = `<p style="color:#c0392b;font-size:.85rem;">${escapeHtml(message)}</p>`;
+        return;
     }
+    if (!Array.isArray(items)) {
+        el.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">Could not load the document checklist right now.</p>';
+        return;
+    }
+    renderDocumentChecklistItems(items, el, appId, containerId);
+}
+
+function renderDocumentChecklistItems(items, el, appId, containerId) {
     if (!Array.isArray(items)) {
         el.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">Could not load the document checklist right now.</p>';
         return;
@@ -3938,6 +3960,7 @@ function approveDoc(appId, docKey, containerId) {
 async function setDocStatus(appId, docKey, status, containerId, note) {
     try {
         await MefamAPI.setDocumentStatus(appId, docKey, status, note || '');
+        documentChecklistCache.delete(String(appId));
         renderDocChecklist(appId, containerId);
         toast(`Document marked as ${status}.`, 'success');
     } catch (e) {
