@@ -257,6 +257,17 @@ router.patch('/:id', async (req, res) => {
 
   values.push(req.params.id);
   await db.prepare(`UPDATE applications SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+  appendAuditLog(newStatus ? 'application-status-updated' : 'application-updated', {
+    applicant: Number(req.params.id),
+    entityType: 'application',
+    entityId: Number(req.params.id),
+    entityLabel: app.name || `Application #${req.params.id}`,
+    details: newStatus
+      ? `Moved application #${req.params.id} from ${app.status || 'Unknown'} to ${newStatus}.`
+      : `Updated application #${req.params.id}.`,
+    before: { status: app.status || null },
+    after: { status: newStatus || app.status || null },
+  }, req);
   res.json({ ok: true });
 });
 // Close an applicant's current school-year cycle without deleting history.
@@ -275,6 +286,13 @@ router.post('/:id/end-year', requireRole('director'), async (req, res) => {
     SET status = ?, status_updated_at = ?, status_history = ?, cycle_ended_at = ?, reapply_allowed = ?
     WHERE id = ?
   `).run('Year Ended', now, history, now, 1, id);
+  appendAuditLog('application-year-ended', {
+    applicant: Number(id),
+    entityType: 'application',
+    entityId: Number(id),
+    entityLabel: app.name || `Application #${id}`,
+    details: `Closed the school-year cycle for application #${id}.`,
+  }, req);
   res.json({ ok: true, status: 'Year Ended', gradesRetained: true });
 });
 
@@ -293,6 +311,13 @@ router.post('/end-year-all', requireRole('director'), async (req, res) => {
       SET status = ?, status_updated_at = ?, status_history = ?, cycle_ended_at = ?, reapply_allowed = ?
       WHERE id = ?
     `).run('Year Ended', now, history, now, 1, app.id);
+    appendAuditLog('application-year-ended', {
+      applicant: Number(app.id),
+      entityType: 'application',
+      entityId: Number(app.id),
+      entityLabel: `Application #${app.id}`,
+      details: `Closed the school-year cycle for application #${app.id}.`,
+    }, req);
   }
   res.json({ ok: true, status: 'Year Ended', updated: accepted.length, gradesRetained: true });
 });
@@ -332,6 +357,13 @@ router.post('/:id/reapply', requireAuth, async (req, res) => {
   history.push({ status: 'Pending Review', changedAt: now, note: isStaff ? `Staff initiated renewal for ${schoolYear}.` : `Applicant reapplied for ${schoolYear}.` });
   await db.prepare(`UPDATE applications SET status = ?, sy = ?, school = ?, grade = ?, edu_level = ?, degree = ?, contact = ?, email = ?, address = ?, barangay = ?, status_updated_at = ?, status_history = ?, reapply_allowed = ? WHERE id = ?`)
     .run('Pending Review', schoolYear, nextSchool, nextGrade, nextEducationLevel, nextDegree, nextContact, nextEmail, nextAddress, nextBarangay, now, history, 0, id);
+  appendAuditLog('application-reapplied', {
+    applicant: Number(id),
+    entityType: 'application',
+    entityId: Number(id),
+    entityLabel: app.name || `Application #${id}`,
+    details: `${isStaff ? 'Staff' : 'Applicant'} started a new application cycle for ${schoolYear}.`,
+  }, req);
   res.json({ ok: true, status: 'Pending Review', schoolYear, school: nextSchool, grade: nextGrade, eduLevel: nextEducationLevel, degree: nextDegree, contact: nextContact, email: nextEmail, gradesRetained: true });
 });
 

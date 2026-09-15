@@ -4834,15 +4834,32 @@ function getCurrentAuditUser() {
     }
 }
 
-function appendAuditLog(action, payload = {}) {
+async function appendAuditLog(action, payload = {}) {
+    const session = MefamAPI.getSession ? MefamAPI.getSession() : null;
+    const actorRole = String(session?.role || (session?.type === 'applicant' ? 'applicant' : 'system')).trim();
     const entry = {
         id: Date.now() + Math.random(),
         action,
         user: payload.user || getCurrentAuditUser(),
+        actorRole,
         applicant: payload.applicant || null,
         details: payload.details || '',
         timestamp: new Date().toISOString()
     };
+
+    try {
+        await MefamAPI.logAudit({
+            action,
+            entityType: payload.entityType || (entry.applicant ? 'application' : 'system'),
+            entityId: payload.entityId ?? entry.applicant,
+            entityLabel: payload.entityLabel || '',
+            note: payload.details || ''
+        });
+        await renderAuditLogs();
+        return;
+    } catch (error) {
+        console.error('Failed to persist audit log through the API:', error);
+    }
 
     const existing = (() => {
         try {
@@ -4854,7 +4871,7 @@ function appendAuditLog(action, payload = {}) {
 
     const logs = [entry, ...Array.isArray(existing) ? existing : []].slice(0, 50);
     localStorage.setItem('mefamdev_audit_logs', JSON.stringify(logs));
-    renderAuditLogs();
+    await renderAuditLogs();
 }
 
 function getAuditRoleLabel(rawEntry = {}) {

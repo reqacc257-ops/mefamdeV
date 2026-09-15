@@ -28,27 +28,6 @@ app.set('trust proxy', true);
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 
-app.use((req, res, next) => {
-  if (!req.path.startsWith('/api/') || ['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase())) {
-    return next();
-  }
-
-  if (!db || db.isPostgres) return next();
-  const action = `${req.method.toUpperCase()} ${req.path}`;
-  const requestDetails = {
-    action,
-    user: req.user?.name || req.user?.username || req.user?.role || 'System',
-    applicant: req.user?.appId || null,
-    details: `${req.method.toUpperCase()} ${req.path}${req.body && typeof req.body === 'object' ? ' payload=' + JSON.stringify(req.body).slice(0, 180) : ''}`,
-    timestamp: new Date().toISOString(),
-  };
-  if (!Array.isArray(db.data.audit_logs)) db.data.audit_logs = [];
-  db.data.audit_logs.unshift(requestDetails);
-  db.data.audit_logs = db.data.audit_logs.slice(0, 100);
-  if (typeof db.save === 'function') db.save();
-  next();
-});
-
 let databaseReady;
 app.use((req, res, next) => {
   if (!db.isPostgres) return next();

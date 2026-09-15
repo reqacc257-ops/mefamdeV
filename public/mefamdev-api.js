@@ -455,10 +455,8 @@ const MefamAPI = {
   async logAudit(entry) {
     const normalized = normalizeAuditEntry(entry);
     const payload = {
-      ...normalized,
-      actorId: normalized.actorId ?? null,
-      actorName: normalized.actorName,
-      actorRole: normalized.actorRole,
+      id: normalized.id,
+      timestamp: normalized.timestamp,
       entityType: normalized.entityType,
       entityId: normalized.entityId,
       entityLabel: normalized.entityLabel,
