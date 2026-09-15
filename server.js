@@ -16,7 +16,6 @@ const gradeExtractionRouter = require('./routes/gradeExtraction');
 const commsRouter = require('./routes/comms');
 const gradesRouter = require('./routes/grades');
 const schoolsRouter = require('./routes/schools');
-const auditRouter = require('./routes/audit');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -27,6 +26,27 @@ app.set('trust proxy', true);
 // Middleware
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
+
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api/') || ['GET', 'HEAD', 'OPTIONS'].includes(req.method.toUpperCase())) {
+    return next();
+  }
+
+  if (!db || db.isPostgres) return next();
+  const action = `${req.method.toUpperCase()} ${req.path}`;
+  const requestDetails = {
+    action,
+    user: req.user?.name || req.user?.username || req.user?.role || 'System',
+    applicant: req.user?.appId || null,
+    details: `${req.method.toUpperCase()} ${req.path}${req.body && typeof req.body === 'object' ? ' payload=' + JSON.stringify(req.body).slice(0, 180) : ''}`,
+    timestamp: new Date().toISOString(),
+  };
+  if (!Array.isArray(db.data.audit_logs)) db.data.audit_logs = [];
+  db.data.audit_logs.unshift(requestDetails);
+  db.data.audit_logs = db.data.audit_logs.slice(0, 100);
+  if (typeof db.save === 'function') db.save();
+  next();
+});
 
 let databaseReady;
 app.use((req, res, next) => {
@@ -59,7 +79,6 @@ app.use('/ImageCropper-master', express.static(path.join(__dirname, 'ImageCroppe
 
 // Routes
 app.use('/api/auth', authRouter);
-app.use('/api/audit', auditRouter);
 app.use('/api/applications', requireAuth, appsRouter);
 app.use('/api/families', requireAuth, familiesRouter);
 app.use('/api/events', eventsRouter);

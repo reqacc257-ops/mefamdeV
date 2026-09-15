@@ -17,64 +17,6 @@ const defaultApiBase = window.location.protocol === 'file:'
   : '/api';
 const API_BASE = (configuredApiBase || defaultApiBase).replace(/\/$/, '');
 
-function normalizeAuditEntry(entry = {}) {
-  const safe = entry && typeof entry === 'object' ? entry : {};
-  return {
-    id: safe.id || `aud_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`,
-    timestamp: safe.timestamp || new Date().toISOString(),
-    actorId: safe.actorId ?? null,
-    actorName: safe.actorName || safe.user || 'System',
-    actorRole: safe.actorRole || safe.role || 'unknown',
-    action: safe.action || 'system.activity',
-    entityType: safe.entityType || safe.entity || 'settings',
-    entityId: safe.entityId ?? safe.appId ?? safe.applicant ?? null,
-    entityLabel: safe.entityLabel || safe.applicant || '',
-    before: safe.before ?? null,
-    after: safe.after ?? null,
-    note: safe.note || safe.details || '',
-    meta: safe.meta || {},
-  };
-}
-
-function formatRelativeTime(isoString) {
-  const input = isoString ? new Date(isoString) : null;
-  if (!input || Number.isNaN(input.getTime())) return 'just now';
-  const diffMs = Date.now() - input.getTime();
-  const calc = (value, unit) => {
-    const v = Math.round(value);
-    return `${v}${unit} ago`;
-  };
-  const minutes = Math.max(0, Math.round(diffMs / 60000));
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return calc(minutes, 'm');
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return calc(hours, 'h');
-  const days = Math.round(hours / 24);
-  if (days < 7) return calc(days, 'd');
-  return input.toLocaleDateString();
-}
-
-function renderActorLine({ actorName, actorRole, action, timestamp, compact = true }) {
-  const name = actorName || 'System';
-  const role = actorRole || 'unknown';
-  const verb = action || 'activity';
-  const timeLabel = timestamp ? formatRelativeTime(timestamp) : 'just now';
-  const fullText = `${name} (${role}) • ${verb} • ${timeLabel}`;
-  if (compact) {
-    return `<span title="${escapeHtml(fullText)}">${escapeHtml(name)} · ${escapeHtml(timeLabel)}</span>`;
-  }
-  const avatar = name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0, 2) || 'S';
-  return `
-    <div class="audit-actor-line" title="${escapeHtml(fullText)}">
-      <span class="audit-avatar">${escapeHtml(avatar)}</span>
-      <span class="audit-name">${escapeHtml(name)}</span>
-      <span class="audit-role">${escapeHtml(role)}</span>
-      <span class="audit-action">${escapeHtml(verb)}</span>
-      <span class="audit-time">${escapeHtml(new Date(timestamp || Date.now()).toLocaleString())}</span>
-    </div>
-  `;
-}
-
 function hydratePreviewSessionFromStorage() {
   try {
     const previewRaw = localStorage.getItem('mefamdev_preview_session');
@@ -452,88 +394,6 @@ const MefamAPI = {
   async deleteAnnouncement(id) { return this._delete(`/comms/${id}`); },
 
   // ── Audit logs ───────────────────────────────────────────────────────────
-  async logAudit(entry) {
-    const normalized = normalizeAuditEntry(entry);
-    const payload = {
-      id: normalized.id,
-      timestamp: normalized.timestamp,
-      entityType: normalized.entityType,
-      entityId: normalized.entityId,
-      entityLabel: normalized.entityLabel,
-      before: normalized.before,
-      after: normalized.after,
-      note: normalized.note,
-      meta: normalized.meta,
-    };
-
-    try {
-      const result = await this._post('/audit', payload);
-      const items = Array.isArray(result?.entries) ? result.entries : (result?.entry ? [result.entry] : []);
-      const entries = items.map(item => normalizeAuditEntry(item));
-      try {
-        const existing = JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-        const merged = [...entries, ...((Array.isArray(existing) ? existing : []) || [])].slice(0, 200);
-        localStorage.setItem('mefamdev_audit_logs', JSON.stringify(merged));
-      } catch (_) {}
-      return result;
-    } catch (error) {
-      const fallback = { ok: true, entry: normalized, entries: [normalized], error: error.message };
-      try {
-        const existing = JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-        const merged = [normalized, ...(Array.isArray(existing) ? existing : [])].slice(0, 200);
-        localStorage.setItem('mefamdev_audit_logs', JSON.stringify(merged));
-      } catch (_) {}
-      return fallback;
-    }
-  },
-  async getAudit(params = {}) {
-    const qs = new URLSearchParams();
-    Object.entries(params || {}).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === '') return;
-      qs.append(key, String(value));
-    });
-    const url = qs.toString() ? `/audit?${qs.toString()}` : '/audit';
-    try {
-      const result = await this._get(url);
-      const entries = Array.isArray(result?.entries) ? result.entries : (Array.isArray(result) ? result : []);
-      const normalized = entries.map(item => normalizeAuditEntry(item));
-      try { localStorage.setItem('mefamdev_audit_logs', JSON.stringify(normalized.slice(0, 200))); } catch (_) {}
-      return { ok: true, entries: normalized };
-    } catch (error) {
-      try {
-        const raw = JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-        const entries = Array.isArray(raw) ? raw : [];
-        const filtered = entries.filter(entry => {
-          if (params.entityType && String(entry.entityType || entry.entity || '') !== String(params.entityType)) return false;
-          if (params.entityId && String(entry.entityId || '') !== String(params.entityId)) return false;
-          if (params.actorId && String(entry.actorId || '') !== String(params.actorId)) return false;
-          return true;
-        });
-        return { ok: true, entries: filtered.slice(0, Number(params.limit || 50)), fallback: true };
-      } catch (_) {
-        return { ok: true, entries: [], fallback: true };
-      }
-    }
-  },
-  async getRecentAudit(limit = 20) {
-    try {
-      const result = await this._get(`/audit/recent?limit=${encodeURIComponent(limit)}`);
-      const entries = Array.isArray(result?.entries) ? result.entries : (Array.isArray(result) ? result : []);
-      return { ok: true, entries: entries.map(item => normalizeAuditEntry(item)) };
-    } catch (_) {
-      try {
-        const raw = JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-        const entries = Array.isArray(raw) ? raw : [];
-        return { ok: true, entries: entries.slice(0, Number(limit || 20)).map(item => normalizeAuditEntry(item)) };
-      } catch (_) {
-        return { ok: true, entries: [] };
-      }
-    }
-  },
-  async getAuditForEntity(type, id) {
-    if (!type || id === undefined || id === null) return { ok: true, entries: [] };
-    return this.getAudit({ entityType: type, entityId: id, limit: 50 });
-  },
   async getAuditLogs() { return this._get('/events/audit-logs'); },
 
   // ── Internal fetch helpers ────────────────────────────────────────────────
@@ -564,13 +424,8 @@ const MefamAPI = {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const r = await fetch(`${API_BASE}${path}`, { headers, credentials: 'same-origin' });
       if (r.status === 401) { this.logout(); return; }
-      if (r.status === 429) return this._parseJsonResponse(r);
       if (![429, 502, 503, 504].includes(r.status) || attempt === 2) return this._parseJsonResponse(r);
-      const retryAfter = Number(r.headers.get('Retry-After'));
-      const retryDelay = Number.isFinite(retryAfter) && retryAfter > 0
-        ? Math.min(retryAfter * 1000, 10000)
-        : 350 * (attempt + 1);
-      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)));
     }
   },
   async _post(path, body, auth = true, retryTransient = false) {
@@ -630,18 +485,6 @@ const MefamAPI = {
   },
   async _parseJsonResponse(response) {
     const text = await response.text();
-    if (response.status === 429) {
-      const retryAfter = Number(response.headers.get('Retry-After'));
-      const waitLabel = Number.isFinite(retryAfter) && retryAfter > 0
-        ? ` Please try again in about ${Math.ceil(retryAfter)} second${Math.ceil(retryAfter) === 1 ? '' : 's'}.`
-        : ' Please wait a moment and try again.';
-      let payload = null;
-      try { payload = text.trim() ? JSON.parse(text) : null; } catch (_) {}
-      const error = new Error(`${payload?.error || 'The server is temporarily rate-limiting requests.'}${waitLabel}`);
-      error.status = 429;
-      error.retryAfter = retryAfter || null;
-      throw error;
-    }
     if (!text.trim()) {
       if (!response.ok) throw new Error(`Server returned an empty error response (${response.status}).`);
       return {};
