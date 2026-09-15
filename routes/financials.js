@@ -4,6 +4,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { requireRole } = require('../middleware/auth');
+const { appendAuditLog, getAuditUser } = require('../lib/audit');
 
 // Summary
 router.get('/summary', async (req, res) => {
@@ -46,6 +47,17 @@ router.post('/disbursements', requireRole('director','finance'), async (req, res
   const info = await db.prepare(
     'INSERT INTO disbursements (app_id, scholar_name, amount, period, date) VALUES (?,?,?,?,?)'
   ).run(appId, scholar?.name || 'Unknown', amount, period || '', date);
+  appendAuditLog('disbursement.release', {
+    user: getAuditUser(req),
+    actorId: req.user?.id || null,
+    actorRole: req.user?.role || 'finance',
+    entityType: 'Disbursement',
+    entityId: info.lastInsertRowid,
+    entityLabel: scholar?.name || `Scholar #${appId}`,
+    details: `Released ${amount} to ${scholar?.name || `Scholar #${appId}`} for ${period || 'unspecified period'}.`,
+    after: amount,
+    meta: { appId, period: period || '', date, source: 'financials' },
+  }, req);
   res.json({ ok: true, id: info.lastInsertRowid });
 });
 router.delete('/disbursements/:id', requireRole('director','finance'), async (req, res) => {
