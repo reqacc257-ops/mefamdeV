@@ -1775,8 +1775,6 @@
 
           if (type === 'audit') {
             const entry = normaliseAuditEntry(item) || item;
-            const details = [entry.before, entry.after].filter(Boolean).filter(value => String(value).trim()).map(value => String(value).trim());
-            const changeText = details.length ? `status: ${details[0]}${details[1] ? ` → ${details[1]}` : ''}` : (entry.note ? entry.note : 'No detail');
             const roleKey = getAuditRoleKey(entry.actorRole || entry.role || 'system');
             const avatarClass = getRoleClass(roleKey);
             const pillClass = getRolePillClass(roleKey);
@@ -1788,7 +1786,7 @@
             const timestamp = entry.timestamp ? new Date(entry.timestamp) : null;
             const dateLabel = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
             const timeLabel = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Unknown time';
-            return `<tr class="audit-entry-row" data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"></td><td class="audit-cell" colspan="${columns.length + 1}"><div class="audit-entry"><div class="audit-avatar ${avatarClass}">${escapeHtml((entry.actorName || 'S').split(' ').map(part => part[0]).slice(0,2).join('').toUpperCase())}</div><div class="audit-body"><div class="audit-head"><span class="audit-name">${escapeHtml(entry.actorName || 'System')}</span><span class="audit-role-pill ${pillClass}">${escapeHtml(String(entry.actorRole || entry.role || 'system').toUpperCase())}</span></div><div class="audit-verb">${escapeHtml(verb)} ${entityLabel ? `<strong>${escapeHtml(entityLabel)}</strong>` : ''}</div><div class="audit-meta"><span class="audit-ref">${escapeHtml(refText || '-')}</span>${batchChip ? `${batchChip}` : ''}${batchChip ? '<span>·</span>' : ''}${details.length ? `<span>${escapeHtml(changeText)}</span>` : ''}</div>${note}</div><div class="audit-when"><strong>${escapeHtml(dateLabel)}</strong><span>${escapeHtml(timeLabel)}</span></div></div></td></tr>`;
+            return `<tr class="audit-entry-row" data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"></td><td class="audit-cell" colspan="${columns.length + 1}"><div class="audit-entry"><div class="audit-avatar ${avatarClass}">${escapeHtml((entry.actorName || 'S').split(' ').map(part => part[0]).slice(0,2).join('').toUpperCase())}</div><div class="audit-body"><div class="audit-head"><span class="audit-name">${escapeHtml(entry.actorName || 'System')}</span><span class="audit-role-pill ${pillClass}">${escapeHtml(String(entry.actorRole || entry.role || 'system').toUpperCase())}</span></div><div class="audit-verb">${escapeHtml(verb)} ${entityLabel ? `<strong>${escapeHtml(entityLabel)}</strong>` : ''}</div><div class="audit-meta"><span class="audit-ref">${escapeHtml(refText || '-')}</span>${batchChip ? `${batchChip}` : ''}</div>${note}</div><div class="audit-when"><strong>${escapeHtml(dateLabel)}</strong><span>${escapeHtml(timeLabel)}</span></div></div></td></tr>`;
           }
 
           const reportSummary = type === 'report-card' ? getReportCardSummary(item) : null;
@@ -2036,7 +2034,6 @@
           <td>${escapeHtml(actorRole)}</td>
           <td>${escapeHtml(action)}</td>
           <td>${escapeHtml(label)}</td>
-          <td style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">${escapeHtml(change)}</td>
         </tr>`;
       }).join('');
 
@@ -2046,7 +2043,7 @@
         table { width:100%; border-collapse:collapse; margin-top:10px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         th, td { border:1px solid #4a4a4a; padding:6px 7px; text-align:left; vertical-align:top; }
         th { background:#f2f4f7; text-transform:uppercase; font-size:9px; }
-      </style><h2>Audit Log Register</h2><table><thead><tr><th>Timestamp</th><th>Actor</th><th>Role</th><th>Action</th><th>Entity</th><th>Change</th></tr></thead><tbody>${rows || '<tr><td colspan="6">No audit entries matched the current filters.</td></tr>'}</tbody></table></section>`;
+      </style><h2>Audit Log Register</h2><table><thead><tr><th>Timestamp</th><th>Actor</th><th>Role</th><th>Action</th><th>Entity</th></tr></thead><tbody>${rows || '<tr><td colspan="5">No audit entries matched the current filters.</td></tr>'}</tbody></table></section>`;
     }
     function buildFinancialPrint(records) { return `<section><h2>Financial Registers</h2><table><thead><tr><th>Type</th><th>Name / Source</th><th>Amount</th><th>Date / Period</th><th>Notes</th></tr></thead><tbody>${records.map(item => { const contribution = state.funds.includes(item); return `<tr><td>${contribution ? 'Contribution' : 'Disbursement'}</td><td>${escapeHtml(item.source || item.scholarName || item.scholar_name || '-')}</td><td>${escapeHtml(item.amount || '-')}</td><td>${escapeHtml(item.date || item.period || '-')}</td><td>${escapeHtml(item.notes || '-')}</td></tr>`; }).join('')}</tbody></table></section>`; }
 
