@@ -4,6 +4,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { appendAuditLog, listAuditLogs, getAuditUser } = require('../lib/audit');
 
 function generateAttendanceCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -102,65 +103,6 @@ function buildMonitoringSummary(applications = [], grades = [], absences = []) {
     alertLevel: alerts.length >= 2 ? 'high' : alerts.length >= 1 ? 'medium' : 'low',
     alerts,
   };
-}
-
-function getAuditUser(req) {
-  const user = req?.user || {};
-  return user.name || user.username || user.role || 'System';
-}
-
-function getAuditLogsMemory() {
-  if (!Array.isArray(db.data.audit_logs)) db.data.audit_logs = [];
-  return db.data.audit_logs;
-}
-
-function appendAuditLog(action, payload = {}, req = null) {
-  const user = payload.user || getAuditUser(req);
-  const requestUser = req?.user || {};
-  const actorRole = String(payload.actorRole || requestUser.role || (requestUser.type === 'applicant' ? 'applicant' : 'system')).trim().toLowerCase();
-  const actorId = payload.actorId ?? requestUser.id ?? requestUser.appId ?? requestUser.app_id ?? null;
-  const applicant = payload.applicant || payload.appId || null;
-  const entry = {
-    id: Date.now() + Math.round(Math.random() * 10000),
-    action: String(action || 'system-activity'),
-    user,
-    actorId,
-    actorName: user,
-    actorRole,
-    applicant,
-    entityType: payload.entityType || (applicant ? 'application' : 'event'),
-    entityId: payload.entityId ?? payload.eventId ?? applicant,
-    entityLabel: payload.entityLabel || '',
-    details: payload.details || '',
-    note: payload.note || payload.details || '',
-    timestamp: new Date().toISOString(),
-  };
-
-  if (db.isPostgres) {
-    try {
-      db.prepare('INSERT INTO audit_logs (action, user_name, applicant, details, timestamp) VALUES (?, ?, ?, ?, ?)')
-        .run(entry.action, entry.user, entry.applicant || '', entry.details, entry.timestamp);
-    } catch (error) {
-      // Postgres schema can be added later; keep the in-memory fallback available.
-    }
-  } else {
-    const logs = getAuditLogsMemory();
-    logs.unshift(entry);
-    if (typeof db.save === 'function') db.save();
-  }
-
-  return entry;
-}
-
-function listAuditLogs() {
-  if (db.isPostgres) {
-    try {
-      return db.prepare('SELECT * FROM audit_logs ORDER BY timestamp DESC, id DESC').all();
-    } catch (_error) {
-      return [];
-    }
-  }
-  return getAuditLogsMemory().slice(0, 50);
 }
 
 router.get('/audit-logs', requireAuth, async (req, res) => {

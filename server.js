@@ -17,6 +17,7 @@ const commsRouter = require('./routes/comms');
 const gradesRouter = require('./routes/grades');
 const schoolsRouter = require('./routes/schools');
 const { requireAuth } = require('./middleware/auth');
+const { appendAuditLog } = require('./lib/audit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,19 +33,27 @@ app.use((req, res, next) => {
     return next();
   }
 
-  if (!db || db.isPostgres) return next();
-  const action = `${req.method.toUpperCase()} ${req.path}`;
-  const requestDetails = {
-    action,
-    user: req.user?.name || req.user?.username || req.user?.role || 'System',
-    applicant: req.user?.appId || null,
-    details: `${req.method.toUpperCase()} ${req.path}${req.body && typeof req.body === 'object' ? ' payload=' + JSON.stringify(req.body).slice(0, 180) : ''}`,
-    timestamp: new Date().toISOString(),
-  };
-  if (!Array.isArray(db.data.audit_logs)) db.data.audit_logs = [];
-  db.data.audit_logs.unshift(requestDetails);
-  db.data.audit_logs = db.data.audit_logs.slice(0, 100);
-  if (typeof db.save === 'function') db.save();
+  res.once('finish', () => {
+    if (req._auditLogged) return;
+    const safeBody = req.body && typeof req.body === 'object' ? { ...req.body } : {};
+    ['password', 'oldPassword', 'newPassword', 'token', 'otp', 'fileData', 'file_data'].forEach(key => {
+      if (key in safeBody) safeBody[key] = '[redacted]';
+    });
+    const pathParts = req.path.split('/').filter(Boolean);
+    const entityType = pathParts[1] ? pathParts[1].replace(/[-_]/g, ' ') : 'system';
+    const entityId = req.params?.id || safeBody.appId || safeBody.app_id || safeBody.id || req.user?.appId || null;
+    const entityLabel = safeBody.name || safeBody.subject || safeBody.title || safeBody.student || safeBody.scholarName || '';
+    appendAuditLog(`${req.method.toLowerCase()} ${req.path}`, {
+      actorId: req.user?.id || req.user?.appId || null,
+      actorRole: req.user?.role || (req.user?.type === 'applicant' ? 'applicant' : 'system'),
+      applicant: req.user?.appId || safeBody.appId || safeBody.app_id || null,
+      entityType,
+      entityId,
+      entityLabel,
+      details: `${req.method.toUpperCase()} ${req.path}${Object.keys(safeBody).length ? ` payload=${JSON.stringify(safeBody).slice(0, 500)}` : ''}`,
+      meta: { status: res.statusCode, source: 'request' },
+    }, req);
+  });
   next();
 });
 

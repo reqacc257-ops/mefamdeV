@@ -811,6 +811,16 @@
                 <input id="auditTo" type="date" onchange="renderRows()" aria-label="Audit date to">
               </div>
             </div>
+            <div class="field">
+              <label for="auditSort">Sort by</label>
+              <select id="auditSort" onchange="renderRows()">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="actor">Actor</option>
+                <option value="action">Action</option>
+                <option value="entity">Entity</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -927,7 +937,7 @@
   <script src="./mefamdev-api.js"></script>
   <script src="/components/report-card.js"></script>
   <script>
-    const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {}, auditLogs: [], auditActor: '', auditEntity: '', auditFrom: '', auditTo: '' };
+    const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {}, auditLogs: [], auditActor: '', auditEntity: '', auditFrom: '', auditTo: '', auditSort: 'newest' };
     let visibleRecords = [];
 
     const AUDIT_ROLE_STYLES = {
@@ -1358,6 +1368,7 @@
         state.auditEntity = document.getElementById('auditEntity')?.value || '';
         state.auditFrom = document.getElementById('auditFrom')?.value || '';
         state.auditTo = document.getElementById('auditTo')?.value || '';
+        state.auditSort = document.getElementById('auditSort')?.value || 'newest';
         syncAuditFilterOptions();
       }
 
@@ -1384,13 +1395,16 @@
       state.auditEntity = '';
       state.auditFrom = '';
       state.auditTo = '';
+      state.auditSort = 'newest';
+      const auditSort = document.getElementById('auditSort');
+      if (auditSort) auditSort.value = state.auditSort;
       renderRows();
     }
 
     function normaliseAuditEntry(raw) {
       if (!raw || typeof raw !== 'object') return null;
       const actorName = String(raw.actorName || raw.user || raw.user_name || raw.actor || raw.actorName || 'System').trim() || 'System';
-      const actorRole = String(raw.actorRole || raw.role || 'system').trim().toLowerCase();
+      const actorRole = String(raw.actorRole || raw.actor_role || raw.role || 'system').trim().toLowerCase();
       const knownRole = Object.prototype.hasOwnProperty.call(AUDIT_ROLE_STYLES, actorRole) ? actorRole : 'system';
       const action = raw.action || '';
       const timestamp = raw.timestamp || raw.created_at || raw.createdAt || new Date().toISOString();
@@ -1398,6 +1412,10 @@
       const entityId = raw.entityId ?? raw.entity_id ?? raw.appId ?? raw.app_id ?? raw.id ?? null;
       const entityLabel = raw.entityLabel || raw.entity || raw.applicant || raw.appId || raw.reference || raw.referenceNumber || raw.subject || '';
       const note = raw.note ?? raw.details ?? raw.message ?? raw.reason ?? '';
+      let meta = raw.meta ?? null;
+      if (typeof meta === 'string') {
+        try { meta = JSON.parse(meta); } catch { /* retain the raw metadata below */ }
+      }
 
       return {
         ...raw,
@@ -1413,7 +1431,7 @@
         note,
         before: raw.before ?? null,
         after: raw.after ?? null,
-        meta: raw.meta ?? null
+        meta
       };
     }
 
@@ -1631,6 +1649,23 @@
       });
     }
 
+    function sortAuditRecords(records) {
+      const sort = document.getElementById('auditSort')?.value || state.auditSort || 'newest';
+      state.auditSort = sort;
+      return [...records].sort((a, b) => {
+        const left = normaliseAuditEntry(a) || a;
+        const right = normaliseAuditEntry(b) || b;
+        if (sort === 'oldest' || sort === 'newest') {
+          const leftTime = Number(new Date(left.timestamp)) || 0;
+          const rightTime = Number(new Date(right.timestamp)) || 0;
+          return sort === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
+        }
+        const leftValue = sort === 'actor' ? left.actorName : sort === 'action' ? humanizeAuditAction(left.action) : (left.entityLabel || left.entityType || '');
+        const rightValue = sort === 'actor' ? right.actorName : sort === 'action' ? humanizeAuditAction(right.action) : (right.entityLabel || right.entityType || '');
+        return String(leftValue).localeCompare(String(rightValue), undefined, { numeric: true, sensitivity: 'base' });
+      });
+    }
+
     /* ---------- Cell helpers ---------- */
     const DASH = '—';
     function val(value) { const s = String(value ?? '').trim(); return s || DASH; }
@@ -1693,7 +1728,7 @@
       if (type === 'formation' || type === 'attendance') {
         if (selectedEventIds.size === 0) records = [];
       }
-      visibleRecords = type === 'audit' ? records : sortRecords(records);
+      visibleRecords = type === 'audit' ? sortAuditRecords(records) : sortRecords(records);
 
       const head = document.getElementById('recordHead');
       const body = document.getElementById('recordBody');
