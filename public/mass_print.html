@@ -726,10 +726,6 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span>Beneficiary families</span>
           </button>
-          <button type="button" class="chip" data-type="alerts" aria-pressed="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-            <span>Formation alerts</span>
-          </button>
           <button type="button" class="chip" data-type="announcements" aria-pressed="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
             <span>Announcements</span>
@@ -756,7 +752,6 @@
           <option value="report-card">Report cards</option>
           <option value="summary">Report summary</option>
           <option value="families">Beneficiary families</option>
-          <option value="alerts">Formation alerts</option>
           <option value="announcements">Announcements</option>
           <option value="audit">Audit logs</option>
           <option value="financials">Financial registers</option>
@@ -1016,7 +1011,6 @@
       'report-card': '<strong>Report cards</strong> create a polished academic card for each selected student, ready to print or share.',
       summary:       '<strong>Report summary</strong> prints a school, grade, and status overview for a one-page report-summary. Use the same filters to narrow the selected record set.',
       families:      '<strong>Beneficiary families</strong> print as a family register with guardian and benefit details.',
-      alerts:        '<strong>Formation alerts</strong> list scholars flagged for follow-up, together with the reason.',
       announcements: '<strong>Announcements</strong> print as a register with subject, target, and full message text.',
       audit:         '<strong>Audit logs</strong> print a chronological activity register with actor, action, applicant reference, and timestamps.',
       financials:    '<strong>Financial registers</strong> combine contributions and disbursements into one ledger table.'
@@ -1627,10 +1621,6 @@
       if (type === 'intake') return state.intakes;
       if (type === 'assessment') return state.assessments;
       if (type === 'applications') return state.apps;
-      if (type === 'alerts') {
-        const absences = JSON.parse(localStorage.getItem('mefamdev_absences') || '{}');
-        return state.apps.filter(app => app.status === 'Accepted' && (absences[app.id]?.status === 'yellow' || absences[app.id]?.status === 'bad' || absences[app.id]?.reason)).map(app => ({ ...app, alert: absences[app.id]?.reason || absences[app.id]?.status || 'Formation follow-up' }));
-      }
       if (type === 'formation' || type === 'attendance' || type === 'directory' || type === 'report-card' || type === 'summary') return state.apps.filter(app => app.status === 'Accepted');
       if (type === 'families') return state.families;
       if (type === 'announcements') return state.announcements;
@@ -1753,7 +1743,6 @@
         type === 'financials' ? ['Type', 'Name / Source', 'Amount', 'Date / Period'] :
         type === 'families' ? ['Family', 'Guardian', 'Barangay', 'Bracket', 'Contact'] :
         type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] :
-        type === 'alerts' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Alert'] :
         type === 'applications' ? ['Reference', 'Name', 'Grade', 'School', 'Barangay', 'Status'] :
         type === 'audit' ? ['Audit activity'] :
         type === 'attendance' ? ['Scholar', 'Grade', 'Barangay', 'School', 'Check-in', 'Status'] :
@@ -1804,7 +1793,6 @@
               val(item.guardian), val(item.barangay), val(item.bracket), val(item.contact)
             ] :
             type === 'announcements' ? [bold(item.subject), val(item.target), val(item.tag), val(item.date || item.created_at)] :
-            type === 'alerts' ? [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(item.alert || item.reason || 'Formation follow-up', 'warn')] :
             type === 'applications' ? [
               val(item.reference || item.referenceNumber || item.reference_number || item.id),
               bold(item.name), val(item.grade), val(item.school), val(item.barangay), badge(item.status)
@@ -1906,7 +1894,6 @@
       else if (type === 'summary') body = buildReportSummaryPrint(records);
       else if (type === 'applications') body = buildApplicationsPrint(records);
       else if (type === 'families') body = buildFamiliesPrint(records);
-      else if (type === 'alerts') body = buildAlertsPrint(records);
       else if (type === 'announcements') body = buildAnnouncementsPrint(records);
       else if (type === 'audit') body = buildAuditLogsPrint(records);
       else if (type === 'financials') body = buildFinancialPrint(records);
@@ -2016,7 +2003,6 @@
     }
     async function buildReportCardsPrint(records) { const parts = []; for (const item of records) { const grades = state.grades.filter(grade => Number(grade.app_id || grade.appId) === Number(item.id)); const html = buildReportCardHTML({ name:item.name, gradeLevel:item.grade, school:item.school, refNo:item.reference || item.referenceNumber || item.reference_number || item.id, schoolYear:item.sy || 'N/A' }, grades); parts.push(html); } return parts.join(''); }
     function buildFamiliesPrint(records) { return `<section><h2>Beneficiary Family Register</h2><table><thead><tr><th>Family</th><th>Guardian</th><th>Barangay</th><th>Contact</th><th>Income</th><th>Bracket</th><th>Benefits</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.surname || '-')}</td><td>${escapeHtml(item.guardian || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td><td>${escapeHtml(item.income || '-')}</td><td>${escapeHtml(item.bracket || '-')}</td><td>${escapeHtml(item.benefits || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
-    function buildAlertsPrint(records) { return `<section><h2>Formation Alert Register</h2><table><thead><tr><th>Scholar</th><th>Grade</th><th>Barangay</th><th>School</th><th>Alert / Reason</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.alert || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildAnnouncementsPrint(records) { return `<section><h2>Announcement Register</h2><table><thead><tr><th>Subject</th><th>Target</th><th>Tag</th><th>Message</th><th>Date</th><th>Posted By</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.subject || '-')}</td><td>${escapeHtml(item.target || '-')}</td><td>${escapeHtml(item.tag || '-')}</td><td>${escapeHtml(item.message || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td><td>${escapeHtml(item.postedBy || item.posted_by || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildAuditLogsPrint(records) {
       const rows = (records || []).map(item => {
