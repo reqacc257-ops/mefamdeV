@@ -172,6 +172,45 @@ const MefamAPI = {
     const qs = params.length ? ('?' + params.join('&')) : '';
     return this._get(`/applications${qs}`);
   },
+  /** Fetch every application for batch and print workflows. */
+  async getAllApplications(extraOpts = {}) {
+    return this._getAllPages('/applications', 500, 50, extraOpts);
+  },
+  async getAllFamilies() {
+    return this._getAllPages('/families');
+  },
+  async getAllGrades() {
+    return this._getAllPages('/events/grades');
+  },
+  async getAllIntakeSheets() {
+    return this._getAllPages('/records/intake');
+  },
+  async _getAllPages(path, pageSize = 500, maxPages = 50, extraParams = {}) {
+    const all = [];
+    const seen = new Set();
+    for (let page = 1; page <= maxPages; page += 1) {
+      const params = new URLSearchParams({ ...extraParams, page: String(page), pageSize: String(pageSize) });
+      const response = await this._get(`${path}?${params.toString()}`);
+      const rows = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.items) ? response.items
+          : Array.isArray(response?.data) ? response.data
+            : [];
+      if (!rows.length) break;
+
+      rows.forEach(row => {
+        const id = String(row?.id ?? row?.appId ?? row?.app_id ?? '');
+        if (!id || !seen.has(id)) {
+          if (id) seen.add(id);
+          all.push(row);
+        }
+      });
+
+      if (rows.length < pageSize) break;
+      await new Promise(resolve => setTimeout(resolve, 120));
+    }
+    return all;
+  },
   async getApplication(id) {
     return this._get(`/applications/${id}`);
   },

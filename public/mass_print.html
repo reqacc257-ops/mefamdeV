@@ -1303,12 +1303,12 @@
       const loading = document.getElementById('loading');
       try {
         const loaders = [
-          ['apps', () => MefamAPI.getApplications()],
-          ['families', () => MefamAPI.getFamilies()],
+          ['apps', () => MefamAPI.getAllApplications()],
+          ['families', () => MefamAPI.getAllFamilies()],
           ['events', () => MefamAPI.getEvents()],
-          ['intakes', () => MefamAPI.getIntakeSheets()],
+          ['intakes', () => MefamAPI.getAllIntakeSheets()],
           ['assessments', () => MefamAPI.getAssessments()],
-          ['grades', () => MefamAPI.getGrades()],
+          ['grades', () => MefamAPI.getAllGrades()],
           ['funds', () => MefamAPI.getFundLog()],
           ['disbursements', () => MefamAPI.getDisbursements()],
           ['announcements', () => MefamAPI.getAnnouncements()],
@@ -1327,6 +1327,8 @@
         }
 
         state.apps = loaded.apps || [];
+        const acceptedCount = state.apps.filter(app => app.status === 'Accepted').length;
+        console.info(`[MassPrint] Loaded ${state.apps.length} applications (${acceptedCount} accepted).`);
         state.families = loaded.families || [];
         state.events = loaded.events || [];
         state.intakes = loaded.intakes || [];

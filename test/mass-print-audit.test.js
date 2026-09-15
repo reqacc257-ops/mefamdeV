@@ -8,12 +8,21 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   const pageSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'mass_print.html'), 'utf8');
 
   assert.match(apiSource, /async getAuditLogs\(\) \{ return this\._get\('\/events\/audit-logs'\); \}/);
+  assert.match(apiSource, /async getAllApplications\(extraOpts = \{\}\)/);
+  assert.match(apiSource, /async getAllFamilies\(\)/);
+  assert.match(apiSource, /async getAllGrades\(\)/);
+  assert.match(apiSource, /async getAllIntakeSheets\(\)/);
+  assert.match(apiSource, /async _getAllPages\(path, pageSize = 500, maxPages = 50/);
   assert.match(pageSource, /data-type="audit"/);
   assert.match(pageSource, /type === 'audit'/);
   assert.match(pageSource, /buildAuditLogsPrint/);
   assert.match(apiSource, /async recordAuditLog\(action, payload = \{\}\)/);
   assert.doesNotMatch(pageSource, /window\.AuditLog\?\.log\(AUDIT_ACTIONS\.PRINT_GENERATED/);
   assert.match(pageSource, /AuditLog\.getAll\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllApplications\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllFamilies\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllGrades\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllIntakeSheets\(\)/);
   assert.doesNotMatch(pageSource, /<th>Change<\/th>/);
   assert.doesNotMatch(pageSource, /status: \$\{/);
 });
