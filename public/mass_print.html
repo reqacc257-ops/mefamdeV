@@ -2023,11 +2023,9 @@
         const entry = normaliseAuditEntry(item) || item;
         const label = String(entry.entityLabel || entry.applicant || entry.entityId || '-').trim() || '-';
         const action = humanizeAuditAction(entry.action || 'updated');
-        const detail = String(entry.note || entry.details || entry.message || entry.before && entry.after ? `${entry.before} → ${entry.after}` : '').trim();
         const dateValue = entry.timestamp ? new Date(entry.timestamp) : null;
         const actorRole = String(entry.actorRole || entry.role || 'system').trim().toUpperCase() || 'SYSTEM';
         const timestamp = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : (entry.timestamp || '-');
-        const change = detail ? `status: ${detail.length > 120 ? detail.slice(0, 117) + '...' : detail}` : 'status: updated';
         return `<tr>
           <td>${escapeHtml(dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' }) : (entry.timestamp || '-'))}</td>
           <td><strong>${escapeHtml(entry.actorName || 'System')}</strong><br><span style="font-size:9px;color:#666;">${escapeHtml(actorRole)}</span></td>

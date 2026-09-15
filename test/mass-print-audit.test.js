@@ -14,6 +14,8 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   assert.match(apiSource, /async recordAuditLog\(action, payload = \{\}\)/);
   assert.doesNotMatch(pageSource, /window\.AuditLog\?\.log\(AUDIT_ACTIONS\.PRINT_GENERATED/);
   assert.match(pageSource, /AuditLog\.getAll\(\)/);
+  assert.doesNotMatch(pageSource, /<th>Change<\/th>/);
+  assert.doesNotMatch(pageSource, /status: \$\{/);
 });
 
 test('audit sources exclude print-generated noise', () => {
