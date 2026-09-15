@@ -1305,13 +1305,13 @@
         const loaders = [
           ['apps', () => MefamAPI.getAllApplications()],
           ['families', () => MefamAPI.getAllFamilies()],
-          ['events', () => MefamAPI.getEvents()],
+          ['events', () => MefamAPI.getAllEvents()],
           ['intakes', () => MefamAPI.getAllIntakeSheets()],
-          ['assessments', () => MefamAPI.getAssessments()],
+          ['assessments', () => MefamAPI.getAllAssessments()],
           ['grades', () => MefamAPI.getAllGrades()],
-          ['funds', () => MefamAPI.getFundLog()],
-          ['disbursements', () => MefamAPI.getDisbursements()],
-          ['announcements', () => MefamAPI.getAnnouncements()],
+          ['funds', () => MefamAPI.getAllFunds()],
+          ['disbursements', () => MefamAPI.getAllDisbursements()],
+          ['announcements', () => MefamAPI.getAllAnnouncements()],
           ['auditLogs', () => (window.AuditLog ? AuditLog.getAll() : MefamAPI.getAuditLogs().catch(() => []))]
         ];
 
@@ -1328,7 +1328,13 @@
 
         state.apps = loaded.apps || [];
         const acceptedCount = state.apps.filter(app => app.status === 'Accepted').length;
-        console.info(`[MassPrint] Loaded ${state.apps.length} applications (${acceptedCount} accepted).`);
+        console.info(`[MassPrint] apps=${state.apps.length}, accepted=${acceptedCount}, grades=${(loaded.grades || []).length}, families=${(loaded.families || []).length}, intakes=${(loaded.intakes || []).length}`);
+        if (state.apps.length > 0 && acceptedCount === 0) {
+          toast('0 accepted scholars loaded. The API may be paginating.', 'warn');
+        }
+        if (acceptedCount > 0 && (loaded.grades || []).length === 0) {
+          toast('Accepted scholars loaded but no grades were captured.', 'error');
+        }
         state.families = loaded.families || [];
         state.events = loaded.events || [];
         state.intakes = loaded.intakes || [];

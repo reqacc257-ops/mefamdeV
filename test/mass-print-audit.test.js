@@ -12,7 +12,13 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   assert.match(apiSource, /async getAllFamilies\(\)/);
   assert.match(apiSource, /async getAllGrades\(\)/);
   assert.match(apiSource, /async getAllIntakeSheets\(\)/);
+  assert.match(apiSource, /async getAllEvents\(\)/);
+  assert.match(apiSource, /async getAllAssessments\(\)/);
+  assert.match(apiSource, /async getAllFunds\(\)/);
+  assert.match(apiSource, /async getAllDisbursements\(\)/);
+  assert.match(apiSource, /async getAllAnnouncements\(\)/);
   assert.match(apiSource, /async _getAllPages\(path, pageSize = 500, maxPages = 50/);
+  assert.match(apiSource, /row =>\s*`\$\{row\?\.app_id/);
   assert.match(pageSource, /data-type="audit"/);
   assert.match(pageSource, /type === 'audit'/);
   assert.match(pageSource, /buildAuditLogsPrint/);
@@ -23,6 +29,11 @@ test('mass print UI and API wrapper expose an audit-log print surface', () => {
   assert.match(pageSource, /MefamAPI\.getAllFamilies\(\)/);
   assert.match(pageSource, /MefamAPI\.getAllGrades\(\)/);
   assert.match(pageSource, /MefamAPI\.getAllIntakeSheets\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllEvents\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllAssessments\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllFunds\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllDisbursements\(\)/);
+  assert.match(pageSource, /MefamAPI\.getAllAnnouncements\(\)/);
   assert.doesNotMatch(pageSource, /<th>Change<\/th>/);
   assert.doesNotMatch(pageSource, /status: \$\{/);
 });

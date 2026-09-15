@@ -180,12 +180,29 @@ const MefamAPI = {
     return this._getAllPages('/families');
   },
   async getAllGrades() {
-    return this._getAllPages('/events/grades');
+    return this._getAllPages('/events/grades', 500, 50, {}, row =>
+      `${row?.app_id ?? row?.appId ?? ''}|${row?.subject ?? ''}|${row?.quarter ?? row?.period ?? ''}|${row?.school_year ?? row?.schoolYear ?? row?.semester ?? ''}`
+    );
   },
   async getAllIntakeSheets() {
     return this._getAllPages('/records/intake');
   },
-  async _getAllPages(path, pageSize = 500, maxPages = 50, extraParams = {}) {
+  async getAllEvents() {
+    return this._getAllPages('/events');
+  },
+  async getAllAssessments() {
+    return this._getAllPages('/records/assessments');
+  },
+  async getAllFunds() {
+    return this._getAllPages('/financials/funds');
+  },
+  async getAllDisbursements() {
+    return this._getAllPages('/financials/disbursements');
+  },
+  async getAllAnnouncements() {
+    return this._getAllPages('/comms');
+  },
+  async _getAllPages(path, pageSize = 500, maxPages = 50, extraParams = {}, keyFn = null) {
     const all = [];
     const seen = new Set();
     for (let page = 1; page <= maxPages; page += 1) {
@@ -199,9 +216,9 @@ const MefamAPI = {
       if (!rows.length) break;
 
       rows.forEach(row => {
-        const id = String(row?.id ?? row?.appId ?? row?.app_id ?? '');
-        if (!id || !seen.has(id)) {
-          if (id) seen.add(id);
+        const key = keyFn ? keyFn(row) : JSON.stringify(row);
+        if (!key || !seen.has(key)) {
+          if (key) seen.add(key);
           all.push(row);
         }
       });
