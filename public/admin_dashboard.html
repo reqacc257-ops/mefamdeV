@@ -6,7 +6,7 @@
     <title>MEFAMDEV-Life Admin System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwUEQ1H+L3j3W2z2r8nT3t3g5Qn9hC5J9YQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
         :root {
@@ -634,84 +634,11 @@
         .photo-crop-controls input[type="range"] { width: 100%; }
         .photo-crop-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .photo-crop-actions .btn { flex: 1 1 110px; }
-        /* Audit trail — reference styling */
-        .actor-line {
-            display: inline-flex; align-items: center; gap: 7px; font-size: .76rem; color: var(--text-muted);
-            line-height: 1.3; text-decoration: none; cursor: help; white-space: nowrap;
-        }
-        .actor-line .al-icon { flex: 0 0 auto; font-size: .72rem; line-height: 1; }
-        .actor-line .al-name { font-weight: 700; color: #41556b; }
-        .actor-line .al-dot { color: #c5ced9; }
-        .actor-line .al-when { white-space: nowrap; }
-        .actor-line--check .al-icon { color: var(--green); }
-        .actor-line--cross .al-icon { color: var(--red); }
-        .actor-line--flag .al-icon { color: var(--orange); }
-        .actor-line--plus .al-icon { color: var(--teal); }
-        .actor-line--minus .al-icon { color: var(--red); }
-        .actor-line--neutral .al-icon { color: var(--text-muted); }
-
-        .actor-row {
-            display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f4f9;
-        }
-        .actor-row:last-child { border-bottom: none; }
-        .actor-row .ar-avatar {
-            width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center;
-            color: #fff; font-weight: 700; font-size: .76rem; letter-spacing: .02em;
-        }
-        .actor-row .ar-body { flex: 1; min-width: 0; }
-        .actor-row .ar-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
-        .actor-row .ar-name { font-weight: 700; color: var(--navy); font-size: .88rem; }
-        .actor-row .ar-role {
-            display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .66rem; font-weight: 700;
-            letter-spacing: .04em; text-transform: uppercase;
-        }
-        .actor-row .ar-action { font-size: .85rem; color: var(--text); line-height: 1.5; }
-        .actor-row .ar-action strong { color: var(--navy); }
-        .actor-row .ar-when { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
-        .actor-row .ar-diff {
-            margin-top: 7px; padding: 8px 11px; border-radius: 8px; background: #f8fafc; border: 1px solid #eef2f7;
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: .72rem; line-height: 1.6; color: #4b5563;
-        }
-        .actor-row .ar-diff .d-before { color: var(--red); }
-        .actor-row .ar-diff .d-after { color: var(--green); }
-        .actor-row .ar-diff .d-arrow { color: #94a3b8; margin: 0 4px; }
-
-        .role-director { background: linear-gradient(135deg, #1a2e44, #2d4a6a); }
-        .role-edu { background: linear-gradient(135deg, #0f7a68, #1abc9c); }
-        .role-finance { background: linear-gradient(135deg, #b7770d, #f5a623); }
-        .role-program { background: linear-gradient(135deg, #6b3a8c, #8e44ad); }
-        .role-system { background: linear-gradient(135deg, #64748b, #94a3b8); }
-        .role-applicant { background: linear-gradient(135deg, #2471a3, #3498db); }
-        .pill-director { background: #eef2f7; color: #1a2e44; }
-        .pill-edu { background: #e5f6f2; color: #0f7a68; }
-        .pill-finance { background: #fef5e4; color: #8a5b00; }
-        .pill-program { background: #f3e9fb; color: #6b3a8c; }
-        .pill-system { background: #eef1f5; color: #5b6b7f; }
-        .pill-applicant { background: #eaf3ff; color: #2471a3; }
-
-        .audit-log-list { display: grid; gap: 8px; max-height: 260px; overflow: auto; padding-right: 4px; }
-        .audit-log-entry {
-            display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: start; padding: 12px 8px;
-            border-bottom: 1px solid #f0f4f9; background: linear-gradient(180deg, rgba(59, 130, 246, 0.03), rgba(148, 163, 184, 0.02));
-            border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.08);
-        }
-        .audit-log-entry:last-child { border-bottom: none; }
-        .audit-log-badge {
-            display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
-            background: var(--navy); color: #fff; font-size: .78rem; font-weight: 800;
-        }
-        .audit-log-entry .ae-body { min-width: 0; }
-        .audit-log-entry .ae-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
-        .audit-log-entry .ae-actor { font-weight: 700; color: var(--navy); font-size: .88rem; }
-        .audit-log-entry .ae-role { padding: 1px 8px; border-radius: 999px; font-size: .64rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-        .audit-log-entry .ae-verb { font-size: .85rem; color: var(--text); }
-        .audit-log-entry .ae-verb strong { color: var(--navy); }
-        .audit-log-entry .ae-entity { margin-top: 3px; font-size: .78rem; color: var(--text-muted); }
-        .audit-log-entry .ae-ref {
-            font-size: .72rem; padding: 2px 7px; border-radius: 5px; background: #eef2f7; color: #41556b; border: 1px solid #e3e9f1;
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-        }
-        .audit-log-entry .ae-when { font-size: .73rem; color: var(--text-muted); white-space: nowrap; text-align: right; }
+        .audit-log-list { display: grid; gap: 8px; max-height: 240px; overflow: auto; }
+        .audit-log-entry { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; background: rgba(59, 130, 246, 0.04); border: 1px solid rgba(59, 130, 246, 0.08); }
+        .audit-log-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 999px; background: var(--navy); color: #fff; font-size: .72rem; font-weight: 800; }
+        .audit-log-entry strong { display: block; font-size: .8rem; }
+        .audit-log-entry small { color: var(--text-muted); font-size: .72rem; }
         .mekong-student-name { color: #1a8a4a; background: #e9f7ef; border-radius: 4px; padding: 2px 5px; }
         .mekong-badge { display: inline-block; color: #176b38; background: #d9f2e2; border-radius: 10px; padding: 2px 8px; font-size: .68rem; font-weight: 700; line-height: 1.2; }
         .mekong-application-row td { background: #f0fbf4; }
@@ -761,37 +688,6 @@
         .table-actions .btn { display: block; min-width: 76px; margin: 0 0 4px !important; text-align: center; }
         .table-actions .btn:last-child { margin-bottom: 0 !important; }
         .modal-footer { padding: 16px 26px; background: #f7f9fb; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; border-radius: 0 0 12px 12px; flex-wrap: wrap; }
-
-        /* Application detail modal — visual reference match */
-        .app-detail-modal.modalshell { width: min(1180px, 96vw); }
-        .app-detail-modal .modal-header {
-            background: linear-gradient(180deg, #1d3552, #1a2e44); border-bottom: 1px solid rgba(255,255,255,.08);
-            padding: 18px 22px 16px;
-        }
-        .app-detail-modal .modal-header h2 {
-            font-family: 'DM Serif Display', serif; font-size: 1.12rem; font-weight: 400; letter-spacing: .01em;
-        }
-        .app-detail-modal .modal-header .btn {
-            min-width: 36px; min-height: 36px; padding: 0; border-radius: 8px; font-size: 1.05rem;
-        }
-        .app-detail-layout {
-            background: #f7f9fc; border-radius: 0 0 16px 16px;
-        }
-        .detail-section-label {
-            display: block; margin: 22px 0 12px; font-size: .7rem; color: #5d6f82; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
-        }
-        .detail-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px 26px; padding: 0 0 6px;
-            border-bottom: 1px solid #dde5ef;
-        }
-        .detail-field {
-            display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: .9rem; color: #304561;
-            padding: 3px 0;
-        }
-        .detail-field .label {
-            color: #5b6d80; font-weight: 700; min-width: 110px;
-        }
-        .detail-field .value { text-align: right; color: #1e2d3d; font-weight: 500; }
         .tool-modal { width: min(1100px, 96vw); height: min(92vh, 900px); max-height: 92vh; overflow: hidden; }
         .tool-modal .modal-header { flex-shrink: 0; }
         .tool-modal-frame { display: block; width: 100%; height: calc(100% - 69px); border: 0; background: #f4f5f7; }
@@ -986,7 +882,7 @@
         .cmdk-item-sub { font-size: .75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cmdk-empty { padding: 32px 20px; text-align: center; color: var(--text-muted); font-size: .88rem; }
         .cmdk-footer {
-            border-top: 1px solid  var(--border);
+            border-top: 1px solid var(--border);
             padding: 10px 20px;
             font-size: .72rem;
             color: var(--text-muted);
@@ -1846,8 +1742,8 @@
                     </div>
                 </div>
                 <div class="card" style="border-left:4px solid var(--teal);">
-                    <div class="card-title">Full Audit Log</div>
-                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">Recent actions by every authenticated staff role, including approvals, updates, documents, grades, and finance.</p>
+                    <div class="card-title">Audit Logs</div>
+                    <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">User actions and system changes are logged with the actor and timestamp for review.</p>
                     <div id="recentAuditLogs" class="audit-log-list"></div>
                 </div>
                 <div class="card" id="operations-settings-card" style="display:none;">
@@ -2061,7 +1957,7 @@
 
 <!-- Application Detail Modal -->
 <div class="modal-overlay" id="appModal">
-    <div class="modal app-detail-modal modalshell">
+    <div class="modal">
         <div class="modal-header">
             <h2>Application Details</h2>
             <button type="button" class="btn" style="background:rgba(255,255,255,.15); color:#fff;" onclick="closeModal('appModal')" aria-label="Close">✕ Close</button>
@@ -2768,13 +2664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrades(apps.filter(a => a.status === 'Accepted'));
     });
     loadAllData().then(() => enableSortableTables());
-    let savedSettings = {};
-    try { savedSettings = JSON.parse(localStorage.getItem('mefamdev_system_settings') || '{}'); } catch (_) { savedSettings = {}; }
-    if (savedSettings.autoRefresh === true) {
-        window.dashboardRefreshTimer = window.setInterval(() => {
-            loadAllData();
-        }, 60000);
-    }
+    setInterval(() => { loadAllData(); }, 5000);
 
     window.addEventListener('resize', () => {
         if (window.innerWidth > 900) closeSidebar();
@@ -3850,39 +3740,17 @@ function filterPipeline() {
 }
 
 /* ── Document Checklist ── */
-const documentChecklistCache = new Map();
-
 async function renderDocChecklist(appId, containerId) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    const cacheKey = String(appId);
-    const cached = documentChecklistCache.get(cacheKey);
-    if (cached && Date.now() - cached.loadedAt < 30000) {
-        renderDocumentChecklistItems(cached.items, el, appId, containerId);
-        return;
-    }
     el.innerHTML = '<p style="color:#aaa;font-size:.85rem;">Loading documents…</p>';
 
     let items;
     try {
         items = await MefamAPI.getDocuments(appId);
-        if (Array.isArray(items)) documentChecklistCache.set(cacheKey, { items, loadedAt: Date.now() });
     } catch (e) {
-        console.error(`Failed to load document checklist for application ${appId}:`, e);
-        const message = e?.status === 429
-            ? 'The server is rate-limiting checklist requests. Please wait a moment and try again.'
-            : (e?.message || 'Could not load the document checklist right now.');
-        el.innerHTML = `<p style="color:#c0392b;font-size:.85rem;">${escapeHtml(message)}</p>`;
-        return;
+        items = null;
     }
-    if (!Array.isArray(items)) {
-        el.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">Could not load the document checklist right now.</p>';
-        return;
-    }
-    renderDocumentChecklistItems(items, el, appId, containerId);
-}
-
-function renderDocumentChecklistItems(items, el, appId, containerId) {
     if (!Array.isArray(items)) {
         el.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">Could not load the document checklist right now.</p>';
         return;
@@ -3960,7 +3828,6 @@ function approveDoc(appId, docKey, containerId) {
 async function setDocStatus(appId, docKey, status, containerId, note) {
     try {
         await MefamAPI.setDocumentStatus(appId, docKey, status, note || '');
-        documentChecklistCache.delete(String(appId));
         renderDocChecklist(appId, containerId);
         toast(`Document marked as ${status}.`, 'success');
     } catch (e) {
@@ -4289,50 +4156,47 @@ async function viewApp(id) {
         : '<p style="color:#aaa;font-size:.85rem;">No additional form data captured.</p>';
 
     document.getElementById('appModalContent').innerHTML = `
-        <div class="app-detail-layout">
-            <div style="padding:22px 26px 0;">
-                <span class="detail-section-label">Personal Information</span>
-                <div class="detail-grid">
-                    <div class="detail-field"><span class="label">Name:</span><span class="value">${escapeHtml(a.name)} ${mekongBadge(a)}</span></div>
-                    <div class="detail-field"><span class="label">Age / DOB:</span><span class="value">${escapeHtml(a.age)} (${escapeHtml(a.dob || '—')})</span></div>
-                    <div class="detail-field"><span class="label">Gender:</span><span class="value">${escapeHtml(a.gender)}</span></div>
-                    <div class="detail-field"><span class="label">Contact:</span><span class="value">${escapeHtml(a.contact || '—')}</span></div>
-                    <div class="detail-field"><span class="label">Address:</span><span class="value">${escapeHtml(a.address || '—')}, Brgy. ${escapeHtml(a.barangay || '')}</span></div>
-                    <div class="detail-field"><span class="label">Lives With:</span><span class="value">${escapeHtml(a.livingWith || '—')}</span></div>
-                </div>
-
-                <span class="detail-section-label">Academic (S.Y. ${escapeHtml(a.sy || '—')})</span>
-                <div class="detail-grid">
-                    <div class="detail-field"><span class="label">Level:</span><span class="value">${escapeHtml(a.eduLevel || '—')}</span></div>
-                    <div class="detail-field"><span class="label">Grade:</span><span class="value">${escapeHtml(a.grade || '—')}</span></div>
-                    <div class="detail-field"><span class="label">School:</span><span class="value">${escapeHtml(a.school || '')}</span></div>
-                    <div class="detail-field"><span class="label">Track:</span><span class="value">${escapeHtml(a.degree || '—')}</span></div>
-                </div>
+        <div class="grid-2eq" style="gap:20px;">
+            <div>
+                <div class="modal-section">Personal Information</div>
+                <p><strong>Name:</strong> ${escapeHtml(a.name)} ${mekongBadge(a)}</p>
+                <p><strong>Age / DOB:</strong> ${escapeHtml(a.age)} (${escapeHtml(a.dob||'—')})</p>
+                <p><strong>Gender:</strong> ${escapeHtml(a.gender)}</p>
+                <p><strong>Contact:</strong> ${escapeHtml(a.contact||'—')}</p>
+                <p><strong>Address:</strong> ${escapeHtml(a.address||'—')}, Brgy. ${escapeHtml(a.barangay||'')}</p>
+                <p><strong>Lives With:</strong> ${escapeHtml(a.livingWith||'—')}</p>
+                <p><strong>Religion:</strong> ${escapeHtml(a.religion||'—')}</p>
+                <p><strong>Birthplace:</strong> ${escapeHtml(a.birthplace||'—')}</p>
             </div>
-
-            <div style="padding: 0 26px 18px;">
-                <span class="detail-section-label">Family Composition</span>
-                ${famHTML}
-                <div class="detail-grid" style="margin-top:20px; border-bottom:none;">
-                    <div>
-                        <span class="detail-section-label" style="margin-top:0;">Personal Goals</span>
-                        <div class="detail-field" style="display:block; margin-bottom:10px;"><span class="label">Ambition:</span><span class="value" style="display:block; margin-top:4px; text-align:left;">${escapeHtml(a.ambition || '—')}</span></div>
-                        <div class="detail-field" style="display:block; margin-bottom:10px;"><span class="label">Talents:</span><span class="value" style="display:block; margin-top:4px; text-align:left;">${escapeHtml(a.talents || '—')}</span></div>
-                        <div class="detail-field" style="display:block;"><span class="label">Clubs:</span><span class="value" style="display:block; margin-top:4px; text-align:left;">${escapeHtml(a.clubs || '—')}</span></div>
-                    </div>
-                    <div>
-                        <span class="detail-section-label" style="margin-top:0;">Why Scholar</span>
-                        <div style="color:#555; font-style:italic; line-height:1.6;">"${escapeHtml(a.whyScholar || 'No statement provided.')}"</div>
-                    </div>
-                </div>
+            <div>
+                <div class="modal-section">Academic (S.Y. ${escapeHtml(a.sy||'—')})</div>
+                <p><strong>Level:</strong> ${escapeHtml(a.eduLevel||'—')}</p>
+                <p><strong>School:</strong> ${escapeHtml(a.school || '')}</p>
+                <p><strong>Grade/Year:</strong> ${escapeHtml(a.grade || '')}</p>
+                <p><strong>Course:</strong> ${escapeHtml(a.degree||'—')}</p>
+                <div class="modal-section" style="margin-top:16px;">Financials</div>
+                <p><strong>Total Income:</strong> ₱${escapeHtml(a.totalIncome||0)}</p>
+                <p><strong>Total Expense:</strong> ₱${escapeHtml(a.totalExpense||0)}</p>
+                <p style="margin-top:8px;"><strong>Properties:</strong><br>${propsHTML}</p>
             </div>
-
-            <div style="padding: 0 26px 18px;">
-                ${submittedHTML}
-                <div class="detail-section-label" style="margin-top:20px;">Document Requirements</div>
-                <div id="appModalDocs"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>
+        </div>
+        <div class="modal-section">Family Composition</div>
+        ${famHTML}
+        <div class="grid-2eq" style="margin-top:16px; gap:16px;">
+            <div>
+                <div class="modal-section">Personal Goals</div>
+                <p><strong>Ambition:</strong> ${escapeHtml(a.ambition||'—')}</p>
+                <p><strong>Talents:</strong> ${escapeHtml(a.talents||'—')}</p>
+                <p><strong>Clubs:</strong> ${escapeHtml(a.clubs||'—')}</p>
             </div>
-        </div>`;
+            <div>
+                <div class="modal-section">Why Scholar</div>
+                <p style="color:#555; font-style:italic;">"${escapeHtml(a.whyScholar||'No statement provided.')}"</p>
+            </div>
+        </div>
+        ${submittedHTML}
+        <div class="modal-section" style="margin-top:16px;">Document Requirements</div>
+        <div id="appModalDocs"><p style="color:#aaa;font-size:.85rem;">Loading documents…</p></div>`;
 
     renderDocChecklist(a.id, 'appModalDocs');
 
@@ -4746,32 +4610,15 @@ function getCurrentAuditUser() {
     }
 }
 
-async function appendAuditLog(action, payload = {}) {
-    const session = MefamAPI.getSession ? MefamAPI.getSession() : null;
-    const actorRole = String(session?.role || (session?.type === 'applicant' ? 'applicant' : 'system')).trim();
+function appendAuditLog(action, payload = {}) {
     const entry = {
         id: Date.now() + Math.random(),
         action,
         user: payload.user || getCurrentAuditUser(),
-        actorRole,
         applicant: payload.applicant || null,
         details: payload.details || '',
         timestamp: new Date().toISOString()
     };
-
-    try {
-        await MefamAPI.logAudit({
-            action,
-            entityType: payload.entityType || (entry.applicant ? 'application' : 'system'),
-            entityId: payload.entityId ?? entry.applicant,
-            entityLabel: payload.entityLabel || '',
-            note: payload.details || ''
-        });
-        await renderAuditLogs();
-        return;
-    } catch (error) {
-        console.error('Failed to persist audit log through the API:', error);
-    }
 
     const existing = (() => {
         try {
@@ -4783,131 +4630,42 @@ async function appendAuditLog(action, payload = {}) {
 
     const logs = [entry, ...Array.isArray(existing) ? existing : []].slice(0, 50);
     localStorage.setItem('mefamdev_audit_logs', JSON.stringify(logs));
-    await renderAuditLogs();
+    renderAuditLogs();
 }
 
-function getAuditRoleLabel(rawEntry = {}) {
-    const actorRole = String(rawEntry.actorRole || rawEntry.role || rawEntry.title || rawEntry.userRole || 'System').trim();
-    if (actorRole && actorRole !== 'unknown' && actorRole !== 'System') return actorRole.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
-    const fallback = String(rawEntry.actorName || rawEntry.user || rawEntry.name || 'System').trim();
-    if (!fallback || fallback === 'System' || fallback === 'null') return 'System';
-    return fallback.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
-}
-
-function normalizeAuditDisplayEntry(entry = {}) {
-    const actorRole = String(entry.actorRole || entry.role || entry.title || entry.userRole || 'System').trim();
-    const actorLabel = getAuditRoleLabel(entry);
-    const roleKey = String(actorRole || actorLabel || 'system').toLowerCase();
-    const roleClass = roleKey.includes('director') ? 'role-director' : roleKey.includes('finance') ? 'role-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'role-edu' : roleKey.includes('program') ? 'role-program' : roleKey.includes('applicant') ? 'role-applicant' : 'role-system';
-    const pillClass = roleKey.includes('director') ? 'pill-director' : roleKey.includes('finance') ? 'pill-finance' : roleKey.includes('education') || roleKey.includes('social') ? 'pill-edu' : roleKey.includes('program') ? 'pill-program' : roleKey.includes('applicant') ? 'pill-applicant' : 'pill-system';
-    const initials = actorLabel.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('').slice(0, 2) || 'SY';
-    const action = String(entry.action || 'system.activity').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-    const entityText = entry.entityLabel || entry.applicant || entry.entityType || 'System record';
-    const note = entry.note || entry.details || '';
-    const timestamp = entry.timestamp ? new Date(entry.timestamp) : new Date();
-    const displayDate = Number.isNaN(timestamp.getTime()) ? 'Today' : timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    const timeLabel = Number.isNaN(timestamp.getTime()) ? 'just now' : timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-
-    return {
-        actorName: actorLabel,
-        actorRole: actorLabel,
-        roleClass,
-        pillClass,
-        initials,
-        label: action || 'System activity',
-        timestamp,
-        timeLabel,
-        displayDate,
-        intent: /accept|approved|approve|save|add|created|release|received|submit|updated|edit|flag|reject|decline/.test(String(action).toLowerCase()) ? 'check' : /reject|decline|flag|missing|error/.test(String(action).toLowerCase()) ? 'cross' : /release|remove|minus|pay|disburse/.test(String(action).toLowerCase()) ? 'minus' : /add|create|received|record|contribution|submit|approved/.test(String(action).toLowerCase()) ? 'plus' : 'neutral',
-        entityText,
-        note
-    };
-}
-
-async function renderAuditLogs() {
+function renderAuditLogs() {
     const container = document.getElementById('recentAuditLogs');
     if (!container) return;
-    try {
-        const result = await MefamAPI.getRecentAudit(200);
-        const logs = Array.isArray(result?.entries) ? result.entries : [];
-        const feed = logs.length ? logs : (() => {
-            try {
-                return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-            } catch (error) {
-                return [];
-            }
-        })();
 
-        if (!Array.isArray(feed) || feed.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
-            return;
+    const logs = (() => {
+        try {
+            return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
+        } catch (error) {
+            return [];
         }
+    })();
 
-        container.innerHTML = feed.slice(0, 200).map((entry, index) => {
-        const item = normalizeAuditDisplayEntry(entry);
-        const actionText = item.label.length > 0 ? item.label : 'System activity';
-        const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
-        const roleText = escapeHtml(item.actorRole || 'System');
-        const actorLine = `<span class="actor-line actor-line--${item.intent}" title="${escapeHtml(item.actorName)} (${item.actorRole}) • ${escapeHtml(actionText)} • ${escapeHtml(item.displayDate + ' ' + item.timeLabel)}"><span class="al-icon">${item.intent === 'check' ? '✓' : item.intent === 'cross' ? '✕' : item.intent === 'flag' ? '⚠' : item.intent === 'plus' ? '＋' : item.intent === 'minus' ? '−' : '•'}</span><span class="al-name">${escapeHtml(item.actorName)}</span><span class="al-dot">·</span><span class="al-when">${escapeHtml(item.displayDate)}</span></span>`;
+    if (!Array.isArray(logs) || logs.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
+        return;
+    }
 
+    container.innerHTML = logs.slice(0, 8).map((entry, index) => {
+        const stamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Unknown time';
+        const user = entry.user || 'System';
+        const applicant = entry.applicant ? `<div style="font-size:.72rem; color:var(--text-muted);">Applicant: ${escapeHtml(String(entry.applicant))}</div>` : '';
         return `
             <div class="audit-log-entry">
                 <span class="audit-log-badge">${index + 1}</span>
-                <div class="ae-body">
-                    <div class="ae-top">
-                        <span class="ae-actor">${escapeHtml(item.actorName)}</span>
-                        <span class="ae-role ${item.pillClass}">${roleText}</span>
-                    </div>
-                    <div class="ae-verb">${escapeHtml(actionText)}${item.entityText ? ` <strong>${escapeHtml(item.entityText)}</strong>` : ''}</div>
-                    ${withEntity}
-                    <div style="margin-top:8px;">${actorLine}</div>
+                <div>
+                    <strong>${escapeHtml(entry.action || 'System activity')}</strong>
+                    ${applicant}
+                    ${entry.details ? `<small>${escapeHtml(entry.details)}</small>` : ''}
                 </div>
-                <div class="ae-when">
-                    <div>${escapeHtml(item.displayDate)}</div>
-                    <div>${escapeHtml(item.timeLabel)}</div>
-                </div>
+                <small>${escapeHtml(user)}<br>${escapeHtml(stamp)}</small>
             </div>
         `;
     }).join('');
-    } catch (error) {
-        console.error('Failed to load recent audit logs:', error);
-        const fallback = (() => {
-            try {
-                return JSON.parse(localStorage.getItem('mefamdev_audit_logs') || '[]');
-            } catch (_) {
-                return [];
-            }
-        })();
-        if (Array.isArray(fallback) && fallback.length > 0) {
-            container.innerHTML = fallback.slice(0, 200).map((entry, index) => {
-                const item = normalizeAuditDisplayEntry(entry);
-                const actionText = item.label.length > 0 ? item.label : 'System activity';
-                const withEntity = item.entityText ? `<div class="ae-entity"><span class="ae-ref">${escapeHtml(String(item.entityText).slice(0, 30))}</span> ${item.note ? `· ${escapeHtml(item.note)}` : ''}</div>` : (item.note ? `<div class="ae-entity">${escapeHtml(item.note)}</div>` : '');
-                const roleText = escapeHtml(item.actorRole || 'System');
-                const actorLine = `<span class="actor-line actor-line--${item.intent}" title="${escapeHtml(item.actorName)} (${item.actorRole}) • ${escapeHtml(actionText)} • ${escapeHtml(item.displayDate + ' ' + item.timeLabel)}"><span class="al-icon">${item.intent === 'check' ? '✓' : item.intent === 'cross' ? '✕' : item.intent === 'flag' ? '⚠' : item.intent === 'plus' ? '＋' : item.intent === 'minus' ? '−' : '•'}</span><span class="al-name">${escapeHtml(item.actorName)}</span><span class="al-dot">·</span><span class="al-when">${escapeHtml(item.displayDate)}</span></span>`;
-                return `
-                    <div class="audit-log-entry">
-                        <span class="audit-log-badge">${index + 1}</span>
-                        <div class="ae-body">
-                            <div class="ae-top">
-                                <span class="ae-actor">${escapeHtml(item.actorName)}</span>
-                                <span class="ae-role ${item.pillClass}">${roleText}</span>
-                            </div>
-                            <div class="ae-verb">${escapeHtml(actionText)}${item.entityText ? ` <strong>${escapeHtml(item.entityText)}</strong>` : ''}</div>
-                            ${withEntity}
-                            <div style="margin-top:8px;">${actorLine}</div>
-                        </div>
-                        <div class="ae-when">
-                            <div>${escapeHtml(item.displayDate)}</div>
-                            <div>${escapeHtml(item.timeLabel)}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            container.innerHTML = '<div class="empty-state" style="padding:18px 12px;"><div class="empty-icon">🧾</div><p>No recent activity recorded yet.</p></div>';
-        }
-    }
 }
 
 function saveSystemSettings() {
