@@ -1487,6 +1487,16 @@
 
             <div class="grid-2eq" style="align-items:start;">
                 <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                        <div class="card-title" style="margin:0;">📄 Saved Intake Sheets <span id="savedIntakeCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
+                        <div class="search-wrap" style="max-width:320px; width:100%;">
+                            <input id="savedIntakeSearch" type="text" class="search-input" placeholder="Filter intake sheets..." oninput="filterSavedRecords()" aria-label="Filter intake sheets">
+                        </div>
+                    </div>
+                    <div id="intakeSheetsList" style="overflow:auto; max-height:420px;"></div>
+                </div>
+
+                <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                         <div class="card-title" style="margin:0;">Stipend Disbursements</div>
                         <canvas id="disbursementChart" style="max-height:180px; width:100%; max-width:280px;"></canvas>
@@ -1558,7 +1568,7 @@
             <div class="page-header">
                 <div class="page-header-info">
                     <h2>Saved Records</h2>
-                    <p>All saved Intake Sheets and Staff Assessments.</p>
+                    <p>All saved Staff Assessments.</p>
                 </div>
                 <div class="page-header-actions">
                     <button type="button" class="btn btn-navy" onclick="openAssessment(null)">+ New Assessment</button>
@@ -1567,16 +1577,6 @@
             </div>
 
             <div class="grid-2eq" style="align-items:start;">
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
-                        <div class="card-title" style="margin:0;">📄 Saved Intake Sheets <span id="savedIntakeCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
-                        <div class="search-wrap" style="max-width:320px; width:100%;">
-                            <input id="savedIntakeSearch" type="text" class="search-input" placeholder="Filter intake sheets..." oninput="filterSavedRecords()" aria-label="Filter intake sheets">
-                        </div>
-                    </div>
-                    <div id="intakeSheetsList" style="overflow:auto; max-height:420px;"></div>
-                </div>
-
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                         <div class="card-title" style="margin:0;">Saved Staff Assessments <span id="savedAssessmentCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
@@ -3044,7 +3044,8 @@ function renderSavedIntakeSheets(sheets) {
             const name     = s.name     || s.applicant_name || s.student || '—';
             const school   = s.school   || s.schoolName || s.school_name || '—';
             const savedAt  = s.savedAt  || s.saved_at  || s.caseDate || s.created_at || '—';
-            const rowId    = Number(s.id) || s.id;
+            const rowId    = s.id ?? s.caseNo ?? s.case_no ?? s.case_number;
+            const rowArg   = escapeHtml(JSON.stringify(rowId));
             const linkedId = s.linkedAppId || s.linked_app_id || '';
             return `<tr>
                 <td>${escapeHtml(caseNo)}</td>
@@ -3052,8 +3053,8 @@ function renderSavedIntakeSheets(sheets) {
                 <td style="font-size:.85rem; color:#64748b;">${escapeHtml(school)}</td>
                 <td style="color:var(--text-muted); font-size:.8rem;">${escapeHtml(savedAt)}</td>
                 <td>
-                    <button type="button" class="btn btn-gold btn-sm" onclick="openIntakeSheet(${rowId})">View</button>
-                    <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_intake_sheets',${rowId})" aria-label="Delete">✕</button>
+                    <button type="button" class="btn btn-gold btn-sm" onclick="openIntakeSheet(${rowArg})">View</button>
+                    <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red); margin-left:4px;" onclick="deleteRecord('mefamdev_intake_sheets',${rowArg})" aria-label="Delete">✕</button>
                 </td>
             </tr>`;
         }).join('') + `</tbody></table>`;
@@ -3170,10 +3171,22 @@ window.addEventListener('message', (event) => {
     }
 });
 
-function deleteRecord(key, id) {
+async function deleteRecord(key, id) {
     if (!confirm('Delete this record?')) return;
+    try {
+        if (key === 'mefamdev_intake_sheets') await MefamAPI.deleteIntakeSheet(id);
+        if (key === 'mefamdev_assessments') await MefamAPI.deleteAssessment(id);
+    } catch (error) {
+        console.error('Failed to delete saved record from the server:', error);
+        toast('Could not delete the record.', 'error');
+        return;
+    }
     let records = JSON.parse(localStorage.getItem(key)) || [];
-    records = records.filter(r => r.id !== id);
+    const targetId = String(id ?? '').trim();
+    records = records.filter(r => {
+        const recordId = String(r.id ?? r.caseNo ?? r.case_no ?? r.case_number ?? '').trim();
+        return !targetId || recordId !== targetId;
+    });
     localStorage.setItem(key, JSON.stringify(records));
     loadSavedRecords();
     toast('Record deleted.', 'success');
