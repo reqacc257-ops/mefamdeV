@@ -183,6 +183,7 @@
       max-width:1400px;margin:0 auto;padding:24px;
       display:flex;flex-direction:column;gap:22px;
     }
+    .page > section.panel:not(.no-print){order:-1}
 
     .panel{
       background:var(--surface);
@@ -1322,6 +1323,34 @@
           }
         }
 
+        if (loaded.intakes.length) {
+          const detailedIntakes = await Promise.all(loaded.intakes.map(async intake => {
+            try {
+              const response = await MefamAPI.getIntakeSheet(intake.id);
+              return response?.data ? { ...intake, ...response.data, id: response.id ?? intake.id } : intake;
+            } catch (error) {
+              console.warn(`Mass print intake ${intake.id} failed to load in full; using its saved summary.`, error);
+              return intake;
+            }
+          }));
+          loaded.intakes = detailedIntakes;
+        }
+
+        try {
+          const localIntakes = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
+          if (Array.isArray(localIntakes) && localIntakes.length) {
+            const merged = new Map(loaded.intakes.map(intake => [String(intake.id), intake]));
+            localIntakes.forEach(intake => {
+              const key = String(intake.id || intake.caseNo || '');
+              if (!key) return;
+              merged.set(key, { ...(merged.get(key) || {}), ...intake });
+            });
+            loaded.intakes = [...merged.values()];
+          }
+        } catch (error) {
+          console.warn('Mass print local intake records failed to load.', error);
+        }
+
         state.apps = loaded.apps || [];
         const acceptedCount = state.apps.filter(app => app.status === 'Accepted').length;
         console.info(`[MassPrint] apps=${state.apps.length}, accepted=${acceptedCount}, grades=${(loaded.grades || []).length}, families=${(loaded.families || []).length}, intakes=${(loaded.intakes || []).length}`);
@@ -1743,7 +1772,7 @@
       const body = document.getElementById('recordBody');
       const columns =
         type === 'intake' ? ['Case No.', 'Name', 'School', 'Barangay', 'Date'] :
-        type === 'assessment' ? ['Family', 'Student', 'Result', 'Saved'] :
+        type === 'assessment' ? ['Student Ref / Name', 'Grade', 'School', 'Barangay', 'Status'] :
         type === 'financials' ? ['Type', 'Name / Source', 'Amount', 'Date / Period'] :
         type === 'families' ? ['Family', 'Guardian', 'Barangay', 'Bracket', 'Contact'] :
         type === 'announcements' ? ['Subject', 'Target', 'Tag', 'Date'] :
@@ -1783,9 +1812,30 @@
           }
 
           const reportSummary = type === 'report-card' ? getReportCardSummary(item) : null;
+          const assessmentDisplay = (() => {
+            const resultKey = String(item.finalResult || '').toLowerCase();
+            const ref = item.linkedAppId || item.reference || item.referenceNumber || item.reference_number || item.id || app.id || '—';
+            const name = item.student || item.name || app.name || 'Unnamed';
+            const grade = gradeOf(item) || app.grade || '—';
+            const school = schoolOf(item) || app.school || '—';
+            const barangay = item.barangay || app.barangay || '—';
+            const status = resultKey === 'above'
+              ? '✅ ABOVE POVERTY THRESHOLD'
+              : resultKey === 'below'
+                ? '⚠️ BELOW POVERTY THRESHOLD'
+                : '—';
+            return { ref, name, grade, school, barangay, status };
+          })();
+
           const cells =
             type === 'intake' ? [val(item.caseNo), bold(recordName(item)), val(item.school || app.school), val(item.barangay || app.barangay), val(item.savedAt || item.caseDate || item.created_at)] :
-            type === 'assessment' ? [val(item.familySurname), bold(item.student), badge(item.finalResult || 'Unset'), val(item.savedAt || item.assessmentDate || item.created_at)] :
+            type === 'assessment' ? [
+              val(`${assessmentDisplay.ref} / ${assessmentDisplay.name}`),
+              val(assessmentDisplay.grade),
+              val(assessmentDisplay.school),
+              val(assessmentDisplay.barangay),
+              badge(assessmentDisplay.status)
+            ] :
             type === 'financials' ? [
               state.funds.includes(item) ? badge('Contribution', 'good') : badge('Disbursement', 'warn'),
               bold(item.source || item.scholarName || item.scholar_name),
@@ -1911,7 +1961,22 @@
     }
 
     function buildIntakePrint(item) { return `<section class="record"><h2>Intake Sheet</h2><div class="grid"><div class="field"><span class="label">Case No.</span>${escapeHtml(item.caseNo || '-')}</div><div class="field"><span class="label">Name</span>${escapeHtml(item.name || '-')}</div><div class="field"><span class="label">School</span>${escapeHtml(item.school || item.schoolName || '-')}</div><div class="field"><span class="label">Date</span>${escapeHtml(item.caseDate || item.savedAt || item.created_at || '-')}</div><div class="field"><span class="label">Barangay</span>${escapeHtml(item.barangay || '-')}</div><div class="field"><span class="label">Linked applicant</span>${escapeHtml(item.linkedAppId || '-')}</div></div><p>${escapeHtml(item.problem || item.background || item.notes || 'No additional notes recorded.')}</p><div class="signature"><div class="line">Social worker signature</div><div class="line">Supervisor signature</div></div></section>`; }
-    function buildAssessmentPrint(item) { return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Family</span>${escapeHtml(item.familySurname || '-')}</div><div class="field"><span class="label">Student</span>${escapeHtml(item.student || '-')}</div><div class="field"><span class="label">Final result</span>${escapeHtml(item.finalResult || 'Unset')}</div><div class="field"><span class="label">Saved</span>${escapeHtml(item.savedAt || item.assessmentDate || item.created_at || '-')}</div></div><p>${escapeHtml(item.notes || item.assessmentNotes || item.background || 'No assessment notes recorded.')}</p><div class="signature"><div class="line">Staff signature</div><div class="line">Director signature</div></div></section>`; }
+    function buildAssessmentPrint(item) {
+      const app = appFor(item) || item;
+      const resultKey = String(item.finalResult || '').toLowerCase();
+      const studentRef = item.linkedAppId || item.reference || item.referenceNumber || item.reference_number || item.id || app.id || '-';
+      const studentName = item.student || item.name || app.name || '-';
+      const grade = gradeOf(item) || app.grade || '-';
+      const school = schoolOf(item) || app.school || '-';
+      const barangay = item.barangay || app.barangay || '-';
+      const status = resultKey === 'above'
+        ? '✅ ABOVE POVERTY THRESHOLD'
+        : resultKey === 'below'
+          ? '⚠️ BELOW POVERTY THRESHOLD'
+          : '—';
+
+      return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Student Ref / Name</span>${escapeHtml(`${studentRef} / ${studentName}`)}</div><div class="field"><span class="label">Grade</span>${escapeHtml(grade)}</div><div class="field"><span class="label">School</span>${escapeHtml(school)}</div><div class="field"><span class="label">Barangay</span>${escapeHtml(barangay)}</div><div class="field"><span class="label">Status</span>${escapeHtml(status)}</div></div><div class="signature"><div class="line">Staff signature</div><div class="line">Director signature</div></div></section>`;
+    }
     function buildDirectoryPrint(records) { return `<section><h2>Scholar Directory</h2><table><thead><tr><th>No.</th><th>Name</th><th>Student ID</th><th>Grade</th><th>School</th><th>Barangay</th><th>Contact</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildApplicationsPrint(records) { return `<section><h2>Application Register</h2><table><thead><tr><th>Reference</th><th>Name</th><th>Grade</th><th>School</th><th>Barangay</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildFormationPrint(records) {
