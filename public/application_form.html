@@ -598,40 +598,21 @@
                 </select>
             </div>
             <div class="field-group">
-    <label class="field-label translatable" data-tl="Grupo/Club na Sinalihan" data-en="Clubs / Organizations">
-        Grupo/Club na Sinalihan
-    </label>
-
-    <select id="clubs" onchange="toggleClubInput()">
-        <option value="">Select an option...</option>
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-        <option value="Specify club">Specify club</option>
-    </select>
-
-    <input 
-        type="text" 
-        id="clubInput" 
-        placeholder="Specify club"
-        style="display:none; margin-top:8px;"
-    >
-</div>
-
-<script>
-function toggleClubInput() {
-    const select = document.getElementById('clubs');
-    const input = document.getElementById('clubInput');
-
-    if (select.value === 'Specify club') {
-        input.style.display = 'block';
-        input.focus();
-    } else {
-        input.style.display = 'none';
-        input.value = '';
-    }
-}
-</script>
-
+                <label class="field-label translatable" data-tl="Grupo/Club na Sinalihan" data-en="Clubs / Organizations">Grupo/Club na Sinalihan</label>
+                <select id="clubs" onchange="updateClubField()">
+                    <option value="">Select an option...</option>
+                    <option value="No">No</option>
+                    <option value="Dance Club">Dance Club</option>
+                    <option value="Sports Club">Sports Club</option>
+                    <option value="Music Club">Music Club</option>
+                    <option value="Arts Club">Arts Club</option>
+                    <option value="Science Club">Science Club</option>
+                    <option value="Student Council">Student Council</option>
+                    <option value="Youth / Community Club">Youth / Community Club</option>
+                    <option value="Specify club">Specify club</option>
+                </select>
+                <input type="text" id="clubCustom" placeholder="Type club name here" style="display:none; margin-top:8px;" oninput="this.value = this.value.trimStart()">
+            </div>
             <div class="field-group">
                 <label class="field-label translatable" data-tl="Ambisyon sa Buhay" data-en="Life Ambition">Ambisyon sa Buhay<span class="req-mark">*</span></label>
                 <select id="ambition" required>
@@ -1290,6 +1271,22 @@ function toggleClubInput() {
         }
     }
 
+    function updateClubField() {
+        const clubSelect = document.getElementById('clubs');
+        const clubCustom = document.getElementById('clubCustom');
+        if (!clubSelect || !clubCustom) return;
+
+        const showCustom = clubSelect.value === 'Specify club';
+        clubCustom.style.display = showCustom ? 'block' : 'none';
+        clubCustom.disabled = !showCustom;
+
+        if (!showCustom) {
+            clubCustom.value = '';
+        } else {
+            clubCustom.focus();
+        }
+    }
+
     /* ── Family table ── */
     function initFamilyRows() { for (let i = 0; i < 3; i++) addFamilyRow(); }
 
@@ -1876,6 +1873,11 @@ function toggleClubInput() {
         const talents = Array.from(document.getElementById('talents')?.selectedOptions || [])
             .map(option => option.value)
             .join(', ');
+        const clubSelect = document.getElementById('clubs');
+        const clubCustom = document.getElementById('clubCustom');
+        const clubsValue = clubSelect?.value === 'Specify club'
+            ? (clubCustom?.value || '').trim()
+            : (clubSelect?.value || '');
 
         const data = {
             id: Number(referenceNumber),
@@ -1900,7 +1902,7 @@ function toggleClubInput() {
             religion: document.getElementById('religion').value,
             birthplace: document.getElementById('birthplace').value,
             talents,
-            clubs: document.getElementById('clubs').value,
+            clubs: clubsValue,
             ambition: document.getElementById('ambition').value.trim(),
             livingWith: document.getElementById('livingWith').value,
             familyMembers,
