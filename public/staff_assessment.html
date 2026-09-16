@@ -1455,7 +1455,7 @@ function prefillFromApp(id) {
    9. SAVE / CLEAR / PRINT
    ═══════════════════════════════════════════════════════════ */
 
-function saveAssessment() {
+async function saveAssessment() {
     const family  = val('metaFamily').trim();
     const student = val('metaStudent').trim();
 
@@ -1535,13 +1535,21 @@ function saveAssessment() {
         }
     }
 
+    let serverSaved = false;
+    try {
+        const response = await MefamAPI.saveAssessment(record);
+        serverSaved = Boolean(response?.ok);
+    } catch (error) {
+        console.warn('Assessment saved locally but could not sync to the server.', error);
+    }
+
     state.dirty = false;
     try { localStorage.removeItem(LS.draft); } catch (e) { /* ignore */ }
     const label = finalResult === 'above' ? 'Above Poverty Threshold'
                 : finalResult === 'below' ? 'Below Poverty Threshold'
                 : 'Unset';
 
-    toast(`✅ Assessment saved!\nFamily: ${family || '(unnamed)'}\nResult: ${label}`, 'success');
+    toast(`${serverSaved ? '✅ Assessment saved!' : '⚠️ Assessment saved on this browser only; server sync failed.'}\nFamily: ${family || '(unnamed)'}\nResult: ${label}`, serverSaved ? 'success' : 'error');
 }
 
 function clearAll() {

@@ -43,12 +43,25 @@ router.delete('/intake/:id', requireRole('director','program'), async (req, res)
 router.get('/assessments', async (req, res) => {
   res.json(await db.prepare('SELECT id, linked_app_id, family_surname, student, final_result, saved_at FROM assessments ORDER BY saved_at DESC').all());
 });
+router.get('/assessments/:id', async (req, res) => {
+  const row = await db.prepare('SELECT * FROM assessments WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  res.json({ ...row, data: JSON.parse(row.data) });
+});
 router.post('/assessments', async (req, res) => {
   const b = req.body;
-  const info = await db.prepare(
-    'INSERT INTO assessments (linked_app_id, family_surname, student, final_result, data) VALUES (?,?,?,?,?)'
-  ).run(b.linkedAppId || null, b.familySurname || '', b.student || '', b.finalResult || '', JSON.stringify(b));
-  res.json({ ok: true, id: info.lastInsertRowid });
+  const existing = b.linkedAppId
+    ? await db.prepare('SELECT id FROM assessments WHERE linked_app_id = ?').get(b.linkedAppId)
+    : null;
+  const dataJson = JSON.stringify(b);
+  const info = existing
+    ? await db.prepare(
+      'UPDATE assessments SET family_surname = ?, student = ?, final_result = ?, data = ?, saved_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(b.familySurname || '', b.student || '', b.finalResult || '', dataJson, existing.id)
+    : await db.prepare(
+      'INSERT INTO assessments (linked_app_id, family_surname, student, final_result, data) VALUES (?,?,?,?,?)'
+    ).run(b.linkedAppId || null, b.familySurname || '', b.student || '', b.finalResult || '', dataJson);
+  res.json({ ok: true, id: existing?.id || info.lastInsertRowid });
 });
 router.delete('/assessments/:id', requireRole('director','program'), async (req, res) => {
   await db.prepare('DELETE FROM assessments WHERE id = ?').run(req.params.id);

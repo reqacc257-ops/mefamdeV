@@ -371,6 +371,7 @@ const MefamAPI = {
   async saveIntakeSheet(data) { return this._post('/records/intake', data); },
   async deleteIntakeSheet(id) { return this._delete(`/records/intake/${id}`); },
   async getAssessments() { return this._get('/records/assessments'); },
+  async getAssessment(id) { return this._get(`/records/assessments/${encodeURIComponent(id)}`); },
   async saveAssessment(data) { return this._post('/records/assessments', data); },
   async deleteAssessment(id) { return this._delete(`/records/assessments/${id}`); },
 

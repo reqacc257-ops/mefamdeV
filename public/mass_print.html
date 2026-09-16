@@ -1335,6 +1335,19 @@
           loaded.intakes = detailedIntakes;
         }
 
+        if (loaded.assessments.length) {
+          const detailedAssessments = await Promise.all(loaded.assessments.map(async assessment => {
+            try {
+              const response = await MefamAPI.getAssessment(assessment.id);
+              return response?.data ? { ...assessment, ...response.data, id: response.id ?? assessment.id } : assessment;
+            } catch (error) {
+              console.warn(`Mass print assessment ${assessment.id} failed to load in full; using its saved summary.`, error);
+              return assessment;
+            }
+          }));
+          loaded.assessments = detailedAssessments;
+        }
+
         try {
           const localIntakes = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
           if (Array.isArray(localIntakes) && localIntakes.length) {
@@ -1348,6 +1361,21 @@
           }
         } catch (error) {
           console.warn('Mass print local intake records failed to load.', error);
+        }
+
+        try {
+          const localAssessments = JSON.parse(localStorage.getItem('mefamdev_assessments') || '[]');
+          if (Array.isArray(localAssessments) && localAssessments.length) {
+            const merged = new Map(loaded.assessments.map(assessment => [String(assessment.id), assessment]));
+            localAssessments.forEach(assessment => {
+              const key = String(assessment.id || assessment.linkedAppId || '');
+              if (!key) return;
+              merged.set(key, { ...(merged.get(key) || {}), ...assessment });
+            });
+            loaded.assessments = [...merged.values()];
+          }
+        } catch (error) {
+          console.warn('Mass print local assessment records failed to load.', error);
         }
 
         state.apps = loaded.apps || [];
