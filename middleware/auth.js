@@ -19,8 +19,14 @@ function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Invalid authorization header' });
   try {
     req.user = jwt.verify(token, signingSecret);
-    if (req.user.type === 'staff' && req.user.sid && !staffSessions.isActiveSession(req.user.username, req.user.sid, req.user.exp)) {
-      return res.status(401).json({ error: 'Staff session is no longer active' });
+    if (req.user.type === 'staff' && req.user.sid) {
+      // Render can restart or wake the process, clearing this in-memory map.
+      // A still-valid JWT should survive that restart; reject only sessions
+      // that are present but were explicitly replaced or revoked.
+      const hasSession = staffSessions.hasActiveSession(req.user.username);
+      if (hasSession && !staffSessions.isActiveSession(req.user.username, req.user.sid, req.user.exp)) {
+        return res.status(401).json({ error: 'Staff session is no longer active' });
+      }
     }
     next();
   } catch (e) {
