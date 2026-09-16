@@ -1384,6 +1384,32 @@ function apply(data) {
     recalculate();
 }
 
+function loadSavedAssessmentRecord(recordId) {
+    const saved = readLS(LS.assessments, []);
+    const record = Array.isArray(saved) ? saved.find(item => String(item.id) === String(recordId)) : null;
+    if (!record) return false;
+    apply({
+        meta: {
+            date: record.date,
+            family: record.familySurname,
+            barangay: record.barangay,
+            gabay: record.gabay,
+            student: record.student,
+            sy: record.sy
+        },
+        scores: record.scores,
+        noCount: record.noCount,
+        finalResult: record.finalResult,
+        manualOverride: record.manualOverride,
+        narrative: record.narrative,
+        appliances: record.appliances,
+        cellphones: record.cellphones,
+        linkedAppId: record.linkedAppId
+    });
+    state.dirty = false;
+    return true;
+}
+
 /* ═══════════════════════════════════════════════════════════
    8. PREFILL FROM APPLICATION
    ═══════════════════════════════════════════════════════════ */
@@ -1730,7 +1756,11 @@ function init() {
 
     populatePrefill();
     // URL ?id=… deep link
-    const id = new URLSearchParams(window.location.search).get('id');
+    const params = new URLSearchParams(window.location.search);
+    const recordId = params.get('record');
+    if (recordId) loadSavedAssessmentRecord(recordId);
+
+    const id = params.get('id');
     if (id) {
         const sel = $('prefillSelect');
         if (sel) sel.value = String(id);

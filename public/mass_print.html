@@ -1918,6 +1918,10 @@
         toast(mode === 'selected' ? 'Select at least one record to print.' : 'No records to mass print.', 'warn');
         return;
       }
+      if (type === 'intake' || type === 'assessment') {
+        await runTemplatePrint(type, records, mode);
+        return;
+      }
       const html = await buildPrintDocument(type, records);
       const printWindow = window.open('', '_blank');
       if (!printWindow) { toast('Allow popups to print these records.', 'error'); return; }
@@ -1925,6 +1929,47 @@
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 500);
+    }
+
+    async function runTemplatePrint(type, records, mode) {
+      const storageKey = type === 'intake' ? 'mefamdev_intake_sheets' : 'mefamdev_assessments';
+      const template = type === 'intake' ? 'intake_sheet.html' : 'staff_assessment.html';
+      const original = localStorage.getItem(storageKey);
+      const prefix = `mass-print-${Date.now()}-`;
+      const printable = records.map((record, index) => ({
+        ...record,
+        id: `${prefix}${index}`
+      }));
+
+      try {
+        const existing = JSON.parse(original || '[]');
+        localStorage.setItem(storageKey, JSON.stringify([...existing, ...printable]));
+      } catch (error) {
+        toast('Could not prepare the saved form for printing.', 'error');
+        return;
+      }
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        localStorage.setItem(storageKey, original || '[]');
+        toast('Allow popups to print these saved forms.', 'error');
+        return;
+      }
+
+      const frames = printable.map(record => `<iframe src="${template}?record=${encodeURIComponent(record.id)}" title="${type} print form"></iframe>`).join('');
+      printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV ${type === 'intake' ? 'Intake Sheets' : 'Staff Assessments'}</title><style>@page{size:auto;margin:0}html,body{margin:0;padding:0;background:#fff}iframe{display:block;width:100%;height:100vh;border:0;page-break-after:always}iframe:last-child{page-break-after:auto}</style></head><body>${frames}</body></html>`);
+      printWindow.document.close();
+
+      const cleanup = () => {
+        localStorage.setItem(storageKey, original || '[]');
+        window.removeEventListener('storage', cleanup);
+      };
+      window.addEventListener('storage', cleanup, { once: true });
+      printWindow.addEventListener('afterprint', cleanup, { once: true });
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, Math.max(900, printable.length * 180));
     }
 
     function printSelected() {
