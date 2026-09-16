@@ -1131,9 +1131,30 @@
     .ga-btn[title*="Back" i] {
         display: none !important;
     }
+    @media print {
+        @page { margin: 12mm 13mm 11mm; }
+        body.mass-print { filter: grayscale(1) contrast(1.12); }
+        body.mass-print .doc-header,
+        body.mass-print .doc-header::before,
+        body.mass-print .doc-header::after,
+        body.mass-print .section-title,
+        body.mass-print .section-title .num,
+        body.mass-print .meta-card,
+        body.mass-print .prefill-bar,
+        body.mass-print .toolbar,
+        body.mass-print .btn,
+        body.mass-print .sig-field,
+        body.mass-print .table-wrap,
+        body.mass-print .section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body.mass-print * { border-color: #000 !important; color: #000 !important; box-shadow: none !important; }
+        body.mass-print .doc-header,
+        body.mass-print .section-title,
+        body.mass-print .section-title .num { background: #fff !important; }
+    }
 </style>
 </head>
 <body>
+<script>if (new URLSearchParams(window.location.search).get('massPrint') === '1') document.body.classList.add('mass-print');</script>
 <div class="shell">
 
     <!-- ══ HEADER ══ -->

@@ -711,9 +711,24 @@
             color: var(--navy);
         }
     }
+    @media print {
+        @page { margin: 12mm 13mm 11mm; }
+        body.mass-print { filter: grayscale(1) contrast(1.12); }
+        body.mass-print * { border-color: #000 !important; color: #000 !important; box-shadow: none !important; }
+        body.mass-print .doc-header,
+        body.mass-print .doc-header::before,
+        body.mass-print .doc-header .legend-pill,
+        body.mass-print .category-header,
+        body.mass-print .summary-panel,
+        body.mass-print .assessment-result,
+        body.mass-print .threshold-notes,
+        body.mass-print .final-options label,
+        body.mass-print .print-signatures .sig { background: #fff !important; }
+    }
 </style>
 </head>
 <body>
+<script>if (new URLSearchParams(window.location.search).get('massPrint') === '1') document.body.classList.add('mass-print');</script>
 <div class="shell">
 
     <!-- ══ Header ══ -->

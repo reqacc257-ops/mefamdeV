@@ -1956,7 +1956,7 @@
         return;
       }
 
-      const frames = printable.map(record => `<iframe src="${template}?record=${encodeURIComponent(record.id)}" title="${type} print form"></iframe>`).join('');
+      const frames = printable.map(record => `<iframe src="${template}?record=${encodeURIComponent(record.id)}&massPrint=1" title="${type} print form"></iframe>`).join('');
       printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV ${type === 'intake' ? 'Intake Sheets' : 'Staff Assessments'}</title><style>@page{size:auto;margin:0}html,body{margin:0;padding:0;background:#fff}iframe{display:block;width:100%;height:100vh;border:0;page-break-after:always}iframe:last-child{page-break-after:auto}</style></head><body>${frames}</body></html>`);
       printWindow.document.close();
 
