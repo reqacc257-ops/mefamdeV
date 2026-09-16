@@ -276,6 +276,12 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, .3);
         }
         .crop-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+        .btn:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
 
         .content-modal .modal-header {
             padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
@@ -372,6 +378,21 @@
             .sh-top { flex-direction: column; }
             .pt-label { font-size: .65rem; }
             .action-row { flex-direction: column; }
+            .crop-modal .modal-card { max-height: 100dvh; }
+            .crop-modal .modal-body { padding: 12px; overflow-y: auto; }
+            .crop-stage {
+                min-height: 220px;
+                max-height: 52vh;
+                padding: 12px;
+            }
+            .crop-actions {
+                flex-direction: column-reverse;
+                gap: 8px;
+            }
+            .crop-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         /* ── Print: compact single page ── */
@@ -2002,8 +2023,16 @@ let applicantCropState = {
     fileType: 'image/jpeg',
     uploadMethod: 'upload',
     kind: 'document',
-    cropper: null
+    cropper: null,
+    isSubmitting: false
 };
+
+function setApplicantCropSaveButtonState(isSubmitting) {
+    const saveBtn = document.getElementById('applicantCropSaveBtn');
+    if (!saveBtn) return;
+    saveBtn.disabled = isSubmitting;
+    saveBtn.textContent = isSubmitting ? 'Saving…' : 'Use Cropped Image';
+}
 
 function closeApplicantCropModal() {
     const modal = document.getElementById('applicantCropModal');
@@ -2022,8 +2051,10 @@ function closeApplicantCropModal() {
         fileType: 'image/jpeg',
         uploadMethod: 'upload',
         kind: 'document',
-        cropper: null
+        cropper: null,
+        isSubmitting: false
     };
+    setApplicantCropSaveButtonState(false);
 }
 
 function renderApplicantCropEditor(dataUrl) {
@@ -2126,8 +2157,10 @@ function openApplicantCropModal(dataUrl, appId, docKey, details = {}) {
         fileType: details.fileType || 'image/jpeg',
         uploadMethod: details.uploadMethod || 'upload',
         kind: details.kind || 'document',
-        cropper: null
+        cropper: null,
+        isSubmitting: false
     };
+    setApplicantCropSaveButtonState(false);
 
     renderApplicantCropEditor(dataUrl);
 
@@ -2140,6 +2173,10 @@ function openApplicantCropModal(dataUrl, appId, docKey, details = {}) {
 
 async function submitApplicantCropUpload() {
     if (!applicantCropState.appId || !applicantCropState.docKey) return;
+    if (applicantCropState.isSubmitting) return;
+
+    applicantCropState.isSubmitting = true;
+    setApplicantCropSaveButtonState(true);
 
     const appId = applicantCropState.appId;
     const docKey = applicantCropState.docKey;
@@ -2195,6 +2232,9 @@ async function submitApplicantCropUpload() {
     } catch (error) {
         console.error('Applicant crop upload failed:', error);
         alert(`Upload failed: ${error.message || 'Please try again.'}`);
+    } finally {
+        applicantCropState.isSubmitting = false;
+        setApplicantCropSaveButtonState(false);
     }
 }
 
@@ -2258,7 +2298,7 @@ if (typeof clearClientSession !== 'function') {
                 <canvas id="applicantCropCanvas" width="640" height="640"></canvas>
             </div>
             <div class="crop-actions">
-                <button class="btn btn-gold" type="button" onclick="submitApplicantCropUpload()">Use Cropped Image</button>
+                <button id="applicantCropSaveBtn" class="btn btn-gold" type="button" onclick="submitApplicantCropUpload()">Use Cropped Image</button>
                 <button class="btn btn-ghost" type="button" onclick="closeApplicantCropModal()">Cancel</button>
             </div>
         </div>
