@@ -1487,16 +1487,6 @@
 
             <div class="grid-2eq" style="align-items:start;">
                 <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
-                        <div class="card-title" style="margin:0;">📄 Saved Intake Sheets <span id="savedIntakeCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
-                        <div class="search-wrap" style="max-width:320px; width:100%;">
-                            <input id="savedIntakeSearch" type="text" class="search-input" placeholder="Filter intake sheets..." oninput="filterSavedRecords()" aria-label="Filter intake sheets">
-                        </div>
-                    </div>
-                    <div id="intakeSheetsList" style="overflow:auto; max-height:420px;"></div>
-                </div>
-
-                <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                         <div class="card-title" style="margin:0;">Stipend Disbursements</div>
                         <canvas id="disbursementChart" style="max-height:180px; width:100%; max-width:280px;"></canvas>
@@ -1568,7 +1558,7 @@
             <div class="page-header">
                 <div class="page-header-info">
                     <h2>Saved Records</h2>
-                    <p>All saved Staff Assessments.</p>
+                    <p>All saved Intake Sheets and Staff Assessments.</p>
                 </div>
                 <div class="page-header-actions">
                     <button type="button" class="btn btn-navy" onclick="openAssessment(null)">+ New Assessment</button>
@@ -1577,6 +1567,16 @@
             </div>
 
             <div class="grid-2eq" style="align-items:start;">
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                        <div class="card-title" style="margin:0;">📄 Saved Intake Sheets <span id="savedIntakeCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
+                        <div class="search-wrap" style="max-width:320px; width:100%;">
+                            <input id="savedIntakeSearch" type="text" class="search-input" placeholder="Filter intake sheets..." oninput="filterSavedRecords()" aria-label="Filter intake sheets">
+                        </div>
+                    </div>
+                    <div id="intakeSheetsList" style="overflow:auto; max-height:420px;"></div>
+                </div>
+
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                         <div class="card-title" style="margin:0;">Saved Staff Assessments <span id="savedAssessmentCount" style="font-size:.82rem; color:var(--text-muted);"></span></div>
