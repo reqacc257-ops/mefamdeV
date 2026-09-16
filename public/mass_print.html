@@ -1340,17 +1340,37 @@
         try {
           const localAssessments = JSON.parse(localStorage.getItem('mefamdev_assessments') || '[]');
           if (Array.isArray(localAssessments) && localAssessments.length) {
-            const merged = new Map(loaded.assessments.map(assessment => [String(assessment.id), assessment]));
-            localAssessments.forEach(assessment => {
-              const key = String(assessment.id || assessment.linkedAppId || '');
+            const assessmentKey = assessment => String(
+              assessment.linkedAppId ||
+              assessment.student ||
+              assessment.familySurname ||
+              assessment.id || ''
+            ).trim().toLowerCase();
+            const merged = new Map();
+            [...loaded.assessments, ...localAssessments].forEach(assessment => {
+              const key = assessmentKey(assessment);
               if (!key) return;
-              merged.set(key, { ...(merged.get(key) || {}), ...assessment });
+              const previous = merged.get(key) || {};
+              const previousHasScores = previous.scores && Object.keys(previous.scores).length > 0;
+              const currentHasScores = assessment.scores && Object.keys(assessment.scores).length > 0;
+              merged.set(key, currentHasScores || !previousHasScores
+                ? { ...previous, ...assessment }
+                : { ...assessment, ...previous });
             });
-            loaded.assessments = [...merged.values()];
+            loaded.assessments = [...merged.values()].filter(assessment =>
+              assessment.student || assessment.familySurname
+            );
           }
         } catch (error) {
           console.warn('Mass print local assessment records failed to load.', error);
         }
+
+        loaded.assessments = (loaded.assessments || []).filter(assessment =>
+          assessment &&
+          (assessment.student || assessment.familySurname) &&
+          assessment.scores &&
+          Object.keys(assessment.scores).length > 0
+        );
 
         state.apps = loaded.apps || [];
         const acceptedCount = state.apps.filter(app => app.status === 'Accepted').length;
