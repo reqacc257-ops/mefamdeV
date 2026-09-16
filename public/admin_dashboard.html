@@ -1010,10 +1010,10 @@
                 <button type="button" class="nav-item" onclick="nav('pipeline',this)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">🔀</span> Application Status
                 </button>
-                <button type="button" class="nav-item" onclick="openAssessment(null)" data-roles="director,program">
+                <button type="button" class="nav-item" onclick="loadAssessmentForm(this)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">📝</span> Assessment Form
                 </button>
-                <button type="button" class="nav-item" onclick="openIntakeSheet(null)" data-roles="director,program">
+                <button type="button" class="nav-item" onclick="loadIntakeSheetForm(this)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">📄</span> Intake Sheet
                 </button>
                 <button type="button" class="nav-item" onclick="nav('saved-records',this)" data-roles="director,program">
@@ -1022,7 +1022,7 @@
                 <button type="button" class="nav-item" onclick="loadSpiritualFormation(this)" data-roles="director,program,edu">
                     <span class="nav-icon" aria-hidden="true">🕊️</span> Spiritual Formation
                 </button>
-                <button type="button" class="nav-item" onclick="openToolModal('student_grade_card.html', 'Student Report Cards')" data-roles="director,edu" title="Open Student Report Cards">
+                <button type="button" class="nav-item" onclick="loadStudentReportCardForm(this)" data-roles="director,edu" title="Open Student Report Cards">
                     <span class="nav-icon" aria-hidden="true">📄</span> Student Report Cards
                 </button>
                 <button type="button" class="nav-item" onclick="nav('attendance',this)" data-roles="director,edu,program">
@@ -1458,6 +1458,19 @@
         <!-- Spiritual Formation Iframe Page -->
         <div id="page-spiritual-formation" class="page" style="height: 100%; display: flex; flex-direction: column;">
             <iframe id="spiritualFormationFrame" src="" style="width: 100%; flex: 1; border: none; border-radius: var(--radius); background: var(--bg);" loading="lazy"></iframe>
+        </div>
+
+        <!-- Assessment / Intake / Report Card Iframe Pages -->
+        <div id="page-assessment-form" class="page" style="height: 100%; display: flex; flex-direction: column;">
+            <iframe id="assessmentFormFrame" src="" style="width: 100%; flex: 1; border: none; border-radius: var(--radius); background: var(--bg);" loading="lazy"></iframe>
+        </div>
+
+        <div id="page-intake-sheet" class="page" style="height: 100%; display: flex; flex-direction: column;">
+            <iframe id="intakeSheetFrame" src="" style="width: 100%; flex: 1; border: none; border-radius: var(--radius); background: var(--bg);" loading="lazy"></iframe>
+        </div>
+
+        <div id="page-student-report-card" class="page" style="height: 100%; display: flex; flex-direction: column;">
+            <iframe id="studentReportCardFrame" src="" style="width: 100%; flex: 1; border: none; border-radius: var(--radius); background: var(--bg);" loading="lazy"></iframe>
         </div>
 
         <!-- ══════════════════════════════════════════════
@@ -2756,24 +2769,43 @@ function nav(pageId, el) {
     if (area) area.scrollTop = 0;
 }
 
-function loadSpiritualFormation(el) {
+function loadEmbeddedDashboardPage(pageKey, pageId, frameId, url, title, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const targetPage = document.getElementById('page-spiritual-formation');
+    const targetPage = document.getElementById(pageId);
     if (targetPage) targetPage.classList.add('active');
 
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
 
-    document.getElementById('page-title').innerText = 'Spiritual Formation';
+    document.getElementById('page-title').innerText = title;
 
-    const frame = document.getElementById('spiritualFormationFrame');
-    if (frame && !frame.src) {
-        frame.src = 'spiritual_formation.html';
+    const frame = document.getElementById(frameId);
+    if (frame) {
+        const nextSrc = url || frame.getAttribute('src') || '';
+        if (!frame.src || frame.src !== window.location.origin + '/' + nextSrc) {
+            frame.src = nextSrc;
+        }
     }
 
     if (window.innerWidth <= 900) closeSidebar();
     const area = document.querySelector('.content-area');
     if (area) area.scrollTop = 0;
+}
+
+function loadSpiritualFormation(el) {
+    loadEmbeddedDashboardPage('spiritual', 'page-spiritual-formation', 'spiritualFormationFrame', 'spiritual_formation.html', 'Spiritual Formation', el);
+}
+
+function loadAssessmentForm(el) {
+    loadEmbeddedDashboardPage('assessment', 'page-assessment-form', 'assessmentFormFrame', 'staff_assessment.html', 'Assessment Form', el);
+}
+
+function loadIntakeSheetForm(el) {
+    loadEmbeddedDashboardPage('intake', 'page-intake-sheet', 'intakeSheetFrame', 'intake_sheet.html', 'Intake Sheet', el);
+}
+
+function loadStudentReportCardForm(el) {
+    loadEmbeddedDashboardPage('report-card', 'page-student-report-card', 'studentReportCardFrame', 'student_grade_card.html', 'Student Report Cards', el);
 }
 
 function loadStaffProfile(session = MefamAPI.getSession() || {}) {
@@ -3189,15 +3221,30 @@ function filterSavedRecords() {
 function openIntakeSheet(recordId) {
     const id = recordId === null || recordId === undefined || recordId === 'null' || recordId === 'undefined' ? null : recordId;
     const url = id ? `intake_sheet.html?record=${encodeURIComponent(id)}&view=1` : 'intake_sheet.html';
+    const embeddedPage = document.getElementById('page-intake-sheet');
+    if (embeddedPage) {
+        loadEmbeddedDashboardPage('intake', 'page-intake-sheet', 'intakeSheetFrame', url, 'Intake Sheet', document.querySelector('.nav-item[onclick*=loadIntakeSheetForm]'));
+        return;
+    }
     openToolModal(url, '📝 Intake Sheet');
 }
 function openAssessment(appId) {
     const id = appId === null || appId === undefined || appId === 'null' || appId === 'undefined' ? null : appId;
     const url = id ? `staff_assessment.html?id=${encodeURIComponent(id)}` : 'staff_assessment.html';
+    const embeddedPage = document.getElementById('page-assessment-form');
+    if (embeddedPage) {
+        loadEmbeddedDashboardPage('assessment', 'page-assessment-form', 'assessmentFormFrame', url, 'Assessment Form', document.querySelector('.nav-item[onclick*=loadAssessmentForm]'));
+        return;
+    }
     openToolModal(url, '📝 Staff Assessment');
 }
 function openToolModal(url, title) {
     const toolPath = String(url || '').split('?')[0];
+    const embeddedPage = document.getElementById('page-student-report-card');
+    if (toolPath === 'student_grade_card.html' && embeddedPage) {
+        loadEmbeddedDashboardPage('report-card', 'page-student-report-card', 'studentReportCardFrame', url, 'Student Report Cards', document.querySelector('.nav-item[onclick*=loadStudentReportCardForm]'));
+        return;
+    }
     if (toolPath === 'student_grade_card.html' && window.matchMedia('(max-width: 640px)').matches) {
         window.open(url, '_blank');
         return;
