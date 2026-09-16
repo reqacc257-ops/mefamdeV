@@ -1760,7 +1760,7 @@
                         <button type="button" class="btn btn-ghost btn-sm" onclick="forgetTrustedDevice()">Forget this browser</button>
                     </div>
                 </div>
-                <div class="card" style="border-left:4px solid var(--teal);">
+                <div class="card" id="recentAuditLogsCard" hidden style="border-left:4px solid var(--teal);">
                     <div class="card-title">Audit Logs</div>
                     <p style="font-size:.87rem; color:var(--text-muted); margin:6px 0 14px;">User actions and system changes are logged with the actor and timestamp for review.</p>
                     <div id="recentAuditLogs" class="audit-log-list"></div>
@@ -2683,7 +2683,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const apps = JSON.parse(localStorage.getItem('mefamdev_apps') || '[]');
         renderGrades(apps.filter(a => a.status === 'Accepted'));
     });
-    loadAllData().then(() => enableSortableTables());
+    loadAllData().then(() => {
+        enableSortableTables();
+        void MefamAPI.prefetchMassPrintData?.();
+    });
     setInterval(() => { loadAllData(); }, 5000);
 
     window.addEventListener('resize', () => {

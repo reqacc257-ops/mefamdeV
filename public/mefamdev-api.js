@@ -202,6 +202,36 @@ const MefamAPI = {
   async getAllAnnouncements() {
     return this._getAllPages('/comms');
   },
+  async prefetchMassPrintData(force = false) {
+    const cacheKey = 'mefamdev_mass_print_prefetch';
+    const maxAge = 2 * 60 * 1000;
+    if (!force) {
+      try {
+        const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+        if (cached && Date.now() - Number(cached.cachedAt || 0) < maxAge) return cached.data;
+      } catch (_) {}
+    }
+
+    const loaders = {
+      apps: () => this.getAllApplications(),
+      families: () => this.getAllFamilies(),
+      events: () => this.getAllEvents(),
+      intakes: () => this.getAllIntakeSheets(),
+      assessments: () => this.getAllAssessments(),
+      grades: () => this.getAllGrades(),
+      funds: () => this.getAllFunds(),
+      disbursements: () => this.getAllDisbursements(),
+      announcements: () => this.getAllAnnouncements(),
+      auditLogs: () => (window.AuditLog ? AuditLog.getAll() : this.getAuditLogs().catch(() => []))
+    };
+    const entries = await Promise.all(Object.entries(loaders).map(async ([key, loader]) => {
+      try { return [key, await loader() || []]; }
+      catch (error) { console.warn(`Mass print prefetch ${key} failed.`, error); return [key, []]; }
+    }));
+    const data = Object.fromEntries(entries);
+    try { sessionStorage.setItem(cacheKey, JSON.stringify({ cachedAt: Date.now(), data })); } catch (_) {}
+    return data;
+  },
   async _getAllPages(path, pageSize = 500, maxPages = 50, extraParams = {}, keyFn = null) {
     const all = [];
     const seen = new Set();

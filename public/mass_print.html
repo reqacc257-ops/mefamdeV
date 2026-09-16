@@ -1307,16 +1307,24 @@
           ['auditLogs', () => (window.AuditLog ? AuditLog.getAll() : MefamAPI.getAuditLogs().catch(() => []))]
         ];
 
-        const results = await Promise.all(loaders.map(async ([key, loader]) => {
-          try {
-            const value = await loader();
-            return [key, Array.isArray(value) ? value : []];
-          } catch (error) {
-            console.warn(`Mass print source ${key} failed to load; using an empty fallback.`, error);
-            return [key, []];
-          }
-        }));
-        const loaded = Object.fromEntries(results);
+        let loaded = null;
+        try {
+          const cached = JSON.parse(sessionStorage.getItem('mefamdev_mass_print_prefetch') || 'null');
+          if (cached && Date.now() - Number(cached.cachedAt || 0) < 2 * 60 * 1000) loaded = cached.data;
+        } catch (_) {}
+
+        if (!loaded) {
+          const results = await Promise.all(loaders.map(async ([key, loader]) => {
+            try {
+              const value = await loader();
+              return [key, Array.isArray(value) ? value : []];
+            } catch (error) {
+              console.warn(`Mass print source ${key} failed to load; using an empty fallback.`, error);
+              return [key, []];
+            }
+          }));
+          loaded = Object.fromEntries(results);
+        }
 
         try {
           const localIntakes = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
