@@ -1124,6 +1124,13 @@
         .toolbar .btn{flex:1 1 auto;justify-content:center;}
         .search-results{max-height:180px;}
     }
+
+    /* Hide the global-actions "Back to dashboard" button on this page */
+    .ga-btn.ga-back,
+    .ga-btn[title*="dashboard" i],
+    .ga-btn[title*="Back" i] {
+        display: none !important;
+    }
 </style>
 </head>
 <body>

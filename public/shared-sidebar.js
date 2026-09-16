@@ -1,4 +1,4 @@
-/* Unified sidebar for standalone MEFAMDEV admin pages. */
+/* Unified sidebar + skeleton screens for standalone MEFAMDEV admin pages. */
 (function () {
     'use strict';
 
@@ -37,9 +37,14 @@
         ]}
     ];
 
+    /* ============================================================
+       CSS — sidebar + skeleton overlay
+       ============================================================ */
     const css = `
         :root { --mefam-sidebar-w: 260px; }
         body.mefam-has-sidebar { padding-left: var(--mefam-sidebar-w); }
+
+        /* ---------- Sidebar ---------- */
         .mefam-sidebar { position:fixed; inset:0 auto 0 0; width:var(--mefam-sidebar-w); background:linear-gradient(180deg,#14273b,#1a2e44); display:flex; flex-direction:column; overflow-y:auto; z-index:200; border-right:1px solid rgba(255,255,255,.04); box-shadow:8px 0 24px rgba(15,23,42,.08); font-family:'DM Sans',Arial,sans-serif; }
         .mefam-sidebar-brand { padding:22px 18px 16px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:12px; }
         .mefam-sidebar-brand img { height:42px; object-fit:contain; filter:brightness(1.1); }
@@ -72,9 +77,60 @@
         .mefam-sidebar-backdrop.open { opacity:1; pointer-events:auto; }
         .mefam-sidebar-toggle { display:none; position:fixed; top:12px; left:12px; z-index:201; width:42px; height:42px; border:0; border-radius:10px; background:#1a2e44; color:#fff; font-size:1.15rem; cursor:pointer; }
         @media (max-width:900px) { body.mefam-has-sidebar { padding-left:0; padding-top:58px; } .mefam-sidebar { transform:translateX(-100%); width:min(84vw,300px); transition:transform .25s; } .mefam-sidebar.open { transform:translateX(0); } .mefam-sidebar-backdrop { display:block; } .mefam-sidebar-toggle { display:inline-flex; align-items:center; justify-content:center; } }
-        @media print { .mefam-sidebar,.mefam-sidebar-toggle,.mefam-sidebar-backdrop { display:none!important; } body.mefam-has-sidebar { padding:0!important; } }
+        @media print { .mefam-sidebar,.mefam-sidebar-toggle,.mefam-sidebar-backdrop,#mefamPageSkeleton { display:none!important; } body.mefam-has-sidebar { padding:0!important; } }
+
+        /* ---------- Skeleton screen ---------- */
+        #mefamPageSkeleton {
+            position: fixed;
+            inset: 0;
+            z-index: 400;
+            background: #eef2f7;
+            padding: 26px 28px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .22s ease;
+            font-family: 'DM Sans', Arial, sans-serif;
+        }
+        #mefamPageSkeleton.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        body.mefam-skeleton-active { overflow: hidden; }
+
+        .mefam-sk-shell { max-width: 1180px; margin: 0 auto; width: 100%; }
+        .mefam-sk-line, .mefam-sk-block {
+            background: linear-gradient(90deg, #e1e6ed 25%, #f4f6f9 50%, #e1e6ed 75%);
+            background-size: 200% 100%;
+            animation: mefamSkShimmer 1.35s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        @keyframes mefamSkShimmer {
+            from { background-position: 200% 0; }
+            to   { background-position: -200% 0; }
+        }
+        .mefam-sk-title    { width: 220px; height: 26px; margin-bottom: 10px; }
+        .mefam-sk-sub      { width: 320px; height: 12px; margin-bottom: 26px; }
+        .mefam-sk-grid     { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+        .mefam-sk-block    { height: 112px; }
+        .mefam-sk-block-lg { height: 280px; margin-bottom: 18px; }
+        .mefam-sk-block-lg:last-child { margin-bottom: 0; }
+
+        @media (max-width: 900px) {
+            #mefamPageSkeleton { padding: 16px; padding-top: 74px; }
+            .mefam-sk-grid { grid-template-columns: 1fr 1fr; }
+            .mefam-sk-title { width: 160px; height: 22px; }
+            .mefam-sk-sub { width: 220px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .mefam-sk-line, .mefam-sk-block { animation: none; }
+            #mefamPageSkeleton { transition: none; }
+        }
     `;
 
+    /* ============================================================
+       Sidebar markup
+       ============================================================ */
     function buildHtml() {
         const groups = navGroups.filter(group => group.roles.includes(role)).map(group => {
             const items = group.items.filter(item => item.roles.includes(role));
@@ -91,6 +147,78 @@
         </aside><div class="mefam-sidebar-backdrop" id="mefamSidebarBackdrop"></div><button type="button" class="mefam-sidebar-toggle" id="mefamSidebarToggle" aria-label="Toggle navigation">☰</button>`;
     }
 
+    /* ============================================================
+       Skeleton screen
+       ============================================================ */
+    const SKELETON_ID = 'mefamPageSkeleton';
+    let skeletonFirstShownAt = 0;
+    const SKELETON_MIN_MS = 220;
+
+    function buildSkeletonHtml() {
+        return `<div class="mefam-sk-shell">
+            <div class="mefam-sk-line mefam-sk-title"></div>
+            <div class="mefam-sk-line mefam-sk-sub"></div>
+            <div class="mefam-sk-grid">
+                <div class="mefam-sk-block"></div>
+                <div class="mefam-sk-block"></div>
+                <div class="mefam-sk-block"></div>
+                <div class="mefam-sk-block"></div>
+            </div>
+            <div class="mefam-sk-block mefam-sk-block-lg"></div>
+            <div class="mefam-sk-block mefam-sk-block-lg"></div>
+        </div>`;
+    }
+
+    function ensureSkeleton() {
+        let el = document.getElementById(SKELETON_ID);
+        if (el) return el;
+        if (!document.body) return null;
+        el = document.createElement('div');
+        el.id = SKELETON_ID;
+        el.setAttribute('aria-hidden', 'true');
+        el.innerHTML = buildSkeletonHtml();
+        document.body.appendChild(el);
+        return el;
+    }
+
+    function showSkeleton() {
+        const el = ensureSkeleton();
+        if (!el) return;
+        if (!el.classList.contains('is-visible')) {
+            skeletonFirstShownAt = performance.now();
+            el.classList.add('is-visible');
+            document.body.classList.add('mefam-skeleton-active');
+        }
+    }
+
+    function hideSkeleton() {
+        const el = document.getElementById(SKELETON_ID);
+        if (!el) return;
+        const elapsed = performance.now() - skeletonFirstShownAt;
+        const remaining = Math.max(0, SKELETON_MIN_MS - elapsed);
+        setTimeout(() => {
+            el.classList.remove('is-visible');
+            document.body.classList.remove('mefam-skeleton-active');
+            setTimeout(() => el.remove(), 260);
+        }, remaining);
+    }
+
+    /** Show the skeleton during the very first paint of this page. */
+    function startSkeletonLifecycle() {
+        showSkeleton();
+        const finish = () => hideSkeleton();
+        if (document.readyState === 'complete') {
+            finish();
+        } else {
+            window.addEventListener('load', finish, { once: true });
+            // Safety net — never leave the user stuck behind the skeleton.
+            setTimeout(finish, 6000);
+        }
+    }
+
+    /* ============================================================
+       Sidebar API
+       ============================================================ */
     const api = {
         toggle() { const sidebar = document.getElementById('mefamSidebar'); const backdrop = document.getElementById('mefamSidebarBackdrop'); const open = sidebar?.classList.toggle('open'); backdrop?.classList.toggle('open', open); },
         close() { document.getElementById('mefamSidebar')?.classList.remove('open'); document.getElementById('mefamSidebarBackdrop')?.classList.remove('open'); },
@@ -111,9 +239,13 @@
         document.getElementById('mefamSidebarToggle')?.addEventListener('click', api.toggle);
         document.getElementById('mefamSidebarBackdrop')?.addEventListener('click', api.close);
         document.querySelector('[data-sidebar-logout]')?.addEventListener('click', api.logout);
-        document.querySelectorAll('.mefam-nav-item').forEach(link => link.addEventListener('click', () => { if (window.innerWidth <= 900) api.close(); }));
+        document.querySelectorAll('.mefam-nav-item').forEach(link => link.addEventListener('click', () => {
+            showSkeleton();
+            if (window.innerWidth <= 900) api.close();
+        }));
         api.highlight();
         window.addEventListener('hashchange', api.highlight);
+        startSkeletonLifecycle();
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
