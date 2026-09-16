@@ -753,13 +753,6 @@
 
     <div class="doc-body">
 
-        <!-- ══ Draft restore ══ -->
-        <div class="draft-bar" id="draftBar" hidden>
-            <p>📝 May <strong>hindi pa naisave na draft</strong><span id="draftTimeDisplay"></span>.</p>
-            <button type="button" class="draft-restore" id="draftRestore">I-restore</button>
-            <button type="button" class="draft-discard" id="draftDiscard">Itapon</button>
-        </div>
-
         <!-- ══ Prefill ══ -->
         <div class="prefill-bar">
             <p>⚡ <strong>Auto-fill from application:</strong> Link this assessment to a submitted application.</p>
@@ -1567,8 +1560,6 @@ function saveAssessment() {
 
     state.dirty = false;
     try { localStorage.removeItem(LS.draft); } catch (e) { /* ignore */ }
-    $('draftBar').hidden = true;
-
     const label = finalResult === 'above' ? 'Above Poverty Threshold'
                 : finalResult === 'below' ? 'Below Poverty Threshold'
                 : 'Unset';
@@ -1600,8 +1591,6 @@ function clearAll() {
     if (sel && !sel.disabled) sel.value = '';
 
     try { localStorage.removeItem(LS.draft); } catch (e) { /* ignore */ }
-    $('draftBar').hidden = true;
-
     recalculate();
     updateFinalLabel();
     toast('Form cleared.', 'info', 2500);
@@ -1755,8 +1744,6 @@ function init() {
     $('metaDate').value = todayLocalISO();
 
     populatePrefill();
-    offerDraft();
-
     // URL ?id=… deep link
     const id = new URLSearchParams(window.location.search).get('id');
     if (id) {
@@ -1841,5 +1828,6 @@ if (document.readyState === 'loading') {
     init();
 }
 </script>
+<script src="./shared-sidebar.js"></script>
 </body>
 </html>
