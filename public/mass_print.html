@@ -1,3 +1,8 @@
+Here is the complete, updated `mass_print.html` file. 
+
+I have integrated the loading overlay to cover the background for **both Intake Sheets and Staff Assessments** (as well as all other report types). The overlay uses a high `z-index` to sit on top of everything, but it is explicitly excluded from the `@media print` CSS. This ensures the user sees a clean "Preparing document..." screen while the system stages the print files, and the overlay disappears right before the print dialog opens.
+
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -651,10 +656,53 @@
       .cb-options{max-height:170px}
     }
 
+    /* ============ PRINT LOADING OVERLAY ============ */
+    #printOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: #eef2f7;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', Arial, sans-serif;
+      color: var(--navy);
+      text-align: center;
+      padding: 24px;
+    }
+    #printOverlay.is-visible {
+      display: flex;
+    }
+    .print-overlay-spinner {
+      width: 54px;
+      height: 54px;
+      border: 4px solid rgba(18, 43, 69, 0.1);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: printSpin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes printSpin {
+      to { transform: rotate(360deg); }
+    }
+    #printOverlay h3 {
+      margin: 0 0 8px;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.35rem;
+      color: var(--navy);
+    }
+    #printOverlay p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
     /* ============ PRINT ============ */
     @media print{
       body{background:#fff}
       .no-print{display:none !important}
+      #printOverlay { display: none !important; }
     }
   </style>
 </head>
@@ -676,7 +724,6 @@
   </header>
 
   <main class="page">
-
 
     <!-- ============ SETUP ============ -->
     <section class="panel no-print">
@@ -920,6 +967,13 @@
       </div>
     </section>
   </main>
+
+  <!-- Print Loading Overlay -->
+  <div id="printOverlay" class="no-print">
+    <div class="print-overlay-spinner"></div>
+    <h3>Preparing document...</h3>
+    <p>Please wait while we generate the print preview.</p>
+  </div>
 
   <script src="./mefamdev-api.js"></script>
   <script src="./audit-log.js"></script>
@@ -1942,22 +1996,37 @@
         toast(mode === 'selected' ? 'Select at least one record to print.' : 'No records to mass print.', 'warn');
         return;
       }
-      if (type === 'intake' || type === 'assessment') {
-        await runTemplatePrint(type, records, mode);
-        return;
+
+      const overlay = document.getElementById('printOverlay');
+      if (overlay) overlay.classList.add('is-visible');
+
+      try {
+        if (type === 'intake' || type === 'assessment') {
+          await runTemplatePrint(type, records, mode);
+        } else {
+          const html = await buildPrintDocument(type, records);
+          printCurrentTabHtml(html);
+        }
+      } catch (error) {
+        console.error('Print generation failed:', error);
+        toast('Failed to generate print document.', 'error');
+        if (overlay) overlay.classList.remove('is-visible');
       }
-      const html = await buildPrintDocument(type, records);
-      printCurrentTabHtml(html);
     }
 
     function printCurrentTabHtml(html) {
+      const overlay = document.getElementById('printOverlay');
+      if (overlay) overlay.classList.remove('is-visible');
+
       const frame = document.createElement('iframe');
       frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;z-index:99999;';
       document.body.appendChild(frame);
+
       const printDocument = frame.contentDocument || frame.contentWindow.document;
       printDocument.open();
       printDocument.write(html);
       printDocument.close();
+
       let printed = false;
       const doPrint = () => {
         if (printed) return;
@@ -1965,6 +2034,7 @@
         try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {}
         setTimeout(() => frame.remove(), 700);
       };
+
       setTimeout(doPrint, 300);
       setTimeout(doPrint, 1500);
     }
@@ -1994,6 +2064,7 @@
         document.body.appendChild(frame);
         return frame;
       });
+
       await Promise.all(staging.map(frame => new Promise(resolve => {
         const started = Date.now();
         const isReady = () => {
@@ -2011,12 +2082,15 @@
           }
         }, 60);
       })));
+
       const body = staging.map(frame => `<section class="template-page">${serializeTemplateBody(frame.contentDocument)}</section>`).join('');
       const styles = staging[0]?.contentDocument ? [...staging[0].contentDocument.querySelectorAll('style')]
         .map(style => style.textContent.replace(/body\.mass-print/g, '.mass-print'))
         .join('\n') : '';
+
       staging.forEach(frame => frame.remove());
       localStorage.setItem(storageKey, original || '[]');
+
       printCurrentTabHtml(`<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Print</title><style>${styles}.template-page{page-break-after:always}.template-page:last-child{page-break-after:auto}</style></head><body class="mass-print">${body}</body></html>`);
     }
 
@@ -2287,3 +2361,4 @@
 <script src="./shared-sidebar.js"></script>
 </body>
 </html>
+```
