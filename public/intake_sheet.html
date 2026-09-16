@@ -1906,7 +1906,7 @@ function loadSavedIntakeRecord(recordId) {
     setVal('spBirthplace', record.spBirthplace || '');
     setVal('spEduc', record.spEduc || '');
     setVal('spOccup', record.spOccup || '');
-    const hasSpouse = (record.spName || record.spNick || record.spOccup || record.spEduc || '').toString().trim() !== '';
+    const hasSpouse = (record.spName || record.spNickname || record.spOccup || record.spEduc || '').toString().trim() !== '';
     if (hasSpouse) {
         const cb = document.getElementById('includeSpouse'); if (cb) cb.checked = true;
         const ss = document.getElementById('spouseSection'); if (ss) ss.style.display = 'block';
@@ -2008,6 +2008,19 @@ function collectData() {
         birthplace: document.getElementById('iBirthplace').value,
         educ: document.getElementById('iEduc').value,
         occup: document.getElementById('iOccup').value,
+        spName: document.getElementById('spName')?.value || '',
+        spNickname: document.getElementById('spNickname')?.value || '',
+        spNationality: document.getElementById('spNationality')?.value || '',
+        spContact: document.getElementById('spContact')?.value || '',
+        spAddress: document.getElementById('spAddress')?.value || '',
+        spCivil: document.getElementById('spCivil')?.value || '',
+        spSex: document.getElementById('spSex')?.value || '',
+        spReligion: document.getElementById('spReligion')?.value || '',
+        spAge: document.getElementById('spAge')?.value || '',
+        spDob: document.getElementById('spDob')?.value || '',
+        spBirthplace: document.getElementById('spBirthplace')?.value || '',
+        spEduc: document.getElementById('spEduc')?.value || '',
+        spOccup: document.getElementById('spOccup')?.value || '',
         familyComposition: famRows,
         problemPresented: document.getElementById('sProblem').value,
         backgroundInfo: document.getElementById('sBackground').value,

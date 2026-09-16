@@ -1994,7 +1994,23 @@
       const field = (label, text) => `<div class="field"><span class="label">${escapeHtml(label)}</span>${value(text)}</div>`;
       const family = Array.isArray(item.familyComposition) ? item.familyComposition : [];
       const actions = Array.isArray(item.actionPlan) ? item.actionPlan : [];
-      const spouse = [item.spName, item.spNickname, item.spNationality, item.spContact, item.spAddress, item.spCivil, item.spSex, item.spReligion, item.spAge, item.spDob, item.spBirthplace, item.spEduc, item.spOccup].some(Boolean);
+      const parentFallback = family.find(member => /^(father|mother|ama|ina)$/i.test(String(member.relation || '').trim()));
+      const spouseData = {
+        name: item.spName || parentFallback?.name,
+        nickname: item.spNickname,
+        nationality: item.spNationality,
+        contact: item.spContact,
+        address: item.spAddress,
+        civil: item.spCivil,
+        sex: item.spSex || parentFallback?.sex,
+        religion: item.spReligion,
+        age: item.spAge || parentFallback?.age,
+        dob: item.spDob,
+        birthplace: item.spBirthplace,
+        educ: item.spEduc || parentFallback?.educ,
+        occup: item.spOccup || parentFallback?.occup
+      };
+      const spouse = Object.values(spouseData).some(Boolean);
       const familyRows = family.length ? family.map((member, index) => `<tr><td>${index + 1}</td><td>${value(member.name)}</td><td>${value(member.age)}</td><td>${value(member.sex)}</td><td>${value(member.relation)}</td><td>${value(member.civil)}</td><td>${value(member.educ)}</td><td>${value(member.occup)}</td><td>${value(member.income)}</td></tr>`).join('') : '<tr><td colspan="9" class="muted">No family members recorded.</td></tr>';
       const actionRows = actions.length ? actions.map(action => `<tr><td>${value(action.service)}</td><td>${value(action.plan)}</td></tr>`).join('') : '<tr><td>-</td><td>-</td></tr>';
       const clientSignature = item.clientSignature ? `<img src="${escapeHtml(item.clientSignature)}" alt="">` : '';
@@ -2002,7 +2018,7 @@
       return `<section class="record intake-print"><div class="sheet-title">Intake Sheet <small>MEFAMDEV</small></div>
         <div class="grid">${field('Case No.', item.caseNo)}${field('Date', item.caseDate || item.savedAt)}${field('Case Category', item.caseCategory)}${field('Referral (optional)', item.caseReferral)}</div>
         <h2>I. Identifying Information</h2><div class="grid">${field('Name (Last, First, M.I.)', item.name)}${field('Nickname', item.nickname)}${field('Nationality', item.nationality)}${field('Contact No.', item.contact)}<div class="field" style="grid-column:1 / -1"><span class="label">Present Address</span>${value(item.presentAddr)}</div><div class="field" style="grid-column:1 / -1"><span class="label">Permanent Address</span>${value(item.permAddr)}</div>${field('Civil Status', item.civilStatus)}${field('Sex', item.sex)}${field('Religion', item.religion)}${field('Age', item.age)}${field('Date of Birth', item.dob)}${field('Place of Birth', item.birthplace)}${field('Educational Attainment', item.educ)}${field('Occupation', item.occup)}</div>
-        ${spouse ? `<h2>Spouse / Partner Information</h2><div class="grid">${field('Name of Spouse', item.spName)}${field('Nickname', item.spNickname)}${field('Nationality', item.spNationality)}${field('Contact No.', item.spContact)}<div class="field" style="grid-column:1 / -1"><span class="label">Present Address</span>${value(item.spAddress)}</div>${field('Civil Status', item.spCivil)}${field('Sex', item.spSex)}${field('Religion', item.spReligion)}${field('Age', item.spAge)}${field('Date of Birth', item.spDob)}${field('Place of Birth', item.spBirthplace)}${field('Educational Attainment', item.spEduc)}${field('Occupation', item.spOccup)}</div>` : ''}
+        ${spouse ? `<h2>Spouse / Partner Information</h2><div class="grid">${field('Name of Spouse', spouseData.name)}${field('Nickname', spouseData.nickname)}${field('Nationality', spouseData.nationality)}${field('Contact No.', spouseData.contact)}<div class="field" style="grid-column:1 / -1"><span class="label">Present Address</span>${value(spouseData.address)}</div>${field('Civil Status', spouseData.civil)}${field('Sex', spouseData.sex)}${field('Religion', spouseData.religion)}${field('Age', spouseData.age)}${field('Date of Birth', spouseData.dob)}${field('Place of Birth', spouseData.birthplace)}${field('Educational Attainment', spouseData.educ)}${field('Occupation', spouseData.occup)}</div>` : ''}
         <h2>II. Family Composition</h2><table class="family-table"><thead><tr><th>#</th><th>Name</th><th>Age</th><th>Sex</th><th>Rel. to Client</th><th>Civil Status</th><th>Educ. Attainment</th><th>Occupation</th><th>Income</th></tr></thead><tbody>${familyRows}</tbody></table>
         <h2>III. Problem Presented</h2><div class="section-text">${value(item.problemPresented)}</div><h2>IV. Background Information on the Stated Problem</h2><div class="section-text">${value(item.backgroundInfo)}</div><h2>V. Social Worker's Assessment of the Problem</h2><div class="section-text">${value(item.assessment)}</div>
         <h2>VI. Social Worker's Intervention Action Plan</h2><table class="action-table"><thead><tr><th>Services</th><th>Specific Activities / Plan of Action</th></tr></thead><tbody>${actionRows}</tbody></table>
@@ -2022,7 +2038,7 @@
           ? '⚠️ BELOW POVERTY THRESHOLD'
           : '—';
 
-      return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Student Ref / Name</span>${escapeHtml(`${studentRef} / ${studentName}`)}</div><div class="field"><span class="label">Grade</span>${escapeHtml(grade)}</div><div class="field"><span class="label">School</span>${escapeHtml(school)}</div><div class="field"><span class="label">Barangay</span>${escapeHtml(barangay)}</div><div class="field"><span class="label">Status</span>${escapeHtml(status)}</div></div><div class="signature"><div class="line">Staff signature</div><div class="line">Director signature</div></div></section>`;
+      return `<section class="record"><h2>Staff Assessment</h2><div class="grid"><div class="field"><span class="label">Student Ref / Name</span>${escapeHtml(`${studentRef} / ${studentName}`)}</div><div class="field"><span class="label">Grade</span>${escapeHtml(grade)}</div><div class="field"><span class="label">School</span>${escapeHtml(school)}</div><div class="field"><span class="label">Barangay</span>${escapeHtml(barangay)}</div><div class="field"><span class="label">Status</span>${escapeHtml(status)}</div></div><div class="signature" style="display:block;max-width:360px;margin:28px auto 0"><div class="line">Staff assessor signature</div></div></section>`;
     }
     function buildDirectoryPrint(records) { return `<section><h2>Scholar Directory</h2><table><thead><tr><th>No.</th><th>Name</th><th>Student ID</th><th>Grade</th><th>School</th><th>Barangay</th><th>Contact</th></tr></thead><tbody>${records.map((item, index) => `<tr><td>${index + 1}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.contact || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
     function buildApplicationsPrint(records) { return `<section><h2>Application Register</h2><table><thead><tr><th>Reference</th><th>Name</th><th>Grade</th><th>School</th><th>Barangay</th><th>Status</th><th>Submitted</th></tr></thead><tbody>${records.map(item => `<tr><td>${escapeHtml(item.reference || item.referenceNumber || item.reference_number || item.id || '-')}</td><td>${escapeHtml(item.name || '-')}</td><td>${escapeHtml(item.grade || '-')}</td><td>${escapeHtml(item.school || '-')}</td><td>${escapeHtml(item.barangay || '-')}</td><td>${escapeHtml(item.status || '-')}</td><td>${escapeHtml(item.date || item.created_at || '-')}</td></tr>`).join('')}</tbody></table></section>`; }
