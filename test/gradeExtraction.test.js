@@ -13,6 +13,20 @@ test('parseNumber handles numeric strings and nulls', () => {
   assert.strictEqual(parseNumber('86.5'), 86.5);
 });
 
+test('normalizeExtractionResult accepts string-only subject rows and normalizes them', () => {
+  const raw = {
+    schoolYear: '2025-2026',
+    subjects: ['Filipino', 'English', 'Mathematics', 'Science'],
+    generalAverage: '86.2',
+    confidence: '0.92',
+    uncertainFields: ['Science Q3']
+  };
+
+  const norm = normalizeExtractionResult(raw);
+  assert.deepStrictEqual(norm.subjects.map(s => s.name), ['Filipino', 'English', 'Mathematics', 'Science']);
+  assert.ok(norm.subjects.every(s => s.q1 === null && s.q2 === null && s.q3 === null && s.q4 === null && s.final === null));
+});
+
 test('normalizeExtractionResult merges MAPEH subcomponents and parses values', () => {
   const raw = {
     schoolYear: '2025-2026',
