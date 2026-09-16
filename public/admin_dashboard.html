@@ -1019,7 +1019,7 @@
                 <button type="button" class="nav-item" onclick="nav('saved-records',this)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">🗂️</span> Saved Forms
                 </button>
-                <button type="button" class="nav-item" onclick="nav('events',this)" data-roles="director,program,edu">
+                <button type="button" class="nav-item" onclick="loadSpiritualFormation(this)" data-roles="director,program,edu">
                     <span class="nav-icon" aria-hidden="true">🕊️</span> Spiritual Formation
                 </button>
                 <button type="button" class="nav-item" onclick="openToolModal('student_grade_card.html', 'Student Report Cards')" data-roles="director,edu" title="Open Student Report Cards">
@@ -1453,6 +1453,11 @@
                 <div class="card-title">Formation Summary</div>
                 <div id="formationEventsSummary"></div>
             </div>
+        </div>
+
+        <!-- Spiritual Formation Iframe Page -->
+        <div id="page-spiritual-formation" class="page" style="height: 100%; display: flex; flex-direction: column;">
+            <iframe id="spiritualFormationFrame" src="" style="width: 100%; flex: 1; border: none; border-radius: var(--radius); background: var(--bg);" loading="lazy"></iframe>
         </div>
 
         <!-- ══════════════════════════════════════════════
@@ -2747,6 +2752,26 @@ function nav(pageId, el) {
     if (menu) menu.classList.remove('open');
     if (window.innerWidth <= 900) closeSidebar();
     // Scroll content area to top
+    const area = document.querySelector('.content-area');
+    if (area) area.scrollTop = 0;
+}
+
+function loadSpiritualFormation(el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const targetPage = document.getElementById('page-spiritual-formation');
+    if (targetPage) targetPage.classList.add('active');
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    document.getElementById('page-title').innerText = 'Spiritual Formation';
+
+    const frame = document.getElementById('spiritualFormationFrame');
+    if (frame && !frame.src) {
+        frame.src = 'spiritual_formation.html';
+    }
+
+    if (window.innerWidth <= 900) closeSidebar();
     const area = document.querySelector('.content-area');
     if (area) area.scrollTop = 0;
 }
