@@ -1946,12 +1946,22 @@
       const frame = document.createElement('iframe');
       frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;z-index:99999;';
       document.body.appendChild(frame);
-      frame.srcdoc = html;
-      frame.addEventListener('load', () => {
+      const printDocument = frame.contentDocument || frame.contentWindow.document;
+      printDocument.open();
+      printDocument.write(html);
+      printDocument.close();
+      let printed = false;
+      const print = () => {
+        if (printed) return;
+        printed = true;
         frame.contentWindow.focus();
         frame.contentWindow.print();
         setTimeout(() => frame.remove(), 700);
-      }, { once: true });
+      };
+      frame.addEventListener('load', () => setTimeout(print, 250), { once: true });
+      setTimeout(() => {
+        if (document.body.contains(frame)) print();
+      }, 1200);
     }
 
     async function runTemplatePrint(type, records, mode) {
@@ -1984,7 +1994,9 @@
         frame.addEventListener('load', resolve, { once: true });
       })));
       const body = staging.map(frame => `<section class="template-page">${serializeTemplateBody(frame.contentDocument)}</section>`).join('');
-      const styles = staging[0]?.contentDocument ? [...staging[0].contentDocument.querySelectorAll('style')].map(style => style.textContent).join('\n') : '';
+      const styles = staging[0]?.contentDocument ? [...staging[0].contentDocument.querySelectorAll('style')]
+        .map(style => style.textContent.replace(/body\.mass-print/g, '.mass-print'))
+        .join('\n') : '';
       staging.forEach(frame => frame.remove());
       localStorage.setItem(storageKey, original || '[]');
       printCurrentTabHtml(`<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Print</title><style>${styles}.template-page{page-break-after:always}.template-page:last-child{page-break-after:auto}</style></head><body class="mass-print">${body}</body></html>`);
