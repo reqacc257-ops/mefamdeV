@@ -27,7 +27,6 @@
             { href: 'admin_dashboard.html#pipeline', icon: '🔀', label: 'Application Status', roles: ['director', 'program'] },
             { href: 'staff_assessment.html', icon: '📝', label: 'Assessment Form', roles: ['director', 'program'] },
             { href: 'intake_sheet.html', icon: '📄', label: 'Intake Sheet', roles: ['director', 'program'] },
-            { href: 'grade_tracking.html', icon: '📊', label: 'Grade Tracking', roles: ['director', 'edu', 'program'] },
             { href: 'student_grade_card.html', icon: '🎓', label: 'Student Report Cards', roles: ['director', 'edu'] },
             { href: 'spiritual_formation.html', icon: '🕊️', label: 'Spiritual Formation', roles: ['director', 'edu', 'program'] }
         ]},
