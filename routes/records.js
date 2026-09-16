@@ -16,15 +16,23 @@ router.get('/intake/:id', async (req, res) => {
 });
 router.post('/intake', async (req, res) => {
   const b = req.body;
-  const info = await db.prepare(
-    'INSERT INTO intake_sheets (linked_app_id, case_no, case_date, case_category, case_referral, data) VALUES (?,?,?,?,?,?)'
-  ).run(b.linkedAppId || null, b.caseNo || '', b.caseDate || '', b.caseCategory || '', b.caseReferral || '', JSON.stringify(b));
+  const existing = b.caseNo
+    ? await db.prepare('SELECT id FROM intake_sheets WHERE case_no = ?').get(b.caseNo)
+    : null;
+  const dataJson = JSON.stringify(b);
+  const info = existing
+    ? await db.prepare(
+      'UPDATE intake_sheets SET linked_app_id = ?, case_date = ?, case_category = ?, case_referral = ?, data = ?, saved_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(b.linkedAppId || null, b.caseDate || '', b.caseCategory || '', b.caseReferral || '', dataJson, existing.id)
+    : await db.prepare(
+      'INSERT INTO intake_sheets (linked_app_id, case_no, case_date, case_category, case_referral, data) VALUES (?,?,?,?,?,?)'
+    ).run(b.linkedAppId || null, b.caseNo || '', b.caseDate || '', b.caseCategory || '', b.caseReferral || '', dataJson);
 
   // Auto-advance application to Interviewing
   if (b.linkedAppId) {
     await db.prepare("UPDATE applications SET status='Interviewing' WHERE id=? AND status='Pending Review'").run(b.linkedAppId);
   }
-  res.json({ ok: true, id: info.lastInsertRowid });
+  res.json({ ok: true, id: existing?.id || info.lastInsertRowid });
 });
 router.delete('/intake/:id', requireRole('director','program'), async (req, res) => {
   await db.prepare('DELETE FROM intake_sheets WHERE id = ?').run(req.params.id);

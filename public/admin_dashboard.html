@@ -282,6 +282,7 @@
             scroll-behavior: smooth;
         }
         .page { display: none; animation: fadeIn .25s ease; }
+        .page:not(.active) { display: none !important; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
 

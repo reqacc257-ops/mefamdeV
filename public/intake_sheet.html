@@ -1808,7 +1808,7 @@ function toggleSpouseSection() {
 }
 
 /* ── Save ── */
-function saveIntake() {
+async function saveIntake() {
     const data = collectData();
     const caseNo = String(data.caseNo || '').trim();
     if (!caseNo) {
@@ -1856,7 +1856,14 @@ function saveIntake() {
             localStorage.setItem('mefamdev_apps', JSON.stringify(apps));
         }
     }
-    alert(`Intake Sheet saved!\nCase No: ${data.caseNo || '(no case no.)'}`);
+    let serverSaved = false;
+    try {
+        const response = await MefamAPI.saveIntakeSheet(data);
+        serverSaved = Boolean(response?.ok);
+    } catch (error) {
+        console.warn('Intake sheet saved locally but could not sync to the server.', error);
+    }
+    alert(`${serverSaved ? 'Intake Sheet saved!' : 'Intake Sheet saved on this browser only; server sync failed.'}\nCase No: ${data.caseNo || '(no case no.)'}`);
 }
 
 function loadSavedIntakeRecord(recordId) {
