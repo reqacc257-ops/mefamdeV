@@ -1971,6 +1971,16 @@
         if (frame.contentDocument?.readyState === 'complete') { resolve(); return; }
         frame.addEventListener('load', resolve, { once: true });
       })));
+      await Promise.all(frameWindows.map(frame => frame.contentDocument?.fonts?.ready || Promise.resolve()));
+      frameWindows.forEach(frame => {
+        const doc = frame.contentDocument;
+        const height = Math.max(
+          doc?.documentElement?.scrollHeight || 0,
+          doc?.body?.scrollHeight || 0,
+          1
+        );
+        frame.style.height = `${height + 2}px`;
+      });
       setTimeout(() => {
         printWindow.focus();
         printWindow.print();
