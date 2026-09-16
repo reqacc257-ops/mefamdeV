@@ -493,7 +493,6 @@
       </div>
       <div class="appbar-right">
         <p class="tagline">Track funds, disburse stipends, and issue receipts across the system.</p>
-        <a class="back" id="backToDashboardBtn" href="admin_dashboard.html">← Dashboard</a>
       </div>
     </div>
   </header>
@@ -2108,13 +2107,6 @@
         updateDisburseUI();
 
         await loadData();
-      });
-
-      document.addEventListener('DOMContentLoaded', () => {
-        if (window.self !== window.top) {
-          const backBtn = document.getElementById('backToDashboardBtn');
-          if (backBtn) backBtn.style.display = 'none';
-        }
       });
 
       // Expose for debugging
