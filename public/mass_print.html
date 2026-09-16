@@ -1951,17 +1951,14 @@
       printDocument.write(html);
       printDocument.close();
       let printed = false;
-      const print = () => {
+      const doPrint = () => {
         if (printed) return;
         printed = true;
-        frame.contentWindow.focus();
-        frame.contentWindow.print();
+        try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (_) {}
         setTimeout(() => frame.remove(), 700);
       };
-      frame.addEventListener('load', () => setTimeout(print, 250), { once: true });
-      setTimeout(() => {
-        if (document.body.contains(frame)) print();
-      }, 1200);
+      setTimeout(doPrint, 300);
+      setTimeout(doPrint, 1500);
     }
 
     async function runTemplatePrint(type, records, mode) {
@@ -1990,8 +1987,21 @@
         return frame;
       });
       await Promise.all(staging.map(frame => new Promise(resolve => {
-        if (frame.contentDocument?.readyState === 'complete') { resolve(); return; }
-        frame.addEventListener('load', resolve, { once: true });
+        const started = Date.now();
+        const isReady = () => {
+          try {
+            const doc = frame.contentDocument;
+            if (!doc || doc.readyState !== 'complete') return false;
+            return Boolean(doc.querySelector('.shell, .doc-header, #indicatorHost, #famTableBody'));
+          } catch (_) { return false; }
+        };
+        if (isReady()) return resolve();
+        const timer = setInterval(() => {
+          if (isReady() || Date.now() - started > 5000) {
+            clearInterval(timer);
+            setTimeout(resolve, 100);
+          }
+        }, 60);
       })));
       const body = staging.map(frame => `<section class="template-page">${serializeTemplateBody(frame.contentDocument)}</section>`).join('');
       const styles = staging[0]?.contentDocument ? [...staging[0].contentDocument.querySelectorAll('style')]
@@ -2003,8 +2013,9 @@
     }
 
     function serializeTemplateBody(doc) {
-      const clone = doc.body.cloneNode(true);
+      if (!doc || !doc.body) return '';
       const sourceFields = [...doc.body.querySelectorAll('input, textarea, select')];
+      const clone = doc.body.cloneNode(true);
       const cloneFields = [...clone.querySelectorAll('input, textarea, select')];
       sourceFields.forEach((source, index) => {
         const target = cloneFields[index];
@@ -2018,6 +2029,7 @@
           else target.setAttribute('value', source.value);
         }
       });
+      clone.querySelectorAll('script, noscript').forEach(element => element.remove());
       return clone.innerHTML;
     }
 
