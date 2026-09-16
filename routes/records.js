@@ -7,7 +7,15 @@ const { requireRole } = require('../middleware/auth');
 
 // ── Intake Sheets ─────────────────────────────────────
 router.get('/intake', async (req, res) => {
-  res.json(await db.prepare('SELECT id, linked_app_id, case_no, case_date, saved_at, json_extract(data,"$.name") as name FROM intake_sheets ORDER BY saved_at DESC').all());
+  const rows = await db.prepare(
+    req.query.full === '1'
+      ? 'SELECT * FROM intake_sheets ORDER BY saved_at DESC'
+      : 'SELECT id, linked_app_id, case_no, case_date, saved_at, json_extract(data,"$.name") as name FROM intake_sheets ORDER BY saved_at DESC'
+  ).all();
+  res.json(req.query.full === '1' ? rows.map(row => {
+    const data = JSON.parse(row.data || '{}');
+    return { ...row, ...data, id: row.id, data };
+  }) : rows);
 });
 router.get('/intake/:id', async (req, res) => {
   const row = await db.prepare('SELECT * FROM intake_sheets WHERE id = ?').get(req.params.id);
@@ -41,7 +49,15 @@ router.delete('/intake/:id', requireRole('director','program'), async (req, res)
 
 // ── Staff Assessments ─────────────────────────────────
 router.get('/assessments', async (req, res) => {
-  res.json(await db.prepare('SELECT id, linked_app_id, family_surname, student, final_result, saved_at FROM assessments ORDER BY saved_at DESC').all());
+  const rows = await db.prepare(
+    req.query.full === '1'
+      ? 'SELECT * FROM assessments ORDER BY saved_at DESC'
+      : 'SELECT id, linked_app_id, family_surname, student, final_result, saved_at FROM assessments ORDER BY saved_at DESC'
+  ).all();
+  res.json(req.query.full === '1' ? rows.map(row => {
+    const data = JSON.parse(row.data || '{}');
+    return { ...row, ...data, id: row.id, data };
+  }) : rows);
 });
 router.get('/assessments/:id', async (req, res) => {
   const row = await db.prepare('SELECT * FROM assessments WHERE id = ?').get(req.params.id);

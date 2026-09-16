@@ -185,13 +185,13 @@ const MefamAPI = {
     );
   },
   async getAllIntakeSheets() {
-    return this._getAllPages('/records/intake');
+    return this._getAllPages('/records/intake', 500, 50, { full: '1' });
   },
   async getAllEvents() {
     return this._getAllPages('/events');
   },
   async getAllAssessments() {
-    return this._getAllPages('/records/assessments');
+    return this._getAllPages('/records/assessments', 500, 50, { full: '1' });
   },
   async getAllFunds() {
     return this._getAllPages('/financials/funds');

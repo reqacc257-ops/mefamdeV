@@ -1311,42 +1311,16 @@
           ['auditLogs', () => (window.AuditLog ? AuditLog.getAll() : MefamAPI.getAuditLogs().catch(() => []))]
         ];
 
-        const loaded = {};
-        for (const [key, loader] of loaders) {
+        const results = await Promise.all(loaders.map(async ([key, loader]) => {
           try {
             const value = await loader();
-            loaded[key] = Array.isArray(value) ? value : [];
+            return [key, Array.isArray(value) ? value : []];
           } catch (error) {
             console.warn(`Mass print source ${key} failed to load; using an empty fallback.`, error);
-            loaded[key] = [];
+            return [key, []];
           }
-        }
-
-        if (loaded.intakes.length) {
-          const detailedIntakes = await Promise.all(loaded.intakes.map(async intake => {
-            try {
-              const response = await MefamAPI.getIntakeSheet(intake.id);
-              return response?.data ? { ...intake, ...response.data, id: response.id ?? intake.id } : intake;
-            } catch (error) {
-              console.warn(`Mass print intake ${intake.id} failed to load in full; using its saved summary.`, error);
-              return intake;
-            }
-          }));
-          loaded.intakes = detailedIntakes;
-        }
-
-        if (loaded.assessments.length) {
-          const detailedAssessments = await Promise.all(loaded.assessments.map(async assessment => {
-            try {
-              const response = await MefamAPI.getAssessment(assessment.id);
-              return response?.data ? { ...assessment, ...response.data, id: response.id ?? assessment.id } : assessment;
-            } catch (error) {
-              console.warn(`Mass print assessment ${assessment.id} failed to load in full; using its saved summary.`, error);
-              return assessment;
-            }
-          }));
-          loaded.assessments = detailedAssessments;
-        }
+        }));
+        const loaded = Object.fromEntries(results);
 
         try {
           const localIntakes = JSON.parse(localStorage.getItem('mefamdev_intake_sheets') || '[]');
