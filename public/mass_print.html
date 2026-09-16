@@ -890,10 +890,6 @@
             Clear
           </button>
           <span class="count" id="selectionCount">0 selected</span>
-          <button class="btn btn-navy" type="button" id="massPrintBtn" onclick="massPrint()">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/><line x1="12" y1="2" x2="12" y2="6"/></svg>
-            Mass print <span id="massPrintCount"></span>
-          </button>
           <button class="btn btn-gold" type="button" id="printBtn" onclick="printSelected()" disabled>
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print selected
@@ -1943,12 +1939,19 @@
         return;
       }
       const html = await buildPrintDocument(type, records);
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) { toast('Allow popups to print these records.', 'error'); return; }
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => printWindow.print(), 500);
+      printCurrentTabHtml(html);
+    }
+
+    function printCurrentTabHtml(html) {
+      const frame = document.createElement('iframe');
+      frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;z-index:99999;';
+      document.body.appendChild(frame);
+      frame.srcdoc = html;
+      frame.addEventListener('load', () => {
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+        setTimeout(() => frame.remove(), 700);
+      }, { once: true });
     }
 
     async function runTemplatePrint(type, records, mode) {
@@ -1969,42 +1972,41 @@
         return;
       }
 
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        localStorage.setItem(storageKey, original || '[]');
-        toast('Allow popups to print these saved forms.', 'error');
-        return;
-      }
-
-      const frames = printable.map(record => `<div class="print-slot"><iframe src="${template}?record=${encodeURIComponent(record.id)}&massPrint=1" title="${type} print form"></iframe></div>`).join('');
-      printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV ${type === 'intake' ? 'Intake Sheets' : 'Staff Assessments'}</title><style>@page{size:auto;margin:0}html,body{margin:0;padding:0;background:#fff}.print-slot{display:block;width:100%;height:100vh;overflow:hidden;page-break-after:always}.print-slot:last-child{page-break-after:auto}iframe{display:block;width:100%;height:100%;border:0}</style></head><body>${frames}</body></html>`);
-      printWindow.document.close();
-
-      const cleanup = () => {
-        localStorage.setItem(storageKey, original || '[]');
-        window.removeEventListener('storage', cleanup);
-      };
-      window.addEventListener('storage', cleanup, { once: true });
-      printWindow.addEventListener('afterprint', cleanup, { once: true });
-      const frameWindows = [...printWindow.document.querySelectorAll('iframe')];
-      await Promise.all(frameWindows.map(frame => new Promise(resolve => {
+      const staging = printable.map(record => {
+        const frame = document.createElement('iframe');
+        frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:1000px;height:1000px;border:0;';
+        frame.src = `${template}?record=${encodeURIComponent(record.id)}&massPrint=1`;
+        document.body.appendChild(frame);
+        return frame;
+      });
+      await Promise.all(staging.map(frame => new Promise(resolve => {
         if (frame.contentDocument?.readyState === 'complete') { resolve(); return; }
         frame.addEventListener('load', resolve, { once: true });
       })));
-      await Promise.all(frameWindows.map(frame => frame.contentDocument?.fonts?.ready || Promise.resolve()));
-      frameWindows.forEach(frame => {
-        const doc = frame.contentDocument;
-        const height = Math.max(
-          doc?.documentElement?.scrollHeight || 0,
-          doc?.body?.scrollHeight || 0,
-          1
-        );
-        frame.style.height = '100%';
+      const body = staging.map(frame => `<section class="template-page">${serializeTemplateBody(frame.contentDocument)}</section>`).join('');
+      const styles = staging[0]?.contentDocument ? [...staging[0].contentDocument.querySelectorAll('style')].map(style => style.textContent).join('\n') : '';
+      staging.forEach(frame => frame.remove());
+      localStorage.setItem(storageKey, original || '[]');
+      printCurrentTabHtml(`<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Print</title><style>${styles}.template-page{page-break-after:always}.template-page:last-child{page-break-after:auto}</style></head><body class="mass-print">${body}</body></html>`);
+    }
+
+    function serializeTemplateBody(doc) {
+      const clone = doc.body.cloneNode(true);
+      const sourceFields = [...doc.body.querySelectorAll('input, textarea, select')];
+      const cloneFields = [...clone.querySelectorAll('input, textarea, select')];
+      sourceFields.forEach((source, index) => {
+        const target = cloneFields[index];
+        if (!target) return;
+        if (source instanceof doc.defaultView.HTMLTextAreaElement) {
+          target.textContent = source.value;
+        } else if (source instanceof doc.defaultView.HTMLSelectElement) {
+          [...target.options].forEach((option, optionIndex) => option.selected = source.options[optionIndex]?.selected || false);
+        } else if (source instanceof doc.defaultView.HTMLInputElement) {
+          if (source.type === 'checkbox' || source.type === 'radio') target.checked = source.checked;
+          else target.setAttribute('value', source.value);
+        }
       });
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 250);
+      return clone.innerHTML;
     }
 
     function printSelected() {
