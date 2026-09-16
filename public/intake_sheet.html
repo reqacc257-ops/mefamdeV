@@ -1887,6 +1887,18 @@ async function saveIntake() {
     try {
         const response = await MefamAPI.saveIntakeSheet(data);
         serverSaved = Boolean(response?.ok);
+        if (response?.id !== undefined && response?.id !== null) {
+            const saved = getSavedIntakes();
+            const index = saved.findIndex(record => String(record.id) === String(recordId)
+                || (record.caseNo && record.caseNo === data.caseNo));
+            if (index > -1) {
+                data.id = response.id;
+                saved[index] = data;
+                localStorage.setItem('mefamdev_intake_sheets', JSON.stringify(saved));
+                currentIntakeId = response.id;
+                window.currentIntakeId = response.id;
+            }
+        }
     } catch (error) {
         console.warn('Intake sheet saved locally but could not sync to the server.', error);
     }
@@ -2016,7 +2028,7 @@ function collectData() {
     const staffEsign  = isEsignOn('staffSig');
 
     return {
-        id: window.currentIntakeId || Date.now(),
+        id: currentIntakeId || window.currentIntakeId || Date.now(),
         caseNo: document.getElementById('caseNo').value,
         caseDate: document.getElementById('caseDate').value,
         caseCategory: document.getElementById('caseCategory').value,
