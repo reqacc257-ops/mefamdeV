@@ -1010,19 +1010,19 @@
                 <button type="button" class="nav-item" onclick="nav('pipeline',this)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">🔀</span> Application Status
                 </button>
-                <button type="button" class="nav-item" onclick="loadAssessmentForm(this)" data-roles="director,program">
+                <button type="button" class="nav-item" onclick="window.location.href='staff_assessment.html'" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">📝</span> Assessment Form
                 </button>
-                <button type="button" class="nav-item" onclick="loadIntakeSheetForm(this)" data-roles="director,program">
+                <button type="button" class="nav-item" onclick="window.location.href='intake_sheet.html'" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">📄</span> Intake Sheet
                 </button>
                 <button type="button" class="nav-item" onclick="nav('saved-records',this)" data-roles="director,program">
                     <span class="nav-icon" aria-hidden="true">🗂️</span> Saved Forms
                 </button>
-                <button type="button" class="nav-item" onclick="loadSpiritualFormation(this)" data-roles="director,program,edu">
+                <button type="button" class="nav-item" onclick="window.location.href='spiritual_formation.html'" data-roles="director,program,edu">
                     <span class="nav-icon" aria-hidden="true">🕊️</span> Spiritual Formation
                 </button>
-                <button type="button" class="nav-item" onclick="loadStudentReportCardForm(this)" data-roles="director,edu" title="Open Student Report Cards">
+                <button type="button" class="nav-item" onclick="window.location.href='student_grade_card.html'" data-roles="director,edu" title="Open Student Report Cards">
                     <span class="nav-icon" aria-hidden="true">📄</span> Student Report Cards
                 </button>
                 <button type="button" class="nav-item" onclick="nav('attendance',this)" data-roles="director,edu,program">
@@ -1131,8 +1131,8 @@
             <!-- Edu stats -->
             <div class="stats-grid" data-roles="edu">
                 <button type="button" class="stat-card" style="--card-accent:#3498db; border-top-color:#3498db;" onclick="nav('profiles', document.querySelector('.nav-item[onclick*=profiles]'))"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-user-graduate"></i></span><div class="stat-label">Active Scholars</div><div class="stat-value" id="edu-scholars">0</div></button>
-                <button type="button" class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c;" onclick="openToolModal('student_grade_card.html', '📄 Student Report Cards')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
-                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="openToolModal('student_grade_card.html', '📄 Report Cards')"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-file-contract"></i></span><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#e74c3c; border-top-color:#e74c3c;" onclick="window.location.href='student_grade_card.html'"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="stat-label">Grade Alerts</div><div class="stat-value" id="edu-alerts">0</div><div class="stat-sub">Below 80 avg.</div></button>
+                <button type="button" class="stat-card" style="--card-accent:#27ae60; border-top-color:#27ae60;" onclick="window.location.href='student_grade_card.html'"><span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-file-contract"></i></span><div class="stat-label">Report Cards In</div><div class="stat-value" id="edu-reportcards">0/0</div></button>
             </div>
 
             <!-- Finance stats -->
@@ -2383,7 +2383,7 @@ const CMDK_PAGES = [
     { icon: '<i class="fa-solid fa-folder-open"></i>', title: 'Saved Forms', sub: 'Intake sheets & assessments', action: () => nav('saved-records', document.querySelector('.nav-item[onclick*=saved]')) },
     { icon: '<i class="fa-solid fa-church"></i>', title: 'Spiritual Formation', sub: 'Formation events', action: () => nav('events', document.querySelector('.nav-item[onclick*=events]')) },
     { icon: '<i class="fa-solid fa-user-graduate"></i>', title: 'Scholar Records', sub: 'Browse scholar records', action: () => nav('profiles', document.querySelector('.nav-item[onclick*=profiles]')) },
-    { icon: '<i class="fa-solid fa-file-signature"></i>', title: 'Student Report Cards', sub: 'View and print student report cards', action: () => openToolModal('student_grade_card.html', '📄 Student Report Cards') },
+    { icon: '<i class="fa-solid fa-file-signature"></i>', title: 'Student Report Cards', sub: 'View and print student report cards', action: () => window.location.href = 'student_grade_card.html' },
     { icon: '<i class="fa-solid fa-calendar-check"></i>', title: 'Attendance Updates', sub: 'Formation absence tracking', action: () => nav('attendance', document.querySelector('.nav-item[onclick*=attendance]')) },
     { icon: '<i class="fa-solid fa-people-roof"></i>', title: 'Family Records', sub: 'Family records', action: () => nav('family', document.querySelector('.nav-item[onclick*=family]')) },
     { icon: '<i class="fa-solid fa-wallet"></i>', title: 'Financials', sub: 'Funds & disbursements', action: () => nav('financials', document.querySelector('.nav-item[onclick*=financials]')) },
@@ -2394,7 +2394,7 @@ const CMDK_PAGES = [
 ];
 
 const CMDK_ACTIONS = [
-    { icon: '<i class="fa-solid fa-file-pen"></i>', title: 'New Staff Assessment', sub: 'Open blank assessment form', action: () => openAssessment(null) },
+    { icon: '<i class="fa-solid fa-file-pen"></i>', title: 'New Staff Assessment', sub: 'Open blank assessment form', action: () => window.location.href = 'staff_assessment.html' },
     { icon: '<i class="fa-solid fa-rotate-right"></i>', title: 'Refresh Data', sub: 'Reload all dashboard data', action: () => loadAllData(true) },
     { icon: '<i class="fa-solid fa-right-from-bracket"></i>', title: 'Sign Out', sub: 'Log out of the admin system', action: () => adminLogout() },
 ];
@@ -3221,32 +3221,17 @@ function filterSavedRecords() {
 function openIntakeSheet(recordId) {
     const id = recordId === null || recordId === undefined || recordId === 'null' || recordId === 'undefined' ? null : recordId;
     const url = id ? `intake_sheet.html?record=${encodeURIComponent(id)}&view=1` : 'intake_sheet.html';
-    const embeddedPage = document.getElementById('page-intake-sheet');
-    if (embeddedPage) {
-        loadEmbeddedDashboardPage('intake', 'page-intake-sheet', 'intakeSheetFrame', url, 'Intake Sheet', document.querySelector('.nav-item[onclick*=loadIntakeSheetForm]'));
-        return;
-    }
-    openToolModal(url, '📝 Intake Sheet');
+    window.location.href = url;
 }
 function openAssessment(appId) {
     const id = appId === null || appId === undefined || appId === 'null' || appId === 'undefined' ? null : appId;
     const url = id ? `staff_assessment.html?id=${encodeURIComponent(id)}` : 'staff_assessment.html';
-    const embeddedPage = document.getElementById('page-assessment-form');
-    if (embeddedPage) {
-        loadEmbeddedDashboardPage('assessment', 'page-assessment-form', 'assessmentFormFrame', url, 'Assessment Form', document.querySelector('.nav-item[onclick*=loadAssessmentForm]'));
-        return;
-    }
-    openToolModal(url, '📝 Staff Assessment');
+    window.location.href = url;
 }
 function openToolModal(url, title) {
     const toolPath = String(url || '').split('?')[0];
-    const embeddedPage = document.getElementById('page-student-report-card');
-    if (toolPath === 'student_grade_card.html' && embeddedPage) {
-        loadEmbeddedDashboardPage('report-card', 'page-student-report-card', 'studentReportCardFrame', url, 'Student Report Cards', document.querySelector('.nav-item[onclick*=loadStudentReportCardForm]'));
-        return;
-    }
-    if (toolPath === 'student_grade_card.html' && window.matchMedia('(max-width: 640px)').matches) {
-        window.open(url, '_blank');
+    if (toolPath === 'student_grade_card.html') {
+        window.location.href = url;
         return;
     }
     const modal = document.getElementById('toolModal');
@@ -3891,7 +3876,7 @@ function closeDocumentPreview() {
 }
 
 function openStudentGradeCard(appId) {
-    openToolModal(`student_grade_card.html?appId=${encodeURIComponent(appId)}`, '📄 Report Cards');
+    window.location.href = `student_grade_card.html?appId=${encodeURIComponent(appId)}`;
 }
 
 function approveDoc(appId, docKey, containerId) {
