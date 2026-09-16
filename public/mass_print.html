@@ -1966,10 +1966,15 @@
       };
       window.addEventListener('storage', cleanup, { once: true });
       printWindow.addEventListener('afterprint', cleanup, { once: true });
+      const frameWindows = [...printWindow.document.querySelectorAll('iframe')];
+      await Promise.all(frameWindows.map(frame => new Promise(resolve => {
+        if (frame.contentDocument?.readyState === 'complete') { resolve(); return; }
+        frame.addEventListener('load', resolve, { once: true });
+      })));
       setTimeout(() => {
         printWindow.focus();
         printWindow.print();
-      }, Math.max(900, printable.length * 180));
+      }, 250);
     }
 
     function printSelected() {
