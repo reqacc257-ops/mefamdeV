@@ -1497,7 +1497,7 @@
       document.getElementById('auditFilters').style.display = auditVisible ? '' : 'none';
       document.getElementById('schoolYearFilterWrap').style.display = auditVisible ? 'none' : '';
       document.getElementById('formatNote').innerHTML = TYPE_NOTES[type] || '';
-      document.getElementById('modeBanner').classList.toggle('is-visible', needsEvent);
+      document.getElementById('modeBanner')?.classList.toggle('is-visible', needsEvent);
 
       if (needsEvent && selectedEventIds.size === 0 && state.events.length) {
         selectedEventIds.add(String(state.events[0].id));
