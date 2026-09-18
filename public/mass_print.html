@@ -964,13 +964,6 @@
         </div>
       </div>
 
-      <div class="mode-banner" id="modeBanner">
-        <span class="mode-tag">Mass print</span>
-        <span>prints <strong>every</strong> record currently shown after filtering.</span>
-        <span class="mode-tag gold">Print selected</span>
-        <span>prints <strong>only</strong> the scholars you tick in the table below — perfect for printing one section or a specific student.</span>
-      </div>
-
       <div id="loading" class="loading-state">
         <div class="skeleton"></div>
         <div class="skeleton"></div>
@@ -1654,6 +1647,25 @@
     function text(value) { return String(value || '').trim().toLowerCase(); }
     function appFor(item) { return state.apps.find(app => String(app.id) === String(item.linkedAppId || item.appId || item.app_id || item.id)); }
 
+    function attendanceKeys(record) {
+      const app = appFor(record) || record || {};
+      return new Set([
+        record?.id, app.id,
+        record?.reference, record?.referenceNumber, record?.reference_number,
+        app.reference, app.referenceNumber, app.reference_number,
+        record?.name, app.name
+      ].map(text).filter(Boolean));
+    }
+
+    function checkinMatchesRecord(checkin, record) {
+      const checkinKeys = [
+        checkin?.student_id, checkin?.studentId,
+        checkin?.student_name, checkin?.studentName
+      ].map(text).filter(Boolean);
+      const recordKeys = attendanceKeys(record);
+      return checkinKeys.some(key => recordKeys.has(key));
+    }
+
     function gradeOf(item) {
       const app = appFor(item) || item;
       return item.grade || item.gradeLevel || item.grade_level || item.nextGrade || app.grade || app.gradeLevel || app.grade_level || '';
@@ -1895,9 +1907,7 @@
           const app = appFor(item) || item;
           const id = `${type}-${item.id || app.id || index}`;
           const attended = [...selectedEventIds].some(eventId =>
-            (state.checkins[eventId] || []).some(check =>
-              text(check.student_name) === text(item.name) || text(check.student_id) === text(item.reference)
-            )
+            (state.checkins[eventId] || []).some(check => checkinMatchesRecord(check, item))
           );
 
           if (type === 'audit') {
@@ -2256,10 +2266,7 @@
         const attended = new Set((attData[event.id] || []).map(String));
         const checkins = state.checkins[event.id] || [];
         checkins.forEach(checkin => {
-          const match = records.find(item =>
-            text(item.name) === text(checkin.student_name) ||
-            text(item.reference) === text(checkin.student_id)
-          );
+          const match = records.find(item => checkinMatchesRecord(checkin, item));
           if (match) attended.add(String(match.id));
         });
 
@@ -2295,10 +2302,7 @@
         const checkins = state.checkins[event.id] || [];
 
         const rows = records.map((item, index) => {
-          const check = checkins.find(c =>
-            text(c.student_name) === text(item.name) ||
-            text(c.student_id) === text(item.reference)
-          );
+          const check = checkins.find(c => checkinMatchesRecord(c, item));
           const present = Boolean(check);
           return `<tr>
             <td>${index + 1}</td>
