@@ -135,6 +135,9 @@
                         <select id="rcGradeFilter" aria-label="Filter by grade" onchange="filterReportCards()">
                             <option value="">All grades</option>
                         </select>
+                        <select id="rcGwaFilter" aria-label="Filter by GWA" onchange="filterReportCards()">
+                            <option value="">All GWA</option>
+                        </select>
                         <button class="btn btn-gold btn-sm" type="button" onclick="filterReportCards()">🔍 Filter</button>
                     </div>
                 </div>
@@ -178,12 +181,20 @@
     <script src="./audit-log.js"></script>
     <script>
         let acceptedScholars = [];
+        let reportCardGrades = [];
         let currentSchoolYearFilter = '';
 
         async function loadReportCardsPage() {
             try {
                 acceptedScholars = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
+                try {
+                    reportCardGrades = await MefamAPI.getGrades() || [];
+                } catch (error) {
+                    console.error('Failed to load grades:', error);
+                    reportCardGrades = [];
+                }
                 populateGradeFilter();
+                populateGwaFilter();
                 await renderSubjectsDatalist();
                 renderReportCards();
             } catch (error) {
@@ -199,25 +210,22 @@
             const schoolYear = document.getElementById('rcSchoolYearFilter')?.value.trim().toLowerCase();
             const searchQuery = document.getElementById('rcSearchInput')?.value.trim().toLowerCase();
             const selectedGrade = document.getElementById('rcGradeFilter')?.value.trim().toLowerCase();
+            const selectedGwa = document.getElementById('rcGwaFilter')?.value.trim();
             const accepted = Array.isArray(acceptedScholars) ? acceptedScholars : [];
             const filtered = accepted.filter(app => {
                 const yearMatch = !schoolYear || String(app.sy || app.school_year || '').toLowerCase().includes(schoolYear) || String(app.school_year || '').toLowerCase().includes(schoolYear);
                 const searchMatch = !searchQuery || `${app.name || ''} ${app.school || ''} ${app.grade || ''} ${app.reference || app.referenceNumber || ''}`.toLowerCase().includes(searchQuery);
                 const gradeMatch = !selectedGrade || String(app.grade || '').trim().toLowerCase() === selectedGrade;
-                return yearMatch && searchMatch && gradeMatch;
+                const gwa = getReportCardGwa(app.id);
+                const gwaMatch = !selectedGwa || String(gwa) === selectedGwa;
+                return yearMatch && searchMatch && gradeMatch && gwaMatch;
             });
             if (filtered.length === 0) {
                 body.innerHTML = '<tr><td colspan="6"><div class="empty-state">No accepted scholars yet.</div></td></tr>';
                 return;
             }
-            let grades = [];
-            try {
-                grades = await MefamAPI.getGrades() || [];
-            } catch (error) {
-                console.error('Failed to load grades:', error);
-            }
             body.innerHTML = filtered.map(app => {
-                const appGrades = grades.filter(g => Number(g.app_id || g.appId) === Number(app.id));
+                const appGrades = reportCardGrades.filter(g => Number(g.app_id || g.appId) === Number(app.id));
                 const schoolYears = Array.from(new Set(appGrades.map(g => g.school_year || g.schoolYear).filter(Boolean))).sort();
                 const latestSY = schoolYears.length > 0 ? schoolYears[schoolYears.length - 1] : String(app.sy || '2025-2026');
                 const refNo = app.reference || app.referenceNumber || app.reference_number || String(app.id || '—');
@@ -249,6 +257,40 @@
                 .map(grade => `<option value="${escapeHtml(grade)}">${escapeHtml(grade)}</option>`)
                 .join('');
             if (grades.includes(currentValue)) select.value = currentValue;
+        }
+
+        function getReportCardGwa(appId) {
+            const grades = reportCardGrades.filter(grade => Number(grade.app_id || grade.appId) === Number(appId));
+            const subjects = new Map();
+            grades.forEach(grade => {
+                const subject = String(grade.subject || grade.subject_name || grade.subjectName || '').trim();
+                const value = Number(grade.grade_val ?? grade.grade_value);
+                const quarter = String(grade.quarter || '').replace(/^Q/i, '');
+                if (!subject || !Number.isFinite(value) || !quarter) return;
+                if (!subjects.has(subject)) subjects.set(subject, []);
+                subjects.get(subject).push(value);
+            });
+            const subjectFinals = [...subjects.values()]
+                .map(values => values.reduce((sum, value) => sum + value, 0) / values.length)
+                .filter(value => value > 0);
+            return subjectFinals.length
+                ? Math.round((subjectFinals.reduce((sum, value) => sum + value, 0) / subjectFinals.length) * 10) / 10
+                : 0;
+        }
+
+        function populateGwaFilter() {
+            const select = document.getElementById('rcGwaFilter');
+            if (!select) return;
+            const currentValue = select.value;
+            const gwaValues = [...new Set((acceptedScholars || [])
+                .map(app => getReportCardGwa(app.id))
+                .filter(gwa => gwa > 0)
+                .map(gwa => String(gwa)))]
+                .sort((left, right) => Number(right) - Number(left));
+            select.innerHTML = '<option value="">All GWA</option>' + gwaValues
+                .map(gwa => `<option value="${escapeHtml(gwa)}">GWA ${escapeHtml(gwa)}</option>`)
+                .join('');
+            if (gwaValues.includes(currentValue)) select.value = currentValue;
         }
 
         async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
