@@ -132,6 +132,9 @@
                     <div class="grade-card-filters">
                         <div class="search-wrap"><span class="search-icon"></span><input type="text" id="rcSearchInput" class="search-input" placeholder="Search student, school, grade..." oninput="filterReportCards()"></div>
                         <div class="search-wrap" style="min-width:240px; max-width:320px;"><span class="search-icon"></span><input type="text" id="rcSchoolYearFilter" class="search-input" placeholder="Filter by school year" oninput="filterReportCards()"></div>
+                        <select id="rcGradeFilter" aria-label="Filter by grade" onchange="filterReportCards()">
+                            <option value="">All grades</option>
+                        </select>
                         <button class="btn btn-gold btn-sm" type="button" onclick="filterReportCards()">🔍 Filter</button>
                     </div>
                 </div>
@@ -180,6 +183,7 @@
         async function loadReportCardsPage() {
             try {
                 acceptedScholars = await MefamAPI.getApplications({ status: 'Accepted' }) || [];
+                populateGradeFilter();
                 await renderSubjectsDatalist();
                 renderReportCards();
             } catch (error) {
@@ -194,11 +198,13 @@
             if (!body) return;
             const schoolYear = document.getElementById('rcSchoolYearFilter')?.value.trim().toLowerCase();
             const searchQuery = document.getElementById('rcSearchInput')?.value.trim().toLowerCase();
+            const selectedGrade = document.getElementById('rcGradeFilter')?.value.trim().toLowerCase();
             const accepted = Array.isArray(acceptedScholars) ? acceptedScholars : [];
             const filtered = accepted.filter(app => {
                 const yearMatch = !schoolYear || String(app.sy || app.school_year || '').toLowerCase().includes(schoolYear) || String(app.school_year || '').toLowerCase().includes(schoolYear);
                 const searchMatch = !searchQuery || `${app.name || ''} ${app.school || ''} ${app.grade || ''} ${app.reference || app.referenceNumber || ''}`.toLowerCase().includes(searchQuery);
-                return yearMatch && searchMatch;
+                const gradeMatch = !selectedGrade || String(app.grade || '').trim().toLowerCase() === selectedGrade;
+                return yearMatch && searchMatch && gradeMatch;
             });
             if (filtered.length === 0) {
                 body.innerHTML = '<tr><td colspan="6"><div class="empty-state">No accepted scholars yet.</div></td></tr>';
@@ -229,6 +235,20 @@
                     </td>
                 </tr>`;
             }).join('');
+        }
+
+        function populateGradeFilter() {
+            const select = document.getElementById('rcGradeFilter');
+            if (!select) return;
+            const currentValue = select.value;
+            const grades = [...new Set((acceptedScholars || [])
+                .map(app => String(app.grade || '').trim())
+                .filter(Boolean))]
+                .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+            select.innerHTML = '<option value="">All grades</option>' + grades
+                .map(grade => `<option value="${escapeHtml(grade)}">${escapeHtml(grade)}</option>`)
+                .join('');
+            if (grades.includes(currentValue)) select.value = currentValue;
         }
 
         async function viewReportCard(appId, name, gradeLevel, school, schoolYear, refNo) {
