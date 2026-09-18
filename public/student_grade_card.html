@@ -1160,8 +1160,6 @@ async function openReviewModal(id){
         <div class="form-group"><label>School Year</label><input type="text" id="reviewSchoolYear" value="${escapeHtml(extracted.schoolYear||'')}"></div>
         <div class="form-group"><label for="reviewPeriodCount">Grading format</label>
           <select id="reviewPeriodCount" onchange="updateReviewPeriodFields()">
-            <option value="1"${reviewPeriodCount===1?' selected':''}>1 term</option>
-            <option value="2"${reviewPeriodCount===2?' selected':''}>2 terms</option>
             <option value="3"${reviewPeriodCount===3?' selected':''}>3 terms</option>
             <option value="4"${reviewPeriodCount===4?' selected':''}>4 quarters</option>
           </select>
