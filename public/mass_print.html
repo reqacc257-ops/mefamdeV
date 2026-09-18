@@ -1064,6 +1064,7 @@
     };
     const msState = {};
     const selectedEventIds = new Set();
+    const selectedRecordKeys = new Set();
     let eventSearchQuery = '';
 
     const TYPE_NOTES = {
@@ -1906,6 +1907,7 @@
         body.innerHTML = visibleRecords.map((item, index) => {
           const app = appFor(item) || item;
           const id = `${type}-${item.id || app.id || index}`;
+          const checked = selectedRecordKeys.has(id) ? ' checked' : '';
           const attended = [...selectedEventIds].some(eventId =>
             (state.checkins[eventId] || []).some(check => checkinMatchesRecord(check, item))
           );
@@ -1923,7 +1925,7 @@
             const timestamp = entry.timestamp ? new Date(entry.timestamp) : null;
             const dateLabel = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
             const timeLabel = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Unknown time';
-            return `<tr class="audit-entry-row" data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"></td><td class="audit-cell" colspan="${columns.length + 1}"><div class="audit-entry"><div class="audit-avatar ${avatarClass}">${escapeHtml((entry.actorName || 'S').split(' ').map(part => part[0]).slice(0,2).join('').toUpperCase())}</div><div class="audit-body"><div class="audit-head"><span class="audit-name">${escapeHtml(entry.actorName || 'System')}</span><span class="audit-role-pill ${pillClass}">${escapeHtml(String(entry.actorRole || entry.role || 'system').toUpperCase())}</span></div><div class="audit-verb">${escapeHtml(verb)} ${entityLabel ? `<strong>${escapeHtml(entityLabel)}</strong>` : ''}</div><div class="audit-meta"><span class="audit-ref">${escapeHtml(refText || '-')}</span>${batchChip ? `${batchChip}` : ''}</div>${note}</div><div class="audit-when"><strong>${escapeHtml(dateLabel)}</strong><span>${escapeHtml(timeLabel)}</span></div></div></td></tr>`;
+            return `<tr class="audit-entry-row" data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"${checked}></td><td class="audit-cell" colspan="${columns.length + 1}"><div class="audit-entry"><div class="audit-avatar ${avatarClass}">${escapeHtml((entry.actorName || 'S').split(' ').map(part => part[0]).slice(0,2).join('').toUpperCase())}</div><div class="audit-body"><div class="audit-head"><span class="audit-name">${escapeHtml(entry.actorName || 'System')}</span><span class="audit-role-pill ${pillClass}">${escapeHtml(String(entry.actorRole || entry.role || 'system').toUpperCase())}</span></div><div class="audit-verb">${escapeHtml(verb)} ${entityLabel ? `<strong>${escapeHtml(entityLabel)}</strong>` : ''}</div><div class="audit-meta"><span class="audit-ref">${escapeHtml(refText || '-')}</span>${batchChip ? `${batchChip}` : ''}</div>${note}</div><div class="audit-when"><strong>${escapeHtml(dateLabel)}</strong><span>${escapeHtml(timeLabel)}</span></div></div></td></tr>`;
           }
 
           const reportSummary = type === 'report-card' ? getReportCardSummary(item) : null;
@@ -1979,7 +1981,7 @@
             ] :
             [bold(recordName(item)), val(app.grade), val(app.barangay), val(app.school), badge(app.status)];
 
-          return `<tr data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"></td>${cells.map(c => `<td>${cell(c)}</td>`).join('')}</tr>`;
+          return `<tr data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"${checked}></td>${cells.map(c => `<td>${cell(c)}</td>`).join('')}</tr>`;
         }).join('');
       } else {
         body.innerHTML = `<tr><td colspan="${columns.length + 1}" class="empty">
@@ -2002,15 +2004,23 @@
 
     /* ---------- Selection ---------- */
     function toggleVisibleSelection(checked) {
-      document.querySelectorAll('#recordBody .record-check').forEach(input => { input.checked = checked; });
+      document.querySelectorAll('#recordBody .record-check').forEach(input => {
+        input.checked = checked;
+        if (checked) selectedRecordKeys.add(input.value);
+        else selectedRecordKeys.delete(input.value);
+      });
       updateSelectionCount();
     }
     function updateSelectionCount() {
       const boxes = [...document.querySelectorAll('#recordBody .record-check')];
-      const checked = boxes.filter(box => box.checked);
+      boxes.forEach(box => {
+        if (box.checked) selectedRecordKeys.add(box.value);
+        else selectedRecordKeys.delete(box.value);
+      });
+      const checked = boxes.filter(box => selectedRecordKeys.has(box.value));
 
-      document.getElementById('selectionCount').textContent = `${checked.length} selected`;
-      boxes.forEach(box => box.closest('tr')?.classList.toggle('is-selected', box.checked));
+      document.getElementById('selectionCount').textContent = `${selectedRecordKeys.size} selected`;
+      boxes.forEach(box => box.closest('tr')?.classList.toggle('is-selected', selectedRecordKeys.has(box.value)));
 
       const all = document.getElementById('selectAll');
       if (all) {
@@ -2153,14 +2163,13 @@
 
     function printSelected() {
       const type = document.getElementById('printType').value;
-      const selectedIds = new Set([...document.querySelectorAll('#recordBody .record-check:checked')].map(input => input.value));
-      const records = visibleRecords.filter((item, index) => selectedIds.has(`${type}-${item.id || appFor(item)?.id || index}`));
+      const records = visibleRecords.filter((item, index) => selectedRecordKeys.has(`${type}-${item.id || appFor(item)?.id || index}`));
       runPrint(records, 'selected');
     }
 
     function massPrint() {
       const type = document.getElementById('printType').value;
-      const records = visibleRecords.filter((item, index) => `${type}-${item.id || appFor(item)?.id || index}`);
+      const records = visibleRecords.filter((item, index) => selectedRecordKeys.has(`${type}-${item.id || appFor(item)?.id || index}`));
       runPrint(records, 'mass');
     }
 
