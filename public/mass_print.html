@@ -1772,7 +1772,8 @@
       if (type === 'intake') return state.intakes;
       if (type === 'assessment') return state.assessments;
       if (type === 'applications') return state.apps;
-      if (type === 'formation' || type === 'attendance' || type === 'directory' || type === 'report-card' || type === 'summary') return state.apps.filter(app => app.status === 'Accepted');
+      if (type === 'report-card') return state.apps.filter(app => app.status === 'Accepted' && hasReportCardGrades(app));
+      if (type === 'formation' || type === 'attendance' || type === 'directory' || type === 'summary') return state.apps.filter(app => app.status === 'Accepted');
       if (type === 'families') return state.families;
       if (type === 'announcements') return state.announcements;
       if (type === 'audit') return (state.auditLogs || []).map(normaliseAuditEntry).filter(Boolean);
@@ -1780,6 +1781,9 @@
     }
 
     function recordName(item) { return item.name || item.student || item.familySurname || item.scholarName || item.scholar_name || appFor(item)?.name || 'Unnamed record'; }
+    function hasReportCardGrades(app) {
+      return state.grades.some(grade => Number(grade.app_id || grade.appId) === Number(app.id));
+    }
     function getReportCardSummary(item) {
       const app = appFor(item) || item;
       const entries = state.grades.filter(grade => String(grade.appId ?? grade.app_id ?? grade.student_id ?? grade.studentId) === String(app.id || item.id || ''));
