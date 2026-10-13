@@ -39,6 +39,10 @@ function canonicalSubjectName(name) {
   return String(name || '').trim();
 }
 
+function escapeReportCardHtml(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function mergeSubjectGrades(target, source) {
   ['Q1', 'Q2', 'Q3', 'Q4'].forEach(quarter => {
     if (target[quarter] === '' && source[quarter] !== '') target[quarter] = source[quarter];
@@ -87,8 +91,8 @@ function buildReportCardHTML(scholarData, gradesData) {
 
     tableRows += `
       <tr>
-        <td class="rc-area">${subj}</td>
-        ${periodValues.map(value => `<td class="rc-grade">${value || '-'}</td>`).join('')}
+        <td class="rc-area">${escapeReportCardHtml(subj)}</td>
+        ${periodValues.map(value => `<td class="rc-grade">${escapeReportCardHtml(value || '-')}</td>`).join('')}
         <td class="rc-final">${finalGrade > 0 ? finalGrade : '-'}</td>
         <td class="rc-remark ${remark === 'Passed' ? 'remark-pass' : 'remark-pending'}">${finalGrade > 0 ? remark : '-'}</td>
       </tr>
@@ -120,25 +124,25 @@ function buildReportCardHTML(scholarData, gradesData) {
       <div class="rc-head">
         <div class="rc-org">MEFAMDEV-Life · Angat, Bulacan</div>
         <div class="rc-title">Report on Learning Progress and Achievement</div>
-        <div class="rc-sub">School Year ${schoolYear || 'N/A'} · ${periodCount === 3 ? 'Terms 1–3' : 'Quarters 1–4'}</div>
+        <div class="rc-sub">School Year ${escapeReportCardHtml(schoolYear || 'N/A')} · ${periodCount === 3 ? 'Terms 1–3' : 'Quarters 1–4'}</div>
       </div>
 
       <div class="rc-info">
         <div class="rc-info-cell">
           <div class="rc-lbl">Scholar</div>
-          <div class="rc-val">${name || 'N/A'}</div>
+          <div class="rc-val">${escapeReportCardHtml(name || 'N/A')}</div>
         </div>
         <div class="rc-info-cell">
           <div class="rc-lbl">Grade / Level</div>
-          <div class="rc-val">${gradeLevel || 'N/A'}</div>
+          <div class="rc-val">${escapeReportCardHtml(gradeLevel || 'N/A')}</div>
         </div>
         <div class="rc-info-cell">
           <div class="rc-lbl">School</div>
-          <div class="rc-val">${school || 'N/A'}</div>
+          <div class="rc-val">${escapeReportCardHtml(school || 'N/A')}</div>
         </div>
         <div class="rc-info-cell">
           <div class="rc-lbl">Reference No.</div>
-          <div class="rc-val">${refNo || 'N/A'}</div>
+          <div class="rc-val">${escapeReportCardHtml(refNo || 'N/A')}</div>
         </div>
       </div>
 
