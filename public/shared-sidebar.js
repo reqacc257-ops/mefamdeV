@@ -19,21 +19,21 @@
     const storageKey = 'mefamdev_sidebar_groups';
 
     const navGroups = [
-        { id: 'overview', label: '📊 Overview', roles: ['director', 'edu', 'finance', 'program'], items: [
-            { href: 'admin_dashboard.html', icon: '🏠', label: 'Dashboard', roles: ['director', 'edu', 'finance', 'program'] }
+        { id: 'overview', label: 'Main', roles: ['director', 'edu', 'finance', 'program'], items: [
+            { href: 'admin_dashboard.html', icon: '📊', label: 'Dashboard', desc: 'Overview & analytics', roles: ['director', 'edu', 'finance', 'program'] }
         ]},
-        { id: 'intake', label: '📥 Intake & Programs', roles: ['director', 'program', 'edu'], items: [
-            { href: 'admin_dashboard.html#submitted-apps', icon: '📨', label: 'Submitted Applications', roles: ['director', 'program'] },
-            { href: 'admin_dashboard.html#pipeline', icon: '🔀', label: 'Application Status', roles: ['director', 'program'] },
-            { href: 'staff_assessment.html', icon: '📝', label: 'Assessment Form', roles: ['director', 'program'] },
-            { href: 'intake_sheet.html', icon: '📄', label: 'Intake Sheet', roles: ['director', 'program'] },
-            { href: 'student_grade_card.html', icon: '🎓', label: 'Student Report Cards', roles: ['director', 'edu'] },
-            { href: 'spiritual_formation.html', icon: '🕊️', label: 'Spiritual Formation', roles: ['director', 'edu', 'program'] }
+        { id: 'scholars', label: 'Scholars & Programs', roles: ['director', 'program', 'edu'], items: [
+            { href: 'admin_dashboard.html#submitted-apps', icon: '📨', label: 'Applications', desc: 'New submissions', roles: ['director', 'program'] },
+            { href: 'admin_dashboard.html#pipeline', icon: '🔄', label: 'Pipeline', desc: 'Status tracking', roles: ['director', 'program'] },
+            { href: 'student_grade_card.html', icon: '📈', label: 'Grades', desc: 'Grade tracking', roles: ['director', 'edu'] },
+            { href: 'spiritual_formation.html', icon: '✨', label: 'Formation', desc: 'Events & attendance', roles: ['director', 'edu', 'program'] }
         ]},
-        { id: 'admin', label: '💼 Admin & Finance', roles: ['director', 'finance', 'program'], items: [
-            { href: 'financials.html', icon: '💰', label: 'Financials', roles: ['director', 'finance'] },
-            { href: 'mass_print.html', icon: '🖨️', label: 'Printing Area', roles: ['director', 'edu', 'finance', 'program'] },
-            { href: 'admin_dashboard.html#settings', icon: '⚙️', label: 'Settings', roles: ['director'] }
+        { id: 'operations', label: 'Operations', roles: ['director', 'finance', 'program'], items: [
+            { href: 'staff_assessment.html', icon: '📝', label: 'Assessment', desc: 'Staff evaluations', roles: ['director', 'program'] },
+            { href: 'intake_sheet.html', icon: '📋', label: 'Intake', desc: 'Intake forms', roles: ['director', 'program'] },
+            { href: 'mass_print.html', icon: '🖨️', label: 'Printing', desc: 'Bulk printing', roles: ['director', 'edu', 'finance', 'program'] },
+            { href: 'financials.html', icon: '💰', label: 'Financials', desc: 'Financial reports', roles: ['director', 'finance'] },
+            { href: 'admin_dashboard.html#settings', icon: '⚙️', label: 'Settings', desc: 'Configuration', roles: ['director'] }
         ]}
     ];
 
@@ -41,38 +41,378 @@
        CSS — sidebar + skeleton overlay
        ============================================================ */
     const css = `
-        :root { --mefam-sidebar-w: 260px; }
-        body.mefam-has-sidebar { padding-left: var(--mefam-sidebar-w); }
+        :root { --mefam-sidebar-w: 280px; --mefam-primary: #1a2e44; --mefam-accent: #f5a623; --mefam-hover: rgba(255,255,255,.08); }
+        body.mefam-has-sidebar { padding-left: var(--mefam-sidebar-w); transition: padding-left .3s; }
 
-        /* ---------- Sidebar ---------- */
-        .mefam-sidebar { position:fixed; inset:0 auto 0 0; width:var(--mefam-sidebar-w); background:linear-gradient(180deg,#14273b,#1a2e44); display:flex; flex-direction:column; overflow-y:auto; z-index:200; border-right:1px solid rgba(255,255,255,.04); box-shadow:8px 0 24px rgba(15,23,42,.08); font-family:'DM Sans',Arial,sans-serif; }
-        .mefam-sidebar-brand { padding:22px 18px 16px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; align-items:center; gap:12px; }
-        .mefam-sidebar-brand img { height:42px; object-fit:contain; filter:brightness(1.1); }
-        .mefam-brand-text { line-height:1.3; min-width:0; }
-        .mefam-brand-name { font-family:'DM Serif Display',Georgia,serif; color:#fff; font-size:1rem; }
-        .mefam-brand-sub { font-size:.7rem; color:rgba(255,255,255,.55); letter-spacing:.03em; }
-        .mefam-nav-group { margin:4px 0; }
-        .mefam-nav-group-header { display:flex; align-items:center; justify-content:space-between; padding:12px 18px 4px; cursor:pointer; margin:0 8px; width:calc(100% - 16px); border:0; border-radius:6px; background:transparent; color:inherit; font:inherit; text-align:left; }
-        .mefam-nav-group-header:hover { background:rgba(255,255,255,.04); }
-        .mefam-nav-section-label { font-size:.66rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.5); display:flex; align-items:center; gap:8px; }
-        .mefam-nav-group-chevron { font-size:.7rem; color:rgba(255,255,255,.4); transform:rotate(90deg); transition:transform .2s; }
-        .mefam-nav-group.collapsed .mefam-nav-group-chevron { transform:rotate(0); }
-        .mefam-nav-group-items { overflow:hidden; max-height:2400px; opacity:1; transition:max-height .28s,opacity .18s; }
-        .mefam-nav-group.collapsed .mefam-nav-group-items { max-height:0; opacity:0; }
-        .mefam-nav-item { display:flex; align-items:center; gap:11px; padding:10px 18px; border-radius:7px; margin:2px 10px; cursor:pointer; font-size:.88rem; font-weight:500; color:rgba(255,255,255,.75); transition:background .15s,color .15s; width:calc(100% - 20px); background:transparent; border:0; font-family:inherit; text-decoration:none; }
-        .mefam-nav-item:hover { background:rgba(255,255,255,.08); color:#fff; transform:translateX(2px); }
-        .mefam-nav-item.active { background:#f5a623; color:#1a2e44; font-weight:700; box-shadow:0 4px 14px rgba(245,166,35,.25); }
-        .mefam-nav-icon { width:24px; height:24px; border-radius:7px; display:grid; place-items:center; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#fff; font-size:.9rem; flex-shrink:0; }
-        .mefam-nav-item.active .mefam-nav-icon { background:rgba(26,46,68,.12); color:#1a2e44; }
-        .mefam-sidebar-footer { margin-top:auto; padding:14px 18px; border-top:1px solid rgba(255,255,255,.08); }
-        .mefam-user-box { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); margin-bottom:10px; }
-        .mefam-user-avatar { width:34px; height:34px; border-radius:50%; background:#f5a623; color:#1a2e44; display:grid; place-items:center; font-weight:700; flex-shrink:0; overflow:hidden; }
-        .mefam-user-avatar img { width:100%; height:100%; object-fit:cover; }
-        .mefam-user-info { min-width:0; }
-        .mefam-user-name,.mefam-user-role { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .mefam-user-name { color:#fff; font-size:.82rem; font-weight:700; }
-        .mefam-user-role { color:rgba(255,255,255,.55); font-size:.68rem; }
-        .mefam-logout-btn { width:100%; padding:10px 14px; background:rgba(231,76,60,.15); color:#ff8a7a; border:1px solid rgba(231,76,60,.3); border-radius:7px; font-size:.82rem; font-weight:700; cursor:pointer; font-family:inherit; }
+        /* ---------- Sidebar Container ---------- */
+        .mefam-sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--mefam-sidebar-w);
+            background: linear-gradient(180deg, #0f1e30 0%, #1a2e44 50%, #14273b 100%);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 200;
+            border-right: 1px solid rgba(255, 255, 255, .06);
+            box-shadow: 12px 0 32px rgba(15, 23, 42, .15);
+            font-family: 'Inter', -apple-system, sans-serif;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, .1) transparent;
+        }
+        .mefam-sidebar::-webkit-scrollbar { width: 6px; }
+        .mefam-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .mefam-sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .1); border-radius: 3px; }
+        .mefam-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .15); }
+
+        /* ---------- Brand/Logo Area ---------- */
+        .mefam-sidebar-brand {
+            padding: 20px 16px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, .01);
+        }
+        .mefam-sidebar-brand img {
+            height: 38px;
+            object-fit: contain;
+            filter: brightness(1.15);
+        }
+        .mefam-brand-text {
+            line-height: 1.2;
+            min-width: 0;
+            flex: 1;
+        }
+        .mefam-brand-name {
+            font-family: 'DM Serif Display', Georgia, serif;
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -.02em;
+        }
+        .mefam-brand-sub {
+            font-size: .65rem;
+            color: rgba(255, 255, 255, .45);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        /* ---------- Navigation Groups ---------- */
+        .mefam-nav-group {
+            margin: 8px 0;
+            flex-shrink: 0;
+        }
+        .mefam-nav-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px 6px;
+            cursor: pointer;
+            margin: 0;
+            width: 100%;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+            transition: all .2s;
+            position: relative;
+        }
+        .mefam-nav-group-header:hover {
+            background: rgba(255, 255, 255, .03);
+            padding-left: 18px;
+        }
+        .mefam-nav-section-label {
+            font-size: .7rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mefam-nav-group-chevron {
+            font-size: .65rem;
+            color: rgba(255, 255, 255, .3);
+            transform: rotate(0deg);
+            transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+            display: inline-block;
+        }
+        .mefam-nav-group:not(.collapsed) .mefam-nav-group-chevron {
+            transform: rotate(-90deg);
+        }
+
+        /* ---------- Navigation Items Container ---------- */
+        .mefam-nav-group-items {
+            overflow: hidden;
+            max-height: 2400px;
+            opacity: 1;
+            transition: max-height .3s cubic-bezier(.4, 0, .2, 1), opacity .2s linear;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding: 4px 0;
+        }
+        .mefam-nav-group.collapsed .mefam-nav-group-items {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ---------- Individual Navigation Items ---------- */
+        .mefam-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 16px 11px 12px;
+            margin: 0;
+            cursor: pointer;
+            font-size: .86rem;
+            font-weight: 500;
+            line-height: 1.3;
+            color: rgba(255, 255, 255, .7);
+            transition: all .2s;
+            width: 100%;
+            background: transparent;
+            border: 0;
+            font-family: inherit;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .mefam-nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: transparent;
+            transition: all .2s;
+        }
+        .mefam-nav-item:hover {
+            background: rgba(255, 255, 255, .06);
+            color: #fff;
+            padding-left: 14px;
+        }
+        .mefam-nav-item.active {
+            background: rgba(245, 166, 35, .15);
+            color: var(--mefam-accent);
+            font-weight: 700;
+            border-left: 3px solid var(--mefam-accent);
+            padding-left: 13px;
+        }
+        .mefam-nav-item.active::before {
+            background: var(--mefam-accent);
+            width: 3px;
+        }
+
+        /* ---------- Nav Item Content ---------- */
+        .mefam-nav-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, .08);
+            color: #fff;
+            font-size: 1rem;
+            flex-shrink: 0;
+            transition: all .2s;
+            border: 1px solid rgba(255, 255, 255, .1);
+        }
+        .mefam-nav-item:hover .mefam-nav-icon {
+            background: rgba(245, 166, 35, .15);
+            border-color: rgba(245, 166, 35, .3);
+        }
+        .mefam-nav-item.active .mefam-nav-icon {
+            background: rgba(245, 166, 35, .2);
+            border-color: var(--mefam-accent);
+        }
+        .mefam-nav-label {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .mefam-nav-label-main {
+            font-weight: 600;
+            color: inherit;
+        }
+        .mefam-nav-label-desc {
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .4);
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity .2s, max-height .2s;
+        }
+        .mefam-nav-item:hover .mefam-nav-label-desc {
+            opacity: 1;
+            max-height: 20px;
+        }
+
+        /* ---------- Sidebar Footer ---------- */
+        .mefam-sidebar-footer {
+            margin-top: auto;
+            padding: 14px 12px;
+            border-top: 1px solid rgba(255, 255, 255, .06);
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, .01);
+        }
+        .mefam-user-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .08);
+            margin-bottom: 10px;
+            transition: all .2s;
+        }
+        .mefam-user-box:hover {
+            background: rgba(255, 255, 255, .08);
+        }
+        .mefam-user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--mefam-accent), #f5a623);
+            color: var(--mefam-primary);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: .85rem;
+            flex-shrink: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(245, 166, 35, .2);
+        }
+        .mefam-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .mefam-user-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .mefam-user-name,
+        .mefam-user-role {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mefam-user-name {
+            color: #fff;
+            font-size: .81rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .mefam-user-role {
+            color: rgba(255, 255, 255, .5);
+            font-size: .7rem;
+            margin: 2px 0 0;
+        }
+        .mefam-logout-btn {
+            width: 100%;
+            padding: 9px 12px;
+            background: rgba(231, 76, 60, .12);
+            color: #ff8a7a;
+            border: 1px solid rgba(231, 76, 60, .25);
+            border-radius: 7px;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .2s;
+        }
+        .mefam-logout-btn:hover {
+            background: rgba(231, 76, 60, .2);
+            border-color: rgba(231, 76, 60, .4);
+            transform: translateY(-1px);
+        }
+
+        /* ---------- Backdrop & Mobile ---------- */
+        .mefam-sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 12, 23, .65);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s;
+            backdrop-filter: blur(4px);
+        }
+        .mefam-sidebar-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .mefam-sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 201;
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: rgba(26, 46, 68, .95);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, .2);
+        }
+        .mefam-sidebar-toggle:hover {
+            background: rgba(26, 46, 68, 1);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 900px) {
+            body.mefam-has-sidebar {
+                padding-left: 0;
+                padding-top: 60px;
+            }
+            .mefam-sidebar {
+                width: min(85vw, 320px);
+                transform: translateX(-100%);
+                transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+                height: calc(100vh - 60px);
+                top: 60px;
+            }
+            .mefam-sidebar.open {
+                transform: translateX(0);
+            }
+            .mefam-sidebar-backdrop {
+                display: block;
+            }
+            .mefam-sidebar-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        @media print {
+            .mefam-sidebar,
+            .mefam-sidebar-toggle,
+            .mefam-sidebar-backdrop,
+            #mefamPageSkeleton {
+                display: none !important;
+            }
+            body.mefam-has-sidebar {
+                padding: 0 !important;
+            }
+        }
+`;
         .mefam-sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(5,12,23,.6); z-index:199; opacity:0; pointer-events:none; transition:opacity .2s; }
         .mefam-sidebar-backdrop.open { opacity:1; pointer-events:auto; }
         .mefam-sidebar-toggle { display:none; position:fixed; top:12px; left:12px; z-index:201; width:42px; height:42px; border:0; border-radius:10px; background:#1a2e44; color:#fff; font-size:1.15rem; cursor:pointer; }
@@ -137,11 +477,11 @@
             if (!items.length) return '';
             return `<div class="mefam-nav-group" data-group="${group.id}">
                 <button type="button" class="mefam-nav-group-header" data-group-toggle="${group.id}" aria-expanded="true"><span class="mefam-nav-section-label">${group.label}</span><span class="mefam-nav-group-chevron">▸</span></button>
-                <div class="mefam-nav-group-items">${items.map(item => `<a class="mefam-nav-item" href="${item.href}" data-href="${item.href}"><span class="mefam-nav-icon">${item.icon}</span><span>${item.label}</span></a>`).join('')}</div>
+                <div class="mefam-nav-group-items">${items.map(item => `<a class="mefam-nav-item" href="${item.href}" data-href="${item.href}" title="${item.desc || item.label}"><span class="mefam-nav-icon">${item.icon}</span><span class="mefam-nav-label"><span class="mefam-nav-label-main">${item.label}</span><span class="mefam-nav-label-desc">${item.desc || ''}</span></span></a>`).join('')}</div>
             </div>`;
         }).join('');
         return `<aside class="mefam-sidebar" id="mefamSidebar" aria-label="Main navigation">
-            <div class="mefam-sidebar-brand"><img src="mefamdev.png" alt="MEFAMDEV Logo" onerror="this.style.display='none'"><div class="mefam-brand-text"><div class="mefam-brand-name">MEFAMDEV-Life</div><div class="mefam-brand-sub">Angat, Bulacan Chapter</div></div></div>
+            <div class="mefam-sidebar-brand"><img src="mefamdev.png" alt="MEFAMDEV Logo" onerror="this.style.display='none'"><div class="mefam-brand-text"><div class="mefam-brand-name">MEFAMDEV-Life</div><div class="mefam-brand-sub">Angat, Bulacan</div></div></div>
             <nav aria-label="Primary">${groups}</nav>
             <div class="mefam-sidebar-footer"><div class="mefam-user-box"><div class="mefam-user-avatar" id="mefamUserAvatar">${initials}</div><div class="mefam-user-info"><div class="mefam-user-name">${displayName}</div><div class="mefam-user-role">${title}</div></div></div><button type="button" class="mefam-logout-btn" data-sidebar-logout>⎋ Sign Out</button></div>
         </aside><div class="mefam-sidebar-backdrop" id="mefamSidebarBackdrop"></div><button type="button" class="mefam-sidebar-toggle" id="mefamSidebarToggle" aria-label="Toggle navigation">☰</button>`;
