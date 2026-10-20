@@ -998,6 +998,45 @@
   <script src="./audit-log.js"></script>
   <script src="/components/report-card.js"></script>
   <script>
+    /**
+     * MASS PRINT CENTER - Main Application Logic
+     * 
+     * This module implements a comprehensive batch printing interface for MEFAMDEV.
+     * It supports 12+ document types with advanced filtering, sorting, and customization.
+     *
+     * ARCHITECTURE:
+     * 
+     * 1. STATE MANAGEMENT
+     *    - Global `state` object holds all loaded data
+     *    - `msState` holds multi-select filter state (selected items + search query)
+     *    - `selectedEventIds` tracks selected formation events
+     *    - `selectedRecordKeys` tracks checked records for printing
+     *
+     * 2. DATA FLOW
+     *    Page Load → loadPrintData() → populateFilters() → renderRows() → User Interaction
+     *
+     * 3. RENDERING PIPELINE
+     *    User Filter Change → renderRowsDebounced() → matches() filter → renderRows() → Update DOM
+     *
+     * 4. PERFORMANCE
+     *    - Debounced rendering (300ms) to handle rapid filter changes
+     *    - Session caching (2 min TTL) to reduce API calls
+     *    - Parallel data loading for all sources
+     *    - Graceful fallback if individual sources fail
+     *
+     * 5. ERROR HANDLING
+     *    - Try-catch blocks with specific error messages
+     *    - Toast notifications for user feedback
+     *    - Console logging for debugging
+     *    - Fallback to empty arrays if data loading fails
+     *
+     * 6. SECURITY
+     *    - HTML escaping for all user-controlled content
+     *    - Input validation for filter values
+     *    - XSS protection via escapeHtml() function
+     *    - Content validation before rendering
+     */
+
     const state = { apps: [], families: [], events: [], checkins: {}, intakes: [], assessments: [], grades: [], funds: [], disbursements: [], announcements: [], documents: {}, auditLogs: [], auditActor: '', auditEntity: '', auditFrom: '', auditTo: '', auditSort: 'newest' };
     let visibleRecords = [];
 
@@ -1062,6 +1101,43 @@
       };
     }
     const renderRowsDebounced = createDebounce(renderRows, 300);
+
+    /**
+     * Validates and sanitizes user input from filter fields
+     * @param {string} value - Raw input value
+     * @param {string} fieldType - Type of field: 'search', 'date', 'select'
+     * @returns {string} Sanitized value or empty string if invalid
+     */
+    function validateFilterInput(value, fieldType = 'search') {
+      if (typeof value !== 'string') return '';
+      const trimmed = value.trim();
+      
+      switch (fieldType) {
+        case 'date':
+          // Validate ISO date format (YYYY-MM-DD)
+          return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : '';
+        case 'select':
+          // Allow alphanumeric, spaces, hyphens, and common symbols
+          return /^[a-zA-Z0-9\s\-()&'.]*$/.test(trimmed) ? trimmed : '';
+        case 'search':
+        default:
+          // Allow most characters but limit length
+          const maxLen = 100;
+          return trimmed.slice(0, maxLen);
+      }
+    }
+
+    /**
+     * Safely clamps a number to a range
+     * @param {number} value - Value to clamp
+     * @param {number} min - Minimum value
+     * @param {number} max - Maximum value
+     * @returns {number} Clamped value
+     */
+    function clamp(value, min, max) {
+      const num = Number(value) || 0;
+      return Math.min(Math.max(num, min), max);
+    }
 
     /* ---------- Checkbox filter configuration ---------- */
     const FILTER_META = {
@@ -1376,6 +1452,32 @@
     }
 
     /* ---------- Data loading ---------- */
+    /**
+     * Loads all data required for mass printing from API and local storage.
+     *
+     * @async
+     * @returns {Promise<void>}
+     *
+     * @description
+     * Main data loading function that:
+     * - Loads all data sources in parallel (applications, families, events, etc.)
+     * - Uses session cache if available (2 minute TTL)
+     * - Merges local storage drafts (intakes, assessments)
+     * - Validates all loaded data
+     * - Provides granular error handling per data source
+     * - Shows loading indicator while loading
+     *
+     * @data Sources Loaded:
+     *   - Applications, Families, Events, Intakes, Assessments
+     *   - Grades, Funds, Disbursements, Announcements, Audit Logs
+     *   - Event check-ins loaded separately for each event
+     *
+     * @errors Specific error messages for network, JSON, and data issues
+     * @cache Session cache: 2 minute TTL via sessionStorage
+     * @fallback If an individual source fails, uses empty array and continues
+     *
+     * @seeAlso MefamAPI, state, renderRows
+     */
     async function loadPrintData() {
       const loading = document.getElementById('loading');
       try {
@@ -1676,7 +1778,13 @@
     }
 
     /* ---------- Field extractors ---------- */
+    /**
+     * Normalizes a value for case-insensitive text comparison.
+     * @param {*} value - Value to normalize
+     * @returns {string} Lowercase, trimmed string
+     */
     function text(value) { return String(value || '').trim().toLowerCase(); }
+    
     function appFor(item) { return state.apps.find(app => String(app.id) === String(item.linkedAppId || item.appId || item.app_id || item.id)); }
 
     function attendanceKeys(record) {
@@ -1729,11 +1837,40 @@
     }
 
     /* ---------- Filters ---------- */
+    /**
+     * Extracts unique values from an array and sorts alphabetically (numeric-aware).
+     *
+     * @param {Array} values - Array of values to deduplicate
+     * @returns {Array<string>} Sorted unique values
+     *
+     * @description
+     * - Converts all values to strings
+     * - Trims whitespace and filters empty strings
+     * - Uses numeric sort so "Grade 2" comes before "Grade 10"
+     *
+     * @example
+     * unique(['B', 'A', 'C', 'A', '']) // Returns: ['A', 'B', 'C']
+     * unique(['Grade 10', 'Grade 2', 'Grade 5']) // Returns: ['Grade 2', 'Grade 5', 'Grade 10']
+     */
     function unique(values) {
       return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     }
 
+    /**
+     * Populates filter dropdowns with unique values from current record set.
+     * Called when print type changes or data is loaded/refreshed.
+     *
+     * @function populateFilters
+     * @returns {void}
+     *
+     * @description
+     * Updates all filter options based on current print type:
+     * - Selects appropriate data source (apps, intakes, assessments, families)
+     * - Extracts unique values for each filter field
+     * - Validates existing selections against new options
+     * - Re-renders filter dropdowns
+     */
     function populateFilters() {
       const type = document.getElementById('printType').value;
       const apps = state.apps;
@@ -1923,6 +2060,25 @@
     }
 
     /* ---------- Render ---------- */
+    /**
+     * Renders the results table with filtered and sorted records.
+     * Applies current filters, sorts by type, and populates table rows.
+     * Debounced via renderRowsDebounced to prevent excessive re-rendering.
+     *
+     * @function renderRows
+     * @returns {void}
+     *
+     * @description
+     * Main rendering function that:
+     * - Gets current print type and record source
+     * - Applies active filters via matches() function
+     * - Sorts results by appropriate criteria
+     * - Generates HTML for table header and body
+     * - Updates result count and button states
+     *
+     * @performance Debounced (300ms) to handle rapid filter changes
+     * @seeAlso matches, sortRecords, updateSelectionCount
+     */
     function renderRows() {
       const type = document.getElementById('printType').value;
       let records = currentRecords().filter(matches);
@@ -2084,6 +2240,30 @@
     });
 
     /* ---------- Print ---------- */
+    /**
+     * Generates and triggers print for selected or filtered records.
+     *
+     * @async
+     * @param {Array} records - Array of records to print
+     * @param {string} mode - Print mode: 'all' or 'selected'
+     * @returns {Promise<void>}
+     *
+     * @description
+     * Core print function that:
+     * - Validates record selection
+     * - Generates HTML document for print type
+     * - Shows loading overlay during generation
+     * - Triggers browser print dialog or download
+     * - Displays specific error messages if generation fails
+     *
+     * @throws {Error} Will catch and display specific errors:
+     *   - Empty document: "No data to print"
+     *   - Memory: "Too many records"
+     *   - Timeout: "Print took too long"
+     *   - Report card: "Failed to generate report cards"
+     *
+     * @seeAlso buildPrintDocument, printCurrentTabHtml, toast
+     */
     async function runPrint(records, mode) {
       const type = document.getElementById('printType').value;
       if (!records.length) {
@@ -2459,6 +2639,17 @@
       toastTimer = setTimeout(() => { el.className = 'toast'; }, 3200);
     }
 
+    /**
+     * Escapes HTML special characters to prevent XSS attacks.
+     * Converts: & < > " '
+     *
+     * @param {*} value - Value to escape
+     * @returns {string} Escaped HTML-safe string
+     * @security CRITICAL: Use for all user-controlled content in HTML
+     *
+     * @example
+     * escapeHtml('User & "Admin"') // Returns: User &amp; &quot;Admin&quot;
+     */
     function escapeHtml(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
   </script>
 <script src="./shared-sidebar.js"></script>
