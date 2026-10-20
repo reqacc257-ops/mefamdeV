@@ -1103,6 +1103,48 @@
     const renderRowsDebounced = createDebounce(renderRows, 300);
 
     /**
+     * Performance monitoring and warnings
+     * Tracks dataset size and alerts user if approaching limits
+     */
+    const PERFORMANCE_LIMITS = {
+      LARGE_DATASET: 1000,      // Show warning at 1000 records
+      VERY_LARGE_DATASET: 5000, // Show heavy warning at 5000 records
+      MAX_RENDER: 10000         // Hard limit for rendering
+    };
+
+    /**
+     * Logging and analytics helper
+     * Provides structured logging with timestamp and context
+     */
+    const Logger = {
+      info: (msg, data) => console.log(`[MassPrint ${new Date().toLocaleTimeString()}]`, msg, data || ''),
+      warn: (msg, data) => console.warn(`[MassPrint WARN ${new Date().toLocaleTimeString()}]`, msg, data || ''),
+      error: (msg, data) => console.error(`[MassPrint ERROR ${new Date().toLocaleTimeString()}]`, msg, data || ''),
+      perf: (operation, duration) => console.log(`[MassPrint PERF] ${operation}: ${duration}ms`)
+    };
+
+    /**
+     * Checks if current dataset might cause performance issues
+     * @returns {Object} { size: number, warning: string|null, severity: 'info'|'warn'|'error' }
+     */
+    function checkPerformance() {
+      const type = document.getElementById('printType').value;
+      const records = currentRecords ? currentRecords() : [];
+      const size = records.length;
+      
+      if (size > PERFORMANCE_LIMITS.MAX_RENDER) {
+        return { size, warning: `Dataset too large (${size} records). Performance severely degraded.`, severity: 'error' };
+      }
+      if (size > PERFORMANCE_LIMITS.VERY_LARGE_DATASET) {
+        return { size, warning: `Very large dataset (${size} records). Recommend pagination.`, severity: 'warn' };
+      }
+      if (size > PERFORMANCE_LIMITS.LARGE_DATASET) {
+        return { size, warning: `Large dataset (${size} records). Filters may be slower.`, severity: 'warn' };
+      }
+      return { size, warning: null, severity: 'info' };
+    }
+
+    /**
      * Validates and sanitizes user input from filter fields
      * @param {string} value - Raw input value
      * @param {string} fieldType - Type of field: 'search', 'date', 'select'
@@ -2086,6 +2128,15 @@
         if (selectedEventIds.size === 0) records = [];
       }
       visibleRecords = type === 'audit' ? sortAuditRecords(records) : sortRecords(records);
+
+      // Check performance and warn if approaching limits
+      const perf = checkPerformance();
+      if (perf.warning && perf.severity === 'warn') {
+        console.warn(`[MassPrint Performance] ${perf.warning}`);
+      } else if (perf.warning && perf.severity === 'error') {
+        console.error(`[MassPrint Performance] ${perf.warning}`);
+        toast(perf.warning, 'error');
+      }
 
       const head = document.getElementById('recordHead');
       const body = document.getElementById('recordBody');
