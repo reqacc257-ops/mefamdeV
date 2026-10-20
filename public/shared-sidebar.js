@@ -17,6 +17,10 @@
     const title = session.title || role.toUpperCase();
     const initials = session.initials || displayName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || '??';
     const storageKey = 'mefamdev_sidebar_groups';
+    const collapsedStorageKey = 'mefamdev_sidebar_collapsed';
+    
+    // Load collapsed state from localStorage
+    let isCollapsed = localStorage.getItem(collapsedStorageKey) === 'true';
 
     const navGroups = [
         { id: 'overview', label: 'Main', roles: ['director', 'edu', 'finance', 'program'], items: [
@@ -41,8 +45,9 @@
        CSS — sidebar + skeleton overlay
        ============================================================ */
     const css = `
-        :root { --mefam-sidebar-w: 280px; --mefam-primary: #1a2e44; --mefam-accent: #f5a623; --mefam-hover: rgba(255,255,255,.08); }
+        :root { --mefam-sidebar-w: 280px; --mefam-sidebar-collapsed-w: 80px; --mefam-primary: #1a2e44; --mefam-accent: #f5a623; --mefam-hover: rgba(255,255,255,.08); }
         body.mefam-has-sidebar { padding-left: var(--mefam-sidebar-w); transition: padding-left .3s; }
+        body.mefam-has-sidebar.mefam-sidebar-collapsed { padding-left: var(--mefam-sidebar-collapsed-w); }
 
         /* ---------- Sidebar Container ---------- */
         .mefam-sidebar {
@@ -60,6 +65,10 @@
             font-family: 'Inter', -apple-system, sans-serif;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, .1) transparent;
+            transition: width .3s cubic-bezier(.4, 0, .2, 1);
+        }
+        .mefam-sidebar.collapsed {
+            width: var(--mefam-sidebar-collapsed-w);
         }
         .mefam-sidebar::-webkit-scrollbar { width: 6px; }
         .mefam-sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -75,16 +84,28 @@
             gap: 10px;
             flex-shrink: 0;
             background: rgba(255, 255, 255, .01);
+            position: relative;
+        }
+        .mefam-sidebar.collapsed .mefam-sidebar-brand {
+            padding: 16px 12px;
+            justify-content: center;
+            flex-direction: column;
         }
         .mefam-sidebar-brand img {
             height: 38px;
             object-fit: contain;
             filter: brightness(1.15);
         }
+        .mefam-sidebar.collapsed .mefam-sidebar-brand img {
+            height: 32px;
+        }
         .mefam-brand-text {
             line-height: 1.2;
             min-width: 0;
             flex: 1;
+        }
+        .mefam-sidebar.collapsed .mefam-brand-text {
+            display: none;
         }
         .mefam-brand-name {
             font-family: 'DM Serif Display', Georgia, serif;
@@ -99,6 +120,47 @@
             color: rgba(255, 255, 255, .45);
             letter-spacing: .04em;
             text-transform: uppercase;
+        }
+
+        /* ---------- Collapse Toggle Button ---------- */
+        .mefam-collapse-btn {
+            position: absolute;
+            right: 8px;
+            top: 18px;
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .6);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            transition: all .2s;
+            flex-shrink: 0;
+            padding: 0;
+            font-family: inherit;
+        }
+        .mefam-collapse-btn:hover {
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            transform: scale(1.08);
+        }
+        .mefam-sidebar.collapsed .mefam-collapse-btn {
+            position: static;
+            right: auto;
+            width: calc(100% - 16px);
+            height: 44px;
+            margin: 0 8px 8px 8px;
+            border-radius: 8px;
+            background: rgba(245, 166, 35, .1);
+            color: var(--mefam-accent);
+            font-size: 1rem;
+        }
+        .mefam-sidebar.collapsed .mefam-collapse-btn:hover {
+            background: rgba(245, 166, 35, .15);
         }
 
         /* ---------- Navigation Groups ---------- */
@@ -122,6 +184,9 @@
             text-align: left;
             transition: all .2s;
             position: relative;
+        }
+        .mefam-sidebar.collapsed .mefam-nav-group-header {
+            display: none;
         }
         .mefam-nav-group-header:hover {
             background: rgba(255, 255, 255, .03);
@@ -159,10 +224,24 @@
             gap: 3px;
             padding: 4px 0;
         }
+        .mefam-sidebar.collapsed .mefam-nav-group-items {
+            padding: 4px 8px;
+            max-height: 2400px;
+            opacity: 1;
+            gap: 6px;
+            flex-wrap: wrap;
+            flex-direction: row;
+            justify-content: center;
+        }
         .mefam-nav-group.collapsed .mefam-nav-group-items {
             max-height: 0;
             opacity: 0;
             pointer-events: none;
+        }
+        .mefam-sidebar.collapsed .mefam-nav-group.collapsed .mefam-nav-group-items {
+            max-height: 2400px;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         /* ---------- Individual Navigation Items ---------- */
@@ -186,6 +265,16 @@
             position: relative;
             overflow: hidden;
         }
+        .mefam-sidebar.collapsed .mefam-nav-item {
+            width: auto;
+            gap: 0;
+            padding: 8px;
+            justify-content: center;
+            border-radius: 8px;
+            position: relative;
+            min-width: 44px;
+            min-height: 44px;
+        }
         .mefam-nav-item::before {
             content: '';
             position: absolute;
@@ -196,10 +285,17 @@
             background: transparent;
             transition: all .2s;
         }
+        .mefam-sidebar.collapsed .mefam-nav-item::before {
+            display: none;
+        }
         .mefam-nav-item:hover {
             background: rgba(255, 255, 255, .06);
             color: #fff;
             padding-left: 14px;
+        }
+        .mefam-sidebar.collapsed .mefam-nav-item:hover {
+            background: rgba(245, 166, 35, .15);
+            padding-left: 8px;
         }
         .mefam-nav-item.active {
             background: rgba(245, 166, 35, .15);
@@ -207,6 +303,12 @@
             font-weight: 700;
             border-left: 3px solid var(--mefam-accent);
             padding-left: 13px;
+        }
+        .mefam-sidebar.collapsed .mefam-nav-item.active {
+            background: rgba(245, 166, 35, .2);
+            border-left: 0;
+            border-radius: 8px;
+            padding-left: 8px;
         }
         .mefam-nav-item.active::before {
             background: var(--mefam-accent);
@@ -227,6 +329,13 @@
             transition: all .2s;
             border: 1px solid rgba(255, 255, 255, .1);
         }
+        .mefam-sidebar.collapsed .mefam-nav-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            margin: 0 auto;
+        }
         .mefam-nav-item:hover .mefam-nav-icon {
             background: rgba(245, 166, 35, .15);
             border-color: rgba(245, 166, 35, .3);
@@ -240,6 +349,9 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+        }
+        .mefam-sidebar.collapsed .mefam-nav-label {
+            display: none;
         }
         .mefam-nav-label-main {
             font-weight: 600;
@@ -266,6 +378,9 @@
             flex-shrink: 0;
             background: rgba(255, 255, 255, .01);
         }
+        .mefam-sidebar.collapsed .mefam-sidebar-footer {
+            padding: 8px 8px;
+        }
         .mefam-user-box {
             display: flex;
             align-items: center;
@@ -276,6 +391,11 @@
             border: 1px solid rgba(255, 255, 255, .08);
             margin-bottom: 10px;
             transition: all .2s;
+        }
+        .mefam-sidebar.collapsed .mefam-user-box {
+            padding: 8px;
+            margin-bottom: 8px;
+            justify-content: center;
         }
         .mefam-user-box:hover {
             background: rgba(255, 255, 255, .08);
@@ -302,6 +422,9 @@
         .mefam-user-info {
             min-width: 0;
             flex: 1;
+        }
+        .mefam-sidebar.collapsed .mefam-user-info {
+            display: none;
         }
         .mefam-user-name,
         .mefam-user-role {
@@ -332,6 +455,12 @@
             cursor: pointer;
             font-family: inherit;
             transition: all .2s;
+        }
+        .mefam-sidebar.collapsed .mefam-logout-btn {
+            width: calc(100% - 16px);
+            margin: 0 8px;
+            padding: 8px 12px;
+            font-size: .75rem;
         }
         .mefam-logout-btn:hover {
             background: rgba(231, 76, 60, .2);
@@ -477,11 +606,11 @@
             if (!items.length) return '';
             return `<div class="mefam-nav-group" data-group="${group.id}">
                 <button type="button" class="mefam-nav-group-header" data-group-toggle="${group.id}" aria-expanded="true"><span class="mefam-nav-section-label">${group.label}</span><span class="mefam-nav-group-chevron">▸</span></button>
-                <div class="mefam-nav-group-items">${items.map(item => `<a class="mefam-nav-item" href="${item.href}" data-href="${item.href}" title="${item.desc || item.label}"><span class="mefam-nav-icon">${item.icon}</span><span class="mefam-nav-label"><span class="mefam-nav-label-main">${item.label}</span><span class="mefam-nav-label-desc">${item.desc || ''}</span></span></a>`).join('')}</div>
-            </div>`;
+                <div class="mefam-nav-group-items">${items.map(item => `<a class="mefam-nav-item" href="${item.href}" data-href="${item.href}" title="${item.desc || item.label}"><span class="mefam-nav-icon">${item.icon}</span><span class="mefam-nav-label"><span class="mefam-nav-label-main">${item.label}</span><span class="mefam-nav-label-desc">${item.desc || ''}</span></span></a>`).join('')}</div></div>`;
         }).join('');
-        return `<aside class="mefam-sidebar" id="mefamSidebar" aria-label="Main navigation">
-            <div class="mefam-sidebar-brand"><img src="mefamdev.png" alt="MEFAMDEV Logo" onerror="this.style.display='none'"><div class="mefam-brand-text"><div class="mefam-brand-name">MEFAMDEV-Life</div><div class="mefam-brand-sub">Angat, Bulacan</div></div></div>
+        const collapsedClass = isCollapsed ? ' collapsed' : '';
+        return `<aside class="mefam-sidebar${collapsedClass}" id="mefamSidebar" aria-label="Main navigation">
+            <div class="mefam-sidebar-brand"><img src="mefamdev.png" alt="MEFAMDEV Logo" onerror="this.style.display='none'"><div class="mefam-brand-text"><div class="mefam-brand-name">MEFAMDEV-Life</div><div class="mefam-brand-sub">Angat, Bulacan</div></div><button type="button" class="mefam-collapse-btn" title="Toggle sidebar" aria-label="Toggle sidebar" data-collapse-toggle>${isCollapsed ? '»' : '«'}</button></div>
             <nav aria-label="Primary">${groups}</nav>
             <div class="mefam-sidebar-footer"><div class="mefam-user-box"><div class="mefam-user-avatar" id="mefamUserAvatar">${initials}</div><div class="mefam-user-info"><div class="mefam-user-name">${displayName}</div><div class="mefam-user-role">${title}</div></div></div><button type="button" class="mefam-logout-btn" data-sidebar-logout>⎋ Sign Out</button></div>
         </aside><div class="mefam-sidebar-backdrop" id="mefamSidebarBackdrop"></div><button type="button" class="mefam-sidebar-toggle" id="mefamSidebarToggle" aria-label="Toggle navigation">☰</button>`;
@@ -563,6 +692,7 @@
         toggle() { const sidebar = document.getElementById('mefamSidebar'); const backdrop = document.getElementById('mefamSidebarBackdrop'); const open = sidebar?.classList.toggle('open'); backdrop?.classList.toggle('open', open); },
         close() { document.getElementById('mefamSidebar')?.classList.remove('open'); document.getElementById('mefamSidebarBackdrop')?.classList.remove('open'); },
         logout() { if (!confirm('Sign out of the admin dashboard?')) return; if (window.MefamAPI?.logout) return window.MefamAPI.logout(); sessionStorage.clear(); localStorage.removeItem('mefamdev_preview_session'); window.location.href = 'index.html'; },
+        toggleCollapse() { const sidebar = document.getElementById('mefamSidebar'); const btn = document.querySelector('[data-collapse-toggle]'); const collapsed = sidebar?.classList.toggle('collapsed'); if (btn) btn.textContent = collapsed ? '»' : '«'; isCollapsed = collapsed; localStorage.setItem(collapsedStorageKey, String(collapsed)); document.body.classList.toggle('mefam-sidebar-collapsed', collapsed); },
         highlight() { const path = (window.location.pathname.split('/').pop() || '').toLowerCase(); const hash = window.location.hash || ''; let matched = false; document.querySelectorAll('.mefam-nav-item').forEach(link => { const href = link.dataset.href.toLowerCase(); const active = href === path || (href.includes('#') && href === path + hash); link.classList.toggle('active', active); matched ||= active; }); if (!matched) document.querySelector('.mefam-nav-item[data-href="admin_dashboard.html"]')?.classList.add('active'); }
     };
 
@@ -572,6 +702,7 @@
         if (document.getElementById('mefamSidebar')) return;
         const style = document.createElement('style'); style.id = 'mefam-sidebar-styles'; style.textContent = css; document.head.appendChild(style);
         document.body.classList.add('mefam-has-sidebar');
+        if (isCollapsed) document.body.classList.add('mefam-sidebar-collapsed');
         const wrapper = document.createElement('div'); wrapper.innerHTML = buildHtml(); while (wrapper.firstElementChild) document.body.insertBefore(wrapper.firstElementChild, document.body.firstChild);
         document.querySelectorAll('.app-sidebar,.sidebar,.sidebar-backdrop,.app-menu-toggle,#sidebar,#sidebarBackdrop,#menuToggle').forEach(element => { element.style.display = 'none'; });
         const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -579,6 +710,7 @@
         document.getElementById('mefamSidebarToggle')?.addEventListener('click', api.toggle);
         document.getElementById('mefamSidebarBackdrop')?.addEventListener('click', api.close);
         document.querySelector('[data-sidebar-logout]')?.addEventListener('click', api.logout);
+        document.querySelector('[data-collapse-toggle]')?.addEventListener('click', api.toggleCollapse);
         document.querySelectorAll('.mefam-nav-item').forEach(link => link.addEventListener('click', () => {
             showSkeleton();
             if (window.innerWidth <= 900) api.close();
