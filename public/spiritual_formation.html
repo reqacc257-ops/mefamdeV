@@ -561,8 +561,31 @@
         input.textContent = String(countValue);
         input.style.color = isEnabled ? '#1e2a47' : '#94a3b8';
       }
+      
+      // Update toggle switch visual state
+      if (toggle) {
+        toggle.setAttribute('aria-pressed', String(isEnabled));
+        const switchSpan = toggle.querySelector('span:nth-child(2)');
+        if (switchSpan) {
+          switchSpan.style.background = isEnabled ? '#4F5FE0' : '#dfe4ee';
+          const knob = switchSpan.querySelector('span');
+          if (knob) {
+            knob.style.left = isEnabled ? '18px' : '3px';
+            knob.style.background = '#fff';
+          }
+        }
+      }
+      
+      // Update row background and circle
       row.classList.toggle('capacity-row-on', isEnabled);
-      if (toggle) toggle.setAttribute('aria-pressed', String(isEnabled));
+      row.style.background = isEnabled ? 'rgba(79,95,224,0.04)' : '#fff';
+      
+      const circle = row.querySelector('div[style*="border-radius: 50%"]');
+      if (circle) {
+        circle.style.background = isEnabled ? '#4F5FE0' : '#f1f5f9';
+        circle.style.color = isEnabled ? '#fff' : '#94a3b8';
+      }
+      
       getCapacitySelection();
     }
 
@@ -584,9 +607,34 @@
         input.textContent = String(nextEnabled ? baseCount : 0);
         input.style.color = nextEnabled ? '#1e2a47' : '#94a3b8';
       }
-      row.classList.toggle('capacity-row-on', nextEnabled);
+      
+      // Update toggle switch visual state
       const toggle = row.querySelector('.capacity-toggle');
-      if (toggle) toggle.setAttribute('aria-pressed', String(nextEnabled));
+      if (toggle) {
+        toggle.setAttribute('aria-pressed', String(nextEnabled));
+        const switchSpan = toggle.querySelector('span:nth-child(2)');
+        if (switchSpan) {
+          switchSpan.style.background = nextEnabled ? '#4F5FE0' : '#dfe4ee';
+          const knob = switchSpan.querySelector('span');
+          if (knob) {
+            knob.style.left = nextEnabled ? '18px' : '3px';
+            knob.style.background = '#fff';
+          }
+        }
+      }
+      
+      // Update row background
+      row.classList.toggle('capacity-row-on', nextEnabled);
+      row.style.background = nextEnabled ? 'rgba(79,95,224,0.04)' : '#fff';
+      
+      // Update level circle color
+      const circle = row.querySelector('[data-id="' + id + '"][style*="border-radius: 50%"]') || 
+                     row.querySelector('div[style*="border-radius: 50%"]');
+      if (circle) {
+        circle.style.background = nextEnabled ? '#4F5FE0' : '#f1f5f9';
+        circle.style.color = nextEnabled ? '#fff' : '#94a3b8';
+      }
+      
       getCapacitySelection();
     }
 
