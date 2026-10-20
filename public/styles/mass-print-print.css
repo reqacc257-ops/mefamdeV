@@ -1,0 +1,423 @@
+/* =============================================================================
+   Mass Print Document Styles
+   Used by mass_print.html for generating printable documents
+   ============================================================================= */
+
+/* Base Print Page Setup */
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #111;
+  font-size: 11px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+h2 {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.org,
+.meta {
+  text-align: center;
+}
+
+.org {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.meta {
+  color: #555;
+  margin-bottom: 12px;
+}
+
+/* Record & Page Layout */
+.record {
+  page-break-after: always;
+}
+
+.record:last-child {
+  page-break-after: auto;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+th,
+td {
+  border: 1px solid #555;
+  padding: 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #eee;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+/* Form Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.field {
+  border: 1px solid #aaa;
+  padding: 6px;
+  min-height: 28px;
+}
+
+.label {
+  display: block;
+  color: #555;
+  font-size: 8px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+/* Signatures */
+.signature {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 28px;
+}
+
+.line {
+  border-top: 1px solid #111;
+  padding-top: 5px;
+  text-align: center;
+}
+
+.summary {
+  border: 1px solid #888;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+/* Report Card Styles */
+.rc-card {
+  page-break-after: always;
+  box-shadow: none !important;
+  border: 1px solid #aaa;
+}
+
+.rc-card:last-child {
+  page-break-after: auto;
+}
+
+.rc-head {
+  background: #1a2e44 !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* =============================================================================
+   Intake Sheet Print Styles
+   ============================================================================= */
+
+@page {
+  size: letter portrait;
+  margin: 5mm;
+}
+
+.intake-print {
+  font-family: Arial, sans-serif;
+  font-size: 7px;
+  line-height: 1.15;
+}
+
+.intake-print h2 {
+  border-bottom: 1px solid #111;
+  padding: 2px 4px;
+  margin: 4px 0 3px;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.intake-print .sheet-title {
+  border-bottom: 2px solid #111;
+  padding-bottom: 3px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.intake-print .sheet-title small {
+  float: right;
+  font-size: 7px;
+  font-weight: normal;
+  padding-top: 3px;
+}
+
+.intake-print .grid {
+  gap: 2px;
+}
+
+.intake-print .field {
+  min-height: 14px;
+  padding: 2px 3px;
+  border: 1px solid #777;
+}
+
+.intake-print .label {
+  font-size: 5px;
+  line-height: 1;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 1px;
+}
+
+.intake-print .section-text {
+  border: 1px solid #777;
+  min-height: 27px;
+  padding: 3px;
+  white-space: pre-wrap;
+  line-height: 1.15;
+}
+
+.intake-print .family-table th,
+.intake-print .family-table td,
+.intake-print .action-table th,
+.intake-print .action-table td {
+  padding: 2px 3px;
+  font-size: 6px;
+  line-height: 1.1;
+}
+
+.intake-print .family-table th,
+.intake-print .action-table th {
+  background: #eee;
+}
+
+.intake-print .signature {
+  gap: 10px;
+  margin-top: 7px;
+}
+
+.intake-print .signature-box {
+  min-height: 35px;
+  border: 1px solid #777;
+  padding: 15px 4px 3px;
+  text-align: center;
+}
+
+.intake-print .signature-box img {
+  display: block;
+  max-width: 100%;
+  height: 12px;
+  margin: -13px auto 1px;
+  object-fit: contain;
+}
+
+.intake-print .signature-box .line {
+  border-top: 1px solid #111;
+  padding-top: 2px;
+  font-size: 6px;
+}
+
+.intake-print .muted {
+  color: #555;
+}
+
+/* =============================================================================
+   Assessment Print Styles
+   ============================================================================= */
+
+.assessment-print {
+  font-family: Arial, sans-serif;
+  font-size: 8px;
+  line-height: 1.15;
+}
+
+.assessment-print .sheet-title {
+  border-bottom: 2px solid #111;
+  padding-bottom: 4px;
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.assessment-print .sheet-title small {
+  float: right;
+  font-size: 8px;
+  font-weight: normal;
+  padding-top: 3px;
+}
+
+.assessment-print h2 {
+  border-bottom: 1px solid #111;
+  padding: 3px 4px;
+  margin: 5px 0 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.assessment-print .grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.assessment-print .field {
+  min-height: 18px;
+  padding: 3px 4px;
+  border: 1px solid #777;
+}
+
+.assessment-print .label {
+  display: block;
+  font-size: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 1px;
+}
+
+.assessment-print .score-table {
+  width: 100%;
+  margin: 3px 0;
+}
+
+.assessment-print .score-table th,
+.assessment-print .score-table td {
+  padding: 2px 3px;
+  font-size: 7px;
+}
+
+.assessment-print .score-table th {
+  background: #e9edf2;
+}
+
+.assessment-print .score-table .category {
+  background: #f4f6f9;
+  font-weight: 700;
+}
+
+.assessment-print .score {
+  width: 34px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.assessment-print .check {
+  color: #087a45;
+}
+
+.assessment-print .cross {
+  color: #b3261e;
+}
+
+.assessment-print .blank {
+  color: #777;
+}
+
+.assessment-print .summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+
+.assessment-print .summary-box {
+  border: 1px solid #777;
+  padding: 3px;
+  text-align: center;
+}
+
+.assessment-print .summary-box strong {
+  display: block;
+  font-size: 11px;
+}
+
+.assessment-print .summary-box span {
+  display: block;
+  font-size: 5px;
+  text-transform: uppercase;
+}
+
+.assessment-print .result {
+  border: 1px solid #555;
+  padding: 5px;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.assessment-print .result.below {
+  background: #fff0ee;
+  color: #a51d18;
+}
+
+.assessment-print .result.above {
+  background: #edf9f1;
+  color: #087a45;
+}
+
+.assessment-print .text-block {
+  border: 1px solid #777;
+  min-height: 28px;
+  padding: 4px;
+  white-space: pre-wrap;
+}
+
+.assessment-print .signature {
+  display: block;
+  width: 280px;
+  margin: 12px auto 0;
+}
+
+.assessment-print .signature .line {
+  border-top: 1px solid #111;
+  padding-top: 3px;
+  text-align: center;
+  font-size: 7px;
+}
+
+/* =============================================================================
+   Print Media Queries
+   ============================================================================= */
+
+@media print {
+  .no-print {
+    display: none;
+  }
+
+  .intake-print h2,
+  .assessment-print h2 {
+    break-after: avoid;
+  }
+
+  .intake-print .family-table,
+  .intake-print .action-table,
+  .assessment-print .score-table {
+    break-inside: avoid;
+  }
+
+  table tr {
+    break-inside: avoid;
+  }
+}

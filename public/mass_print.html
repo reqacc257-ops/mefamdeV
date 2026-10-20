@@ -948,16 +948,16 @@
           <span class="pill-count"><strong id="resultCount">0</strong> shown</span>
         </div>
         <div class="results-actions">
-          <button class="btn btn-ghost btn-sm" type="button" onclick="toggleVisibleSelection(true)">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="toggleVisibleSelection(true)" aria-label="Select all visible records" title="Select all visible records">
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             Select visible
           </button>
-          <button class="btn btn-ghost btn-sm" type="button" onclick="toggleVisibleSelection(false)">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="toggleVisibleSelection(false)" aria-label="Clear all selections" title="Clear all selections">
             <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             Clear
           </button>
-          <span class="count" id="selectionCount">0 selected</span>
-          <button class="btn btn-gold" type="button" id="printBtn" onclick="printSelected()" disabled>
+          <span class="count" id="selectionCount" role="status" aria-live="polite">0 selected</span>
+          <button class="btn btn-gold" type="button" id="printBtn" onclick="printSelected()" disabled aria-label="Print selected records" title="Print selected records">
             <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print selected
           </button>
@@ -1053,6 +1053,16 @@
       'auth.failed': 'failed login attempt for'
     };
 
+    // Debounce utility for filter performance
+    function createDebounce(fn, delayMs) {
+      let timeoutId;
+      return function debounced(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), delayMs);
+      };
+    }
+    const renderRowsDebounced = createDebounce(renderRows, 300);
+
     /* ---------- Checkbox filter configuration ---------- */
     const FILTER_META = {
       status:   { all: 'All statuses',    search: 'Search statuses…'    },
@@ -1145,6 +1155,7 @@
         search.addEventListener('input', () => {
           msState[key].query = search.value;
           renderMultiSelectOptions(key);
+          renderRowsDebounced();
         });
 
         list.addEventListener('change', event => {
@@ -1153,21 +1164,21 @@
           if (box.checked) msState[key].selected.add(box.value);
           else msState[key].selected.delete(box.value);
           updateMultiSelectLabel(key);
-          renderRows();
+          renderRowsDebounced();
         });
 
         host.querySelector('[data-ms-action="all"]').addEventListener('click', () => {
           visibleMultiSelectOptions(key).forEach(value => msState[key].selected.add(value));
           renderMultiSelectOptions(key);
           updateMultiSelectLabel(key);
-          renderRows();
+          renderRowsDebounced();
         });
 
         host.querySelector('[data-ms-action="none"]').addEventListener('click', () => {
           msState[key].selected.clear();
           renderMultiSelectOptions(key);
           updateMultiSelectLabel(key);
-          renderRows();
+          renderRowsDebounced();
         });
       });
 
@@ -1184,7 +1195,7 @@
           updateMultiSelectLabel(key);
           renderMultiSelectOptions(key);
         }
-        renderRows();
+        renderRowsDebounced();
       });
     }
 
@@ -1384,14 +1395,24 @@
         let loaded = null;
         try {
           const cached = JSON.parse(sessionStorage.getItem('mefamdev_mass_print_prefetch') || 'null');
-          if (cached && Date.now() - Number(cached.cachedAt || 0) < 2 * 60 * 1000) loaded = cached.data;
-        } catch (_) {}
+          if (cached && Date.now() - Number(cached.cachedAt || 0) < 2 * 60 * 1000) {
+            loaded = cached.data;
+            if (!loaded || typeof loaded !== 'object') {
+              throw new Error('Cached data is invalid');
+            }
+          }
+        } catch (cacheError) {
+          console.warn('Session cache unavailable; loading fresh data.', cacheError);
+        }
 
         if (!loaded) {
           const results = await Promise.all(loaders.map(async ([key, loader]) => {
             try {
               const value = await loader();
-              return [key, Array.isArray(value) ? value : []];
+              if (!Array.isArray(value)) {
+                throw new Error(`Expected array for ${key}, got ${typeof value}`);
+              }
+              return [key, value];
             } catch (error) {
               console.warn(`Mass print source ${key} failed to load; using an empty fallback.`, error);
               return [key, []];
@@ -1473,6 +1494,7 @@
           try {
             return [event.id, await MefamAPI.getEventCheckins(event.id).catch(() => [])];
           } catch (error) {
+            console.warn(`Failed to load checkins for event ${event.id}`, error);
             return [event.id, []];
           }
         }));
@@ -1482,7 +1504,16 @@
         document.getElementById('recordTable').style.display = 'table';
       } catch (error) {
         console.error('Mass print data load failed:', error);
-        loading.textContent = 'Unable to load print records. Refresh and try again.';
+        let errorMsg = 'Unable to load print records. ';
+        if (error.message?.includes('fetch') || error.message?.includes('network')) {
+          errorMsg += 'Check your internet connection and try again.';
+        } else if (error.message?.includes('JSON')) {
+          errorMsg += 'Server returned invalid data. Refresh and try again.';
+        } else {
+          errorMsg += 'Refresh and try again.';
+        }
+        loading.textContent = errorMsg;
+        toast(errorMsg, 'error');
       }
     }
 
@@ -1834,14 +1865,24 @@
       const raw = String(value ?? '').trim();
       if (!raw) return DASH;
       let cls = 'status';
+      let statusType = 'status';
       if (forcedClass) cls += ' ' + forcedClass;
       else {
         const key = raw.toLowerCase();
-        if (/(accept|approv|active|complete|present|verified|paid|good|pass|cleared|enrolled|released)/.test(key)) cls += ' good';
-        else if (/(reject|denied|absent|fail|bad|overdue|inactive|drop|declin|cancel)/.test(key)) cls += ' bad';
-        else if (/(pending|review|wait|partial|warn|follow|process|unset|hold|draft)/.test(key)) cls += ' warn';
+        if (/(accept|approv|active|complete|present|verified|paid|good|pass|cleared|enrolled|released)/.test(key)) {
+          cls += ' good';
+          statusType = 'accepted';
+        }
+        else if (/(reject|denied|absent|fail|bad|overdue|inactive|drop|declin|cancel)/.test(key)) {
+          cls += ' bad';
+          statusType = 'rejected';
+        }
+        else if (/(pending|review|wait|partial|warn|follow|process|unset|hold|draft)/.test(key)) {
+          cls += ' warn';
+          statusType = 'pending';
+        }
       }
-      return { html: `<span class="${cls}">${escapeHtml(raw)}</span>` };
+      return { html: `<span class="${cls}" title="Status: ${escapeHtml(raw)}">${escapeHtml(raw)}</span>` };
     }
     function money(value) {
       const raw = String(value ?? '').trim();
@@ -1929,7 +1970,10 @@
             const timestamp = entry.timestamp ? new Date(entry.timestamp) : null;
             const dateLabel = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
             const timeLabel = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'Unknown time';
-            return `<tr class="audit-entry-row" data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"${checked}></td><td class="audit-cell" colspan="${columns.length + 1}"><div class="audit-entry"><div class="audit-avatar ${avatarClass}">${escapeHtml((entry.actorName || 'S').split(' ').map(part => part[0]).slice(0,2).join('').toUpperCase())}</div><div class="audit-body"><div class="audit-head"><span class="audit-name">${escapeHtml(entry.actorName || 'System')}</span><span class="audit-role-pill ${pillClass}">${escapeHtml(String(entry.actorRole || entry.role || 'system').toUpperCase())}</span></div><div class="audit-verb">${escapeHtml(verb)} ${entityLabel ? `<strong>${escapeHtml(entityLabel)}</strong>` : ''}</div><div class="audit-meta"><span class="audit-ref">${escapeHtml(refText || '-')}</span>${batchChip ? `${batchChip}` : ''}</div>${note}</div><div class="audit-when"><strong>${escapeHtml(dateLabel)}</strong><span>${escapeHtml(timeLabel)}</span></div></div></td></tr>`;
+            const actorRole = String(entry.actorRole || entry.role || 'system').toUpperCase();
+            const avatarText = escapeHtml((entry.actorName || 'S').split(' ').map(part => part[0]).slice(0,2).join('').toUpperCase());
+            const avatarAriaLabel = `${escapeHtml(entry.actorName || 'System')} (${actorRole})`;
+            return `<tr class="audit-entry-row" data-print-id="${escapeHtml(id)}"><td class="col-check"><input type="checkbox" class="record-check" value="${escapeHtml(id)}" aria-label="Select record"${checked}></td><td class="audit-cell" colspan="${columns.length + 1}"><div class="audit-entry"><div class="audit-avatar ${avatarClass}" aria-label="${avatarAriaLabel}" title="${avatarAriaLabel}">${avatarText}</div><div class="audit-body"><div class="audit-head"><span class="audit-name">${escapeHtml(entry.actorName || 'System')}</span><span class="audit-role-pill ${pillClass}" title="Actor role: ${actorRole}">${actorRole}</span></div><div class="audit-verb">${escapeHtml(verb)} ${entityLabel ? `<strong>${escapeHtml(entityLabel)}</strong>` : ''}</div><div class="audit-meta"><span class="audit-ref">${escapeHtml(refText || '-')}</span>${batchChip ? `${batchChip}` : ''}</div>${note}</div><div class="audit-when"><strong>${escapeHtml(dateLabel)}</strong><span>${escapeHtml(timeLabel)}</span></div></div></td></tr>`;
           }
 
           const reportSummary = type === 'report-card' ? getReportCardSummary(item) : null;
@@ -2043,7 +2087,10 @@
     async function runPrint(records, mode) {
       const type = document.getElementById('printType').value;
       if (!records.length) {
-        toast(mode === 'selected' ? 'Select at least one record to print.' : 'No records to mass print.', 'warn');
+        const message = mode === 'selected' 
+          ? 'Select at least one record to print.' 
+          : 'No records to mass print. Check your filters and try again.';
+        toast(message, 'warn');
         return;
       }
 
@@ -2055,11 +2102,27 @@
           await runTemplatePrint(type, records, mode);
         } else {
           const html = await buildPrintDocument(type, records);
+          if (!html || html.length < 100) {
+            throw new Error('Print document is empty or invalid');
+          }
           printCurrentTabHtml(html);
+          toast(`Printing ${records.length} ${type}...`, 'success');
         }
       } catch (error) {
         console.error('Print generation failed:', error);
-        toast('Failed to generate print document.', 'error');
+        
+        let userMessage = 'Failed to generate print document.';
+        if (error.message?.includes('empty')) {
+          userMessage = 'No data to print. Check your selection and try again.';
+        } else if (error.message?.includes('memory')) {
+          userMessage = 'Too many records. Try printing fewer at a time.';
+        } else if (error.message?.includes('timeout')) {
+          userMessage = 'Print generation took too long. Try fewer records.';
+        } else if (error.message?.includes('report-card')) {
+          userMessage = 'Failed to generate report cards. Check the data and try again.';
+        }
+        
+        toast(userMessage, 'error');
         if (overlay) overlay.classList.remove('is-visible');
       }
     }
@@ -2193,12 +2256,9 @@
       else body = records.map(buildAssessmentPrint).join('');
 
       const printHeader = type === 'intake' || type === 'assessment' ? '' : `<div class="org">Fr. Marie Eugene Family Development Foundation, Inc.</div><h1>MEFAMDEV Mass Print</h1><div class="meta">Generated ${escapeHtml(new Date().toLocaleString())}</div>`;
-      return `<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Mass Print</title><style>
-        @page { size:A4; margin:10mm; } * { box-sizing:border-box; } body { font-family:Arial, sans-serif; color:#111; font-size:11px; } h1 { text-align:center; font-size:20px; margin:0 0 4px; } h2 { font-size:15px; margin:0 0 8px; } .org,.meta { text-align:center; } .org { font-size:10px; text-transform:uppercase; letter-spacing:.08em; } .meta { color:#555; margin-bottom:12px; } .record { page-break-after:always; } .record:last-child { page-break-after:auto; } table { width:100%; border-collapse:collapse; margin:8px 0; } th,td { border:1px solid #555; padding:6px; text-align:left; vertical-align:top; } th { background:#eee; font-size:9px; text-transform:uppercase; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .field { border:1px solid #aaa; padding:6px; min-height:28px; } .label { display:block; color:#555; font-size:8px; text-transform:uppercase; margin-bottom:3px; } .signature { display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:28px; } .line { border-top:1px solid #111; padding-top:5px; text-align:center; } .summary { border:1px solid #888; padding:8px; margin-bottom:10px; } .rc-card { page-break-after:always; box-shadow:none !important; border:1px solid #aaa; } .rc-card:last-child { page-break-after:auto; } .rc-head { background:#1a2e44 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-        @page { size:letter portrait; margin:5mm; } .intake-print { font-family:Arial,sans-serif; font-size:7px; line-height:1.15; } .intake-print h2 { border-bottom:1px solid #111; padding:2px 4px; margin:4px 0 3px; font-size:8px; text-transform:uppercase; letter-spacing:.03em; } .intake-print .sheet-title { border-bottom:2px solid #111; padding-bottom:3px; margin-bottom:4px; font-size:13px; text-align:left; } .intake-print .sheet-title small { float:right; font-size:7px; font-weight:normal; padding-top:3px; } .intake-print .grid { gap:2px; } .intake-print .field { min-height:14px; padding:2px 3px; border:1px solid #777; } .intake-print .label { font-size:5px; line-height:1; font-weight:bold; color:#222; margin-bottom:1px; } .intake-print .section-text { border:1px solid #777; min-height:27px; padding:3px; white-space:pre-wrap; line-height:1.15; } .intake-print .family-table th,.intake-print .family-table td,.intake-print .action-table th,.intake-print .action-table td { padding:2px 3px; font-size:6px; line-height:1.1; } .intake-print .family-table th,.intake-print .action-table th { background:#eee; } .intake-print .signature { gap:10px; margin-top:7px; } .intake-print .signature-box { min-height:35px; border:1px solid #777; padding:15px 4px 3px; text-align:center; } .intake-print .signature-box img { display:block; max-width:100%; height:12px; margin:-13px auto 1px; object-fit:contain; } .intake-print .signature-box .line { border-top:1px solid #111; padding-top:2px; font-size:6px; } .intake-print .muted { color:#555; }
-        .assessment-print { font-family:Arial,sans-serif; font-size:8px; line-height:1.15; } .assessment-print .sheet-title { border-bottom:2px solid #111; padding-bottom:4px; margin-bottom:5px; font-size:14px; font-weight:700; } .assessment-print .sheet-title small { float:right; font-size:8px; font-weight:normal; padding-top:3px; } .assessment-print h2 { border-bottom:1px solid #111; padding:3px 4px; margin:5px 0 3px; font-size:9px; text-transform:uppercase; } .assessment-print .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; } .assessment-print .field { min-height:18px; padding:3px 4px; border:1px solid #777; } .assessment-print .label { display:block; font-size:5px; font-weight:700; text-transform:uppercase; margin-bottom:1px; } .assessment-print .score-table { width:100%; margin:3px 0; } .assessment-print .score-table th,.assessment-print .score-table td { padding:2px 3px; font-size:7px; } .assessment-print .score-table th { background:#e9edf2; } .assessment-print .score-table .category { background:#f4f6f9; font-weight:700; } .assessment-print .score { width:34px; text-align:center; font-size:10px; font-weight:700; } .assessment-print .check { color:#087a45; } .assessment-print .cross { color:#b3261e; } .assessment-print .blank { color:#777; } .assessment-print .summary-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; } .assessment-print .summary-box { border:1px solid #777; padding:3px; text-align:center; } .assessment-print .summary-box strong { display:block; font-size:11px; } .assessment-print .summary-box span { display:block; font-size:5px; text-transform:uppercase; } .assessment-print .result { border:1px solid #555; padding:5px; margin-top:4px; font-weight:700; } .assessment-print .result.below { background:#fff0ee; color:#a51d18; } .assessment-print .result.above { background:#edf9f1; color:#087a45; } .assessment-print .text-block { border:1px solid #777; min-height:28px; padding:4px; white-space:pre-wrap; } .assessment-print .signature { display:block; width:280px; margin:12px auto 0; } .assessment-print .signature .line { border-top:1px solid #111; padding-top:3px; text-align:center; font-size:7px; } @media print { .no-print { display:none; } .intake-print h2,.assessment-print h2 { break-after:avoid; } .intake-print .family-table,.intake-print .action-table,.assessment-print .score-table { break-inside:avoid; } .intake-print .record,.assessment-print .record { page-break-after:always; } }
-      ${typeof REPORT_CARD_STYLES === 'string' ? REPORT_CARD_STYLES : ''}
-      </style></head><body>${printHeader}${body}</body></html>`;
+      return `<!doctype html><html><head><meta charset="utf-8"><title>MEFAMDEV Mass Print</title><link rel="stylesheet" href="/styles/mass-print-print.css">
+      ${typeof REPORT_CARD_STYLES === 'string' ? `<style>${REPORT_CARD_STYLES}</style>` : ''}
+      </head><body>${printHeader}${body}</body></html>`;
     }
 
     function buildIntakePrint(item) {
